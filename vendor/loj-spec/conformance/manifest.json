@@ -949,6 +949,454 @@
       "input": "conformance/valid/T075/law.yaml",
       "expected": "conformance/expected/T075.json",
       "success": true
+    },
+    {
+      "id": "T076",
+      "title": "附属資料の段落・見出し・リスト分割",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T076/law.yaml",
+      "expected": "conformance/expected/T076.json",
+      "success": true
+    },
+    {
+      "id": "T077",
+      "title": "附属資料の空白だけの後続を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T077/law.yaml",
+      "expected": "conformance/expected/T077.json",
+      "success": false
+    },
+    {
+      "id": "T078",
+      "title": "非最終の明示閉鎖フェンス",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T078/law.yaml",
+      "expected": "conformance/expected/T078.json",
+      "success": true
+    },
+    {
+      "id": "T079",
+      "title": "非最終の未閉鎖フェンスを拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T079/law.yaml",
+      "expected": "conformance/expected/T079.json",
+      "success": false
+    },
+    {
+      "id": "T080",
+      "title": "短い閉じフェンスを拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T080/law.yaml",
+      "expected": "conformance/expected/T080.json",
+      "success": false
+    },
+    {
+      "id": "T081",
+      "title": "異なる文字種の閉じフェンスを拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T081/law.yaml",
+      "expected": "conformance/expected/T081.json",
+      "success": false
+    },
+    {
+      "id": "T082",
+      "title": "引用内のチルダフェンス閉鎖",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T082/law.yaml",
+      "expected": "conformance/expected/T082.json",
+      "success": true
+    },
+    {
+      "id": "T083",
+      "title": "引用終了だけのフェンスを拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T083/law.yaml",
+      "expected": "conformance/expected/T083.json",
+      "success": false
+    },
+    {
+      "id": "T084",
+      "title": "最終ファイルの未閉鎖フェンスを許可",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T084/law.yaml",
+      "expected": "conformance/expected/T084.json",
+      "success": true
+    },
+    {
+      "id": "T085",
+      "title": "非最終HTML種類1の終端",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T085/law.yaml",
+      "expected": "conformance/expected/T085.json",
+      "success": true
+    },
+    {
+      "id": "T086",
+      "title": "非最終HTML種類1の暗黙終端を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T086/law.yaml",
+      "expected": "conformance/expected/T086.json",
+      "success": false
+    },
+    {
+      "id": "T087",
+      "title": "非最終HTML種類2の終端",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T087/law.yaml",
+      "expected": "conformance/expected/T087.json",
+      "success": true
+    },
+    {
+      "id": "T088",
+      "title": "非最終HTML種類2の暗黙終端を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T088/law.yaml",
+      "expected": "conformance/expected/T088.json",
+      "success": false
+    },
+    {
+      "id": "T089",
+      "title": "非最終HTML種類3の終端",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T089/law.yaml",
+      "expected": "conformance/expected/T089.json",
+      "success": true
+    },
+    {
+      "id": "T090",
+      "title": "非最終HTML種類3の暗黙終端を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T090/law.yaml",
+      "expected": "conformance/expected/T090.json",
+      "success": false
+    },
+    {
+      "id": "T091",
+      "title": "非最終HTML種類4の終端",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T091/law.yaml",
+      "expected": "conformance/expected/T091.json",
+      "success": true
+    },
+    {
+      "id": "T092",
+      "title": "非最終HTML種類4の暗黙終端を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T092/law.yaml",
+      "expected": "conformance/expected/T092.json",
+      "success": false
+    },
+    {
+      "id": "T093",
+      "title": "非最終HTML種類5の終端",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T093/law.yaml",
+      "expected": "conformance/expected/T093.json",
+      "success": true
+    },
+    {
+      "id": "T094",
+      "title": "非最終HTML種類5の暗黙終端を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T094/law.yaml",
+      "expected": "conformance/expected/T094.json",
+      "success": false
+    },
+    {
+      "id": "T095",
+      "title": "非最終HTML種類6の終端",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T095/law.yaml",
+      "expected": "conformance/expected/T095.json",
+      "success": true
+    },
+    {
+      "id": "T096",
+      "title": "非最終HTML種類6の暗黙終端を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T096/law.yaml",
+      "expected": "conformance/expected/T096.json",
+      "success": false
+    },
+    {
+      "id": "T097",
+      "title": "非最終HTML種類7の終端",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T097/law.yaml",
+      "expected": "conformance/expected/T097.json",
+      "success": true
+    },
+    {
+      "id": "T098",
+      "title": "非最終HTML種類7の暗黙終端を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T098/law.yaml",
+      "expected": "conformance/expected/T098.json",
+      "success": false
+    },
+    {
+      "id": "T099",
+      "title": "最終HTMLのEOF終端を許可",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T099/law.yaml",
+      "expected": "conformance/expected/T099.json",
+      "success": true
+    },
+    {
+      "id": "T100",
+      "title": "分割附属資料でも予約マーカー禁止",
+      "requirements": [
+        "HEAD-03",
+        "MAN-03"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T100/law.yaml",
+      "expected": "conformance/expected/T100.json",
+      "success": false
+    },
+    {
+      "id": "T101",
+      "title": "CRLF明示閉鎖フェンス",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T101/law.yaml",
+      "expected": "conformance/expected/T101.json",
+      "success": true
+    },
+    {
+      "id": "T102",
+      "title": "CRLF未閉鎖フェンスを拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T102/law.yaml",
+      "expected": "conformance/expected/T102.json",
+      "success": false
+    },
+    {
+      "id": "T103",
+      "title": "附属資料のファイル別参照定義",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T103/law.yaml",
+      "expected": "conformance/expected/T103.json",
+      "success": true
+    },
+    {
+      "id": "T104",
+      "title": "インデントコードのフェンス風本文",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T104/law.yaml",
+      "expected": "conformance/expected/T104.json",
+      "success": true
+    },
+    {
+      "id": "T105",
+      "title": "後続の先頭空行を本文保存",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T105/law.yaml",
+      "expected": "conformance/expected/T105.json",
+      "success": true
     }
   ]
 }

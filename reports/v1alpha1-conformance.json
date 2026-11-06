@@ -107,7 +107,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T001",
@@ -259,7 +259,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n<!-- loj:paragraph number=2 -->\n2　雲は架空である。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T002",
@@ -447,7 +447,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:item number=1 -->\n一　架空の号。\n<!-- loj:end-item -->\n<!-- loj:item number=2 -->\n二　架空の号。\n<!-- loj:end-item -->\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T003",
@@ -636,7 +636,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:item number=1 -->\n一　架空の号。\n<!-- loj:subitem level=1 number=1 -->\n1　架空の細分。\n<!-- loj:end-subitem -->\n<!-- loj:end-item -->\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T004",
@@ -752,7 +752,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲。\n\n次の段落。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T005",
@@ -845,7 +845,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-item -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T006",
@@ -935,7 +935,7 @@
           "text": "# 第一条\n<!-- loj:item number=1 -->\n一　本文。\n<!-- loj:end-item -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T007",
@@ -1051,7 +1051,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T008",
@@ -1167,7 +1167,7 @@
           "text": "# 第十二条の二の三\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T009",
@@ -1249,7 +1249,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n2　本文。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T010",
@@ -1365,7 +1365,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の例。\n\n```md\n<!-- loj:item number=1 -->\n# 第二条\n```\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T011",
@@ -1481,7 +1481,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の例。\n<!-- 通常のコメント loj:example -->\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T012",
@@ -1571,7 +1571,7 @@
           "text": "# 第一条\n<!-- loj:paragraph -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T013",
@@ -1661,7 +1661,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T014",
@@ -1751,7 +1751,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 label=x -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T015",
@@ -1950,7 +1950,7 @@
           "text": "# 第二条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T016",
@@ -2145,7 +2145,7 @@
           "text": "# 第一章　総則\n# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n# 第二条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T017",
@@ -2261,7 +2261,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T018",
@@ -2377,7 +2377,7 @@
           "text": "# 第一条\r\n<!-- loj:paragraph number=1 -->\r\n架空の雲を保管する。\r\n<!-- loj:end-paragraph -->\r\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T019",
@@ -2413,7 +2413,7 @@
           "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    }\n  ],\n  \"unexpected\": true\n}\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T020",
@@ -2612,7 +2612,7 @@
           "text": "# 附則\n# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T021",
@@ -2699,7 +2699,7 @@
           "text": "#第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T022",
@@ -2767,7 +2767,7 @@
           "text": "# 第一条\n架空の雲を保管する。\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T023",
@@ -2883,7 +2883,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n**架空**の雲。\n\n> 引用。\n\n- 通常リスト。\n\n[参照](https://example.org/) と `code`。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T024",
@@ -2999,7 +2999,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n[存在しない条](loj:main/article/999)\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T025",
@@ -3043,7 +3043,7 @@
           "text": ""
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T027",
@@ -3113,7 +3113,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T028",
@@ -3195,7 +3195,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T029",
@@ -3285,7 +3285,7 @@
           "text": "# 第一条\n<!-- loj:unknown number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T030",
@@ -3375,7 +3375,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=\"1\" -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T031",
@@ -3465,7 +3465,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=01 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T032",
@@ -3588,7 +3588,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n本文。\n<!-- loj:item number=1 -->\n一　号。\n<!-- loj:subitem level=2 number=1 -->\n1　細分。\n<!-- loj:end-subitem -->\n<!-- loj:end-item -->\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T033",
@@ -3667,7 +3667,7 @@
           "text": "# 第一条\n削除\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T034",
@@ -3804,7 +3804,7 @@
           "text": "###### 第一章　総則\n# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T035",
@@ -3886,7 +3886,7 @@
           "text": "# 総則\n# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T036",
@@ -4053,7 +4053,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n前文。\n<!-- loj:item number=1 -->\n一　号。\n<!-- loj:end-item -->\n後文。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T037",
@@ -4089,7 +4089,7 @@
           "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"../outside.md\",\n      \"parent\": \"main\"\n    }\n  ]\n}\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T038",
@@ -4129,7 +4129,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T039",
@@ -4180,7 +4180,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T040",
@@ -4216,7 +4216,7 @@
           "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-02-30\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    }\n  ]\n}\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T041",
@@ -4298,7 +4298,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T042",
@@ -4406,7 +4406,7 @@
           "text": "<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T043",
@@ -4493,7 +4493,7 @@
           "text": "第一条\n===\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T044",
@@ -4609,7 +4609,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n本文。\n\n<div>\n<!-- loj:item number=1 -->\n</div>\n\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T045",
@@ -4699,7 +4699,7 @@
           "text": "# 第一条\n<!-- loj:paragraph\nnumber=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T046",
@@ -4789,7 +4789,7 @@
           "text": "# 第一条\n<!-- LOJ:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T047",
@@ -4905,7 +4905,7 @@
           "text": "# 第１２条\n<!-- loj:paragraph number=2 -->\n２　本文。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T048",
@@ -4992,7 +4992,7 @@
           "text": "# 第一十条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T049",
@@ -5167,7 +5167,7 @@
           "text": "# 第一章　甲\n# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n# 第二章　乙\n# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T050",
@@ -5344,7 +5344,7 @@
           "text": "# 附則\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T051",
@@ -5500,7 +5500,7 @@
           "text": "# 別表一\n| 雲 | 色 |\n| --- | --- |\n| 架空 | 青 |\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T052",
@@ -6022,7 +6022,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n本文。\n<!-- loj:item number=1 -->\n一　号。\n<!-- loj:subitem level=1 number=1 -->\n1　細分。\n<!-- loj:subitem level=2 number=1 -->\n1　細分。\n<!-- loj:subitem level=3 number=1 -->\n1　細分。\n<!-- loj:subitem level=4 number=1 -->\n1　細分。\n<!-- loj:subitem level=5 number=1 -->\n1　細分。\n<!-- loj:subitem level=6 number=1 -->\n1　細分。\n<!-- loj:subitem level=7 number=1 -->\n1　細分。\n<!-- loj:subitem level=8 number=1 -->\n1　細分。\n<!-- loj:subitem level=9 number=1 -->\n1　細分。\n<!-- loj:subitem level=10 number=1 -->\n1　細分。\n<!-- loj:end-subitem -->\n<!-- loj:end-subitem -->\n<!-- loj:end-subitem -->\n<!-- loj:end-subitem -->\n<!-- loj:end-subitem -->\n<!-- loj:end-subitem -->\n<!-- loj:end-subitem -->\n<!-- loj:end-subitem -->\n<!-- loj:end-subitem -->\n<!-- loj:end-subitem -->\n<!-- loj:end-item -->\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T053",
@@ -6243,7 +6243,7 @@
           "text": "# 第一編　甲\n# 第一章　乙\n# 第一節　丙\n# 第一款　丁\n# 第一目　戊\n# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T054",
@@ -6333,7 +6333,7 @@
           "text": "# 第一条\n <!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T055",
@@ -6373,7 +6373,7 @@
           "text": "﻿# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T056",
@@ -6413,7 +6413,7 @@
           "text": "# 第一条\r<!-- loj:paragraph number=1 -->\r架空の雲を保管する。\r<!-- loj:end-paragraph -->\r"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T057",
@@ -6449,7 +6449,7 @@
           "text": "{\n  \"schemaVersion\": \"loj/v9\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    }\n  ]\n}\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Error"
     },
     "id": "T058",
@@ -6485,7 +6485,7 @@
           "text": "schemaVersion: loj/v1alpha1\nschemaVersion: loj/v1alpha1\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T059",
@@ -6533,7 +6533,7 @@
           "text": "# 第二条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T060",
@@ -7039,7 +7039,7 @@
           "text": "# 附則\n## 第一条（演習）\n<!-- loj:paragraph number=1 -->\nこのサンプルは現実の権利義務を定めない。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T061",
@@ -7321,7 +7321,7 @@
           "text": "# 附則\n# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T062",
@@ -7437,7 +7437,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n本文。\n\n> <!-- loj:item number=1 -->\n> # 第二条\n\n- <!-- loj:paragraph number=2 -->\n\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T063",
@@ -7553,7 +7553,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n本文。\n\n    <!-- loj:item number=1 -->\n\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T064",
@@ -7669,7 +7669,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T065",
@@ -7751,7 +7751,7 @@
           "text": "# 附則\n# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T066",
@@ -7833,7 +7833,7 @@
           "text": "# 第一条\n削除\n\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T067",
@@ -7920,7 +7920,7 @@
           "text": "# 第１2条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T068",
@@ -8010,7 +8010,7 @@
           "text": "# 第一条\n<!-- loj:paragraph\tnumber=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T069",
@@ -8103,7 +8103,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph number=1 -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T070",
@@ -8231,7 +8231,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n本文。\n# 第二条\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T071",
@@ -8390,7 +8390,7 @@
           "text": "# 第一章　総則\n# 第二条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T072",
@@ -8564,7 +8564,7 @@
           "text": "# 第三条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T073",
@@ -8696,7 +8696,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n本文。\n<!-- loj:item number=1 -->\n一　号。\n<!-- loj:subitem level=1 number=1 -->\nイ　細分。\n<!-- loj:end-subitem -->\n<!-- loj:end-item -->\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Failed"
     },
     "id": "T074",
@@ -8885,10 +8885,4330 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n本文。\n<!-- loj:item number=1 -->\n一　号。\n<!-- loj:subitem number=1 level=1 -->\n1　細分。\n<!-- loj:end-subitem -->\n<!-- loj:end-item -->\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0",
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
       "status": "Passed"
     },
     "id": "T075",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": {
+        "law": {
+          "id": "20990101-act-1",
+          "language": "ja",
+          "number": "架空法律第一号",
+          "promulgatedAt": "2099-01-01",
+          "title": "架空雲保管法（実在しないサンプル）",
+          "type": "act"
+        },
+        "root": {
+          "content": [
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "架空の雲を保管する。\n"
+                        }
+                      ],
+                      "display": "",
+                      "id": "20990101-act-1/main/article/1/paragraph/1",
+                      "kind": "Paragraph",
+                      "number": "1"
+                    }
+                  ],
+                  "display": "第一条",
+                  "id": "20990101-act-1/main/article/1",
+                  "kind": "Article",
+                  "number": "1",
+                  "status": "active"
+                }
+              ],
+              "display": "",
+              "id": "20990101-act-1/main",
+              "kind": "MainProvision",
+              "number": null
+            },
+            {
+              "content": [
+                {
+                  "text": "本文。\n\n## 任意\n- 項目\n\n> 引用\n"
+                }
+              ],
+              "display": "別表",
+              "id": "20990101-act-1/appendix/table",
+              "kind": "AppendedMaterial",
+              "number": null
+            }
+          ],
+          "display": "架空雲保管法（実在しないサンプル）",
+          "id": "20990101-act-1",
+          "kind": "Law",
+          "number": null
+        },
+        "schemaVersion": "loj/v1alpha1"
+      },
+      "complete": true,
+      "diagnostics": [],
+      "exit_code": 0,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 20,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 10,
+              "path": "two.md",
+              "start": 0
+            },
+            {
+              "end": 29,
+              "path": "two.md",
+              "start": 10
+            }
+          ],
+          "text": "本文。\n\n## 任意\n- 項目\n\n> 引用\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n本文。\n\n"
+        },
+        {
+          "path": "two.md",
+          "text": "## 任意\n- 項目\n\n> 引用\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Passed"
+    },
+    "id": "T076",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": null,
+      "complete": true,
+      "diagnostics": [
+        {
+          "code": "loj/v1alpha1/violation",
+          "file": "two.md",
+          "message": "Subsequent appendix file must contain nonblank text",
+          "rule": "MAN-03",
+          "severity": "error",
+          "span": {
+            "end": 4,
+            "start": 0
+          }
+        }
+      ],
+      "exit_code": 1,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 19,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 4,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "本文。\n \n\t\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n本文。\n"
+        },
+        {
+          "path": "two.md",
+          "text": " \n\t\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Failed"
+    },
+    "id": "T077",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": {
+        "law": {
+          "id": "20990101-act-1",
+          "language": "ja",
+          "number": "架空法律第一号",
+          "promulgatedAt": "2099-01-01",
+          "title": "架空雲保管法（実在しないサンプル）",
+          "type": "act"
+        },
+        "root": {
+          "content": [
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "架空の雲を保管する。\n"
+                        }
+                      ],
+                      "display": "",
+                      "id": "20990101-act-1/main/article/1/paragraph/1",
+                      "kind": "Paragraph",
+                      "number": "1"
+                    }
+                  ],
+                  "display": "第一条",
+                  "id": "20990101-act-1/main/article/1",
+                  "kind": "Article",
+                  "number": "1",
+                  "status": "active"
+                }
+              ],
+              "display": "",
+              "id": "20990101-act-1/main",
+              "kind": "MainProvision",
+              "number": null
+            },
+            {
+              "content": [
+                {
+                  "text": "```text\ncode\n```\n次。\n"
+                }
+              ],
+              "display": "別表",
+              "id": "20990101-act-1/appendix/table",
+              "kind": "AppendedMaterial",
+              "number": null
+            }
+          ],
+          "display": "架空雲保管法（実在しないサンプル）",
+          "id": "20990101-act-1",
+          "kind": "Law",
+          "number": null
+        },
+        "schemaVersion": "loj/v1alpha1"
+      },
+      "complete": true,
+      "diagnostics": [],
+      "exit_code": 0,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 26,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 7,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "```text\ncode\n```\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n```text\ncode\n```\n"
+        },
+        {
+          "path": "two.md",
+          "text": "次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Passed"
+    },
+    "id": "T078",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": null,
+      "complete": true,
+      "diagnostics": [
+        {
+          "code": "loj/v1alpha1/violation",
+          "file": "one.md",
+          "message": "Nonfinal appendix block requires an explicit terminator",
+          "rule": "MAN-03",
+          "severity": "error",
+          "span": {
+            "end": 13,
+            "start": 9
+          }
+        }
+      ],
+      "exit_code": 1,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 18,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 7,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "```\ncode\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n```\ncode\n"
+        },
+        {
+          "path": "two.md",
+          "text": "次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Failed"
+    },
+    "id": "T079",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": null,
+      "complete": true,
+      "diagnostics": [
+        {
+          "code": "loj/v1alpha1/violation",
+          "file": "one.md",
+          "message": "Nonfinal appendix block requires an explicit terminator",
+          "rule": "MAN-03",
+          "severity": "error",
+          "span": {
+            "end": 14,
+            "start": 9
+          }
+        }
+      ],
+      "exit_code": 1,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 23,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 7,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "````\ncode\n```\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n````\ncode\n```\n"
+        },
+        {
+          "path": "two.md",
+          "text": "次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Failed"
+    },
+    "id": "T080",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": null,
+      "complete": true,
+      "diagnostics": [
+        {
+          "code": "loj/v1alpha1/violation",
+          "file": "one.md",
+          "message": "Nonfinal appendix block requires an explicit terminator",
+          "rule": "MAN-03",
+          "severity": "error",
+          "span": {
+            "end": 13,
+            "start": 9
+          }
+        }
+      ],
+      "exit_code": 1,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 22,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 7,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "```\ncode\n~~~\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n```\ncode\n~~~\n"
+        },
+        {
+          "path": "two.md",
+          "text": "次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Failed"
+    },
+    "id": "T081",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": {
+        "law": {
+          "id": "20990101-act-1",
+          "language": "ja",
+          "number": "架空法律第一号",
+          "promulgatedAt": "2099-01-01",
+          "title": "架空雲保管法（実在しないサンプル）",
+          "type": "act"
+        },
+        "root": {
+          "content": [
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "架空の雲を保管する。\n"
+                        }
+                      ],
+                      "display": "",
+                      "id": "20990101-act-1/main/article/1/paragraph/1",
+                      "kind": "Paragraph",
+                      "number": "1"
+                    }
+                  ],
+                  "display": "第一条",
+                  "id": "20990101-act-1/main/article/1",
+                  "kind": "Article",
+                  "number": "1",
+                  "status": "active"
+                }
+              ],
+              "display": "",
+              "id": "20990101-act-1/main",
+              "kind": "MainProvision",
+              "number": null
+            },
+            {
+              "content": [
+                {
+                  "text": "> ~~~\n> code\n> ~~~\n次。\n"
+                }
+              ],
+              "display": "別表",
+              "id": "20990101-act-1/appendix/table",
+              "kind": "AppendedMaterial",
+              "number": null
+            }
+          ],
+          "display": "架空雲保管法（実在しないサンプル）",
+          "id": "20990101-act-1",
+          "kind": "Law",
+          "number": null
+        },
+        "schemaVersion": "loj/v1alpha1"
+      },
+      "complete": true,
+      "diagnostics": [],
+      "exit_code": 0,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 28,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 7,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "> ~~~\n> code\n> ~~~\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n> ~~~\n> code\n> ~~~\n"
+        },
+        {
+          "path": "two.md",
+          "text": "次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Passed"
+    },
+    "id": "T082",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": null,
+      "complete": true,
+      "diagnostics": [
+        {
+          "code": "loj/v1alpha1/violation",
+          "file": "one.md",
+          "message": "Nonfinal appendix block requires an explicit terminator",
+          "rule": "MAN-03",
+          "severity": "error",
+          "span": {
+            "end": 15,
+            "start": 9
+          }
+        }
+      ],
+      "exit_code": 1,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 39,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 7,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "> ```\n> code\n\n通常本文。\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n> ```\n> code\n\n通常本文。\n"
+        },
+        {
+          "path": "two.md",
+          "text": "次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Failed"
+    },
+    "id": "T083",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": {
+        "law": {
+          "id": "20990101-act-1",
+          "language": "ja",
+          "number": "架空法律第一号",
+          "promulgatedAt": "2099-01-01",
+          "title": "架空雲保管法（実在しないサンプル）",
+          "type": "act"
+        },
+        "root": {
+          "content": [
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "架空の雲を保管する。\n"
+                        }
+                      ],
+                      "display": "",
+                      "id": "20990101-act-1/main/article/1/paragraph/1",
+                      "kind": "Paragraph",
+                      "number": "1"
+                    }
+                  ],
+                  "display": "第一条",
+                  "id": "20990101-act-1/main/article/1",
+                  "kind": "Article",
+                  "number": "1",
+                  "status": "active"
+                }
+              ],
+              "display": "",
+              "id": "20990101-act-1/main",
+              "kind": "MainProvision",
+              "number": null
+            },
+            {
+              "content": [
+                {
+                  "text": "本文。\n```\ncode\n"
+                }
+              ],
+              "display": "別表",
+              "id": "20990101-act-1/appendix/table",
+              "kind": "AppendedMaterial",
+              "number": null
+            }
+          ],
+          "display": "架空雲保管法（実在しないサンプル）",
+          "id": "20990101-act-1",
+          "kind": "Law",
+          "number": null
+        },
+        "schemaVersion": "loj/v1alpha1"
+      },
+      "complete": true,
+      "diagnostics": [],
+      "exit_code": 0,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 19,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 9,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "本文。\n```\ncode\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n本文。\n"
+        },
+        {
+          "path": "two.md",
+          "text": "```\ncode\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Passed"
+    },
+    "id": "T084",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": {
+        "law": {
+          "id": "20990101-act-1",
+          "language": "ja",
+          "number": "架空法律第一号",
+          "promulgatedAt": "2099-01-01",
+          "title": "架空雲保管法（実在しないサンプル）",
+          "type": "act"
+        },
+        "root": {
+          "content": [
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "架空の雲を保管する。\n"
+                        }
+                      ],
+                      "display": "",
+                      "id": "20990101-act-1/main/article/1/paragraph/1",
+                      "kind": "Paragraph",
+                      "number": "1"
+                    }
+                  ],
+                  "display": "第一条",
+                  "id": "20990101-act-1/main/article/1",
+                  "kind": "Article",
+                  "number": "1",
+                  "status": "active"
+                }
+              ],
+              "display": "",
+              "id": "20990101-act-1/main",
+              "kind": "MainProvision",
+              "number": null
+            },
+            {
+              "content": [
+                {
+                  "text": "<script>\ncode\n</script>\n次。\n"
+                }
+              ],
+              "display": "別表",
+              "id": "20990101-act-1/appendix/table",
+              "kind": "AppendedMaterial",
+              "number": null
+            }
+          ],
+          "display": "架空雲保管法（実在しないサンプル）",
+          "id": "20990101-act-1",
+          "kind": "Law",
+          "number": null
+        },
+        "schemaVersion": "loj/v1alpha1"
+      },
+      "complete": true,
+      "diagnostics": [],
+      "exit_code": 0,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 33,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 7,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "<script>\ncode\n</script>\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n<script>\ncode\n</script>\n"
+        },
+        {
+          "path": "two.md",
+          "text": "次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Passed"
+    },
+    "id": "T085",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": null,
+      "complete": true,
+      "diagnostics": [
+        {
+          "code": "loj/v1alpha1/violation",
+          "file": "one.md",
+          "message": "Nonfinal appendix block requires an explicit terminator",
+          "rule": "MAN-03",
+          "severity": "error",
+          "span": {
+            "end": 18,
+            "start": 9
+          }
+        }
+      ],
+      "exit_code": 1,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 23,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 7,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "<script>\ncode\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n<script>\ncode\n"
+        },
+        {
+          "path": "two.md",
+          "text": "次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Failed"
+    },
+    "id": "T086",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": {
+        "law": {
+          "id": "20990101-act-1",
+          "language": "ja",
+          "number": "架空法律第一号",
+          "promulgatedAt": "2099-01-01",
+          "title": "架空雲保管法（実在しないサンプル）",
+          "type": "act"
+        },
+        "root": {
+          "content": [
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "架空の雲を保管する。\n"
+                        }
+                      ],
+                      "display": "",
+                      "id": "20990101-act-1/main/article/1/paragraph/1",
+                      "kind": "Paragraph",
+                      "number": "1"
+                    }
+                  ],
+                  "display": "第一条",
+                  "id": "20990101-act-1/main/article/1",
+                  "kind": "Article",
+                  "number": "1",
+                  "status": "active"
+                }
+              ],
+              "display": "",
+              "id": "20990101-act-1/main",
+              "kind": "MainProvision",
+              "number": null
+            },
+            {
+              "content": [
+                {
+                  "text": "<!-- ordinary\ncomment -->\n次。\n"
+                }
+              ],
+              "display": "別表",
+              "id": "20990101-act-1/appendix/table",
+              "kind": "AppendedMaterial",
+              "number": null
+            }
+          ],
+          "display": "架空雲保管法（実在しないサンプル）",
+          "id": "20990101-act-1",
+          "kind": "Law",
+          "number": null
+        },
+        "schemaVersion": "loj/v1alpha1"
+      },
+      "complete": true,
+      "diagnostics": [],
+      "exit_code": 0,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 35,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 7,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "<!-- ordinary\ncomment -->\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n<!-- ordinary\ncomment -->\n"
+        },
+        {
+          "path": "two.md",
+          "text": "次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Passed"
+    },
+    "id": "T087",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": null,
+      "complete": true,
+      "diagnostics": [
+        {
+          "code": "loj/v1alpha1/violation",
+          "file": "one.md",
+          "message": "Nonfinal appendix block requires an explicit terminator",
+          "rule": "MAN-03",
+          "severity": "error",
+          "span": {
+            "end": 23,
+            "start": 9
+          }
+        }
+      ],
+      "exit_code": 1,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 31,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 7,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "<!-- ordinary\ncomment\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n<!-- ordinary\ncomment\n"
+        },
+        {
+          "path": "two.md",
+          "text": "次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Failed"
+    },
+    "id": "T088",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": {
+        "law": {
+          "id": "20990101-act-1",
+          "language": "ja",
+          "number": "架空法律第一号",
+          "promulgatedAt": "2099-01-01",
+          "title": "架空雲保管法（実在しないサンプル）",
+          "type": "act"
+        },
+        "root": {
+          "content": [
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "架空の雲を保管する。\n"
+                        }
+                      ],
+                      "display": "",
+                      "id": "20990101-act-1/main/article/1/paragraph/1",
+                      "kind": "Paragraph",
+                      "number": "1"
+                    }
+                  ],
+                  "display": "第一条",
+                  "id": "20990101-act-1/main/article/1",
+                  "kind": "Article",
+                  "number": "1",
+                  "status": "active"
+                }
+              ],
+              "display": "",
+              "id": "20990101-act-1/main",
+              "kind": "MainProvision",
+              "number": null
+            },
+            {
+              "content": [
+                {
+                  "text": "<?proc\n?>\n次。\n"
+                }
+              ],
+              "display": "別表",
+              "id": "20990101-act-1/appendix/table",
+              "kind": "AppendedMaterial",
+              "number": null
+            }
+          ],
+          "display": "架空雲保管法（実在しないサンプル）",
+          "id": "20990101-act-1",
+          "kind": "Law",
+          "number": null
+        },
+        "schemaVersion": "loj/v1alpha1"
+      },
+      "complete": true,
+      "diagnostics": [],
+      "exit_code": 0,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 19,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 7,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "<?proc\n?>\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n<?proc\n?>\n"
+        },
+        {
+          "path": "two.md",
+          "text": "次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Passed"
+    },
+    "id": "T089",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": null,
+      "complete": true,
+      "diagnostics": [
+        {
+          "code": "loj/v1alpha1/violation",
+          "file": "one.md",
+          "message": "Nonfinal appendix block requires an explicit terminator",
+          "rule": "MAN-03",
+          "severity": "error",
+          "span": {
+            "end": 16,
+            "start": 9
+          }
+        }
+      ],
+      "exit_code": 1,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 16,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 7,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "<?proc\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n<?proc\n"
+        },
+        {
+          "path": "two.md",
+          "text": "次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Failed"
+    },
+    "id": "T090",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": {
+        "law": {
+          "id": "20990101-act-1",
+          "language": "ja",
+          "number": "架空法律第一号",
+          "promulgatedAt": "2099-01-01",
+          "title": "架空雲保管法（実在しないサンプル）",
+          "type": "act"
+        },
+        "root": {
+          "content": [
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "架空の雲を保管する。\n"
+                        }
+                      ],
+                      "display": "",
+                      "id": "20990101-act-1/main/article/1/paragraph/1",
+                      "kind": "Paragraph",
+                      "number": "1"
+                    }
+                  ],
+                  "display": "第一条",
+                  "id": "20990101-act-1/main/article/1",
+                  "kind": "Article",
+                  "number": "1",
+                  "status": "active"
+                }
+              ],
+              "display": "",
+              "id": "20990101-act-1/main",
+              "kind": "MainProvision",
+              "number": null
+            },
+            {
+              "content": [
+                {
+                  "text": "<!DOCTYPE\nhtml>\n次。\n"
+                }
+              ],
+              "display": "別表",
+              "id": "20990101-act-1/appendix/table",
+              "kind": "AppendedMaterial",
+              "number": null
+            }
+          ],
+          "display": "架空雲保管法（実在しないサンプル）",
+          "id": "20990101-act-1",
+          "kind": "Law",
+          "number": null
+        },
+        "schemaVersion": "loj/v1alpha1"
+      },
+      "complete": true,
+      "diagnostics": [],
+      "exit_code": 0,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 25,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 7,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "<!DOCTYPE\nhtml>\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n<!DOCTYPE\nhtml>\n"
+        },
+        {
+          "path": "two.md",
+          "text": "次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Passed"
+    },
+    "id": "T091",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": null,
+      "complete": true,
+      "diagnostics": [
+        {
+          "code": "loj/v1alpha1/violation",
+          "file": "one.md",
+          "message": "Nonfinal appendix block requires an explicit terminator",
+          "rule": "MAN-03",
+          "severity": "error",
+          "span": {
+            "end": 19,
+            "start": 9
+          }
+        }
+      ],
+      "exit_code": 1,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 24,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 7,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "<!DOCTYPE\nhtml\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n<!DOCTYPE\nhtml\n"
+        },
+        {
+          "path": "two.md",
+          "text": "次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Failed"
+    },
+    "id": "T092",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": {
+        "law": {
+          "id": "20990101-act-1",
+          "language": "ja",
+          "number": "架空法律第一号",
+          "promulgatedAt": "2099-01-01",
+          "title": "架空雲保管法（実在しないサンプル）",
+          "type": "act"
+        },
+        "root": {
+          "content": [
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "架空の雲を保管する。\n"
+                        }
+                      ],
+                      "display": "",
+                      "id": "20990101-act-1/main/article/1/paragraph/1",
+                      "kind": "Paragraph",
+                      "number": "1"
+                    }
+                  ],
+                  "display": "第一条",
+                  "id": "20990101-act-1/main/article/1",
+                  "kind": "Article",
+                  "number": "1",
+                  "status": "active"
+                }
+              ],
+              "display": "",
+              "id": "20990101-act-1/main",
+              "kind": "MainProvision",
+              "number": null
+            },
+            {
+              "content": [
+                {
+                  "text": "<![CDATA[\nbody\n]]>\n次。\n"
+                }
+              ],
+              "display": "別表",
+              "id": "20990101-act-1/appendix/table",
+              "kind": "AppendedMaterial",
+              "number": null
+            }
+          ],
+          "display": "架空雲保管法（実在しないサンプル）",
+          "id": "20990101-act-1",
+          "kind": "Law",
+          "number": null
+        },
+        "schemaVersion": "loj/v1alpha1"
+      },
+      "complete": true,
+      "diagnostics": [],
+      "exit_code": 0,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 28,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 7,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "<![CDATA[\nbody\n]]>\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n<![CDATA[\nbody\n]]>\n"
+        },
+        {
+          "path": "two.md",
+          "text": "次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Passed"
+    },
+    "id": "T093",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": null,
+      "complete": true,
+      "diagnostics": [
+        {
+          "code": "loj/v1alpha1/violation",
+          "file": "one.md",
+          "message": "Nonfinal appendix block requires an explicit terminator",
+          "rule": "MAN-03",
+          "severity": "error",
+          "span": {
+            "end": 19,
+            "start": 9
+          }
+        }
+      ],
+      "exit_code": 1,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 24,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 7,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "<![CDATA[\nbody\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n<![CDATA[\nbody\n"
+        },
+        {
+          "path": "two.md",
+          "text": "次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Failed"
+    },
+    "id": "T094",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": {
+        "law": {
+          "id": "20990101-act-1",
+          "language": "ja",
+          "number": "架空法律第一号",
+          "promulgatedAt": "2099-01-01",
+          "title": "架空雲保管法（実在しないサンプル）",
+          "type": "act"
+        },
+        "root": {
+          "content": [
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "架空の雲を保管する。\n"
+                        }
+                      ],
+                      "display": "",
+                      "id": "20990101-act-1/main/article/1/paragraph/1",
+                      "kind": "Paragraph",
+                      "number": "1"
+                    }
+                  ],
+                  "display": "第一条",
+                  "id": "20990101-act-1/main/article/1",
+                  "kind": "Article",
+                  "number": "1",
+                  "status": "active"
+                }
+              ],
+              "display": "",
+              "id": "20990101-act-1/main",
+              "kind": "MainProvision",
+              "number": null
+            },
+            {
+              "content": [
+                {
+                  "text": "<div>\nbody\n</div>\n\n次。\n"
+                }
+              ],
+              "display": "別表",
+              "id": "20990101-act-1/appendix/table",
+              "kind": "AppendedMaterial",
+              "number": null
+            }
+          ],
+          "display": "架空雲保管法（実在しないサンプル）",
+          "id": "20990101-act-1",
+          "kind": "Law",
+          "number": null
+        },
+        "schemaVersion": "loj/v1alpha1"
+      },
+      "complete": true,
+      "diagnostics": [],
+      "exit_code": 0,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 28,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 7,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "<div>\nbody\n</div>\n\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n<div>\nbody\n</div>\n\n"
+        },
+        {
+          "path": "two.md",
+          "text": "次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Passed"
+    },
+    "id": "T095",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": null,
+      "complete": true,
+      "diagnostics": [
+        {
+          "code": "loj/v1alpha1/violation",
+          "file": "one.md",
+          "message": "Nonfinal appendix block requires an explicit terminator",
+          "rule": "MAN-03",
+          "severity": "error",
+          "span": {
+            "end": 15,
+            "start": 9
+          }
+        }
+      ],
+      "exit_code": 1,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 27,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 7,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "<div>\nbody\n</div>\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n<div>\nbody\n</div>\n"
+        },
+        {
+          "path": "two.md",
+          "text": "次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Failed"
+    },
+    "id": "T096",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": {
+        "law": {
+          "id": "20990101-act-1",
+          "language": "ja",
+          "number": "架空法律第一号",
+          "promulgatedAt": "2099-01-01",
+          "title": "架空雲保管法（実在しないサンプル）",
+          "type": "act"
+        },
+        "root": {
+          "content": [
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "架空の雲を保管する。\n"
+                        }
+                      ],
+                      "display": "",
+                      "id": "20990101-act-1/main/article/1/paragraph/1",
+                      "kind": "Paragraph",
+                      "number": "1"
+                    }
+                  ],
+                  "display": "第一条",
+                  "id": "20990101-act-1/main/article/1",
+                  "kind": "Article",
+                  "number": "1",
+                  "status": "active"
+                }
+              ],
+              "display": "",
+              "id": "20990101-act-1/main",
+              "kind": "MainProvision",
+              "number": null
+            },
+            {
+              "content": [
+                {
+                  "text": "<custom>\nbody\n</custom>\n\n次。\n"
+                }
+              ],
+              "display": "別表",
+              "id": "20990101-act-1/appendix/table",
+              "kind": "AppendedMaterial",
+              "number": null
+            }
+          ],
+          "display": "架空雲保管法（実在しないサンプル）",
+          "id": "20990101-act-1",
+          "kind": "Law",
+          "number": null
+        },
+        "schemaVersion": "loj/v1alpha1"
+      },
+      "complete": true,
+      "diagnostics": [],
+      "exit_code": 0,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 34,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 7,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "<custom>\nbody\n</custom>\n\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n<custom>\nbody\n</custom>\n\n"
+        },
+        {
+          "path": "two.md",
+          "text": "次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Passed"
+    },
+    "id": "T097",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": null,
+      "complete": true,
+      "diagnostics": [
+        {
+          "code": "loj/v1alpha1/violation",
+          "file": "one.md",
+          "message": "Nonfinal appendix block requires an explicit terminator",
+          "rule": "MAN-03",
+          "severity": "error",
+          "span": {
+            "end": 18,
+            "start": 9
+          }
+        }
+      ],
+      "exit_code": 1,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 33,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 7,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "<custom>\nbody\n</custom>\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n<custom>\nbody\n</custom>\n"
+        },
+        {
+          "path": "two.md",
+          "text": "次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Failed"
+    },
+    "id": "T098",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": {
+        "law": {
+          "id": "20990101-act-1",
+          "language": "ja",
+          "number": "架空法律第一号",
+          "promulgatedAt": "2099-01-01",
+          "title": "架空雲保管法（実在しないサンプル）",
+          "type": "act"
+        },
+        "root": {
+          "content": [
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "架空の雲を保管する。\n"
+                        }
+                      ],
+                      "display": "",
+                      "id": "20990101-act-1/main/article/1/paragraph/1",
+                      "kind": "Paragraph",
+                      "number": "1"
+                    }
+                  ],
+                  "display": "第一条",
+                  "id": "20990101-act-1/main/article/1",
+                  "kind": "Article",
+                  "number": "1",
+                  "status": "active"
+                }
+              ],
+              "display": "",
+              "id": "20990101-act-1/main",
+              "kind": "MainProvision",
+              "number": null
+            },
+            {
+              "content": [
+                {
+                  "text": "本文。\n<div>\nbody\n"
+                }
+              ],
+              "display": "別表",
+              "id": "20990101-act-1/appendix/table",
+              "kind": "AppendedMaterial",
+              "number": null
+            }
+          ],
+          "display": "架空雲保管法（実在しないサンプル）",
+          "id": "20990101-act-1",
+          "kind": "Law",
+          "number": null
+        },
+        "schemaVersion": "loj/v1alpha1"
+      },
+      "complete": true,
+      "diagnostics": [],
+      "exit_code": 0,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 19,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 11,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "本文。\n<div>\nbody\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n本文。\n"
+        },
+        {
+          "path": "two.md",
+          "text": "<div>\nbody\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Passed"
+    },
+    "id": "T099",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": null,
+      "complete": true,
+      "diagnostics": [
+        {
+          "code": "loj/v1alpha1/violation",
+          "file": "two.md",
+          "message": "Reserved marker in appendix",
+          "rule": "HEAD-03",
+          "severity": "error",
+          "span": {
+            "end": 27,
+            "start": 0
+          }
+        }
+      ],
+      "exit_code": 1,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 19,
+              "path": "one.md",
+              "start": 9
+            }
+          ],
+          "text": "本文。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n本文。\n"
+        },
+        {
+          "path": "two.md",
+          "text": "<!-- loj:item number=1 -->\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Failed"
+    },
+    "id": "T100",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": {
+        "law": {
+          "id": "20990101-act-1",
+          "language": "ja",
+          "number": "架空法律第一号",
+          "promulgatedAt": "2099-01-01",
+          "title": "架空雲保管法（実在しないサンプル）",
+          "type": "act"
+        },
+        "root": {
+          "content": [
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "架空の雲を保管する。\n"
+                        }
+                      ],
+                      "display": "",
+                      "id": "20990101-act-1/main/article/1/paragraph/1",
+                      "kind": "Paragraph",
+                      "number": "1"
+                    }
+                  ],
+                  "display": "第一条",
+                  "id": "20990101-act-1/main/article/1",
+                  "kind": "Article",
+                  "number": "1",
+                  "status": "active"
+                }
+              ],
+              "display": "",
+              "id": "20990101-act-1/main",
+              "kind": "MainProvision",
+              "number": null
+            },
+            {
+              "content": [
+                {
+                  "text": "```\r\ncode\r\n```\r\n次。\n"
+                }
+              ],
+              "display": "別表",
+              "id": "20990101-act-1/appendix/table",
+              "kind": "AppendedMaterial",
+              "number": null
+            }
+          ],
+          "display": "架空雲保管法（実在しないサンプル）",
+          "id": "20990101-act-1",
+          "kind": "Law",
+          "number": null
+        },
+        "schemaVersion": "loj/v1alpha1"
+      },
+      "complete": true,
+      "diagnostics": [],
+      "exit_code": 0,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 25,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 7,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "```\r\ncode\r\n```\r\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n```\r\ncode\r\n```\r\n"
+        },
+        {
+          "path": "two.md",
+          "text": "次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Passed"
+    },
+    "id": "T101",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": null,
+      "complete": true,
+      "diagnostics": [
+        {
+          "code": "loj/v1alpha1/violation",
+          "file": "one.md",
+          "message": "Nonfinal appendix block requires an explicit terminator",
+          "rule": "MAN-03",
+          "severity": "error",
+          "span": {
+            "end": 14,
+            "start": 9
+          }
+        }
+      ],
+      "exit_code": 1,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 20,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 7,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "```\r\ncode\r\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n```\r\ncode\r\n"
+        },
+        {
+          "path": "two.md",
+          "text": "次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Failed"
+    },
+    "id": "T102",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": {
+        "law": {
+          "id": "20990101-act-1",
+          "language": "ja",
+          "number": "架空法律第一号",
+          "promulgatedAt": "2099-01-01",
+          "title": "架空雲保管法（実在しないサンプル）",
+          "type": "act"
+        },
+        "root": {
+          "content": [
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "架空の雲を保管する。\n"
+                        }
+                      ],
+                      "display": "",
+                      "id": "20990101-act-1/main/article/1/paragraph/1",
+                      "kind": "Paragraph",
+                      "number": "1"
+                    }
+                  ],
+                  "display": "第一条",
+                  "id": "20990101-act-1/main/article/1",
+                  "kind": "Article",
+                  "number": "1",
+                  "status": "active"
+                }
+              ],
+              "display": "",
+              "id": "20990101-act-1/main",
+              "kind": "MainProvision",
+              "number": null
+            },
+            {
+              "content": [
+                {
+                  "text": "[label]: https://example.com\n[label]\n"
+                }
+              ],
+              "display": "別表",
+              "id": "20990101-act-1/appendix/table",
+              "kind": "AppendedMaterial",
+              "number": null
+            }
+          ],
+          "display": "架空雲保管法（実在しないサンプル）",
+          "id": "20990101-act-1",
+          "kind": "Law",
+          "number": null
+        },
+        "schemaVersion": "loj/v1alpha1"
+      },
+      "complete": true,
+      "diagnostics": [],
+      "exit_code": 0,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 38,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 8,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "[label]: https://example.com\n[label]\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n[label]: https://example.com\n"
+        },
+        {
+          "path": "two.md",
+          "text": "[label]\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Passed"
+    },
+    "id": "T103",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": {
+        "law": {
+          "id": "20990101-act-1",
+          "language": "ja",
+          "number": "架空法律第一号",
+          "promulgatedAt": "2099-01-01",
+          "title": "架空雲保管法（実在しないサンプル）",
+          "type": "act"
+        },
+        "root": {
+          "content": [
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "架空の雲を保管する。\n"
+                        }
+                      ],
+                      "display": "",
+                      "id": "20990101-act-1/main/article/1/paragraph/1",
+                      "kind": "Paragraph",
+                      "number": "1"
+                    }
+                  ],
+                  "display": "第一条",
+                  "id": "20990101-act-1/main/article/1",
+                  "kind": "Article",
+                  "number": "1",
+                  "status": "active"
+                }
+              ],
+              "display": "",
+              "id": "20990101-act-1/main",
+              "kind": "MainProvision",
+              "number": null
+            },
+            {
+              "content": [
+                {
+                  "text": "    ```\n    code\n次。\n"
+                }
+              ],
+              "display": "別表",
+              "id": "20990101-act-1/appendix/table",
+              "kind": "AppendedMaterial",
+              "number": null
+            }
+          ],
+          "display": "架空雲保管法（実在しないサンプル）",
+          "id": "20990101-act-1",
+          "kind": "Law",
+          "number": null
+        },
+        "schemaVersion": "loj/v1alpha1"
+      },
+      "complete": true,
+      "diagnostics": [],
+      "exit_code": 0,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 26,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 7,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "    ```\n    code\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n    ```\n    code\n"
+        },
+        {
+          "path": "two.md",
+          "text": "次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Passed"
+    },
+    "id": "T104",
+    "level": "L1",
+    "problems": [],
+    "result": "Passed"
+  },
+  {
+    "actual": {
+      "ast": {
+        "law": {
+          "id": "20990101-act-1",
+          "language": "ja",
+          "number": "架空法律第一号",
+          "promulgatedAt": "2099-01-01",
+          "title": "架空雲保管法（実在しないサンプル）",
+          "type": "act"
+        },
+        "root": {
+          "content": [
+            {
+              "content": [
+                {
+                  "content": [
+                    {
+                      "content": [
+                        {
+                          "text": "架空の雲を保管する。\n"
+                        }
+                      ],
+                      "display": "",
+                      "id": "20990101-act-1/main/article/1/paragraph/1",
+                      "kind": "Paragraph",
+                      "number": "1"
+                    }
+                  ],
+                  "display": "第一条",
+                  "id": "20990101-act-1/main/article/1",
+                  "kind": "Article",
+                  "number": "1",
+                  "status": "active"
+                }
+              ],
+              "display": "",
+              "id": "20990101-act-1/main",
+              "kind": "MainProvision",
+              "number": null
+            },
+            {
+              "content": [
+                {
+                  "text": "本文。\n\n\n次。\n"
+                }
+              ],
+              "display": "別表",
+              "id": "20990101-act-1/appendix/table",
+              "kind": "AppendedMaterial",
+              "number": null
+            }
+          ],
+          "display": "架空雲保管法（実在しないサンプル）",
+          "id": "20990101-act-1",
+          "kind": "Law",
+          "number": null
+        },
+        "schemaVersion": "loj/v1alpha1"
+      },
+      "complete": true,
+      "diagnostics": [],
+      "exit_code": 0,
+      "level": "L1",
+      "positions": [
+        {
+          "end": 9,
+          "nodeId": "20990101-act-1/appendix/table",
+          "path": "one.md",
+          "start": 0
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/appendix/table",
+          "spans": [
+            {
+              "end": 19,
+              "path": "one.md",
+              "start": 9
+            },
+            {
+              "end": 9,
+              "path": "two.md",
+              "start": 0
+            }
+          ],
+          "text": "本文。\n\n\n次。\n"
+        },
+        {
+          "end": 12,
+          "nodeId": "20990101-act-1/main/article/1",
+          "path": "main.md",
+          "start": 0
+        },
+        {
+          "end": 102,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "path": "main.md",
+          "start": 12
+        },
+        {
+          "contentIndex": 0,
+          "nodeId": "20990101-act-1/main/article/1/paragraph/1",
+          "spans": [
+            {
+              "end": 75,
+              "path": "main.md",
+              "start": 44
+            }
+          ],
+          "text": "架空の雲を保管する。\n"
+        }
+      ],
+      "profile": "loj/v1alpha1",
+      "sourceMap": {
+        "20990101-act-1": [],
+        "20990101-act-1/appendix/table": [
+          {
+            "end": 9,
+            "path": "one.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main": [],
+        "20990101-act-1/main/article/1": [
+          {
+            "end": 12,
+            "path": "main.md",
+            "start": 0
+          }
+        ],
+        "20990101-act-1/main/article/1/paragraph/1": [
+          {
+            "end": 102,
+            "path": "main.md",
+            "start": 12
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "law.yaml",
+          "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    },\n    {\n      \"path\": \"one.md\",\n      \"parent\": \"appendix/table\"\n    },\n    {\n      \"path\": \"two.md\",\n      \"parent\": \"appendix/table\"\n    }\n  ],\n  \"appendices\": [\n    {\n      \"key\": \"table\",\n      \"title\": \"別表\"\n    }\n  ]\n}\n"
+        },
+        {
+          "path": "main.md",
+          "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
+        },
+        {
+          "path": "one.md",
+          "text": "# 別表\n本文。\n"
+        },
+        {
+          "path": "two.md",
+          "text": "\n\n次。\n"
+        }
+      ],
+      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "status": "Passed"
+    },
+    "id": "T105",
     "level": "L1",
     "problems": [],
     "result": "Passed"

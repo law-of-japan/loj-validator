@@ -3,7 +3,7 @@
 ## Investigation and requirements (before implementation)
 
 Baseline validator: 6dbd0b97e3d1d669d6e4949db1876e2a41b2c966.
-Specification: b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0; normative chapters 01–10,
+Specification: 6295fd7769a09eeb0da56bcc6ff8c404ec391db6; normative chapters 01–10,
 both grammars, JSON schemas, fixed conformance expectations and DDR 001–010 reviewed.
 The syntax evaluation directory is an unversioned experimental reference. It uses
 CommonMark protection ranges and a line marker lexer, but its bounded grammar lacks
@@ -47,8 +47,7 @@ Existing `check file.md --structure-schema ...` remains legacy; `--profile legac
 its default mapping profile. L0/L1 are selected with `--level`; default L1.
 Passed=0, Failed=1, Error=2, Incomplete=3. Incomplete never exits successfully, including
 strict mode. Normative `rule` and implementation `code` are separate diagnostic fields.
-Specification-pending checks also return Incomplete with code
-`loj/v1alpha1/specification-pending`, never a complete AST. Unknown versions use the
+The former appendix specification-pending restriction was removed after option B approval. Unknown versions use the
 specific code `loj/v1alpha1/unsupported-version` with Error.
 
 ## Implemented pipeline and recovery
@@ -96,7 +95,7 @@ Node positions and text-fragment spans refer to original files; no UTF-16 indice
 
 Pinned new direct dependencies: yaml-rust2 0.10.4 (encoding conversion disabled), same-file 1.0.6.
 CommonMark uses existing pulldown-cmark 0.13.4. Full resolved versions are in Cargo.lock.
-Schema assets and all 75 upstream cases are vendored at SPEC_COMMIT with 243 SHA-256 entries;
+Schema assets and all 105 upstream cases are vendored at SPEC_COMMIT with 393 SHA-256 entries;
 the conformance runner verifies hashes before comparisons. `.gitattributes` disables newline
 conversion for these assets. Future spec tracking can run against a separately reviewed vendor
 update; routine CI never fetches an unpinned spec head or rewrites expected ASTs.
@@ -126,8 +125,7 @@ Reports can be larger than source inputs because they include original inputs, A
 
 ## Scope and remaining work
 
-L0/L1 are implemented within the explicit resource limits and the pending appendix
-restriction below. L2–L4, XML round-trip conversion,
+L0/L1 are implemented within the explicit resource limits. L2–L4, XML round-trip conversion,
 legal authenticity, undeclared semantic omissions, preambles, unnumbered paragraphs, lettered
 subitems and legal amendment history are outside v1alpha1. `unsupportedFeatures` is accepted
 at L0 and rejected at L1. Legacy same-file reference resolution is not applied to v1alpha1.
@@ -135,19 +133,18 @@ at L0 and rejected at L1. Legacy same-file reference resolution is not applied t
 The fixed suite has no L0 success cases and asserts no negative diagnostic byte ranges;
 [loj-spec #1](https://github.com/law-of-japan/loj-spec/issues/1) records the coverage gap.
 Local independent tests cover L0 success, unsupported-feature levels and diagnostic locations.
-There are no currently deferred official cases. Future work: run the configured OS/MSRV matrix,
-add upstream fixture coverage after specification review, and introduce sustained fuzzing and
+There are no currently deferred official cases. Future work: add upstream fixture coverage after specification review, and introduce sustained fuzzing and
 large-corpus memory benchmarks. Fixed fixture success is not proof over all possible inputs.
 
-[loj-spec #2](https://github.com/law-of-japan/loj-spec/issues/2) asks whether MAN-03's
-subsequent-file heading requirement applies to appendices and whether CommonMark EOF
-termination counts as a completed block at a split (including unclosed fences/HTML).
-The grammars do not settle these conditions and T052 uses only one appendix file.
-Until resolved, all multi-file appendices are L1 Incomplete, with a dedicated pending
-diagnostic; L0 remains available. No interpretation of split fences is asserted as
-normative. The local test checks this non-success policy for ordinary, closed-fence
-and unclosed-fence splits; it is not evidence that those inputs are legally invalid.
-Single-file appendices remain supported. No official case is pending on #2.
+[loj-spec #2](https://github.com/law-of-japan/loj-spec/issues/2): the user approved option B.
+MAN-03 permits any nonblank Markdown in subsequent appendix files and preserves leading blank lines.
+For each nonfinal appendix file, nested CommonMark events identify fenced code and HTML blocks.
+A fenced block's end range must extend past its last content event: EOF/container termination alone fails.
+HTML types 1–5 require their terminator; types 6–7 require a blank line, allowing parser container prefixes.
+Diagnostics cover the opening physical line; whitespace-only subsequent files report the whole file.
+Final/sole appendix files retain normal CommonMark EOF rules. L0 does not run these L1 checks.
+Ordinary paragraphs, lists, quotes and indented code may end at EOF. Reference definitions stay file-local.
+The spec change and 30 independently authored fixtures are pinned, not inferred from validator outputs.
 
 ## Conformance runner outcome policy after review
 
@@ -163,12 +160,11 @@ status contract, not a change to the upstream expected JSON or a parser case exc
 Review regression mapping: input-budget unit and integration tests (finding 1),
 heading punctuation/whole-file reference markup (2), caption whitespace (3), subsequent
 main/supplement file starts (4), incomplete/unexpected-error and T058 cause tests (5).
-Windows Rust 1.99.1: 60 test functions passed after review (33 legacy; 9 review regressions plus 3 handoff boundary tests).
-Linux Rust 1.99.1 stable and 1.88.0 MSRV each passed all 60 functions in an isolated Docker container.
-macOS remains unexecuted. Logs and pinned container reproduction are recorded in reports/v1alpha1-conformance.md.
-Status precedence is Error > Incomplete > Failed > Passed: known violations remain visible
-when a specification-pending warning is present; IO errors take precedence. L0 and
-single-file appendices are unaffected. See docs/man03-resolution-proposal.md for an unadopted proposal.
+Windows Rust 1.99.1: 62 tests passed, including 104 formal cases. New fence and HTML
+regressions cover nested containers, malformed closers, CRLF and protected code.
+The initial implementation passed Windows/Linux/macOS stable and Linux MSRV CI.
+Current branch CI results are recorded in reports/v1alpha1-conformance.md.
+Status precedence remains Error > Incomplete > Failed > Passed. No case-specific parser exceptions.
 
 ## Reference review
 

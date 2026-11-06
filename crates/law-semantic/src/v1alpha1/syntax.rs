@@ -1,7 +1,10 @@
 use super::Context;
 use super::{
     directives::marker,
-    markdown::{bare, blocks, line_end, line_start, plain_heading, reserved, BlockKind},
+    markdown::{
+        bare, blocks, incomplete_split_blocks, line_end, line_start, plain_heading, reserved,
+        BlockKind,
+    },
     number::number,
 };
 use regex::Regex;
@@ -250,7 +253,7 @@ pub(super) fn build(
     let mut previous = String::new();
     let mut groups: Vec<usize> = Vec::new();
     let mut visited = HashSet::new();
-    for (path, source, scope_name) in documents {
+    for (document_index, (path, source, scope_name)) in documents.iter().enumerate() {
         let Some(&scope) = scopes.get(scope_name) else {
             continue;
         };
@@ -296,11 +299,30 @@ pub(super) fn build(
                 );
             }
         }
-        // MAN-03's appendix start/completion conditions need specification review.
-        // Do not assert a conforming merge until that review establishes the contract.
-        if !first && appendix {
-            ctx.incomplete = true;
-            ctx.diagnostics.push(json!({"rule":"MAN-03","code":"loj/v1alpha1/specification-pending","severity":"warning","message":"Multi-file appendix: start and block-completion conditions await specification clarification","file":path,"span":{"start":0,"end":line_end(source,0)}}));
+        if appendix {
+            if !first && source.trim().is_empty() {
+                ctx.diag(
+                    "MAN-03",
+                    "Subsequent appendix file must contain nonblank text",
+                    path,
+                    0,
+                    source.len(),
+                );
+            }
+            if documents
+                .get(document_index + 1)
+                .is_some_and(|(_, _, next)| next == scope_name)
+            {
+                for span in incomplete_split_blocks(source) {
+                    ctx.diag(
+                        "MAN-03",
+                        "Nonfinal appendix block requires an explicit terminator",
+                        path,
+                        span.start,
+                        span.end,
+                    );
+                }
+            }
         }
         for (is_heading, heading_plain, span) in events {
             if nodes.len() >= 20_000 || span.len() > 4096 {

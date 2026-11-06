@@ -200,7 +200,7 @@ fn split_files_preserve_ast_and_ids_but_not_article_state() {
     assert!(rule(&check(&path, Level::L1), "DIR-02"));
 }
 #[test]
-fn appendix_split_is_specification_pending() {
+fn appendix_split_uses_explicit_nonfinal_boundaries() {
     let path = fixture();
     fs::write(path.join("main.md"), valid("本文")).unwrap();
     fs::write(path.join("one.md"), "# 別表\n表本文\n\n").unwrap();
@@ -211,19 +211,30 @@ fn appendix_split_is_specification_pending() {
     m["appendices"] = json!([{"key":"table","title":"別表"}]);
     write_manifest(&path, &m);
     let r = check(&path, Level::L1);
-    assert_eq!(r["status"], "Incomplete", "{r}");
-    assert_eq!(r["exit_code"], 3);
-    assert_eq!(r["complete"], false);
-    assert!(r["ast"].is_null());
-    assert!(r["diagnostics"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .any(|d| d["code"] == "loj/v1alpha1/specification-pending"));
+    assert_eq!(r["status"], "Passed", "{r}");
+    assert_eq!(
+        r["ast"]["root"]["content"][1]["content"][0]["text"],
+        "表本文\n\n次の本文\n\n## 任意の見出し\n末尾\n"
+    );
     assert_eq!(check(&path, Level::L0)["status"], "Passed");
-    for first in ["# 別表\n```\ncode\n", "# 別表\n```\ncode\n```\n"] {
+    for (first, expected) in [
+        ("# 別表\n```\ncode\n", "Failed"),
+        ("# 別表\n```\ncode\n```\n", "Passed"),
+    ] {
         fs::write(path.join("one.md"), first).unwrap();
-        assert_eq!(check(&path, Level::L1)["status"], "Incomplete");
+        let r = check(&path, Level::L1);
+        assert_eq!(r["status"], expected, "{r}");
+        if expected == "Failed" {
+            let d = r["diagnostics"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|d| d["rule"] == "MAN-03")
+                .unwrap();
+            assert_eq!(d["file"], "one.md");
+            assert_eq!(d["span"], json!({"start":9,"end":13}));
+        }
+        assert_eq!(check(&path, Level::L0)["status"], "Passed");
     }
     // A single-file appendix still retains arbitrary headings and raw Markdown.
     m["documents"].as_array_mut().unwrap().pop();
@@ -242,7 +253,7 @@ fn appendix_split_is_specification_pending() {
 }
 
 #[test]
-fn appendix_pending_keeps_violations_and_io_errors_visible() {
+fn appendix_split_keeps_violations_and_io_errors_visible() {
     let path = fixture();
     let m = {
         let mut m = manifest(json!([
@@ -258,15 +269,10 @@ fn appendix_pending_keeps_violations_and_io_errors_visible() {
     fs::write(path.join("one.md"), "# 別表\n本文\n").unwrap();
     fs::write(path.join("two.md"), "<!-- loj:item number=1 -->\n").unwrap();
     let r = check(&path, Level::L1);
-    assert_eq!(r["status"], "Incomplete");
-    assert_eq!(r["complete"], false);
+    assert_eq!(r["status"], "Failed");
+    assert_eq!(r["complete"], true);
     assert!(r["ast"].is_null());
     assert!(rule(&r, "HEAD-03"), "known violation must not disappear");
-    assert!(r["diagnostics"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .any(|d| d["code"] == "loj/v1alpha1/specification-pending"));
     assert_eq!(check(&path, Level::L0)["status"], "Passed");
     let mut missing = m;
     missing["documents"]
@@ -280,11 +286,6 @@ fn appendix_pending_keeps_violations_and_io_errors_visible() {
     assert_eq!(r["complete"], false);
     assert!(rule(&r, "MAN-02"));
     assert!(rule(&r, "HEAD-03"));
-    assert!(r["diagnostics"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .any(|d| d["code"] == "loj/v1alpha1/specification-pending"));
     assert_eq!(check(&path, Level::L0)["status"], "Error");
 }
 

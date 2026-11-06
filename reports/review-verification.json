@@ -1,61 +1,35 @@
 {
-  "dateJST": "2026-11-06",
-  "rustTestsPassed": 60,
+  "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+  "rustTestsPassed": 62,
   "rustTestsFailed": 0,
-  "formalCasesPassed": 74,
+  "formalCasesPassed": 104,
   "formalCasesFailed": 0,
   "formalCasesPending": 0,
+  "formalCasesByLevel": {
+    "L0": 11,
+    "L1": 93
+  },
   "informativeCasesNotExecuted": [
     "T026"
   ],
   "formalValidatorStatuses": {
-    "Passed": 31,
-    "Failed": 42,
+    "Passed": 47,
+    "Failed": 56,
     "Error": 1,
     "Incomplete": 0
   },
-  "successfulTextPositionsVerified": 65,
-  "vendoredFilesMatchedToSpec": 243,
-  "pendingSpecificationIssue": "https://github.com/law-of-japan/loj-spec/issues/2",
-  "unexecutedEnvironments": [
-    "macOS/stable"
-  ],
+  "successfulTextPositionsVerified": 97,
+  "vendoredFilesMatchedToSpec": 393,
+  "specificationDecision": "Issue #2 option B approved and implemented on feature branches",
+  "pendingSpecificationIssue": null,
+  "coverageIssue": "https://github.com/law-of-japan/loj-spec/issues/1",
   "platformResults": {
-    "windows": {
-      "rustTestsPassed": 60,
-      "formalCasesPassed": 74,
-      "validatorStatuses": {
-        "Passed": 31,
-        "Failed": 42,
-        "Error": 1,
-        "Incomplete": 0
-      },
-      "identicalToWindowsReport": true
+    "windows-local": {
+      "rustTestsPassed": 62,
+      "formalCasesPassed": 104
     },
-    "linux-msrv": {
-      "rustTestsPassed": 60,
-      "formalCasesPassed": 74,
-      "validatorStatuses": {
-        "Passed": 31,
-        "Failed": 42,
-        "Error": 1,
-        "Incomplete": 0
-      },
-      "identicalToWindowsReport": true,
-      "toolchain": "rustc 1.88.0 (6b00bc388 2025-06-23)"
-    },
-    "linux-stable": {
-      "rustTestsPassed": 60,
-      "formalCasesPassed": 74,
-      "validatorStatuses": {
-        "Passed": 31,
-        "Failed": 42,
-        "Error": 1,
-        "Incomplete": 0
-      },
-      "identicalToWindowsReport": true,
-      "toolchain": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
-    }
+    "current-validator-ci": "pending"
   },
-  "linuxContainerImage": "rust@sha256:af306cfa71d987911a781c37b59d7d67d934f49684058f96cf72079c3626bfe0"
+  "historicalInitialCi": "https://github.com/law-of-japan/loj-validator/actions/runs/42232317522",
+  "specCi": "https://github.com/law-of-japan/loj-spec/actions/runs/42234173859"
 }

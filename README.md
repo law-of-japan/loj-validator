@@ -10,7 +10,7 @@
 ## loj-spec v1alpha1（Manifest形式）
 
 `law.yaml`と列挙されたMarkdownを、固定仕様commit
-`b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0`のL0/L1で検証します。
+`6295fd7769a09eeb0da56bcc6ff8c404ec391db6`のL0/L1で検証します。
 
 ```sh
 loj-validator check .
@@ -30,7 +30,7 @@ loj-validator check legacy.md --profile legacy --structure-schema schemas/law-of
 | Passed | 0 | 指定レベルの検査に違反なし |
 | Failed | 1 | 仕様違反を検出 |
 | Error | 2 | 読込不能・未対応version等 |
-| Incomplete | 3 | 入力サイズ等の実装上限、または仕様判断待ちにより検査未完了 |
+| Incomplete | 3 | 入力サイズ等の実装上限により検査未完了 |
 
 `--strict`の有無によらずIncompleteは非ゼロです。引数エラーは従来のエラー形式・終了コード2です。
 JSONの`ast`はL1合格時のみ完全な規範ASTを返し、L0または不合格時はnullです。
@@ -39,11 +39,10 @@ JSONの`ast`はL1合格時のみ完全な規範ASTを返し、L0または不合�
 `sources`は元入力、`sourceMap`はIDごとのノード位置列、`positions`はノード位置と本文片の対応です。
 失敗時の位置は回復過程の情報であり、完全ASTの存在を示しません。
 
-複数ファイルの附属資料は、MAN-03の開始条件・ブロック完結条件が
-[仕様確認中（#2）](https://github.com/law-of-japan/loj-spec/issues/2)のため、L1では
-`Incomplete`・終了3・`ast: null`となります。診断コードは
-`loj/v1alpha1/specification-pending`です。L0検査は可能です。
-これは仕様違反の確定判定ではなく、判断待ちの実装上の制限です。
+複数ファイル附属資料はMAN-03のB案に対応しています。後続ファイルは空白以外のMarkdown本文で開始でき、条見出しは不要です。
+非最終ファイルのフェンスコードとHTMLブロックには明示終端が必要です（HTML種類6〜7は空行）。
+最終ファイルは通常のCommonMark EOF終端を許します。違反はL1でMAN-03/Failedとなり、L0ではこの意味検査を行いません。
+[採用判断](docs/man03-resolution-proposal.md)と[検証結果](reports/v1alpha1-conformance.md)を参照してください。
 
 入力は正常・不正の別なく16 MiB/ファイル、law.yamlを含む128 MiB総量で制限します。
 読込前にサイズを確認し、ストリーム読込にも残量上限を適用します。
@@ -190,7 +189,7 @@ cargo clippy --workspace --all-targets --locked -- -D warnings
 
 ### ビルド環境と抽出状態
 
-依存関係の宣言に合わせ、必要なRust版は1.88以上とする。動作確認はWindows/LinuxのRust 1.99.1とLinuxのRust 1.88.0で行った。macOSは未実行。Cargo.lockを使用する。mapping_completeはマッピング診断にerrorがないことを表し、意味ASTのスキーマ適合や参照検証完了とは別の状態である。スキーマ不適合でも、既に得られたマッピング診断を消さずに返す。
+依存関係の宣言に合わせ、必要なRust版は1.88以上とする。初期実装はWindows/Linux/macOS stableとLinux Rust 1.88.0のCIに成功。B案対応後の結果はreports/v1alpha1-conformance.mdを参照。Cargo.lockを使用する。mapping_completeはマッピング診断にerrorがないことを表し、意味ASTのスキーマ適合や参照検証完了とは別の状態である。スキーマ不適合でも、既に得られたマッピング診断を消さずに返す。
 
 
 今回の実装・レビュー・試験結果は [検証記録](docs/validation.md) を参照。

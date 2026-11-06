@@ -1,3 +1,30 @@
+# 現在の作業状態（B案承認後）
+
+ユーザーの最新指示「CIを利用してよい。#2はB案で進めてよい。」を適用。
+CI用の専用ブランチpushとB案の仕様変更は承認済み。main push・PR・merge・Releaseは未承認。
+Codex内で判断を完結し、旧handoffの承認待ちを再質問しない。
+
+- 初期実装5ee3472、記録5a71b00はfeat/initial-v1alpha1へpush済み。
+- 初期CI 42232317522はWindows/Linux/macOS stable、Linux1.88の4ジョブ成功。
+- loj-specはspec/man03-appendix-boundariesの6295fd7769a09eeb0da56bcc6ff8c404ec391db6へcommit/push済み。
+  MAN-03・EBNF注記・DDR・CHANGELOG、独立T076〜T105を追加。Schema/旧75定義は不変。
+  verify.py成功（105定義、47正例source/tree、11 L0負例）、unittest17成功。
+  CI 42234173859も成功。
+- validatorの固定vendor393ファイルは上記spec commitのGit blobと全件一致。
+  非最終附属資料のCommonMarkフェンス/HTML明示終端、後続の非空白本文を実装し、一律Incompleteを解除。
+  フェンス/HTML独立回帰2関数追加、従来の保留テストを採用規範へ更新。
+- Windowsローカルfmt/Clippy/全62テスト成功。正式104/104（L0 11,L1 93）、旧74も成功。
+  実状態Passed47/Failed56/Error1/Incomplete0。47AST完全一致、97本文位置復元一致。
+  T058の期待Errorは専用原因だけを許可。参考L2 T026は未実行。
+- 設計・利用ガイド・適合結果・仕様フィードバックを更新。旧Docker証跡は旧版74ケースの履歴。
+- 次: この修正差分をcommit/pushし、更新validatorのCI4ジョブを追跡して結果を保存する。
+- #1カバレッジ課題はOpen。#2は承認・実装済みだが統合前でOpen。Issueの投稿/closeはしていない。
+- 継続fuzzing、ピークメモリ、同時ファイル差替え、旧ベンチマーク再測定は未実施。
+
+以下は前段階の履歴であり、承認状況・件数・保留条件は上記が優先する。
+
+---
+
 # Codex作業記録
 
 ## 現在の目的と承認境界

@@ -1,96 +1,52 @@
-# v1alpha1 適合検証結果（レビュー修正後）
+# v1alpha1 適合検証結果（MAN-03 B案対応）
 
-- 記録日: 2026-11-06 JST
-- 固定仕様: `b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0`、loj/v1alpha1
-- 実行環境: Windows x86_64、rustc/cargo 1.99.1、debug build
-- vendorの243ファイルをSHA-256検査し、隣接loj-specとも全件一致。規範・期待値は変更していない。
-
-## 適合テストの成否
+固定仕様: `6295fd7769a09eeb0da56bcc6ff8c404ec391db6`。vendor 393ファイルをcommitのGit blobとSHA-256で照合。
+旧T001〜T075・Schemaは不変。承認された仕様変更による独立30ケースを追加した。
 
 | 対象 | 実行 | 成功 | 失敗 | 未実行 | 仕様判断待ち |
 |---|---:|---:|---:|---:|---:|
 | 正式L0 | 11 | 11 | 0 | 0 | 0 |
-| 正式L1 | 63 | 63 | 0 | 0 | 0 |
-| 正式合計 | 74 | 74 | 0 | 0 | 0 |
+| 正式L1 | 93 | 93 | 0 | 0 | 0 |
+| 正式合計 | 104 | 104 | 0 | 0 | 0 |
 | 参考L2 T026 | 0 | 0 | 0 | 1 | 0 |
 
-## 検証器が返した状態（正式74入力）
+検証器の状態は **Passed 47 / Failed 56 / Error 1 / Incomplete 0**。
+旧正式74ケースも全件成功、新規30ケースも全件成功。適合成功数と入力の合格数は異なる。
+47正例の固定AST完全一致、指定ノード位置一致。97本文要素でUTF-8位置列から原文を復元し一致。
+通常負例はFailed/1/complete=true/ASTなしと期待ruleを要求する。
+T058だけはloj/v9とVAL-01に基づくError/2/complete=falseを期待し、unsupported-version診断のみに限定。
+予期しないError・Incompleteを成功扱いしない。
 
-| 状態 | 件数 |
-|---|---:|
-| Passed | 31 |
-| Failed | 42 |
-| Error | 1 |
-| Incomplete | 0 |
+## ローカル検証
 
-適合テストの成功74件は、入力の合格74件を意味しない。
-31正例は固定ASTと完全一致、指定ノード位置も一致。正例の全65本文要素について、
-実出力のバイト位置列から原文を復元し、textとの一致も独立確認した。
-通常負例はFailed/終了1/complete=true/ASTなしと期待ruleを要求する。
-T058だけは固定入力がloj/v9、固定期待ruleがBASIC-01であり、VAL-01の未対応versionの
-処理不能規定に基づきError/終了2/complete=false/ASTなしを要求する。
-専用コード`loj/v1alpha1/unsupported-version`の診断のみを許し、IO・internalエラーを代用できない。
-Incomplete、予期しないError、仕様判断待ちは適合成功に集計しない。
+Windows Rust 1.99.1で `cargo fmt --all -- --check`、
+`cargo clippy --workspace --all-targets --locked -- -D warnings`、
+`cargo test --workspace --locked` が終了0。62テスト関数成功（既存33を含む）、失敗/ignored 0。
+このうち1関数が正式104ケースを実行するため、件数を合算しない。
+Windowsリンク検証は許可された通常ホスト権限で実行。sandbox増分キャッシュの
+ハードリンク不可警告はコピー代替となり、fmt/Clippyは終了0。
 
-## 実行と回帰テスト
+[fmt](fmt.log)、[Clippy](clippy.log)、[全テスト](cargo-test.log)、
+[正式実出力](v1alpha1-conformance.json)、[集計](review-verification.json)。
+元の指摘1〜5の独立回帰を維持。B案はフェンスとHTMLそれぞれの追加回帰を持ち、
+引用・リスト内、閉鎖文字種/長さ/インデント、CRLF、最終EOF、空白だけの後続、
+診断の開始行、AST原文統合、L0非適用、既知違反とIOエラーの併存を検査する。
 
-```powershell
-cargo fmt --all -- --check
-cargo clippy --workspace --all-targets --locked -- -D warnings
-$env:LOJ_CONFORMANCE_REPORT = Join-Path (Get-Location) 'reports/v1alpha1-conformance.json'
-cargo test --workspace --locked
-```
+## CIと限界
 
-全コマンド終了0。Rustテスト60関数成功、失敗・ignored・filtered outは0。
-既存33関数を維持し、レビュー指摘向けに9関数、引き継ぎ後の境界確認に3関数を追加した。
-この60関数のうち1関数が正式74ケースを実行するため、件数を加算しない。
-Windowsリンク試験はsandbox内で権限が制限されるため、最終全件実行はsandbox外で行った。
-Clippyではsandboxの増分キャッシュのハードリンク不可・コピー代替警告が出たが終了0。
-ログ: [fmt](fmt.log)、[clippy](clippy.log)、[cargo test](cargo-test.log)。
-実出力: [正式全ケースJSON](v1alpha1-conformance.json)、[検証集計JSON](review-verification.json)。
+初期実装 `5a71b00` は[CI](https://github.com/law-of-japan/loj-validator/actions/runs/42232317522)で
+Windows/Linux/macOS stableとLinux Rust 1.88.0の4ジョブすべて成功。
+B案対応後のvalidator CIはcommit/push後に確認する（現時点で未実行）。
+仕様側B案は[CI](https://github.com/law-of-japan/loj-spec/actions/runs/42234173859)成功。
+旧Dockerログlinux-msrv/stableおよび対応JSONは旧74ケース・60関数の履歴証跡であり、今回の104ケースとは別。
 
-| 指摘 | 独立した回帰検証 |
-|---|---|
-| 1 | 不正UTF-8/BOM/NUL/単独CRの総量算入、メタデータによる読込前拒否、無限readerの上限、部分IO失敗の算入、128 MiB実上限と後続読込停止 |
-| 2 | 通常文字の角括弧・アスタリスク・非閉じハッシュ等を受理、装飾と同一ファイルの参照リンクを拒否 |
-| 3 | caption末尾のASCII空白・タブ・全角空白・NBSPを拒否、内部空白を受理 |
-| 4 | 本則・附則の空白だけ/コメント先行/マーカー継続をMAN-03拒否、条/分類開始を受理 |
-| 5 | 期待ruleがあってもIncomplete・予期しないErrorを拒否、T058の原因診断を限定 |
+#2は承認・実装済み、GitHubでは統合前のためOpen。#1の正式L0正例・負例診断位置不足は残る。
+L2は対象外。継続fuzzing、ピークメモリ、同時ファイル差替え耐性、旧ベンチマーク再測定は未実施。
+入力バイト制限はプロセスメモリ上限を保証しない。正式ケース成功は全入力への準拠証明ではない。
 
-## 仕様判断待ち（正式ケース外）
+## 全ケース
 
-[loj-spec #2](https://github.com/law-of-japan/loj-spec/issues/2)は未解決。
-複数ファイル附属資料の開始条件とEOFでのブロック完結条件が対象である。
-現実装はL1でIncomplete/終了3/完全ASTなし、専用のspecification-pending診断を返す。
-局所テストは通常本文分割・明示閉鎖フェンス・未閉鎖フェンスの3変種で、この保留状態を確認する。
-そのテスト成功を、3入力の仕様適合確定として数えない。L0と単一ファイル附属資料は引き続き検証可能。
-[#1](https://github.com/law-of-japan/loj-spec/issues/1)のL0正例・診断位置カバレッジ提案もOpen。
-
-## 未実行と限界
-
-| 環境 | 状態 |
-|---|---|
-| Windows / Rust 1.99.1 | 全60関数を実測 |
-| Linux / stable (Rust 1.99.1) | Docker内で全60関数・正式74ケース成功 |
-| macOS / stable | CI構成済み、未実行 |
-| Linux / Rust 1.88.0 (MSRV) | Docker内で全60関数・正式74ケース成功 |
-
-macOS実行環境がないためmacOSのみ未実行。Linuxは既存Docker上に隔離コンテナを作成し実測した。
-ソースは読取専用mountからコンテナ内へコピーし、Unixのhardlink/symlink試験も実行した。
-Linuxの2種類の正式実出力JSONはWindowsの出力と完全一致した。
-[MSRVログ](linux-msrv.log)、[stableログ](linux-stable.log)、
-[MSRV実出力](linux-msrv-conformance.json)、[stable実出力](linux-stable-conformance.json)。
-再現スクリプト: `scripts/verify-linux.sh`。イメージ: `rust@sha256:af306cfa71d987911a781c37b59d7d67d934f49684058f96cf72079c3626bfe0`。
-`/source`へリポジトリをread-only、`/results`へ結果用ディレクトリをmountしてbashで起動する。
-stableは実行時にcontainer内だけへ導入し、実測バージョンをログへ記録する。
-push・PR作成は行っておらず、リモートActionsの成功を主張しない。
-継続fuzzing・ピークメモリ・同時ファイル差替え耐性は未検証。
-既存ベンチマークJSONは修正前の参考測定で、今回再実行していない。
-入力バイト上限とJSON/ASTを含むプロセスメモリは別物である。
-
-## 全ケース結果
-
-| ID | レベル | 適合テスト結果 | 検証器状態 |
+| ケース | レベル | テスト結果 | 検証器状態 |
 |---|---|---|---|
 | T001 | L1 | 成功 | Passed |
 | T002 | L1 | 成功 | Passed |
@@ -167,3 +123,33 @@ push・PR作成は行っておらず、リモートActionsの成功を主張し�
 | T073 | L1 | 成功 | Passed |
 | T074 | L1 | 成功 | Failed |
 | T075 | L1 | 成功 | Passed |
+| T076 | L1 | 成功 | Passed |
+| T077 | L1 | 成功 | Failed |
+| T078 | L1 | 成功 | Passed |
+| T079 | L1 | 成功 | Failed |
+| T080 | L1 | 成功 | Failed |
+| T081 | L1 | 成功 | Failed |
+| T082 | L1 | 成功 | Passed |
+| T083 | L1 | 成功 | Failed |
+| T084 | L1 | 成功 | Passed |
+| T085 | L1 | 成功 | Passed |
+| T086 | L1 | 成功 | Failed |
+| T087 | L1 | 成功 | Passed |
+| T088 | L1 | 成功 | Failed |
+| T089 | L1 | 成功 | Passed |
+| T090 | L1 | 成功 | Failed |
+| T091 | L1 | 成功 | Passed |
+| T092 | L1 | 成功 | Failed |
+| T093 | L1 | 成功 | Passed |
+| T094 | L1 | 成功 | Failed |
+| T095 | L1 | 成功 | Passed |
+| T096 | L1 | 成功 | Failed |
+| T097 | L1 | 成功 | Passed |
+| T098 | L1 | 成功 | Failed |
+| T099 | L1 | 成功 | Passed |
+| T100 | L1 | 成功 | Failed |
+| T101 | L1 | 成功 | Passed |
+| T102 | L1 | 成功 | Failed |
+| T103 | L1 | 成功 | Passed |
+| T104 | L1 | 成功 | Passed |
+| T105 | L1 | 成功 | Passed |
