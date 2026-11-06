@@ -17,7 +17,10 @@ Codex内で判断を完結し、旧handoffの承認待ちを再質問しない�
   実状態Passed47/Failed56/Error1/Incomplete0。47AST完全一致、97本文位置復元一致。
   T058の期待Errorは専用原因だけを許可。参考L2 T026は未実行。
 - 設計・利用ガイド・適合結果・仕様フィードバックを更新。旧Docker証跡は旧版74ケースの履歴。
-- 次: この修正差分をcommit/pushし、更新validatorのCI4ジョブを追跡して結果を保存する。
+- B案実装は1a53cf48884d1e9961830b494e15aa51684ceea9へcommit/push済み。
+  追加レビューでHTML終了タグのUnicode case-foldによる誤認を発見。CommonMarkのASCII比較に限定し、
+  `</ſcript>`を拒否する独立入力を既存HTML回帰へ追加した。仕様の問題ではなく実装の不具合。
+- 次: ASCII比較修正をcommit/pushし、更新validatorのCI4ジョブを追跡して結果を保存する。
 - #1カバレッジ課題はOpen。#2は承認・実装済みだが統合前でOpen。Issueの投稿/closeはしていない。
 - 継続fuzzing、ピークメモリ、同時ファイル差替え、旧ベンチマーク再測定は未実施。
 

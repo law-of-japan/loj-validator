@@ -140,7 +140,7 @@ large-corpus memory benchmarks. Fixed fixture success is not proof over all poss
 MAN-03 permits any nonblank Markdown in subsequent appendix files and preserves leading blank lines.
 For each nonfinal appendix file, nested CommonMark events identify fenced code and HTML blocks.
 A fenced block's end range must extend past its last content event: EOF/container termination alone fails.
-HTML types 1–5 require their terminator; types 6–7 require a blank line, allowing parser container prefixes.
+HTML types 1–5 require their terminator (ASCII-only case-insensitive tags, not Unicode folding); types 6–7 require a blank line, allowing parser container prefixes.
 Diagnostics cover the opening physical line; whitespace-only subsequent files report the whole file.
 Final/sole appendix files retain normal CommonMark EOF rules. L0 does not run these L1 checks.
 Ordinary paragraphs, lists, quotes and indented code may end at EOF. Reference definitions stay file-local.

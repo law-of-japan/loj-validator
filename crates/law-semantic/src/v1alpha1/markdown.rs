@@ -53,8 +53,10 @@ pub(super) fn blocks(source: &str) -> Vec<(BlockKind, Range<usize>)> {
 /// Use CommonMark events for block recognition, including nested containers.
 pub(super) fn incomplete_split_blocks(source: &str) -> Vec<Range<usize>> {
     let mut result = Vec::new();
-    let type_one = regex::Regex::new(r"(?i)^<(script|pre|style|textarea)(?:[\t\r\n >]|$)").unwrap();
-    let type_one_end = regex::Regex::new(r"(?i)</(script|pre|style|textarea)>").unwrap();
+    // CommonMark HTML tag matching is ASCII case-insensitive, not Unicode folding.
+    let type_one =
+        regex::Regex::new(r"(?i-u)^<(script|pre|style|textarea)(?:[\t\r\n >]|$)").unwrap();
+    let type_one_end = regex::Regex::new(r"(?i-u)</(script|pre|style|textarea)>").unwrap();
     let mut fence = None;
     let mut html = None;
     let mut quotes = 0usize;
@@ -218,6 +220,7 @@ mod tests {
         }
         for source in [
             "<script>\nx\n",
+            "<script>\n</ſcript>\n",
             "<!-- x\n",
             "<?x\n",
             "<!DOCTYPE\n",
