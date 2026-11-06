@@ -7,7 +7,7 @@ mod syntax;
 use serde_json::{json, Value};
 use std::path::Path;
 
-pub const SPEC_COMMIT: &str = "6295fd7769a09eeb0da56bcc6ff8c404ec391db6";
+pub const SPEC_COMMIT: &str = "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9";
 pub const MANIFEST_SCHEMA: &str =
     include_str!("../../../../vendor/loj-spec/schemas/v1alpha1/manifest.schema.json");
 pub const AST_SCHEMA: &str =

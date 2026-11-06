@@ -3,7 +3,7 @@
 ## Investigation and requirements (before implementation)
 
 Baseline validator: 6dbd0b97e3d1d669d6e4949db1876e2a41b2c966.
-Specification: 6295fd7769a09eeb0da56bcc6ff8c404ec391db6; normative chapters 01–10,
+Specification: b704631b6501a0a01c1eb6faf99cfe16a4bccfa9; normative chapters 01–10,
 both grammars, JSON schemas, fixed conformance expectations and DDR 001–010 reviewed.
 The syntax evaluation directory is an unversioned experimental reference. It uses
 CommonMark protection ranges and a line marker lexer, but its bounded grammar lacks

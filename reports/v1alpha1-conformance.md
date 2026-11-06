@@ -1,6 +1,12 @@
 # v1alpha1 適合検証結果（MAN-03 B案対応）
 
-固定仕様: `6295fd7769a09eeb0da56bcc6ff8c404ec391db6`。vendor 393ファイルをcommitのGit blobとSHA-256で照合。
+2026-11-07: 仕様PR #4で適合レベルの定義・独立性を統合し、下記固定参照へ更新した。
+正式ケースの内容は不変。更新後もWindowsの全62テスト・fmt・Clippy、正式L0 11件/L1 93件が成功。
+各レベルは独立しており、合計104は両レベルを個別に実行した件数。L1によるL0の保証ではない。
+最終headのCIは[validator PR #1のChecks](https://github.com/law-of-japan/loj-validator/pull/1/checks)を参照。
+本文中の4599a69・42235465039等は固定参照更新前の履歴証跡である。
+
+固定仕様: `b704631b6501a0a01c1eb6faf99cfe16a4bccfa9`。vendor 393ファイルをcommitのGit blobとSHA-256で照合。
 旧T001〜T075・Schemaは不変。承認された仕様変更による独立30ケースを追加した。
 
 | 対象 | 実行 | 成功 | 失敗 | 未実行 | 仕様判断待ち |

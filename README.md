@@ -13,7 +13,7 @@ L0〜L4の定義と現行仕様との対応は[適合レベル定義](docs/confo
 ## loj-spec v1alpha1（Manifest形式）
 
 `law.yaml`と列挙されたMarkdownを、固定仕様commit
-`6295fd7769a09eeb0da56bcc6ff8c404ec391db6`のL0/L1で検証します。
+`b704631b6501a0a01c1eb6faf99cfe16a4bccfa9`のL0/L1で検証します。
 
 ```sh
 loj-validator check .

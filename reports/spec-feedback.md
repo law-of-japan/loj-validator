@@ -1,5 +1,9 @@
 # Specification feedback
 
+2026-11-07更新: 仕様PR #3（B案）と#4（レベル定義・独立性）はmerge済み。
+現在の固定仕様はb704631b6501a0a01c1eb6faf99cfe16a4bccfa9。#1はユーザー判断で保留し、今回のmergeを阻害しない。
+以下の#2の「統合前」はvalidator側の統合完了前の状態を表す。
+
 | Issue | Current status |
 |---|---|
 | [#1](https://github.com/law-of-japan/loj-spec/issues/1) | Open: positive L0 / negative diagnostic-span formal coverage remains incomplete. Local regressions supplement it. |

@@ -16,12 +16,12 @@
 
 ## 現行仕様・実装との照合
 
-仕様側のVAL-01/CONF-02をこの独立性に合わせて訂正した。現行validatorの固定commit6295fd7は訂正前なので、
-その累積適合の文言は今回のユーザー指示で撤回された旧記述として扱う。固定参照の更新は仕様訂正の統合時に行う。
+仕様側のVAL-01/CONF-02をこの独立性に合わせて訂正し、仕様PR #4を統合した。
+validatorは統合後commit b704631b6501a0a01c1eb6faf99cfe16a4bccfa9を固定参照する。
 正式ランナーは既にcase.levelごとに実行しており、L0ケースのL1継承テストを追加する必要はない。
 CONF-01のL0正例契約はIssue #1で解決するため保留し、今回の作業・merge判断の阻害事項とはしない。
 
-固定仕様6295fd7のVAL-01はL0をManifest・ファイル/encoding・独立Markdown読込、L1を構造・番号・表示・ID・ASTとする。
+訂正後VAL-01はL0をManifest・ファイル/encoding・CommonMark構文解析、L1を構造・番号・表示・ID・ASTとする。
 MD-03はCommonMarkが任意テキストを解析できることを明記し、Markdownとしての構文と法令固有構造の違反を区別する。
 validatorのL0はCommonMarkパーサーを実行するが、法令固有の構文・意味検査はL1で実行する。
 「Markdown構文」を単なる読込と言い換えない一方、未閉鎖フェンス等をCommonMark違反と自動的に扱わない。

@@ -107,7 +107,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T001",
@@ -259,7 +259,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n<!-- loj:paragraph number=2 -->\n2　雲は架空である。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T002",
@@ -447,7 +447,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:item number=1 -->\n一　架空の号。\n<!-- loj:end-item -->\n<!-- loj:item number=2 -->\n二　架空の号。\n<!-- loj:end-item -->\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T003",
@@ -636,7 +636,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:item number=1 -->\n一　架空の号。\n<!-- loj:subitem level=1 number=1 -->\n1　架空の細分。\n<!-- loj:end-subitem -->\n<!-- loj:end-item -->\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T004",
@@ -752,7 +752,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲。\n\n次の段落。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T005",
@@ -845,7 +845,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-item -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T006",
@@ -935,7 +935,7 @@
           "text": "# 第一条\n<!-- loj:item number=1 -->\n一　本文。\n<!-- loj:end-item -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T007",
@@ -1051,7 +1051,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T008",
@@ -1167,7 +1167,7 @@
           "text": "# 第十二条の二の三\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T009",
@@ -1249,7 +1249,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n2　本文。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T010",
@@ -1365,7 +1365,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の例。\n\n```md\n<!-- loj:item number=1 -->\n# 第二条\n```\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T011",
@@ -1481,7 +1481,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の例。\n<!-- 通常のコメント loj:example -->\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T012",
@@ -1571,7 +1571,7 @@
           "text": "# 第一条\n<!-- loj:paragraph -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T013",
@@ -1661,7 +1661,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T014",
@@ -1751,7 +1751,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 label=x -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T015",
@@ -1950,7 +1950,7 @@
           "text": "# 第二条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T016",
@@ -2145,7 +2145,7 @@
           "text": "# 第一章　総則\n# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n# 第二条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T017",
@@ -2261,7 +2261,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T018",
@@ -2377,7 +2377,7 @@
           "text": "# 第一条\r\n<!-- loj:paragraph number=1 -->\r\n架空の雲を保管する。\r\n<!-- loj:end-paragraph -->\r\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T019",
@@ -2413,7 +2413,7 @@
           "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    }\n  ],\n  \"unexpected\": true\n}\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T020",
@@ -2612,7 +2612,7 @@
           "text": "# 附則\n# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T021",
@@ -2699,7 +2699,7 @@
           "text": "#第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T022",
@@ -2767,7 +2767,7 @@
           "text": "# 第一条\n架空の雲を保管する。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T023",
@@ -2883,7 +2883,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n**架空**の雲。\n\n> 引用。\n\n- 通常リスト。\n\n[参照](https://example.org/) と `code`。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T024",
@@ -2999,7 +2999,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n[存在しない条](loj:main/article/999)\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T025",
@@ -3043,7 +3043,7 @@
           "text": ""
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T027",
@@ -3113,7 +3113,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T028",
@@ -3195,7 +3195,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T029",
@@ -3285,7 +3285,7 @@
           "text": "# 第一条\n<!-- loj:unknown number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T030",
@@ -3375,7 +3375,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=\"1\" -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T031",
@@ -3465,7 +3465,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=01 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T032",
@@ -3588,7 +3588,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n本文。\n<!-- loj:item number=1 -->\n一　号。\n<!-- loj:subitem level=2 number=1 -->\n1　細分。\n<!-- loj:end-subitem -->\n<!-- loj:end-item -->\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T033",
@@ -3667,7 +3667,7 @@
           "text": "# 第一条\n削除\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T034",
@@ -3804,7 +3804,7 @@
           "text": "###### 第一章　総則\n# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T035",
@@ -3886,7 +3886,7 @@
           "text": "# 総則\n# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T036",
@@ -4053,7 +4053,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n前文。\n<!-- loj:item number=1 -->\n一　号。\n<!-- loj:end-item -->\n後文。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T037",
@@ -4089,7 +4089,7 @@
           "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"../outside.md\",\n      \"parent\": \"main\"\n    }\n  ]\n}\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T038",
@@ -4129,7 +4129,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T039",
@@ -4180,7 +4180,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T040",
@@ -4216,7 +4216,7 @@
           "text": "{\n  \"schemaVersion\": \"loj/v1alpha1\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-02-30\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    }\n  ]\n}\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T041",
@@ -4298,7 +4298,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T042",
@@ -4406,7 +4406,7 @@
           "text": "<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T043",
@@ -4493,7 +4493,7 @@
           "text": "第一条\n===\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T044",
@@ -4609,7 +4609,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n本文。\n\n<div>\n<!-- loj:item number=1 -->\n</div>\n\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T045",
@@ -4699,7 +4699,7 @@
           "text": "# 第一条\n<!-- loj:paragraph\nnumber=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T046",
@@ -4789,7 +4789,7 @@
           "text": "# 第一条\n<!-- LOJ:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T047",
@@ -4905,7 +4905,7 @@
           "text": "# 第１２条\n<!-- loj:paragraph number=2 -->\n２　本文。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T048",
@@ -4992,7 +4992,7 @@
           "text": "# 第一十条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T049",
@@ -5167,7 +5167,7 @@
           "text": "# 第一章　甲\n# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n# 第二章　乙\n# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T050",
@@ -5344,7 +5344,7 @@
           "text": "# 附則\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T051",
@@ -5500,7 +5500,7 @@
           "text": "# 別表一\n| 雲 | 色 |\n| --- | --- |\n| 架空 | 青 |\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T052",
@@ -6022,7 +6022,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n本文。\n<!-- loj:item number=1 -->\n一　号。\n<!-- loj:subitem level=1 number=1 -->\n1　細分。\n<!-- loj:subitem level=2 number=1 -->\n1　細分。\n<!-- loj:subitem level=3 number=1 -->\n1　細分。\n<!-- loj:subitem level=4 number=1 -->\n1　細分。\n<!-- loj:subitem level=5 number=1 -->\n1　細分。\n<!-- loj:subitem level=6 number=1 -->\n1　細分。\n<!-- loj:subitem level=7 number=1 -->\n1　細分。\n<!-- loj:subitem level=8 number=1 -->\n1　細分。\n<!-- loj:subitem level=9 number=1 -->\n1　細分。\n<!-- loj:subitem level=10 number=1 -->\n1　細分。\n<!-- loj:end-subitem -->\n<!-- loj:end-subitem -->\n<!-- loj:end-subitem -->\n<!-- loj:end-subitem -->\n<!-- loj:end-subitem -->\n<!-- loj:end-subitem -->\n<!-- loj:end-subitem -->\n<!-- loj:end-subitem -->\n<!-- loj:end-subitem -->\n<!-- loj:end-subitem -->\n<!-- loj:end-item -->\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T053",
@@ -6243,7 +6243,7 @@
           "text": "# 第一編　甲\n# 第一章　乙\n# 第一節　丙\n# 第一款　丁\n# 第一目　戊\n# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T054",
@@ -6333,7 +6333,7 @@
           "text": "# 第一条\n <!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T055",
@@ -6373,7 +6373,7 @@
           "text": "﻿# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T056",
@@ -6413,7 +6413,7 @@
           "text": "# 第一条\r<!-- loj:paragraph number=1 -->\r架空の雲を保管する。\r<!-- loj:end-paragraph -->\r"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T057",
@@ -6449,7 +6449,7 @@
           "text": "{\n  \"schemaVersion\": \"loj/v9\",\n  \"law\": {\n    \"id\": \"20990101-act-1\",\n    \"title\": \"架空雲保管法（実在しないサンプル）\",\n    \"type\": \"act\",\n    \"number\": \"架空法律第一号\",\n    \"promulgatedAt\": \"2099-01-01\",\n    \"language\": \"ja\"\n  },\n  \"documents\": [\n    {\n      \"path\": \"main.md\",\n      \"parent\": \"main\"\n    }\n  ]\n}\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Error"
     },
     "id": "T058",
@@ -6485,7 +6485,7 @@
           "text": "schemaVersion: loj/v1alpha1\nschemaVersion: loj/v1alpha1\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T059",
@@ -6533,7 +6533,7 @@
           "text": "# 第二条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T060",
@@ -7039,7 +7039,7 @@
           "text": "# 附則\n## 第一条（演習）\n<!-- loj:paragraph number=1 -->\nこのサンプルは現実の権利義務を定めない。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T061",
@@ -7321,7 +7321,7 @@
           "text": "# 附則\n# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T062",
@@ -7437,7 +7437,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n本文。\n\n> <!-- loj:item number=1 -->\n> # 第二条\n\n- <!-- loj:paragraph number=2 -->\n\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T063",
@@ -7553,7 +7553,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n本文。\n\n    <!-- loj:item number=1 -->\n\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T064",
@@ -7669,7 +7669,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T065",
@@ -7751,7 +7751,7 @@
           "text": "# 附則\n# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T066",
@@ -7833,7 +7833,7 @@
           "text": "# 第一条\n削除\n\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T067",
@@ -7920,7 +7920,7 @@
           "text": "# 第１2条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T068",
@@ -8010,7 +8010,7 @@
           "text": "# 第一条\n<!-- loj:paragraph\tnumber=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T069",
@@ -8103,7 +8103,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph number=1 -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T070",
@@ -8231,7 +8231,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n本文。\n# 第二条\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T071",
@@ -8390,7 +8390,7 @@
           "text": "# 第一章　総則\n# 第二条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T072",
@@ -8564,7 +8564,7 @@
           "text": "# 第三条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n# 第一条\n<!-- loj:paragraph number=1 -->\n架空の雲を保管する。\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T073",
@@ -8696,7 +8696,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n本文。\n<!-- loj:item number=1 -->\n一　号。\n<!-- loj:subitem level=1 number=1 -->\nイ　細分。\n<!-- loj:end-subitem -->\n<!-- loj:end-item -->\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T074",
@@ -8885,7 +8885,7 @@
           "text": "# 第一条\n<!-- loj:paragraph number=1 -->\n本文。\n<!-- loj:item number=1 -->\n一　号。\n<!-- loj:subitem number=1 level=1 -->\n1　細分。\n<!-- loj:end-subitem -->\n<!-- loj:end-item -->\n<!-- loj:end-paragraph -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T075",
@@ -9055,7 +9055,7 @@
           "text": "## 任意\n- 項目\n\n> 引用\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T076",
@@ -9175,7 +9175,7 @@
           "text": " \n\t\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T077",
@@ -9340,7 +9340,7 @@
           "text": "次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T078",
@@ -9460,7 +9460,7 @@
           "text": "次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T079",
@@ -9580,7 +9580,7 @@
           "text": "次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T080",
@@ -9700,7 +9700,7 @@
           "text": "次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T081",
@@ -9865,7 +9865,7 @@
           "text": "次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T082",
@@ -9985,7 +9985,7 @@
           "text": "次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T083",
@@ -10150,7 +10150,7 @@
           "text": "```\ncode\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T084",
@@ -10315,7 +10315,7 @@
           "text": "次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T085",
@@ -10435,7 +10435,7 @@
           "text": "次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T086",
@@ -10600,7 +10600,7 @@
           "text": "次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T087",
@@ -10720,7 +10720,7 @@
           "text": "次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T088",
@@ -10885,7 +10885,7 @@
           "text": "次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T089",
@@ -11005,7 +11005,7 @@
           "text": "次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T090",
@@ -11170,7 +11170,7 @@
           "text": "次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T091",
@@ -11290,7 +11290,7 @@
           "text": "次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T092",
@@ -11455,7 +11455,7 @@
           "text": "次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T093",
@@ -11575,7 +11575,7 @@
           "text": "次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T094",
@@ -11740,7 +11740,7 @@
           "text": "次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T095",
@@ -11860,7 +11860,7 @@
           "text": "次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T096",
@@ -12025,7 +12025,7 @@
           "text": "次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T097",
@@ -12145,7 +12145,7 @@
           "text": "次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T098",
@@ -12310,7 +12310,7 @@
           "text": "<div>\nbody\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T099",
@@ -12425,7 +12425,7 @@
           "text": "<!-- loj:item number=1 -->\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T100",
@@ -12590,7 +12590,7 @@
           "text": "次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T101",
@@ -12710,7 +12710,7 @@
           "text": "次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Failed"
     },
     "id": "T102",
@@ -12875,7 +12875,7 @@
           "text": "[label]\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T103",
@@ -13040,7 +13040,7 @@
           "text": "次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T104",
@@ -13205,7 +13205,7 @@
           "text": "\n\n次。\n"
         }
       ],
-      "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+      "specCommit": "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9",
       "status": "Passed"
     },
     "id": "T105",
