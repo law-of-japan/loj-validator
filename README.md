@@ -189,7 +189,7 @@ cargo clippy --workspace --all-targets --locked -- -D warnings
 
 ### ビルド環境と抽出状態
 
-依存関係の宣言に合わせ、必要なRust版は1.88以上とする。初期実装はWindows/Linux/macOS stableとLinux Rust 1.88.0のCIに成功。B案対応後の結果はreports/v1alpha1-conformance.mdを参照。Cargo.lockを使用する。mapping_completeはマッピング診断にerrorがないことを表し、意味ASTのスキーマ適合や参照検証完了とは別の状態である。スキーマ不適合でも、既に得られたマッピング診断を消さずに返す。
+依存関係の宣言に合わせ、必要なRust版は1.88以上とする。B案対応後もWindows/Linux/macOSのRust 1.99.1とLinux Rust 1.88.0でCI成功。詳細は[検証結果](reports/v1alpha1-conformance.md)を参照。Cargo.lockを使用する。mapping_completeはマッピング診断にerrorがないことを表し、意味ASTのスキーマ適合や参照検証完了とは別の状態である。スキーマ不適合でも、既に得られたマッピング診断を消さずに返す。
 
 
 今回の実装・レビュー・試験結果は [検証記録](docs/validation.md) を参照。

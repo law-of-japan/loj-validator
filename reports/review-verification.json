@@ -28,8 +28,59 @@
       "rustTestsPassed": 62,
       "formalCasesPassed": 104
     },
-    "current-validator-ci": "pending"
+    "Rust stable / macos-latest": {
+      "rustTestsPassed": 62,
+      "formalCasesPassed": 104,
+      "formalRunnerPass": true,
+      "conclusion": "success",
+      "toolchainVersions": [
+        "cargo 1.99.1 (5f94df478 2026-08-27)",
+        "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+      ]
+    },
+    "Rust stable / windows-latest": {
+      "rustTestsPassed": 62,
+      "formalCasesPassed": 104,
+      "formalRunnerPass": true,
+      "conclusion": "success",
+      "toolchainVersions": [
+        "cargo 1.99.1 (5f94df478 2026-08-27)",
+        "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+      ]
+    },
+    "Rust 1.88.0 / ubuntu-latest": {
+      "rustTestsPassed": 62,
+      "formalCasesPassed": 104,
+      "formalRunnerPass": true,
+      "conclusion": "success",
+      "toolchainVersions": [
+        "cargo 1.88.0 (873a06493 2025-05-10)",
+        "rustc 1.88.0 (6b00bc388 2025-06-23)"
+      ]
+    },
+    "Rust stable / ubuntu-latest": {
+      "rustTestsPassed": 62,
+      "formalCasesPassed": 104,
+      "formalRunnerPass": true,
+      "conclusion": "success",
+      "toolchainVersions": [
+        "cargo 1.99.1 (5f94df478 2026-08-27)",
+        "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+      ]
+    }
   },
   "historicalInitialCi": "https://github.com/law-of-japan/loj-validator/actions/runs/42232317522",
-  "specCi": "https://github.com/law-of-japan/loj-spec/actions/runs/42234173859"
+  "specCi": "https://github.com/law-of-japan/loj-spec/actions/runs/42234173859",
+  "validatorCodeCommit": "4599a6971975ae5ce4e254b1786ae964c6bdb79c",
+  "validatorCi": "https://github.com/law-of-japan/loj-validator/actions/runs/42235465039",
+  "unexecutedRequiredMatrixEnvironments": [],
+  "outsideMatrixUnexecutedEnvironments": [
+    "Windows/Rust 1.88.0",
+    "macOS/Rust 1.88.0"
+  ],
+  "supersededCi": {
+    "url": "https://github.com/law-of-japan/loj-validator/actions/runs/42235102010",
+    "conclusion": "cancelled",
+    "reason": "Superseded by ASCII HTML fix push; Windows build cancelled, other three jobs succeeded."
+  }
 }

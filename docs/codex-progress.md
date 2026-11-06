@@ -20,7 +20,13 @@ Codex内で判断を完結し、旧handoffの承認待ちを再質問しない�
 - B案実装は1a53cf48884d1e9961830b494e15aa51684ceea9へcommit/push済み。
   追加レビューでHTML終了タグのUnicode case-foldによる誤認を発見。CommonMarkのASCII比較に限定し、
   `</ſcript>`を拒否する独立入力を既存HTML回帰へ追加した。仕様の問題ではなく実装の不具合。
-- 次: ASCII比較修正をcommit/pushし、更新validatorのCI4ジョブを追跡して結果を保存する。
+- ASCII比較修正4599a6971975ae5ce4e254b1786ae964c6bdb79cをcommit/push済み。
+  最終CI 42235465039は4ジョブ成功。各ログで62テスト・正式104ケースのランナー成功を確認。
+  Windows/Linux/macOSはRust1.99.1、Linux MSRVは1.88.0。要求matrixに未実行はない。
+  Windows/macOSのMSRV組合せは対象外で未実行。前run42235102010は新pushでcancelled、成功扱いしない。
+- CI証跡はreports/validator-ci.jsonとreports/spec-ci.json、集計はreview-verification.json。
+  結果を記録する文書だけの後続commitはローカル保存し、不要なCI再起動はしない。
+- 今回の作業は完了。次はユーザーの明示承認がある場合だけPR/merge等の統合へ進む。
 - #1カバレッジ課題はOpen。#2は承認・実装済みだが統合前でOpen。Issueの投稿/closeはしていない。
 - 継続fuzzing、ピークメモリ、同時ファイル差替え、旧ベンチマーク再測定は未実施。
 

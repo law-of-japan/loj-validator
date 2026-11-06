@@ -36,7 +36,11 @@ Windowsリンク検証は許可された通常ホスト権限で実行。sandbox
 
 初期実装 `5a71b00` は[CI](https://github.com/law-of-japan/loj-validator/actions/runs/42232317522)で
 Windows/Linux/macOS stableとLinux Rust 1.88.0の4ジョブすべて成功。
-B案対応後のvalidator CIはcommit/push後に確認する（現時点で未実行）。
+B案・ASCII終了タグ修正後 `4599a6971975ae5ce4e254b1786ae964c6bdb79c` は[最終CI](https://github.com/law-of-japan/loj-validator/actions/runs/42235465039)の4ジョブすべて成功。
+各ジョブログで62テストと正式適合ランナー成功を確認。stable実測はRust 1.99.1、MSRVは1.88.0。
+[commit・ジョブ別証跡](validator-ci.json)。要求された3 OS stable＋Linux MSRVに未実行はない。
+Windows/macOSでのMSRV組合せはCI対象外で未実行。全プラットフォーム間のJSON全量比較は今回は行っていない。
+直前run 42235102010は追加修正pushによりWindows build中にcancelled。成功としては数えず、最終runで全件再実行した。
 仕様側B案は[CI](https://github.com/law-of-japan/loj-spec/actions/runs/42234173859)成功。
 旧Dockerログlinux-msrv/stableおよび対応JSONは旧74ケース・60関数の履歴証跡であり、今回の104ケースとは別。
 

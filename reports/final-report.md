@@ -22,7 +22,10 @@ T058のErrorは未対応versionという規範上の期待された拒否であ�
 [詳細・全ケース](v1alpha1-conformance.md)、[集計](review-verification.json)。
 
 初期実装の3 OS stable/Linux MSRV CIと、B案仕様側CIは成功。
-更新validatorのCIはcommit/push後に結果を追記する。
+最終コード `4599a6971975ae5ce4e254b1786ae964c6bdb79c` は[CI](https://github.com/law-of-japan/loj-validator/actions/runs/42235465039)の4ジョブすべて成功。
+各環境で62テストと正式104ケースを検証。Windows/macOSのMSRV組合せは対象外で未実行。
+仕様commit6295fd7、validator実装1a53cf4と追加修正4599a69はCI用ブランチへpush済み。
+CI結果の記録は後続のローカル文書commitに保存する。
 
 ## 未解決・境界
 
