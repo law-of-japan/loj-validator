@@ -142,3 +142,13 @@ cargo clippy --workspace --all-targets --locked -- -D warnings
 
 
 今回の実装・レビュー・試験結果は [検証記録](docs/validation.md) を参照。
+
+## CI
+
+GitHub Actionsはpush・pull request・手動実行で起動する。
+
+- Linux / Windows / macOSのstable Rustでビルド・全試験。
+- LinuxのRust 1.88.0で最小対応版のビルド・全試験。
+- Linuxのstable Rustで整形とClippy（警告をエラー扱い）。
+
+すべてCargo.lockを使う。ActionはコミットSHAに固定し、権限はcontents: readのみ。公開・配布処理は含まない。
