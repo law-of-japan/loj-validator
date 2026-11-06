@@ -1,0 +1,25 @@
+{
+  "platform": "Windows-10-10.0.26300-SP0",
+  "build": "debug",
+  "runsPerSize": 1,
+  "results": [
+    {
+      "articles": 100,
+      "inputBytes": 8392,
+      "jsonBytes": 147528,
+      "secondsIncludingProcessAndJson": 0.0382
+    },
+    {
+      "articles": 1000,
+      "inputBytes": 84893,
+      "jsonBytes": 1483850,
+      "secondsIncludingProcessAndJson": 0.1176
+    },
+    {
+      "articles": 5000,
+      "inputBytes": 428893,
+      "jsonBytes": 7502093,
+      "secondsIncludingProcessAndJson": 0.529
+    }
+  ]
+}

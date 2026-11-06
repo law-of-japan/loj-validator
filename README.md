@@ -7,6 +7,58 @@
 
 状態: 初期実装。crates.ioへは公開しない（全crateが `publish = false`）。
 
+## loj-spec v1alpha1（Manifest形式）
+
+`law.yaml`と列挙されたMarkdownを、固定仕様commit
+`b2356c6f113f3a02a1a790dc5cf3813d82cf3fe0`のL0/L1で検証します。
+
+```sh
+loj-validator check .
+loj-validator check law.yaml --level L0
+loj-validator check . --level L1 --format json --strict
+loj-validator check path/to/manifest.yaml --profile v1alpha1
+loj-validator check legacy.md --profile legacy --structure-schema schemas/law-of-japan.structure.yaml
+```
+
+ディレクトリまたは`law.yaml`は新形式を自動選択します。既定はL1。
+`--profile v1alpha1`で明示選択できます。新形式では法令IDと構造をManifestから取得するため、
+`--law-id`と`--structure-schema`は併用できません。既存のプロファイルJSON指定と旧APIは維持しています。
+以下の従来の「使い方」はlegacy形式の説明です。
+
+| 新形式の状態 | 終了コード | 意味 |
+|---|---:|---|
+| Passed | 0 | 指定レベルの検査に違反なし |
+| Failed | 1 | 仕様違反を検出 |
+| Error | 2 | 読込不能・未対応version等 |
+| Incomplete | 3 | 入力サイズ等の実装上限、または仕様判断待ちにより検査未完了 |
+
+`--strict`の有無によらずIncompleteは非ゼロです。引数エラーは従来のエラー形式・終了コード2です。
+JSONの`ast`はL1合格時のみ完全な規範ASTを返し、L0または不合格時はnullです。
+`diagnostics[].rule`は規範要件ID、`code`は実装の診断コードです。例えば`DISP-01`は表示番号の不整合です。
+`file`と`span.start/end`は元ファイルのUTF-8バイト半開区間で、日本語・絵文字・CRLFを含めて数えます。
+`sources`は元入力、`sourceMap`はIDごとのノード位置列、`positions`はノード位置と本文片の対応です。
+失敗時の位置は回復過程の情報であり、完全ASTの存在を示しません。
+
+複数ファイルの附属資料は、MAN-03の開始条件・ブロック完結条件が
+[仕様確認中（#2）](https://github.com/law-of-japan/loj-spec/issues/2)のため、L1では
+`Incomplete`・終了3・`ast: null`となります。診断コードは
+`loj/v1alpha1/specification-pending`です。L0検査は可能です。
+これは仕様違反の確定判定ではなく、判断待ちの実装上の制限です。
+
+入力は正常・不正の別なく16 MiB/ファイル、law.yamlを含む128 MiB総量で制限します。
+読込前にサイズを確認し、ストリーム読込にも残量上限を適用します。
+ファイル伸長の検出には最大1バイトの先読みを許し、超過入力を保持せず読込を停止します。
+保持する元入力バイト量の上限であり、JSONやASTを含むプロセスメモリの上限ではありません。
+
+正式適合データはライセンス・commit・SHA-256一覧とともに`vendor/loj-spec`へ固定し、
+`cargo test --workspace --locked`で全正式ケースを検査します。
+個別実行は`cargo test -p law-semantic --test v1alpha1_conformance --locked`です。
+`LOJ_CONFORMANCE_REPORT`に絶対パスを設定すると、ケース別JSON結果を保存します。
+
+[設計と制限](docs/v1alpha1-implementation.md)、[適合結果](reports/v1alpha1-conformance.md)、
+[仕様フィードバック](reports/spec-feedback.md)を参照してください。
+固定テストの成功は、未知の全入力への完全適合や法的正確性の証明ではありません。
+
 ## 使い方
 
 ```powershell
@@ -138,7 +190,7 @@ cargo clippy --workspace --all-targets --locked -- -D warnings
 
 ### ビルド環境と抽出状態
 
-依存関係の宣言に合わせ、必要なRust版は1.88以上とする。今回の動作確認はRust 1.99.1で行った（1.88そのものの実行試験は未実施）。Cargo.lockを使用する。mapping_completeはマッピング診断にerrorがないことを表し、意味ASTのスキーマ適合や参照検証完了とは別の状態である。スキーマ不適合でも、既に得られたマッピング診断を消さずに返す。
+依存関係の宣言に合わせ、必要なRust版は1.88以上とする。動作確認はWindows/LinuxのRust 1.99.1とLinuxのRust 1.88.0で行った。macOSは未実行。Cargo.lockを使用する。mapping_completeはマッピング診断にerrorがないことを表し、意味ASTのスキーマ適合や参照検証完了とは別の状態である。スキーマ不適合でも、既に得られたマッピング診断を消さずに返す。
 
 
 今回の実装・レビュー・試験結果は [検証記録](docs/validation.md) を参照。
@@ -152,3 +204,7 @@ GitHub Actionsはpush・pull request・手動実行で起動する。
 - Linuxのstable Rustで整形とClippy（警告をエラー扱い）。
 
 すべてCargo.lockを使う。ActionはコミットSHAに固定し、権限はcontents: readのみ。公開・配布処理は含まない。
+
+## 継続作業
+
+採用した作業方針は[引き継ぎ](docs/codex-handoff.md)、最新状態と承認境界は[作業記録](docs/codex-progress.md)を参照。

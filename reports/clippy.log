@@ -1,0 +1,45 @@
+    Checking law-semantic v0.1.0 (E:\Users\pinfo\Documents\repositories\law-of-japan\loj-validator\crates\law-semantic)
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\E:\Users\pinfo\Documents\repositories\law-of-japan\loj-validator\target\debug\incremental\law_semantic-1yffrkbxkqtkw\s-hnwrye5tw9-150yaau-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\E:\Users\pinfo\Documents\repositories\law-of-japan\loj-validator\target\debug\incremental\law_semantic-3v7x4vrqop5mq\s-hnwrye5s3k-1mbaae0-working`
+
+warning: `law-semantic` (lib test) generated 1 warning
+warning: `law-semantic` (lib) generated 1 warning
+    Checking loj-validator v0.1.0 (E:\Users\pinfo\Documents\repositories\law-of-japan\loj-validator\crates\loj-validator)
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\E:\Users\pinfo\Documents\repositories\law-of-japan\loj-validator\target\debug\incremental\v1alpha1_adversarial-0wafkolxw30bn\s-hnwryeaaut-1ko49co-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\E:\Users\pinfo\Documents\repositories\law-of-japan\loj-validator\target\debug\incremental\loj_validator-1p30c3gx9jlbi\s-hnwryea8k8-0nt25px-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\E:\Users\pinfo\Documents\repositories\law-of-japan\loj-validator\target\debug\incremental\semantic_cases-35imkh8qvi83q\s-hnwryeafst-1n46jf1-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\E:\Users\pinfo\Documents\repositories\law-of-japan\loj-validator\target\debug\incremental\mapping_boundaries-0a70enpo98q8g\s-hnwryeadmz-14q6v3e-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\E:\Users\pinfo\Documents\repositories\law-of-japan\loj-validator\target\debug\incremental\loj_validator-2yxdqnw6ob4qk\s-hnwryeal04-1hav6ko-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\E:\Users\pinfo\Documents\repositories\law-of-japan\loj-validator\target\debug\incremental\v1alpha1_conformance-0huzsnbl4zsqv\s-hnwryeaq7c-0xlg0w0-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\E:\Users\pinfo\Documents\repositories\law-of-japan\loj-validator\target\debug\incremental\api-0t6ybbsb55po5\s-hnwryeasbx-0mvuen8-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\E:\Users\pinfo\Documents\repositories\law-of-japan\loj-validator\target\debug\incremental\references-1k94w4r7ghqmv\s-hnwryeawon-0lg9ici-working`
+
+warning: `law-semantic` (test "mapping_boundaries") generated 1 warning
+warning: `law-semantic` (test "semantic_cases") generated 1 warning
+warning: `law-semantic` (test "api") generated 1 warning
+warning: `law-semantic` (test "v1alpha1_adversarial") generated 1 warning
+warning: `law-semantic` (test "references") generated 1 warning
+warning: `law-semantic` (test "v1alpha1_conformance") generated 1 warning
+warning: `loj-validator` (lib) generated 1 warning
+warning: `loj-validator` (lib test) generated 1 warning
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\E:\Users\pinfo\Documents\repositories\law-of-japan\loj-validator\target\debug\incremental\loj_validator-1zh5l19qkihmk\s-hnwryefr8t-0plaxud-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\E:\Users\pinfo\Documents\repositories\law-of-japan\loj-validator\target\debug\incremental\loj_validator-0xi7eytn43rza\s-hnwryefs5o-1ehtmbk-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\E:\Users\pinfo\Documents\repositories\law-of-japan\loj-validator\target\debug\incremental\cli-0m5yu50iyt10m\s-hnwryefunv-0n9ragj-working`
+
+warning: hard linking files in the incremental compilation cache failed. copying files instead. consider moving the cache directory to a file system which supports hard linking in session dir `\\?\E:\Users\pinfo\Documents\repositories\law-of-japan\loj-validator\target\debug\incremental\v1alpha1_cli-3k483o2kysc8r\s-hnwryefxcw-0hflrdh-working`
+
+warning: `loj-validator` (test "v1alpha1_cli") generated 1 warning
+warning: `loj-validator` (bin "loj-validator" test) generated 1 warning
+warning: `loj-validator` (bin "loj-validator") generated 1 warning
+warning: `loj-validator` (test "cli") generated 1 warning
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.85s

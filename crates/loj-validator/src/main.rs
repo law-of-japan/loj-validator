@@ -11,7 +11,10 @@ const USAGE: &str = "usage: loj-validator check INPUT.md --structure-schema PATH
   --law-id ID              semantic law identity (default: \"law\")
   --format json|text       output format (default: text)
 
-exit codes: 0 both layers passed, 1 validation failure, 2 tool/configuration error";
+v1alpha1: loj-validator check DIR|law.yaml [--profile v1alpha1] [--level L0|L1]
+          [--format json|text] [--strict]
+Legacy default profile may also be selected with --profile legacy.
+exit codes: 0 passed, 1 validation failure, 2 tool/configuration error, 3 incomplete";
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Format {
@@ -21,10 +24,12 @@ enum Format {
 
 struct Args {
     input: PathBuf,
-    structure_schema: PathBuf,
+    structure_schema: Option<PathBuf>,
     profile: Option<PathBuf>,
     law_id: String,
     format: Format,
+    level: law_semantic::v1alpha1::Level,
+    v1alpha1: bool,
 }
 
 enum Parsed {
@@ -58,10 +63,19 @@ fn parse(args: &[String]) -> Result<Parsed, String> {
     let mut profile = None;
     let mut law_id = None;
     let mut format = None;
+    let mut level = None;
+    let mut strict = false;
     let mut rest = args[1..].iter();
     while let Some(arg) = rest.next() {
         if arg == "-h" || arg == "--help" {
             return Ok(Parsed::Help);
+        }
+        if arg == "--strict" {
+            if strict {
+                return Err("--strict given more than once".into());
+            }
+            strict = true;
+            continue;
         }
         let (name, inline) = match arg.split_once('=') {
             Some((n, v)) if n.starts_with("--") => (n, Some(v.to_string())),
@@ -84,6 +98,14 @@ fn parse(args: &[String]) -> Result<Parsed, String> {
             "--structure-schema" => structure_schema.replace(PathBuf::from(&value)).is_some(),
             "--profile" => profile.replace(PathBuf::from(&value)).is_some(),
             "--law-id" => law_id.replace(value.clone()).is_some(),
+            "--level" => {
+                let value = match value.as_str() {
+                    "L0" => law_semantic::v1alpha1::Level::L0,
+                    "L1" => law_semantic::v1alpha1::Level::L1,
+                    _ => return Err("--level must be L0 or L1".into()),
+                };
+                level.replace(value).is_some()
+            }
             "--format" => {
                 let f = match value.as_str() {
                     "json" => Format::Json,
@@ -102,16 +124,35 @@ fn parse(args: &[String]) -> Result<Parsed, String> {
             return Err(format!("{name} given more than once"));
         }
     }
+    let input = input.ok_or("missing INPUT.md or repository")?;
+    let profile_name = profile.as_deref().and_then(|p| p.to_str());
+    let v1alpha1 = profile_name == Some("v1alpha1")
+        || (profile.is_none()
+            && (input.is_dir() || input.file_name().is_some_and(|p| p == "law.yaml")));
+    if v1alpha1 && (structure_schema.is_some() || law_id.is_some()) {
+        return Err("v1alpha1 gets schema and law identity from law.yaml".into());
+    }
+    if !v1alpha1 && (level.is_some() || strict) {
+        return Err("--level and --strict require v1alpha1".into());
+    }
+    if !v1alpha1 && structure_schema.is_none() {
+        return Err("missing --structure-schema PATH".into());
+    }
+    if matches!(profile_name, Some("legacy" | "v1alpha1")) {
+        profile = None;
+    }
     let law_id = law_id.unwrap_or_else(|| DEFAULT_LAW_ID.into());
     if law_id.is_empty() {
         return Err("--law-id must not be empty".into());
     }
     Ok(Parsed::Check(Args {
-        input: input.ok_or("missing INPUT.md")?,
-        structure_schema: structure_schema.ok_or("missing --structure-schema PATH")?,
+        input,
+        structure_schema,
         profile,
         law_id,
         format: format.unwrap_or(Format::Text),
+        level: level.unwrap_or(law_semantic::v1alpha1::Level::L1),
+        v1alpha1,
     }))
 }
 
@@ -153,9 +194,40 @@ fn main() {
         }
         Parsed::Check(args) => args,
     };
+    if args.v1alpha1 {
+        let report = std::panic::catch_unwind(|| law_semantic::v1alpha1::check(&args.input, args.level))
+            .unwrap_or_else(|_| serde_json::json!({"status":"Error","exit_code":2,"complete":false,"diagnostics":[{"code":"internal","message":"validator panicked; this is a bug"}]}));
+        let output = if args.format == Format::Json {
+            serde_json::to_string_pretty(&report).unwrap()
+        } else {
+            let mut s = format!(
+                "loj/v1alpha1 {:?}: {}\n",
+                args.level,
+                report["status"].as_str().unwrap()
+            );
+            if let Some(ds) = report["diagnostics"].as_array() {
+                for d in ds {
+                    s.push_str(&format!(
+                        "{} [{}..{}] {}: {}\n",
+                        d["file"], d["span"]["start"], d["span"]["end"], d["rule"], d["message"]
+                    ));
+                }
+            }
+            s
+        };
+        let code = if writeln!(std::io::stdout().lock(), "{}", output.trim_end()).is_err() {
+            2
+        } else {
+            report["exit_code"].as_i64().unwrap_or(2) as i32
+        };
+        process::exit(code);
+    }
     let options = CheckOptions {
         input: &args.input,
-        structure_schema: &args.structure_schema,
+        structure_schema: args
+            .structure_schema
+            .as_deref()
+            .expect("legacy requires schema"),
         profile: args.profile.as_deref(),
         law_id: &args.law_id,
     };

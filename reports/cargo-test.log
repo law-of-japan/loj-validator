@@ -1,0 +1,140 @@
+   Compiling law-semantic v0.1.0 (E:\Users\pinfo\Documents\repositories\law-of-japan\loj-validator\crates\law-semantic)
+   Compiling loj-validator v0.1.0 (E:\Users\pinfo\Documents\repositories\law-of-japan\loj-validator\crates\loj-validator)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.28s
+     Running unittests src\lib.rs (target\debug\deps\law_semantic-f5b040c0b887dc9d.exe)
+
+running 10 tests
+test v1alpha1::manifest::tests::streaming_read_is_bounded_even_when_length_is_unknown_or_changes ... ok
+test number::tests::normal_forms ... ok
+test number::tests::rejects_ambiguous_or_malformed_forms ... ok
+test references::tests::fragments ... ok
+test v1alpha1::manifest::tests::partial_io_failure_still_consumes_budget ... ok
+test v1alpha1::manifest::tests::mixed_valid_and_invalid_sources_share_exact_budget ... ok
+test v1alpha1::manifest::tests::invalid_sources_consume_total_budget_before_retention ... ok
+test references::tests::basic_slugs_and_collisions ... ok
+test v1alpha1::number::tests::canonical_numbers_and_width_boundaries ... ok
+test tests::embedded_assets_parse ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests\api.rs (target\debug\deps\api-3642e24c3a96b3db.exe)
+
+running 8 tests
+test number_normalization_is_exposed ... ok
+test invalid_profiles_are_errors_not_panics ... ok
+test permissive_schema_does_not_reach_relational_checks ... ok
+test checked_entry_points_reject_non_conforming_input ... ok
+test optional_capture_groups_do_not_panic ... ok
+test bare_profile_maps_unmarked_paragraphs_and_items ... ok
+test resolve_replaces_local_reference_diagnostics ... ok
+test merge_combines_files_of_one_law ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+     Running tests\mapping_boundaries.rs (target\debug\deps\mapping_boundaries-c5ab6e0ba93de8fd.exe)
+
+running 2 tests
+test origins_point_at_source_bytes ... ok
+test mapping_boundaries ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.28s
+
+     Running tests\references.rs (target\debug\deps\references-6ea6336c22ebc969.exe)
+
+running 2 tests
+test supplied_resolution_flags_are_not_trusted ... ok
+test references_in_two_markdown_forms ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.57s
+
+     Running tests\semantic_cases.rs (target\debug\deps\semantic_cases-36d90588a3eef077.exe)
+
+running 1 test
+test semantic_ast_cases ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s
+
+     Running tests\v1alpha1_adversarial.rs (target\debug\deps\v1alpha1_adversarial-3e0b90a0d072eee7.exe)
+
+running 17 tests
+test resource_limit_is_incomplete_not_passed ... ok
+test heading_reference_definitions_do_not_cross_files ... ok
+test invalid_unicode_bom_nul_and_cr_are_rejected ... ok
+test l0_accepts_structure_independently_and_unsupported_features ... ok
+test utf8_crlf_diagnostic_and_lossless_text_positions ... ok
+test split_files_preserve_ast_and_ids_but_not_article_state ... ok
+test yaml_keys_tags_aliases_documents_and_scalars ... ok
+test appendix_pending_keeps_violations_and_io_errors_visible ... ok
+test windows_hardlinks_and_junctions_are_rejected ... ok
+test appendix_split_is_specification_pending ... ok
+test paths_are_portable_and_scope_order_is_checked ... ok
+test caption_trailing_whitespace_is_rejected ... ok
+test recovery_positions_and_multibyte_eof_do_not_panic ... ok
+test invalid_documents_stop_at_total_input_limit ... ok
+test subsequent_main_and_supplement_files_require_structural_start ... ok
+test heading_punctuation_is_text_unless_commonmark_parses_markup ... ok
+test commonmark_regions_and_strict_heading_and_markers ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.23s
+
+     Running tests\v1alpha1_conformance.rs (target\debug\deps\v1alpha1_conformance-75869122f1330d5d.exe)
+
+running 3 tests
+test unknown_version_requires_expected_error_cause ... ok
+test negative_outcomes_reject_incomplete_and_unexpected_errors ... ok
+test official_conformance ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.65s
+
+     Running unittests src\lib.rs (target\debug\deps\loj_validator-dc52699890aebd65.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\main.rs (target\debug\deps\loj_validator-3b11cf8d8a158879.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\cli.rs (target\debug\deps\cli-4c50eac84b04e70f.exe)
+
+running 15 tests
+test unreadable_input_is_a_tool_error ... ok
+test usage_errors_exit_2 ... ok
+test broken_structure_schemas_are_config_errors ... ok
+test both_layers_report_their_own_failures ... ok
+test raw_heading_levels_are_checked_by_semantic_layer ... ok
+test schema_failure_keeps_mapping_findings ... ok
+test law_id_option_sets_semantic_identity ... ok
+test chaptered_example_maps_expected_nodes ... ok
+test structure_failure_does_not_skip_semantic_layer ... ok
+test explicit_profile_file_is_used ... ok
+test semantic_diagnostics_keep_source_spans ... ok
+test out_of_scope_references_are_visible_not_passed ... ok
+test semantic_failures_are_caught_when_structure_is_permissive ... ok
+test examples_pass_both_layers ... ok
+test broken_profiles_are_config_errors ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.71s
+
+     Running tests\v1alpha1_cli.rs (target\debug\deps\v1alpha1_cli-0dfcf7115c13cf2a.exe)
+
+running 2 tests
+test repository_and_manifest_selection_and_levels ... ok
+test configuration_errors_remain_json_and_legacy_is_compatible ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.61s
+
+   Doc-tests law_semantic
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests loj_validator
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

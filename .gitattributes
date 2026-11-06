@@ -1,1 +1,3 @@
 * text=auto eol=lf
+# Fixed conformance byte ranges include LF, CRLF, BOM and bare CR specimens.
+/vendor/loj-spec/** -text -whitespace

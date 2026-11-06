@@ -1,0 +1,61 @@
+{
+  "dateJST": "2026-11-06",
+  "rustTestsPassed": 60,
+  "rustTestsFailed": 0,
+  "formalCasesPassed": 74,
+  "formalCasesFailed": 0,
+  "formalCasesPending": 0,
+  "informativeCasesNotExecuted": [
+    "T026"
+  ],
+  "formalValidatorStatuses": {
+    "Passed": 31,
+    "Failed": 42,
+    "Error": 1,
+    "Incomplete": 0
+  },
+  "successfulTextPositionsVerified": 65,
+  "vendoredFilesMatchedToSpec": 243,
+  "pendingSpecificationIssue": "https://github.com/law-of-japan/loj-spec/issues/2",
+  "unexecutedEnvironments": [
+    "macOS/stable"
+  ],
+  "platformResults": {
+    "windows": {
+      "rustTestsPassed": 60,
+      "formalCasesPassed": 74,
+      "validatorStatuses": {
+        "Passed": 31,
+        "Failed": 42,
+        "Error": 1,
+        "Incomplete": 0
+      },
+      "identicalToWindowsReport": true
+    },
+    "linux-msrv": {
+      "rustTestsPassed": 60,
+      "formalCasesPassed": 74,
+      "validatorStatuses": {
+        "Passed": 31,
+        "Failed": 42,
+        "Error": 1,
+        "Incomplete": 0
+      },
+      "identicalToWindowsReport": true,
+      "toolchain": "rustc 1.88.0 (6b00bc388 2025-06-23)"
+    },
+    "linux-stable": {
+      "rustTestsPassed": 60,
+      "formalCasesPassed": 74,
+      "validatorStatuses": {
+        "Passed": 31,
+        "Failed": 42,
+        "Error": 1,
+        "Incomplete": 0
+      },
+      "identicalToWindowsReport": true,
+      "toolchain": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+    }
+  },
+  "linuxContainerImage": "rust@sha256:af306cfa71d987911a781c37b59d7d67d934f49684058f96cf72079c3626bfe0"
+}
