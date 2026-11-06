@@ -1,0 +1,2194 @@
+{
+  "specCommit": "6295fd7769a09eeb0da56bcc6ff8c404ec391db6",
+  "formalInputs": 104,
+  "executions": 208,
+  "results": [
+    {
+      "id": "T001",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T002",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T003",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T004",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T005",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T006",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "DIR-02"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T007",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "DIR-02",
+            "HEAD-04",
+            "MD-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T008",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "AST-02",
+            "DIR-02"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T009",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T010",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "DISP-01"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T011",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T012",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T013",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "DIR-01",
+            "DIR-02",
+            "HEAD-04",
+            "MD-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T014",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "DIR-01",
+            "DIR-02",
+            "HEAD-04",
+            "MD-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T015",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "DIR-01",
+            "DIR-02",
+            "HEAD-04",
+            "MD-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T016",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T017",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T018",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T019",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T020",
+      "declaredLevel": "L0",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-01"
+          ],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-01"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T021",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T022",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "AST-01",
+            "DIR-02",
+            "MD-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T023",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "HEAD-04",
+            "MD-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T024",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T025",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T027",
+      "declaredLevel": "L0",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "BASIC-02"
+          ],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "AST-01",
+            "BASIC-02"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T028",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "DIR-02"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T029",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "DIR-02"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T030",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "DIR-01",
+            "DIR-02",
+            "HEAD-04",
+            "MD-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T031",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "DIR-01",
+            "DIR-02",
+            "HEAD-04",
+            "MD-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T032",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "DIR-01",
+            "DIR-02",
+            "HEAD-04",
+            "MD-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T033",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "DIR-02"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T034",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T035",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T036",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "HEAD-01"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T037",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T038",
+      "declaredLevel": "L0",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-02"
+          ],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "AST-01",
+            "MAN-02"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T039",
+      "declaredLevel": "L0",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-02"
+          ],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-02"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T040",
+      "declaredLevel": "L0",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-03"
+          ],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "AST-01",
+            "MAN-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T041",
+      "declaredLevel": "L0",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-01"
+          ],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-01"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T042",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "BASIC-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T043",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "DIR-02",
+            "MAN-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T044",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "AST-01",
+            "DIR-02",
+            "HEAD-01",
+            "MD-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T045",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T046",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "DIR-01",
+            "DIR-02",
+            "HEAD-04",
+            "MD-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T047",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "DIR-01",
+            "DIR-02",
+            "HEAD-04",
+            "MD-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T048",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T049",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "AST-01",
+            "DIR-02",
+            "MD-03",
+            "NUM-01"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T050",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "AST-02",
+            "DIR-02",
+            "HEAD-02"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T051",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T052",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T053",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T054",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T055",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "DIR-01",
+            "DIR-02",
+            "HEAD-04",
+            "MD-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T056",
+      "declaredLevel": "L0",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "BASIC-02"
+          ],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "AST-01",
+            "BASIC-02"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T057",
+      "declaredLevel": "L0",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "BASIC-02"
+          ],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "AST-01",
+            "BASIC-02"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T058",
+      "declaredLevel": "L0",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Error",
+          "exit": 2,
+          "rules": [
+            "BASIC-01"
+          ],
+          "complete": false
+        },
+        "L1": {
+          "status": "Error",
+          "exit": 2,
+          "rules": [
+            "BASIC-01"
+          ],
+          "complete": false
+        }
+      }
+    },
+    {
+      "id": "T059",
+      "declaredLevel": "L0",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-01"
+          ],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-01"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T060",
+      "declaredLevel": "L0",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-03"
+          ],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T061",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T062",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T063",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T064",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T065",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T066",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "HEAD-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T067",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "HEAD-04"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T068",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "AST-01",
+            "DIR-02",
+            "MD-03",
+            "NUM-01"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T069",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "DIR-01",
+            "DIR-02",
+            "HEAD-04",
+            "MD-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T070",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "DIR-01",
+            "DIR-02"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T071",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "DIR-02",
+            "HEAD-04",
+            "MD-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T072",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "AST-02",
+            "HEAD-02"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T073",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T074",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "DISP-01"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T075",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T076",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T077",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T078",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T079",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T080",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T081",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T082",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T083",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T084",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T085",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T086",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T087",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T088",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T089",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T090",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T091",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T092",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T093",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T094",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T095",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T096",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T097",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T098",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T099",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T100",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "HEAD-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T101",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T102",
+      "declaredLevel": "L1",
+      "expectedSuccess": false,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Failed",
+          "exit": 1,
+          "rules": [
+            "MAN-03"
+          ],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T103",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T104",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    },
+    {
+      "id": "T105",
+      "declaredLevel": "L1",
+      "expectedSuccess": true,
+      "runs": {
+        "L0": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        },
+        "L1": {
+          "status": "Passed",
+          "exit": 0,
+          "rules": [],
+          "complete": true
+        }
+      }
+    }
+  ],
+  "validatorCommit": "9b8ea1f7dbd495063d58ddbb509ace16051234ac",
+  "command": "target/debug/loj-validator.exe check <case.input> --level <L0|L1> --format json",
+  "unsupportedLevelProbes": [
+    {
+      "level": "L2",
+      "exit": 2
+    },
+    {
+      "level": "L3",
+      "exit": 2
+    },
+    {
+      "level": "L4",
+      "exit": 2
+    }
+  ],
+  "l1PassImpliesL0Pass": true,
+  "interpretation": "Cross-level observations only; each conformance level is independent. l1PassImpliesL0Pass records this sample, not a guarantee or required contract."
+}

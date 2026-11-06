@@ -1,0 +1,178 @@
+{
+  "ast": {
+    "schemaVersion": "loj/v1alpha1",
+    "law": {
+      "id": "20990101-act-1",
+      "title": "架空雲保管法（実在しないサンプル）",
+      "type": "act",
+      "number": "架空法律第一号",
+      "promulgatedAt": "2099-01-01",
+      "language": "ja"
+    },
+    "root": {
+      "kind": "Law",
+      "number": null,
+      "display": "架空雲保管法（実在しないサンプル）",
+      "content": [
+        {
+          "kind": "MainProvision",
+          "number": null,
+          "display": "",
+          "content": [
+            {
+              "kind": "Chapter",
+              "number": "1",
+              "display": "第一章　総則",
+              "content": [
+                {
+                  "kind": "Article",
+                  "number": "1",
+                  "display": "第一条（目的）",
+                  "content": [
+                    {
+                      "kind": "Paragraph",
+                      "number": "1",
+                      "display": "",
+                      "content": [
+                        {
+                          "text": "この架空法は雲の保管を演習する。\n"
+                        }
+                      ],
+                      "id": "20990101-act-1/main/article/1/paragraph/1"
+                    }
+                  ],
+                  "status": "active",
+                  "id": "20990101-act-1/main/article/1"
+                },
+                {
+                  "kind": "Article",
+                  "number": "2",
+                  "display": "第二条（分類）",
+                  "content": [
+                    {
+                      "kind": "Paragraph",
+                      "number": "1",
+                      "display": "",
+                      "content": [
+                        {
+                          "text": "雲は次のとおりとする。\n"
+                        },
+                        {
+                          "kind": "Item",
+                          "number": "1",
+                          "display": "一",
+                          "content": [
+                            {
+                              "text": "一　青い雲。\n"
+                            },
+                            {
+                              "kind": "Subitem",
+                              "number": "1",
+                              "display": "1",
+                              "content": [
+                                {
+                                  "text": "1　淡い青。\n"
+                                }
+                              ],
+                              "level": 1,
+                              "id": "20990101-act-1/main/article/2/paragraph/1/item/1/subitem/1/1"
+                            }
+                          ],
+                          "id": "20990101-act-1/main/article/2/paragraph/1/item/1"
+                        },
+                        {
+                          "kind": "Item",
+                          "number": "2",
+                          "display": "二",
+                          "content": [
+                            {
+                              "text": "二　白い雲。\n"
+                            }
+                          ],
+                          "id": "20990101-act-1/main/article/2/paragraph/1/item/2"
+                        }
+                      ],
+                      "id": "20990101-act-1/main/article/2/paragraph/1"
+                    },
+                    {
+                      "kind": "Paragraph",
+                      "number": "2",
+                      "display": "2",
+                      "content": [
+                        {
+                          "text": "2　分類は架空である。\n"
+                        }
+                      ],
+                      "id": "20990101-act-1/main/article/2/paragraph/2"
+                    }
+                  ],
+                  "status": "active",
+                  "id": "20990101-act-1/main/article/2"
+                }
+              ],
+              "id": "20990101-act-1/main/chapter/1"
+            },
+            {
+              "kind": "Chapter",
+              "number": "2",
+              "display": "第二章　保管",
+              "content": [
+                {
+                  "kind": "Article",
+                  "number": "3",
+                  "display": "第三条（保管）",
+                  "content": [
+                    {
+                      "kind": "Paragraph",
+                      "number": "1",
+                      "display": "",
+                      "content": [
+                        {
+                          "text": "[第二条](loj:main/article/2)の雲を空想の箱に保管する。\n"
+                        }
+                      ],
+                      "id": "20990101-act-1/main/article/3/paragraph/1"
+                    }
+                  ],
+                  "status": "active",
+                  "id": "20990101-act-1/main/article/3"
+                }
+              ],
+              "id": "20990101-act-1/main/chapter/2"
+            }
+          ],
+          "id": "20990101-act-1/main"
+        },
+        {
+          "kind": "SupplementaryProvision",
+          "number": null,
+          "display": "附則",
+          "content": [
+            {
+              "kind": "Article",
+              "number": "1",
+              "display": "第一条（演習）",
+              "content": [
+                {
+                  "kind": "Paragraph",
+                  "number": "1",
+                  "display": "",
+                  "content": [
+                    {
+                      "text": "このサンプルは現実の権利義務を定めない。\n"
+                    }
+                  ],
+                  "id": "20990101-act-1/supplement/original/article/1/paragraph/1"
+                }
+              ],
+              "status": "active",
+              "id": "20990101-act-1/supplement/original/article/1"
+            }
+          ],
+          "id": "20990101-act-1/supplement/original"
+        }
+      ],
+      "id": "20990101-act-1"
+    }
+  }
+}

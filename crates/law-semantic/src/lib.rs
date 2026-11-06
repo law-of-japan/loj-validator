@@ -16,6 +16,7 @@
 pub mod mapping;
 pub mod number;
 pub mod references;
+pub mod v1alpha1;
 pub mod validation;
 
 use serde_json::Value;

@@ -1,0 +1,428 @@
+{
+  "conclusion": "success",
+  "headSha": "4599a6971975ae5ce4e254b1786ae964c6bdb79c",
+  "jobs": [
+    {
+      "completedAt": "2026-11-06T14:38:06Z",
+      "conclusion": "success",
+      "databaseId": 127951918049,
+      "name": "Rust stable / macos-latest",
+      "startedAt": "2026-11-06T14:37:01Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T14:37:03Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T14:37:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:06Z",
+          "conclusion": "success",
+          "name": "Check out source",
+          "number": 2,
+          "startedAt": "2026-11-06T14:37:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:08Z",
+          "conclusion": "success",
+          "name": "Install Rust",
+          "number": 3,
+          "startedAt": "2026-11-06T14:37:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:08Z",
+          "conclusion": "success",
+          "name": "Toolchain versions",
+          "number": 4,
+          "startedAt": "2026-11-06T14:37:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:08Z",
+          "conclusion": "skipped",
+          "name": "Check formatting",
+          "number": 5,
+          "startedAt": "2026-11-06T14:37:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:42Z",
+          "conclusion": "success",
+          "name": "Build",
+          "number": 6,
+          "startedAt": "2026-11-06T14:37:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:38:01Z",
+          "conclusion": "success",
+          "name": "Test",
+          "number": 7,
+          "startedAt": "2026-11-06T14:37:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:38:03Z",
+          "conclusion": "success",
+          "name": "Formal v1alpha1 conformance (pinned vendored specification)",
+          "number": 8,
+          "startedAt": "2026-11-06T14:38:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:38:03Z",
+          "conclusion": "skipped",
+          "name": "Clippy",
+          "number": 9,
+          "startedAt": "2026-11-06T14:38:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:38:04Z",
+          "conclusion": "success",
+          "name": "Post Check out source",
+          "number": 18,
+          "startedAt": "2026-11-06T14:38:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:38:04Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 19,
+          "startedAt": "2026-11-06T14:38:04Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/law-of-japan/loj-validator/actions/runs/42235465039/job/127951918049",
+      "observedRustTestCount": 62,
+      "observedFormalRunnerPass": true,
+      "toolchainVersions": [
+        "cargo 1.99.1 (5f94df478 2026-08-27)",
+        "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+      ]
+    },
+    {
+      "completedAt": "2026-11-06T14:38:49Z",
+      "conclusion": "success",
+      "databaseId": 127951918474,
+      "name": "Rust stable / windows-latest",
+      "startedAt": "2026-11-06T14:37:01Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T14:37:02Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T14:37:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:10Z",
+          "conclusion": "success",
+          "name": "Check out source",
+          "number": 2,
+          "startedAt": "2026-11-06T14:37:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:17Z",
+          "conclusion": "success",
+          "name": "Install Rust",
+          "number": 3,
+          "startedAt": "2026-11-06T14:37:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:19Z",
+          "conclusion": "success",
+          "name": "Toolchain versions",
+          "number": 4,
+          "startedAt": "2026-11-06T14:37:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:19Z",
+          "conclusion": "skipped",
+          "name": "Check formatting",
+          "number": 5,
+          "startedAt": "2026-11-06T14:37:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:38:22Z",
+          "conclusion": "success",
+          "name": "Build",
+          "number": 6,
+          "startedAt": "2026-11-06T14:37:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:38:44Z",
+          "conclusion": "success",
+          "name": "Test",
+          "number": 7,
+          "startedAt": "2026-11-06T14:38:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:38:46Z",
+          "conclusion": "success",
+          "name": "Formal v1alpha1 conformance (pinned vendored specification)",
+          "number": 8,
+          "startedAt": "2026-11-06T14:38:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:38:46Z",
+          "conclusion": "skipped",
+          "name": "Clippy",
+          "number": 9,
+          "startedAt": "2026-11-06T14:38:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:38:48Z",
+          "conclusion": "success",
+          "name": "Post Check out source",
+          "number": 18,
+          "startedAt": "2026-11-06T14:38:46Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:38:48Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 19,
+          "startedAt": "2026-11-06T14:38:48Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/law-of-japan/loj-validator/actions/runs/42235465039/job/127951918474",
+      "observedRustTestCount": 62,
+      "observedFormalRunnerPass": true,
+      "toolchainVersions": [
+        "cargo 1.99.1 (5f94df478 2026-08-27)",
+        "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+      ]
+    },
+    {
+      "completedAt": "2026-11-06T14:37:59Z",
+      "conclusion": "success",
+      "databaseId": 127951918538,
+      "name": "Rust 1.88.0 / ubuntu-latest",
+      "startedAt": "2026-11-06T14:37:01Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T14:37:03Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T14:37:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:05Z",
+          "conclusion": "success",
+          "name": "Check out source",
+          "number": 2,
+          "startedAt": "2026-11-06T14:37:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:14Z",
+          "conclusion": "success",
+          "name": "Install Rust",
+          "number": 3,
+          "startedAt": "2026-11-06T14:37:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:14Z",
+          "conclusion": "success",
+          "name": "Toolchain versions",
+          "number": 4,
+          "startedAt": "2026-11-06T14:37:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:14Z",
+          "conclusion": "skipped",
+          "name": "Check formatting",
+          "number": 5,
+          "startedAt": "2026-11-06T14:37:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:37Z",
+          "conclusion": "success",
+          "name": "Build",
+          "number": 6,
+          "startedAt": "2026-11-06T14:37:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:55Z",
+          "conclusion": "success",
+          "name": "Test",
+          "number": 7,
+          "startedAt": "2026-11-06T14:37:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:57Z",
+          "conclusion": "success",
+          "name": "Formal v1alpha1 conformance (pinned vendored specification)",
+          "number": 8,
+          "startedAt": "2026-11-06T14:37:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:57Z",
+          "conclusion": "skipped",
+          "name": "Clippy",
+          "number": 9,
+          "startedAt": "2026-11-06T14:37:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:57Z",
+          "conclusion": "success",
+          "name": "Post Check out source",
+          "number": 18,
+          "startedAt": "2026-11-06T14:37:57Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:57Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 19,
+          "startedAt": "2026-11-06T14:37:57Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/law-of-japan/loj-validator/actions/runs/42235465039/job/127951918538",
+      "observedRustTestCount": 62,
+      "observedFormalRunnerPass": true,
+      "toolchainVersions": [
+        "cargo 1.88.0 (873a06493 2025-05-10)",
+        "rustc 1.88.0 (6b00bc388 2025-06-23)"
+      ]
+    },
+    {
+      "completedAt": "2026-11-06T14:37:52Z",
+      "conclusion": "success",
+      "databaseId": 127951918628,
+      "name": "Rust stable / ubuntu-latest",
+      "startedAt": "2026-11-06T14:37:01Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-06T14:37:02Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-06T14:37:01Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:03Z",
+          "conclusion": "success",
+          "name": "Check out source",
+          "number": 2,
+          "startedAt": "2026-11-06T14:37:02Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:04Z",
+          "conclusion": "success",
+          "name": "Install Rust",
+          "number": 3,
+          "startedAt": "2026-11-06T14:37:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:05Z",
+          "conclusion": "success",
+          "name": "Toolchain versions",
+          "number": 4,
+          "startedAt": "2026-11-06T14:37:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:06Z",
+          "conclusion": "success",
+          "name": "Check formatting",
+          "number": 5,
+          "startedAt": "2026-11-06T14:37:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:28Z",
+          "conclusion": "success",
+          "name": "Build",
+          "number": 6,
+          "startedAt": "2026-11-06T14:37:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:40Z",
+          "conclusion": "success",
+          "name": "Test",
+          "number": 7,
+          "startedAt": "2026-11-06T14:37:28Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:41Z",
+          "conclusion": "success",
+          "name": "Formal v1alpha1 conformance (pinned vendored specification)",
+          "number": 8,
+          "startedAt": "2026-11-06T14:37:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:50Z",
+          "conclusion": "success",
+          "name": "Clippy",
+          "number": 9,
+          "startedAt": "2026-11-06T14:37:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:50Z",
+          "conclusion": "success",
+          "name": "Post Check out source",
+          "number": 18,
+          "startedAt": "2026-11-06T14:37:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-06T14:37:50Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 19,
+          "startedAt": "2026-11-06T14:37:50Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/law-of-japan/loj-validator/actions/runs/42235465039/job/127951918628",
+      "observedRustTestCount": 62,
+      "observedFormalRunnerPass": true,
+      "toolchainVersions": [
+        "cargo 1.99.1 (5f94df478 2026-08-27)",
+        "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+      ]
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/law-of-japan/loj-validator/actions/runs/42235465039"
+}

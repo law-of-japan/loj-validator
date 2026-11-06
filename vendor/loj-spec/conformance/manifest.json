@@ -1,0 +1,1402 @@
+{
+  "schemaVersion": "loj/v1alpha1",
+  "cases": [
+    {
+      "id": "T001",
+      "title": "単一項",
+      "requirements": [
+        "DIR-01",
+        "DIR-02",
+        "AST-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T001/law.yaml",
+      "expected": "conformance/expected/T001.json",
+      "success": true
+    },
+    {
+      "id": "T002",
+      "title": "複数項",
+      "requirements": [
+        "DIR-02",
+        "DISP-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T002/law.yaml",
+      "expected": "conformance/expected/T002.json",
+      "success": true
+    },
+    {
+      "id": "T003",
+      "title": "複数号",
+      "requirements": [
+        "DIR-02",
+        "DISP-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T003/law.yaml",
+      "expected": "conformance/expected/T003.json",
+      "success": true
+    },
+    {
+      "id": "T004",
+      "title": "号の細分",
+      "requirements": [
+        "DIR-02",
+        "ID-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T004/law.yaml",
+      "expected": "conformance/expected/T004.json",
+      "success": true
+    },
+    {
+      "id": "T005",
+      "title": "複数段落",
+      "requirements": [
+        "MD-02",
+        "AST-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T005/law.yaml",
+      "expected": "conformance/expected/T005.json",
+      "success": true
+    },
+    {
+      "id": "T006",
+      "title": "終了不一致",
+      "requirements": [
+        "DIR-02"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T006/law.yaml",
+      "expected": "conformance/expected/T006.json",
+      "success": false
+    },
+    {
+      "id": "T007",
+      "title": "項外の号",
+      "requirements": [
+        "DIR-02"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T007/law.yaml",
+      "expected": "conformance/expected/T007.json",
+      "success": false
+    },
+    {
+      "id": "T008",
+      "title": "項番号重複",
+      "requirements": [
+        "DIR-02",
+        "AST-02"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T008/law.yaml",
+      "expected": "conformance/expected/T008.json",
+      "success": false
+    },
+    {
+      "id": "T009",
+      "title": "枝番号",
+      "requirements": [
+        "NUM-01",
+        "ID-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T009/law.yaml",
+      "expected": "conformance/expected/T009.json",
+      "success": true
+    },
+    {
+      "id": "T010",
+      "title": "表示番号不一致",
+      "requirements": [
+        "DISP-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T010/law.yaml",
+      "expected": "conformance/expected/T010.json",
+      "success": false
+    },
+    {
+      "id": "T011",
+      "title": "コード内マーカー",
+      "requirements": [
+        "MD-01",
+        "MD-02"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T011/law.yaml",
+      "expected": "conformance/expected/T011.json",
+      "success": true
+    },
+    {
+      "id": "T012",
+      "title": "通常HTMLコメント",
+      "requirements": [
+        "MD-01",
+        "MD-02"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T012/law.yaml",
+      "expected": "conformance/expected/T012.json",
+      "success": true
+    },
+    {
+      "id": "T013",
+      "title": "属性欠落",
+      "requirements": [
+        "DIR-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T013/law.yaml",
+      "expected": "conformance/expected/T013.json",
+      "success": false
+    },
+    {
+      "id": "T014",
+      "title": "属性重複",
+      "requirements": [
+        "DIR-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T014/law.yaml",
+      "expected": "conformance/expected/T014.json",
+      "success": false
+    },
+    {
+      "id": "T015",
+      "title": "未知属性",
+      "requirements": [
+        "DIR-01",
+        "BASIC-04"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T015/law.yaml",
+      "expected": "conformance/expected/T015.json",
+      "success": false
+    },
+    {
+      "id": "T016",
+      "title": "複数ファイル統合",
+      "requirements": [
+        "MAN-03",
+        "HEAD-02"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T016/law.yaml",
+      "expected": "conformance/expected/T016.json",
+      "success": true
+    },
+    {
+      "id": "T017",
+      "title": "分割前と同じASTとID",
+      "requirements": [
+        "MAN-03",
+        "ID-01",
+        "ID-02"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T017/law.yaml",
+      "expected": "conformance/expected/T017.json",
+      "success": true
+    },
+    {
+      "id": "T018",
+      "title": "日本語UTF-8位置",
+      "requirements": [
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T018/law.yaml",
+      "expected": "conformance/expected/T018.json",
+      "success": true
+    },
+    {
+      "id": "T019",
+      "title": "CRLF位置",
+      "requirements": [
+        "BASIC-02",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T019/law.yaml",
+      "expected": "conformance/expected/T019.json",
+      "success": true
+    },
+    {
+      "id": "T020",
+      "title": "Manifest未知フィールド",
+      "requirements": [
+        "MAN-01"
+      ],
+      "level": "L0",
+      "normative": true,
+      "input": "conformance/invalid/T020/law.yaml",
+      "expected": "conformance/expected/T020.json",
+      "success": false
+    },
+    {
+      "id": "T021",
+      "title": "本則と附則の番号空間",
+      "requirements": [
+        "HEAD-03",
+        "ID-01",
+        "MAN-03"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T021/law.yaml",
+      "expected": "conformance/expected/T021.json",
+      "success": true
+    },
+    {
+      "id": "T022",
+      "title": "不正Markdown見出し",
+      "requirements": [
+        "MD-03",
+        "HEAD-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T022/law.yaml",
+      "expected": "conformance/expected/T022.json",
+      "success": false
+    },
+    {
+      "id": "T023",
+      "title": "マーカーなし本文",
+      "requirements": [
+        "MD-03"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T023/law.yaml",
+      "expected": "conformance/expected/T023.json",
+      "success": false
+    },
+    {
+      "id": "T024",
+      "title": "引用リスト強調リンク",
+      "requirements": [
+        "MD-02",
+        "AST-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T024/law.yaml",
+      "expected": "conformance/expected/T024.json",
+      "success": true
+    },
+    {
+      "id": "T025",
+      "title": "不正参照もL1では原文保持",
+      "requirements": [
+        "REF-01",
+        "MD-02"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T025/law.yaml",
+      "expected": "conformance/expected/T025.json",
+      "success": true
+    },
+    {
+      "id": "T026",
+      "title": "不正参照の将来L2例",
+      "requirements": [
+        "REF-01"
+      ],
+      "level": "L2",
+      "normative": false,
+      "input": "conformance/invalid/T026/law.yaml",
+      "expected": "conformance/expected/T026.json",
+      "success": false
+    },
+    {
+      "id": "T027",
+      "title": "空ファイル",
+      "requirements": [
+        "BASIC-02"
+      ],
+      "level": "L0",
+      "normative": true,
+      "input": "conformance/invalid/T027/law.yaml",
+      "expected": "conformance/expected/T027.json",
+      "success": false
+    },
+    {
+      "id": "T028",
+      "title": "空項",
+      "requirements": [
+        "DIR-02"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T028/law.yaml",
+      "expected": "conformance/expected/T028.json",
+      "success": false
+    },
+    {
+      "id": "T029",
+      "title": "未閉鎖",
+      "requirements": [
+        "DIR-02",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T029/law.yaml",
+      "expected": "conformance/expected/T029.json",
+      "success": false
+    },
+    {
+      "id": "T030",
+      "title": "未知マーカー",
+      "requirements": [
+        "DIR-01",
+        "BASIC-04"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T030/law.yaml",
+      "expected": "conformance/expected/T030.json",
+      "success": false
+    },
+    {
+      "id": "T031",
+      "title": "引用符属性",
+      "requirements": [
+        "DIR-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T031/law.yaml",
+      "expected": "conformance/expected/T031.json",
+      "success": false
+    },
+    {
+      "id": "T032",
+      "title": "先頭ゼロ",
+      "requirements": [
+        "DIR-01",
+        "NUM-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T032/law.yaml",
+      "expected": "conformance/expected/T032.json",
+      "success": false
+    },
+    {
+      "id": "T033",
+      "title": "レベル飛越し",
+      "requirements": [
+        "DIR-02"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T033/law.yaml",
+      "expected": "conformance/expected/T033.json",
+      "success": false
+    },
+    {
+      "id": "T034",
+      "title": "削除条",
+      "requirements": [
+        "HEAD-04",
+        "ID-02"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T034/law.yaml",
+      "expected": "conformance/expected/T034.json",
+      "success": true
+    },
+    {
+      "id": "T035",
+      "title": "見出しレベルは所属と独立",
+      "requirements": [
+        "HEAD-01",
+        "HEAD-02"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T035/law.yaml",
+      "expected": "conformance/expected/T035.json",
+      "success": true
+    },
+    {
+      "id": "T036",
+      "title": "無番号見出し拒否",
+      "requirements": [
+        "HEAD-01",
+        "BASIC-03"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T036/law.yaml",
+      "expected": "conformance/expected/T036.json",
+      "success": false
+    },
+    {
+      "id": "T037",
+      "title": "親本文は子の後も保存",
+      "requirements": [
+        "AST-01",
+        "MD-02"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T037/law.yaml",
+      "expected": "conformance/expected/T037.json",
+      "success": true
+    },
+    {
+      "id": "T038",
+      "title": "パストラバーサル",
+      "requirements": [
+        "MAN-02"
+      ],
+      "level": "L0",
+      "normative": true,
+      "input": "conformance/invalid/T038/law.yaml",
+      "expected": "conformance/expected/T038.json",
+      "success": false
+    },
+    {
+      "id": "T039",
+      "title": "ファイル重複",
+      "requirements": [
+        "MAN-02"
+      ],
+      "level": "L0",
+      "normative": true,
+      "input": "conformance/invalid/T039/law.yaml",
+      "expected": "conformance/expected/T039.json",
+      "success": false
+    },
+    {
+      "id": "T040",
+      "title": "未定義附則キー",
+      "requirements": [
+        "MAN-03"
+      ],
+      "level": "L0",
+      "normative": true,
+      "input": "conformance/invalid/T040/law.yaml",
+      "expected": "conformance/expected/T040.json",
+      "success": false
+    },
+    {
+      "id": "T041",
+      "title": "存在しない日付",
+      "requirements": [
+        "MAN-01"
+      ],
+      "level": "L0",
+      "normative": true,
+      "input": "conformance/invalid/T041/law.yaml",
+      "expected": "conformance/expected/T041.json",
+      "success": false
+    },
+    {
+      "id": "T042",
+      "title": "未対応構造の申告",
+      "requirements": [
+        "BASIC-03"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T042/law.yaml",
+      "expected": "conformance/expected/T042.json",
+      "success": false
+    },
+    {
+      "id": "T043",
+      "title": "ファイルを跨ぐ項を拒否",
+      "requirements": [
+        "MAN-03",
+        "DIR-02"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T043/law.yaml",
+      "expected": "conformance/expected/T043.json",
+      "success": false
+    },
+    {
+      "id": "T044",
+      "title": "Setext拒否",
+      "requirements": [
+        "HEAD-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T044/law.yaml",
+      "expected": "conformance/expected/T044.json",
+      "success": false
+    },
+    {
+      "id": "T045",
+      "title": "raw HTML内保護",
+      "requirements": [
+        "MD-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T045/law.yaml",
+      "expected": "conformance/expected/T045.json",
+      "success": true
+    },
+    {
+      "id": "T046",
+      "title": "複数行予約マーカー",
+      "requirements": [
+        "DIR-01",
+        "MD-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T046/law.yaml",
+      "expected": "conformance/expected/T046.json",
+      "success": false
+    },
+    {
+      "id": "T047",
+      "title": "大文字予約マーカー",
+      "requirements": [
+        "DIR-01",
+        "MD-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T047/law.yaml",
+      "expected": "conformance/expected/T047.json",
+      "success": false
+    },
+    {
+      "id": "T048",
+      "title": "全角番号",
+      "requirements": [
+        "NUM-01",
+        "DISP-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T048/law.yaml",
+      "expected": "conformance/expected/T048.json",
+      "success": true
+    },
+    {
+      "id": "T049",
+      "title": "非標準漢数字",
+      "requirements": [
+        "NUM-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T049/law.yaml",
+      "expected": "conformance/expected/T049.json",
+      "success": false
+    },
+    {
+      "id": "T050",
+      "title": "章を跨ぐ条重複",
+      "requirements": [
+        "HEAD-02",
+        "AST-02"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T050/law.yaml",
+      "expected": "conformance/expected/T050.json",
+      "success": false
+    },
+    {
+      "id": "T051",
+      "title": "条のない附則",
+      "requirements": [
+        "HEAD-03",
+        "DIR-02"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T051/law.yaml",
+      "expected": "conformance/expected/T051.json",
+      "success": true
+    },
+    {
+      "id": "T052",
+      "title": "不透明な附属資料",
+      "requirements": [
+        "HEAD-03",
+        "MD-02",
+        "AST-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T052/law.yaml",
+      "expected": "conformance/expected/T052.json",
+      "success": true
+    },
+    {
+      "id": "T053",
+      "title": "細分10階層",
+      "requirements": [
+        "DIR-02",
+        "ID-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T053/law.yaml",
+      "expected": "conformance/expected/T053.json",
+      "success": true
+    },
+    {
+      "id": "T054",
+      "title": "分類全階層",
+      "requirements": [
+        "HEAD-02",
+        "AST-01",
+        "ID-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T054/law.yaml",
+      "expected": "conformance/expected/T054.json",
+      "success": true
+    },
+    {
+      "id": "T055",
+      "title": "先頭空白マーカー",
+      "requirements": [
+        "MD-01",
+        "DIR-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T055/law.yaml",
+      "expected": "conformance/expected/T055.json",
+      "success": false
+    },
+    {
+      "id": "T056",
+      "title": "BOM禁止",
+      "requirements": [
+        "BASIC-02"
+      ],
+      "level": "L0",
+      "normative": true,
+      "input": "conformance/invalid/T056/law.yaml",
+      "expected": "conformance/expected/T056.json",
+      "success": false
+    },
+    {
+      "id": "T057",
+      "title": "単独CR禁止",
+      "requirements": [
+        "BASIC-02"
+      ],
+      "level": "L0",
+      "normative": true,
+      "input": "conformance/invalid/T057/law.yaml",
+      "expected": "conformance/expected/T057.json",
+      "success": false
+    },
+    {
+      "id": "T058",
+      "title": "未知バージョン",
+      "requirements": [
+        "BASIC-01"
+      ],
+      "level": "L0",
+      "normative": true,
+      "input": "conformance/invalid/T058/law.yaml",
+      "expected": "conformance/expected/T058.json",
+      "success": false
+    },
+    {
+      "id": "T059",
+      "title": "YAML重複キー",
+      "requirements": [
+        "MAN-01"
+      ],
+      "level": "L0",
+      "normative": true,
+      "input": "conformance/invalid/T059/law.yaml",
+      "expected": "conformance/expected/T059.json",
+      "success": false
+    },
+    {
+      "id": "T060",
+      "title": "別scopeから戻る順序",
+      "requirements": [
+        "MAN-03"
+      ],
+      "level": "L0",
+      "normative": true,
+      "input": "conformance/invalid/T060/law.yaml",
+      "expected": "conformance/expected/T060.json",
+      "success": false
+    },
+    {
+      "id": "T061",
+      "title": "完全サンプル",
+      "requirements": [
+        "MAN-03",
+        "AST-01",
+        "ID-01",
+        "REF-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T061/law.yaml",
+      "expected": "conformance/expected/T061.json",
+      "success": true
+    },
+    {
+      "id": "T062",
+      "title": "複数附則の独立キー",
+      "requirements": [
+        "HEAD-03",
+        "ID-01",
+        "MAN-03"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T062/law.yaml",
+      "expected": "conformance/expected/T062.json",
+      "success": true
+    },
+    {
+      "id": "T063",
+      "title": "引用リスト内マーカー保護",
+      "requirements": [
+        "MD-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T063/law.yaml",
+      "expected": "conformance/expected/T063.json",
+      "success": true
+    },
+    {
+      "id": "T064",
+      "title": "インデントコード保護",
+      "requirements": [
+        "MD-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T064/law.yaml",
+      "expected": "conformance/expected/T064.json",
+      "success": true
+    },
+    {
+      "id": "T065",
+      "title": "末尾改行なし",
+      "requirements": [
+        "BASIC-02",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T065/law.yaml",
+      "expected": "conformance/expected/T065.json",
+      "success": true
+    },
+    {
+      "id": "T066",
+      "title": "附則見出しでscopeを変えない",
+      "requirements": [
+        "HEAD-03"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T066/law.yaml",
+      "expected": "conformance/expected/T066.json",
+      "success": false
+    },
+    {
+      "id": "T067",
+      "title": "削除条の項を拒否",
+      "requirements": [
+        "HEAD-04"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T067/law.yaml",
+      "expected": "conformance/expected/T067.json",
+      "success": false
+    },
+    {
+      "id": "T068",
+      "title": "数字の幅混在を拒否",
+      "requirements": [
+        "NUM-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T068/law.yaml",
+      "expected": "conformance/expected/T068.json",
+      "success": false
+    },
+    {
+      "id": "T069",
+      "title": "マーカータブを拒否",
+      "requirements": [
+        "DIR-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T069/law.yaml",
+      "expected": "conformance/expected/T069.json",
+      "success": false
+    },
+    {
+      "id": "T070",
+      "title": "終了属性を拒否",
+      "requirements": [
+        "DIR-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T070/law.yaml",
+      "expected": "conformance/expected/T070.json",
+      "success": false
+    },
+    {
+      "id": "T071",
+      "title": "本文中の見出しを拒否",
+      "requirements": [
+        "DIR-02",
+        "MD-03"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T071/law.yaml",
+      "expected": "conformance/expected/T071.json",
+      "success": false
+    },
+    {
+      "id": "T072",
+      "title": "分類見出し再掲を拒否",
+      "requirements": [
+        "HEAD-02",
+        "MAN-03"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T072/law.yaml",
+      "expected": "conformance/expected/T072.json",
+      "success": false
+    },
+    {
+      "id": "T073",
+      "title": "欠番と逆順を保持",
+      "requirements": [
+        "HEAD-02",
+        "AST-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T073/law.yaml",
+      "expected": "conformance/expected/T073.json",
+      "success": true
+    },
+    {
+      "id": "T074",
+      "title": "字母細分は未対応",
+      "requirements": [
+        "DISP-01",
+        "BASIC-03"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T074/law.yaml",
+      "expected": "conformance/expected/T074.json",
+      "success": false
+    },
+    {
+      "id": "T075",
+      "title": "属性順の交換",
+      "requirements": [
+        "DIR-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T075/law.yaml",
+      "expected": "conformance/expected/T075.json",
+      "success": true
+    },
+    {
+      "id": "T076",
+      "title": "附属資料の段落・見出し・リスト分割",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T076/law.yaml",
+      "expected": "conformance/expected/T076.json",
+      "success": true
+    },
+    {
+      "id": "T077",
+      "title": "附属資料の空白だけの後続を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T077/law.yaml",
+      "expected": "conformance/expected/T077.json",
+      "success": false
+    },
+    {
+      "id": "T078",
+      "title": "非最終の明示閉鎖フェンス",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T078/law.yaml",
+      "expected": "conformance/expected/T078.json",
+      "success": true
+    },
+    {
+      "id": "T079",
+      "title": "非最終の未閉鎖フェンスを拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T079/law.yaml",
+      "expected": "conformance/expected/T079.json",
+      "success": false
+    },
+    {
+      "id": "T080",
+      "title": "短い閉じフェンスを拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T080/law.yaml",
+      "expected": "conformance/expected/T080.json",
+      "success": false
+    },
+    {
+      "id": "T081",
+      "title": "異なる文字種の閉じフェンスを拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T081/law.yaml",
+      "expected": "conformance/expected/T081.json",
+      "success": false
+    },
+    {
+      "id": "T082",
+      "title": "引用内のチルダフェンス閉鎖",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T082/law.yaml",
+      "expected": "conformance/expected/T082.json",
+      "success": true
+    },
+    {
+      "id": "T083",
+      "title": "引用終了だけのフェンスを拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T083/law.yaml",
+      "expected": "conformance/expected/T083.json",
+      "success": false
+    },
+    {
+      "id": "T084",
+      "title": "最終ファイルの未閉鎖フェンスを許可",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T084/law.yaml",
+      "expected": "conformance/expected/T084.json",
+      "success": true
+    },
+    {
+      "id": "T085",
+      "title": "非最終HTML種類1の終端",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T085/law.yaml",
+      "expected": "conformance/expected/T085.json",
+      "success": true
+    },
+    {
+      "id": "T086",
+      "title": "非最終HTML種類1の暗黙終端を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T086/law.yaml",
+      "expected": "conformance/expected/T086.json",
+      "success": false
+    },
+    {
+      "id": "T087",
+      "title": "非最終HTML種類2の終端",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T087/law.yaml",
+      "expected": "conformance/expected/T087.json",
+      "success": true
+    },
+    {
+      "id": "T088",
+      "title": "非最終HTML種類2の暗黙終端を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T088/law.yaml",
+      "expected": "conformance/expected/T088.json",
+      "success": false
+    },
+    {
+      "id": "T089",
+      "title": "非最終HTML種類3の終端",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T089/law.yaml",
+      "expected": "conformance/expected/T089.json",
+      "success": true
+    },
+    {
+      "id": "T090",
+      "title": "非最終HTML種類3の暗黙終端を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T090/law.yaml",
+      "expected": "conformance/expected/T090.json",
+      "success": false
+    },
+    {
+      "id": "T091",
+      "title": "非最終HTML種類4の終端",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T091/law.yaml",
+      "expected": "conformance/expected/T091.json",
+      "success": true
+    },
+    {
+      "id": "T092",
+      "title": "非最終HTML種類4の暗黙終端を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T092/law.yaml",
+      "expected": "conformance/expected/T092.json",
+      "success": false
+    },
+    {
+      "id": "T093",
+      "title": "非最終HTML種類5の終端",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T093/law.yaml",
+      "expected": "conformance/expected/T093.json",
+      "success": true
+    },
+    {
+      "id": "T094",
+      "title": "非最終HTML種類5の暗黙終端を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T094/law.yaml",
+      "expected": "conformance/expected/T094.json",
+      "success": false
+    },
+    {
+      "id": "T095",
+      "title": "非最終HTML種類6の終端",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T095/law.yaml",
+      "expected": "conformance/expected/T095.json",
+      "success": true
+    },
+    {
+      "id": "T096",
+      "title": "非最終HTML種類6の暗黙終端を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T096/law.yaml",
+      "expected": "conformance/expected/T096.json",
+      "success": false
+    },
+    {
+      "id": "T097",
+      "title": "非最終HTML種類7の終端",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T097/law.yaml",
+      "expected": "conformance/expected/T097.json",
+      "success": true
+    },
+    {
+      "id": "T098",
+      "title": "非最終HTML種類7の暗黙終端を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T098/law.yaml",
+      "expected": "conformance/expected/T098.json",
+      "success": false
+    },
+    {
+      "id": "T099",
+      "title": "最終HTMLのEOF終端を許可",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T099/law.yaml",
+      "expected": "conformance/expected/T099.json",
+      "success": true
+    },
+    {
+      "id": "T100",
+      "title": "分割附属資料でも予約マーカー禁止",
+      "requirements": [
+        "HEAD-03",
+        "MAN-03"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T100/law.yaml",
+      "expected": "conformance/expected/T100.json",
+      "success": false
+    },
+    {
+      "id": "T101",
+      "title": "CRLF明示閉鎖フェンス",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T101/law.yaml",
+      "expected": "conformance/expected/T101.json",
+      "success": true
+    },
+    {
+      "id": "T102",
+      "title": "CRLF未閉鎖フェンスを拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/invalid/T102/law.yaml",
+      "expected": "conformance/expected/T102.json",
+      "success": false
+    },
+    {
+      "id": "T103",
+      "title": "附属資料のファイル別参照定義",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T103/law.yaml",
+      "expected": "conformance/expected/T103.json",
+      "success": true
+    },
+    {
+      "id": "T104",
+      "title": "インデントコードのフェンス風本文",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T104/law.yaml",
+      "expected": "conformance/expected/T104.json",
+      "success": true
+    },
+    {
+      "id": "T105",
+      "title": "後続の先頭空行を本文保存",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "level": "L1",
+      "normative": true,
+      "input": "conformance/valid/T105/law.yaml",
+      "expected": "conformance/expected/T105.json",
+      "success": true
+    }
+  ]
+}
