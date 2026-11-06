@@ -1,5 +1,8 @@
 # loj-validator
 
+適合レベルは検証対象ごとに独立しています。L1等の合格は、番号の小さいレベルの合格を保証しません。
+L0〜L4の定義と現行仕様との対応は[適合レベル定義](docs/conformance-levels.md)を参照してください。
+
 日本の法令Markdown（law-of-japan形式）を、**構造**と**意味**の2層で検証するRust製CLIとライブラリ。
 
 - 構造層: 上流の [schematter](https://github.com/iwe-org/schematter)（`schematter-lib` 0.2.0）でdocument-schemaに照らし、正規化した見出し木とブロックを検査する。
