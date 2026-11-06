@@ -1,0 +1,221 @@
+[
+  {
+    "name": "valid-branch-number",
+    "file": "cases/valid-branch-number.json",
+    "expected_codes": [],
+    "exit_code": 0
+  },
+  {
+    "name": "valid-implicit-paragraph",
+    "file": "cases/valid-implicit-paragraph.json",
+    "expected_codes": [],
+    "exit_code": 0
+  },
+  {
+    "name": "valid-number-gap",
+    "file": "cases/valid-number-gap.json",
+    "expected_codes": [],
+    "exit_code": 0
+  },
+  {
+    "name": "wrong-parent",
+    "file": "cases/wrong-parent.json",
+    "expected_codes": [
+      "SCHEMA_INVALID"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "missing-paragraph",
+    "file": "cases/missing-paragraph.json",
+    "expected_codes": [
+      "SCHEMA_INVALID"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "zero-number",
+    "file": "cases/zero-number.json",
+    "expected_codes": [
+      "SCHEMA_INVALID"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "fractional-number",
+    "file": "cases/fractional-number.json",
+    "expected_codes": [
+      "SCHEMA_INVALID"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "empty-paragraph",
+    "file": "cases/empty-paragraph.json",
+    "expected_codes": [
+      "SCHEMA_INVALID"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "unknown-field",
+    "file": "cases/unknown-field.json",
+    "expected_codes": [
+      "SCHEMA_INVALID"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "implicit-display",
+    "file": "cases/implicit-display.json",
+    "expected_codes": [
+      "SCHEMA_INVALID"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "duplicate-id",
+    "file": "cases/duplicate-id.json",
+    "expected_codes": [
+      "ID_DUPLICATE"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "duplicate-scoped-number",
+    "file": "cases/duplicate-scoped-number.json",
+    "expected_codes": [
+      "NUMBER_DUPLICATE"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "unknown-source",
+    "file": "cases/unknown-source.json",
+    "expected_codes": [
+      "SPAN_INVALID",
+      "SPAN_OUTSIDE_PARENT",
+      "CONTENT_OUTSIDE_NODE"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "utf8-middle",
+    "file": "cases/utf8-middle.json",
+    "expected_codes": [
+      "SPAN_INVALID",
+      "CONTENT_OUTSIDE_NODE"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "span-outside-source",
+    "file": "cases/span-outside-source.json",
+    "expected_codes": [
+      "SPAN_INVALID",
+      "SPAN_OUTSIDE_PARENT"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "hash-mismatch",
+    "file": "cases/hash-mismatch.json",
+    "expected_codes": [
+      "SOURCE_HASH"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "duplicate-source",
+    "file": "cases/duplicate-source.json",
+    "expected_codes": [
+      "SOURCE_DUPLICATE"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "unknown-content",
+    "file": "cases/unknown-content.json",
+    "expected_codes": [
+      "INCOMPLETE"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "valid-deleted",
+    "file": "cases/valid-deleted.json",
+    "expected_codes": [],
+    "exit_code": 0
+  },
+  {
+    "name": "deleted-with-body",
+    "file": "cases/deleted-with-body.json",
+    "expected_codes": [
+      "DELETION_INVALID"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "valid-supplement-number-scope",
+    "file": "cases/valid-supplement-number-scope.json",
+    "expected_codes": [],
+    "exit_code": 0
+  },
+  {
+    "name": "mixed-supplement",
+    "file": "cases/mixed-supplement.json",
+    "expected_codes": [
+      "SUPPLEMENT_MIXED"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "whitespace-body",
+    "file": "cases/whitespace-body.json",
+    "expected_codes": [
+      "BODY_EMPTY"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "content-unknown-source",
+    "file": "cases/content-unknown-source.json",
+    "expected_codes": [
+      "SPAN_INVALID",
+      "CONTENT_OUTSIDE_NODE"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "oversized-offset",
+    "file": "cases/oversized-offset.json",
+    "expected_codes": [
+      "SCHEMA_INVALID"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "oversized-number",
+    "file": "cases/oversized-number.json",
+    "expected_codes": [
+      "SCHEMA_INVALID"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "empty-span",
+    "file": "cases/empty-span.json",
+    "expected_codes": [
+      "SPAN_INVALID"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "cross-chapter-duplicate-number",
+    "file": "cases/cross-chapter-duplicate-number.json",
+    "expected_codes": [
+      "NUMBER_DUPLICATE"
+    ],
+    "exit_code": 1
+  }
+]

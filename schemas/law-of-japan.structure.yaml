@@ -1,0 +1,48 @@
+$schema: https://document-schema.org/draft/2026-06/schema
+# Minimal structure schema for the embedded law-of-japan mapping profile.
+# Checked by schematter over the *normalized* heading tree: a skipped level
+# (# → #####) normalizes to parent-child, so raw heading levels are the
+# semantic layer's job (profile "levels"), not this schema's.
+description: law-of-japan Markdown structure (loj-validator default)
+maxDepth: 3
+additionalBlocks: false
+additionalSections: false
+sections:
+  - description: law title (# heading); exactly one
+    header: { pattern: '\S' }
+    maxContains: 1
+    additionalSections: false
+    sections:
+      - description: chapter (第N章); optional, contains articles
+        header: { pattern: '^第[一二三四五六七八九十百千万億兆〇零0-9０-９]+章' }
+        minContains: 0
+        additionalBlocks: false
+        additionalSections: false
+        sections:
+          - $ref: '#/$defs/article'
+      - $ref: '#/$defs/article'
+        description: article directly under the law title (law without chapters)
+        minContains: 0
+      - description: supplementary provisions (附則); articles or direct paragraphs
+        header: { pattern: '^附[　 ]*則' }
+        minContains: 0
+        blocks:
+          - $ref: '#/$defs/body'
+            minContains: 0
+        additionalBlocks: false
+        additionalSections: false
+        sections:
+          - $ref: '#/$defs/article'
+            minContains: 0
+$defs:
+  article:
+    description: article (第N条, 第N条のM, optional （見出し）); body only, no subsections
+    header:
+      pattern: '^第[一二三四五六七八九十百千万億兆〇零0-9０-９]+条(?:[のノ][一二三四五六七八九十百千万億兆〇零0-9０-９]+)*(?:（[^）]*）)?$'
+    blocks:
+      - $ref: '#/$defs/body'
+    additionalBlocks: false
+    additionalSections: false
+  body:
+    description: article body (paragraph text, 1. paragraph lists, - item lists)
+    type: [paragraph, ordered-list, bullet-list, quote, table, code]

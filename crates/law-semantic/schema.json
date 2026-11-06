@@ -1,0 +1,668 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "0.1"
+    },
+    "scope": {
+      "enum": [
+        "complete",
+        "excerpt"
+      ]
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/source"
+      },
+      "minItems": 1
+    },
+    "anchors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/anchor"
+      },
+      "minItems": 0
+    },
+    "laws": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/node"
+          },
+          {
+            "properties": {
+              "kind": {
+                "const": "Law"
+              }
+            }
+          }
+        ]
+      },
+      "minItems": 1
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/diagnostic"
+      },
+      "minItems": 0
+    }
+  },
+  "required": [
+    "version",
+    "scope",
+    "sources",
+    "anchors",
+    "laws",
+    "diagnostics"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "span": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "start_byte": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "end_byte": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "source",
+        "start_byte",
+        "end_byte"
+      ]
+    },
+    "number": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "display": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "parts": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "minItems": 1
+        },
+        "implicit": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "display",
+        "parts",
+        "implicit"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "implicit": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "display": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "display": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "block": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "paragraph",
+            "list",
+            "list-item",
+            "quote",
+            "table",
+            "code",
+            "unsupported"
+          ]
+        },
+        "text": {
+          "type": "string"
+        },
+        "origins": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/span"
+          },
+          "minItems": 1
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/block"
+          },
+          "minItems": 0
+        },
+        "ordered": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind",
+        "text",
+        "origins"
+      ]
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "target_uri": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expected_kinds": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "Law",
+              "Chapter",
+              "Article",
+              "Paragraph",
+              "Item",
+              "Supplement"
+            ]
+          },
+          "minItems": 1
+        },
+        "target_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resolution": {
+          "enum": [
+            "unresolved",
+            "resolved",
+            "external",
+            "unsupported"
+          ]
+        },
+        "origins": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/span"
+          },
+          "minItems": 1,
+          "maxItems": 1
+        }
+      },
+      "required": [
+        "label",
+        "target_uri",
+        "expected_kinds",
+        "target_id",
+        "resolution",
+        "origins"
+      ]
+    },
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "node_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "origins": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/span"
+          },
+          "minItems": 1,
+          "maxItems": 1
+        }
+      },
+      "required": [
+        "name",
+        "text",
+        "node_id",
+        "origins"
+      ]
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "Law",
+            "Chapter",
+            "Article",
+            "Paragraph",
+            "Item",
+            "Supplement"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "number": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "active",
+            "deleted"
+          ]
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node"
+          },
+          "minItems": 0
+        },
+        "content": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/block"
+          },
+          "minItems": 0
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/reference"
+          },
+          "minItems": 0
+        },
+        "origins": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/span"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "number",
+        "title",
+        "status",
+        "children",
+        "content",
+        "references",
+        "origins"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "Law"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "children": {
+                "items": {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "Chapter",
+                        "Article",
+                        "Supplement"
+                      ]
+                    }
+                  }
+                }
+              },
+              "number": {
+                "type": "null"
+              },
+              "status": {
+                "const": "active"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "Chapter"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "children": {
+                "items": {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "Article"
+                      ]
+                    }
+                  }
+                }
+              },
+              "number": {
+                "$ref": "#/$defs/number"
+              },
+              "status": {
+                "const": "active"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "Article"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "children": {
+                "items": {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "Paragraph"
+                      ]
+                    }
+                  }
+                }
+              },
+              "number": {
+                "$ref": "#/$defs/number"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "Paragraph"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "children": {
+                "items": {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "Item"
+                      ]
+                    }
+                  }
+                }
+              },
+              "number": {
+                "$ref": "#/$defs/number"
+              },
+              "status": {
+                "const": "active"
+              },
+              "content": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "Item"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "children": {
+                "maxItems": 0
+              },
+              "number": {
+                "$ref": "#/$defs/number"
+              },
+              "status": {
+                "const": "active"
+              },
+              "content": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "Supplement"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "children": {
+                "items": {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "Article",
+                        "Paragraph"
+                      ]
+                    }
+                  }
+                }
+              },
+              "number": {
+                "type": "null"
+              },
+              "status": {
+                "const": "active"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "Article"
+              },
+              "status": {
+                "const": "active"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "children": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "Article"
+              },
+              "status": {
+                "const": "deleted"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "children": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "text": {
+          "type": "string"
+        },
+        "provenance": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "repository": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "repository",
+            "revision"
+          ]
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "text",
+        "provenance"
+      ]
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "severity": {
+          "enum": [
+            "error",
+            "warning",
+            "info"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rule_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "node_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "primary_span": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/span"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "related_spans": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/span"
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "message",
+        "rule_id",
+        "node_id",
+        "primary_span",
+        "related_spans"
+      ]
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "version": "0.1",
+  "paragraph_mode": "list",
+  "headings": [
+    {
+      "id": "law-title",
+      "kind": "Law",
+      "levels": [
+        1
+      ],
+      "pattern": "^(?P<title>.+)$"
+    },
+    {
+      "id": "chapter",
+      "kind": "Chapter",
+      "levels": [
+        2
+      ],
+      "pattern": "^第(?P<number>[一二三四五六七八九十百千万億兆〇零0-9０-９]+)章[　 ]*(?P<title>.*)$"
+    },
+    {
+      "id": "article",
+      "kind": "Article",
+      "levels": [
+        2,
+        3
+      ],
+      "pattern": "^第(?P<number>[一二三四五六七八九十百千万億兆〇零0-9０-９]+)条(?P<branch>(?:[のノ][一二三四五六七八九十百千万億兆〇零0-9０-９]+)*)(?:（(?P<title>[^）]*)）)?$"
+    },
+    {
+      "id": "supplement",
+      "kind": "Supplement",
+      "levels": [
+        2
+      ],
+      "pattern": "^附[　 ]*則(?P<title>.*)$"
+    }
+  ],
+  "item_pattern": "^(?P<number>[一二三四五六七八九十百千万億兆〇零0-9０-９]+)[　 ]+(?P<body>[\\s\\S]+)$"
+}

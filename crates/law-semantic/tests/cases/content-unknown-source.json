@@ -1,0 +1,97 @@
+{
+  "version": "0.1",
+  "scope": "excerpt",
+  "sources": [
+    {
+      "path": "semantic-source.txt",
+      "text": "本文。削除",
+      "sha256": "3b22eb1670c9cd06cbf1ce6c08e903962c28d77601428bde66751150a436df3d",
+      "provenance": {
+        "repository": "synthetic",
+        "revision": "1"
+      }
+    }
+  ],
+  "laws": [
+    {
+      "kind": "Law",
+      "id": "law",
+      "number": null,
+      "title": "",
+      "status": "active",
+      "children": [
+        {
+          "kind": "Article",
+          "id": "law/main/article/2.2",
+          "number": {
+            "display": "2.2",
+            "parts": [
+              2,
+              2
+            ],
+            "implicit": false
+          },
+          "title": "",
+          "status": "active",
+          "children": [
+            {
+              "kind": "Paragraph",
+              "id": "law/main/article/2.2/paragraph/1",
+              "number": {
+                "display": "1",
+                "parts": [
+                  1
+                ],
+                "implicit": false
+              },
+              "title": "",
+              "status": "active",
+              "children": [],
+              "content": [
+                {
+                  "kind": "paragraph",
+                  "text": "本文。",
+                  "origins": [
+                    {
+                      "source": "absent",
+                      "start_byte": 0,
+                      "end_byte": 15
+                    }
+                  ]
+                }
+              ],
+              "references": [],
+              "origins": [
+                {
+                  "source": "semantic-source.txt",
+                  "start_byte": 0,
+                  "end_byte": 15
+                }
+              ]
+            }
+          ],
+          "content": [],
+          "references": [],
+          "origins": [
+            {
+              "source": "semantic-source.txt",
+              "start_byte": 0,
+              "end_byte": 15
+            }
+          ]
+        }
+      ],
+      "content": [],
+      "references": [],
+      "origins": [
+        {
+          "source": "semantic-source.txt",
+          "start_byte": 0,
+          "end_byte": 15
+        }
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "anchors": []
+}
