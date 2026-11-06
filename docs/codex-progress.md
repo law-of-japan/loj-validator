@@ -62,8 +62,10 @@ IO不能があればErrorが優先される。L0と単一ファイル附属資�
 対象はv1alpha1実装・互換CLI・固定vendor・テスト・CI・文書/証跡に限定。targetは含めない。
 固定vendorには意図的なCRLF・不正空白の標本があるため、改行変換とGit空白警告だけを除外し、
 代わりにステージ済みblobの243 SHA-256一致を検査する。実装側の空白検査は維持する。
-予定するローカルブランチはfeat/initial-v1alpha1、件名は`feat: add initial loj-spec v1alpha1 validation`。
-この記録を含む初期実装commitの実SHAと完了状態はGit履歴・statusで照合する。
+ローカルブランチfeat/initial-v1alpha1に初期実装をcommit済み。
+実装commit: `5ee3472fa972d82b6fff898323624fc8305c6df9`
+件名: `feat: add initial loj-spec v1alpha1 validation`。
+commit後に作業ツリーcleanとspec側cleanを確認した。本段落の完了記録のみを後続のdocs commitに保存する。
 全面準拠・正式リリースとは表現しない。
 
 ## 次の具体的作業・承認待ち
