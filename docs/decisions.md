@@ -42,4 +42,4 @@
 
 ## ライセンス
 
-プロジェクトのライセンスは所有者が決める。全crateを `publish = false` とし、`license` フィールドやライセンスファイルは置いていない。上流（schematter、Apache-2.0）の帰属はREADMEに記載した。
+2026-11-06、所有者の指定によりMITを採用した。ルートのLICENSEに全文を置き、workspace.packageのlicense = "MIT"を両crateで継承する。crates.io公開の設定（publish = false）は維持する。上流（schematter、Apache-2.0）の帰属と依存ライブラリのライセンスはREADMEに記載する。
