@@ -131,7 +131,7 @@ crates/loj-validator/              2層の実行とCLI
   tests/cli.rs                     CLI統合試験
 schemas/law-of-japan.structure.yaml  組込みプロファイルに合わせた既定の構造スキーマ
 examples/                          架空法令の合成例
-docs/                             適合レベル・実装設計と制限
+docs/                              適合レベル・実装設計と制限
 ```
 
 `law-semantic` の主な公開API：
