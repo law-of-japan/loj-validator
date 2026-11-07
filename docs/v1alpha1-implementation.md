@@ -1,15 +1,11 @@
 # loj/v1alpha1 implementation
 
-## Investigation and requirements (before implementation)
+## Specification requirements
 
-Baseline validator: 6dbd0b97e3d1d669d6e4949db1876e2a41b2c966.
-Specification: b704631b6501a0a01c1eb6faf99cfe16a4bccfa9; normative chapters 01–10,
-both grammars, JSON schemas, fixed conformance expectations and DDR 001–010 reviewed.
-The syntax evaluation directory is an unversioned experimental reference. It uses
-CommonMark protection ranges and a line marker lexer, but its bounded grammar lacks
-the normative level attribute and canonical branch-number model; it is not copied.
+The implementation targets loj-spec commit
+`b704631b6501a0a01c1eb6faf99cfe16a4bccfa9`.
 
-| Requirements | Planned implementation / validation |
+| Requirements | Implementation / validation |
 |---|---|
 | BASIC-01–04 | Exact version, strict bytes, unsupported declarations, closed schema |
 | MAN-01 | YAML token restrictions, duplicate detection, schema with format assertions |
@@ -25,7 +21,7 @@ the normative level attribute and canonical branch-number model; it is not copie
 | REF-01 | Preserve links; no L2 resolution requirement |
 | VAL / CONF | Distinct statuses, all normative cases, exact AST and selected positions |
 
-## Architecture decision
+## Architecture
 
 Keep the existing CLI, schematter integration, legacy JSON and library functions intact.
 Add `law_semantic::v1alpha1`, with manifest, Markdown/marker parsing and semantic construction
@@ -47,7 +43,7 @@ Existing `check file.md --structure-schema ...` remains legacy; `--profile legac
 its default mapping profile. L0/L1 are selected with `--level`; default L1.
 Passed=0, Failed=1, Error=2, Incomplete=3. Incomplete never exits successfully, including
 strict mode. Normative `rule` and implementation `code` are separate diagnostic fields.
-The former appendix specification-pending restriction was removed after option B approval. Unknown versions use the
+Unknown versions use the
 specific code `loj/v1alpha1/unsupported-version` with Error.
 
 ## Implemented pipeline and recovery
@@ -136,7 +132,6 @@ Local independent tests cover L0 success, unsupported-feature levels and diagnos
 There are no currently deferred official cases. Future work: add upstream fixture coverage after specification review, and introduce sustained fuzzing and
 large-corpus memory benchmarks. Fixed fixture success is not proof over all possible inputs.
 
-[loj-spec #2](https://github.com/law-of-japan/loj-spec/issues/2): the user approved option B.
 MAN-03 permits any nonblank Markdown in subsequent appendix files and preserves leading blank lines.
 For each nonfinal appendix file, nested CommonMark events identify fenced code and HTML blocks.
 A fenced block's end range must extend past its last content event: EOF/container termination alone fails.
@@ -146,7 +141,7 @@ Final/sole appendix files retain normal CommonMark EOF rules. L0 does not run th
 Ordinary paragraphs, lists, quotes and indented code may end at EOF. Reference definitions stay file-local.
 The spec change and 30 independently authored fixtures are pinned, not inferred from validator outputs.
 
-## Conformance runner outcome policy after review
+## Conformance runner outcome policy
 
 The runner checks status, exit code and completion as well as expected rules and AST.
 Positive cases require Passed/0/complete; ordinary negatives require Failed/1/complete
@@ -157,21 +152,4 @@ that fixture premise, then requires Error/2/not-complete, no AST and only the sp
 unsupported-version diagnostic. This is a harness policy for the implementation's
 status contract, not a change to the upstream expected JSON or a parser case exception.
 
-Review regression mapping: input-budget unit and integration tests (finding 1),
-heading punctuation/whole-file reference markup (2), caption whitespace (3), subsequent
-main/supplement file starts (4), incomplete/unexpected-error and T058 cause tests (5).
-Windows Rust 1.99.1: 62 tests passed, including 104 formal cases. New fence and HTML
-regressions cover nested containers, malformed closers, CRLF and protected code.
-The initial implementation passed Windows/Linux/macOS stable and Linux MSRV CI.
-Current branch CI results are recorded in reports/v1alpha1-conformance.md.
 Status precedence remains Error > Incomplete > Failed > Passed. No case-specific parser exceptions.
-
-## Reference review
-
-The management guideline README/CONTRIBUTING were read via GitHub; its historical law-repository
-naming/commit conventions do not replace v1alpha1 IDs. Reference inputs were not modified.
-CommonMark [0.31.2 HTML blocks](https://spec.commonmark.org/0.31.2/#html-blocks) determine protected
-regions (e.g. a div block continues to a blank line, even after `</div>`).
-[GFM](https://github.github.io/gfm/) is supplementary, not the required parser mode.
-[e-Gov XML documentation](https://laws.e-gov.go.jp/docs/law-data-basic/419a603-xml-schema-for-japanese-law/)
-was checked as structural background; this implementation follows loj-spec's independent AST.

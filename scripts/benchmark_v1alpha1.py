@@ -26,5 +26,5 @@ for count in (100, 1000, 5000):
     assert report["status"] == "Passed"
     results.append({"articles": count, "inputBytes": len(source.encode("utf-8")), "jsonBytes": len(proc.stdout), "secondsIncludingProcessAndJson": round(elapsed, 4)})
 output = {"platform": platform.platform(), "build": "debug", "runsPerSize": 1, "results": results}
-(ROOT / "reports" / "v1alpha1-benchmark.json").write_text(json.dumps(output, indent=2) + "\n", encoding="utf-8")
+(DIRECTORY / "results.json").write_text(json.dumps(output, indent=2) + "\n", encoding="utf-8")
 print(json.dumps(output, indent=2))
