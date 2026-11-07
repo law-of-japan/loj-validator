@@ -42,10 +42,9 @@ JSONの`ast`はL1合格時のみ完全な規範ASTを返し、L0または不合�
 `sources`は元入力、`sourceMap`はIDごとのノード位置列、`positions`はノード位置と本文片の対応です。
 失敗時の位置は回復過程の情報であり、完全ASTの存在を示しません。
 
-複数ファイル附属資料はMAN-03のB案に対応しています。後続ファイルは空白以外のMarkdown本文で開始でき、条見出しは不要です。
+複数ファイル附属資料はMAN-03に対応しています。後続ファイルは空白以外のMarkdown本文で開始でき、条見出しは不要です。
 非最終ファイルのフェンスコードとHTMLブロックには明示終端が必要です（HTML種類6〜7は空行）。
 最終ファイルは通常のCommonMark EOF終端を許します。違反はL1でMAN-03/Failedとなり、L0ではこの意味検査を行いません。
-[採用判断](docs/man03-resolution-proposal.md)と[検証結果](reports/v1alpha1-conformance.md)を参照してください。
 
 入力は正常・不正の別なく16 MiB/ファイル、law.yamlを含む128 MiB総量で制限します。
 読込前にサイズを確認し、ストリーム読込にも残量上限を適用します。
@@ -57,8 +56,7 @@ JSONの`ast`はL1合格時のみ完全な規範ASTを返し、L0または不合�
 個別実行は`cargo test -p law-semantic --test v1alpha1_conformance --locked`です。
 `LOJ_CONFORMANCE_REPORT`に絶対パスを設定すると、ケース別JSON結果を保存します。
 
-[設計と制限](docs/v1alpha1-implementation.md)、[適合結果](reports/v1alpha1-conformance.md)、
-[仕様フィードバック](reports/spec-feedback.md)を参照してください。
+[設計と制限](docs/v1alpha1-implementation.md)を参照してください。
 固定テストの成功は、未知の全入力への完全適合や法的正確性の証明ではありません。
 
 ## 使い方
@@ -133,7 +131,7 @@ crates/loj-validator/              2層の実行とCLI
   tests/cli.rs                     CLI統合試験
 schemas/law-of-japan.structure.yaml  組込みプロファイルに合わせた既定の構造スキーマ
 examples/                          架空法令の合成例
-docs/decisions.md                  設計判断の記録
+docs/                             適合レベル・実装設計と制限
 ```
 
 `law-semantic` の主な公開API：
@@ -184,18 +182,15 @@ cargo clippy --workspace --all-targets --locked -- -D warnings
 ## 上流と帰属
 
 - 構造検証は [iwe-org/schematter](https://github.com/iwe-org/schematter) の `schematter-lib` 0.2.0（crates.ioの公開版、Cargo.tomlで `=0.2.0` に固定、公開APIのみ使用）。上流のライセンスはApache-2.0。上流のソースは本リポジトリに複製（vendor）していない。依存として取得される上流・推移的依存のライセンスはそれぞれの配布物に従う。
-- `law-semantic` の実装・スキーマ・プロファイル・試験ケースは、所有者のプロトタイプ（評価リポジトリ `markdown-schema-evaluation` の `evaluations/semantic-layer`）から移行した。出所は `docs/decisions.md` に記録する。実行時・ビルド時にそのリポジトリへは依存しない。
+- `law-semantic` の実装・スキーマ・プロファイル・試験ケースは、所有者のプロトタイプ（評価リポジトリ `markdown-schema-evaluation` の `evaluations/semantic-layer`）から移行した。実行時・ビルド時にそのリポジトリへは依存しない。
 
 ## ライセンス
 
 本リポジトリは [MIT License](LICENSE) で公開する。依存ライブラリにはそれぞれのライセンスが適用される。
 
-### ビルド環境と抽出状態
+### ビルド環境とマッピング状態
 
-依存関係の宣言に合わせ、必要なRust版は1.88以上とする。B案対応後もWindows/Linux/macOSのRust 1.99.1とLinux Rust 1.88.0でCI成功。詳細は[検証結果](reports/v1alpha1-conformance.md)を参照。Cargo.lockを使用する。mapping_completeはマッピング診断にerrorがないことを表し、意味ASTのスキーマ適合や参照検証完了とは別の状態である。スキーマ不適合でも、既に得られたマッピング診断を消さずに返す。
-
-
-今回の実装・レビュー・試験結果は [検証記録](docs/validation.md) を参照。
+依存関係の宣言に合わせ、必要なRust版は1.88以上とする。Cargo.lockを使用する。mapping_completeはマッピング診断にerrorがないことを表し、意味ASTのスキーマ適合や参照検証完了とは別の状態である。スキーマ不適合でも、既に得られたマッピング診断を消さずに返す。
 
 ## CI
 
@@ -206,7 +201,3 @@ GitHub Actionsはpush・pull request・手動実行で起動する。
 - Linuxのstable Rustで整形とClippy（警告をエラー扱い）。
 
 すべてCargo.lockを使う。ActionはコミットSHAに固定し、権限はcontents: readのみ。公開・配布処理は含まない。
-
-## 継続作業
-
-採用した作業方針は[引き継ぎ](docs/codex-handoff.md)、最新状態と承認境界は[作業記録](docs/codex-progress.md)を参照。
