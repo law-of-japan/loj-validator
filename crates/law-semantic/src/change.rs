@@ -135,9 +135,12 @@ pub fn check(bundle: &Path, base: &str, head: &str) -> Report {
     check_bundle(&b, f, report, base, head)
 }
 
-/// The change check on an opened bundle. A git failure ends the check as
-/// incomplete with its reason (VAL-04), at the first failure: it is never reported
-/// as a finding about the data, and a broken git is not noted once per commit.
+/// The change check on an opened bundle. A git failure is never reported as a
+/// finding about the data. A failure to resolve the commits, list the range or
+/// read a message ends the check as incomplete with its reason (VAL-04), so a
+/// broken git is not noted once per commit. A tree that cannot be exported is
+/// noted for that commit and the check goes on: the cause may lie in that tree
+/// (an unsafe name, the input budget) rather than in git.
 fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, head: &str) -> Report {
     let (base, head) = match (b.commit(base), b.commit(head)) {
         (Ok(Some(base)), Ok(Some(head))) => (base, head),

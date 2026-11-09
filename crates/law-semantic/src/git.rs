@@ -738,6 +738,26 @@ pub(crate) mod tests {
         assert!(b.export("--all").is_err());
     }
 
+    /// A commit object that ends after its header (no blank line) has an empty
+    /// message, which the change check reports as declaring no `LoJ-Change`.
+    #[test]
+    fn commit_without_blank_line_has_empty_message() {
+        let s = Scratch::new();
+        let tree = s.run(&["mktree"], Some(b""));
+        let raw = format!(
+            "tree {tree}\nauthor t <t@example.invalid> 0 +0000\ncommitter t <t@example.invalid> 0 +0000\n"
+        );
+        let c = s.run(
+            &["hash-object", "-t", "commit", "-w", "--stdin"],
+            Some(raw.as_bytes()),
+        );
+        s.run(&["update-ref", "refs/heads/main", &c], None);
+        let path = s.0.join("t.bundle");
+        s.run(&["bundle", "create", &path.to_string_lossy(), "main"], None);
+        let b = Bundle::open(&path).unwrap();
+        assert_eq!(b.message(&c), Ok(Some(String::new())));
+    }
+
     /// An absent object is `Ok(None)`; a git failure is `Err`, never "absent".
     #[test]
     fn git_failures_are_not_absence() {
