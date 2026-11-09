@@ -487,9 +487,16 @@ impl std::fmt::Display for ExportError {
 
 #[cfg(test)]
 impl Bundle {
-    /// The repository directory, for tests that break it after opening.
-    pub(crate) fn dir(&self) -> &Path {
-        &self.dir
+    /// Break the repository so that every later git command fails with status
+    /// 128 ("bad config line"). Unlike removing `HEAD`, this does not depend on
+    /// git's repository discovery or on where the temp directory lies.
+    pub(crate) fn break_for_test(&self) {
+        std::fs::write(
+            self.dir.join("config"),
+            "[[[bad
+",
+        )
+        .unwrap();
     }
 }
 
@@ -818,7 +825,7 @@ pub(crate) mod tests {
         let s = Scratch::new();
         let b = Bundle::open(&s.bundle(&[("100644", "blob", "history.yaml")])).unwrap();
         let head = b.branch("main").unwrap().unwrap();
-        std::fs::remove_file(b.dir.join("HEAD")).unwrap();
+        b.break_for_test();
         assert!(matches!(
             b.export(&head),
             Err(ExportError::Environment(e)) if e.starts_with("git failed")

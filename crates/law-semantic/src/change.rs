@@ -33,16 +33,17 @@ pub(crate) fn snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError
     let dir = b.export(commit)?;
     // The export holds every blob byte for byte, so the raw manifest is read from
     // it rather than from git again. No file of that name (absent, or a directory
-    // in the tree) is no manifest, a finding about the data; only a failure to read
-    // a file that is there leaves the check undetermined.
+    // in the tree) is no manifest, a finding about the data; failing to look at or
+    // read the file leaves the check undetermined.
     let manifest = dir.join("history.yaml");
-    let history_bytes = if manifest.is_file() {
-        let bytes = std::fs::read(&manifest).map_err(|e| {
-            ExportError::Environment(format!("cannot read history.yaml at {commit}: {e}"))
-        })?;
-        Some(bytes)
-    } else {
-        None
+    let unreadable = |e: std::io::Error| {
+        ExportError::Environment(format!("cannot read history.yaml at {commit}: {e}"))
+    };
+    let history_bytes = match std::fs::metadata(&manifest) {
+        Ok(m) if m.is_file() => Some(std::fs::read(&manifest).map_err(unreadable)?),
+        Ok(_) => None,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
+        Err(e) => return Err(unreadable(e)),
     };
     let history = match load_yaml(&dir.join("history.yaml")) {
         Loaded::Ok(v, _) => Some(v),
@@ -431,16 +432,13 @@ mod tests {
     }
 
     /// When git fails (not "absent"), the check is incomplete with git's reason,
-    /// and reports no finding about the data. Without `HEAD` git no longer takes
-    /// the directory for a repository, so every git command exits with status 128
-    /// (this relies on git's repository discovery, and on the temp directory not
-    /// lying inside another repository).
+    /// and reports no finding about the data.
     #[test]
     fn git_failure_is_incomplete_not_a_finding() {
         let s = Scratch::new();
         let (path, c) = s.chain(&[b"base\n", b"head\n\nLoJ-Change: metadata\n"]);
         let b = Bundle::open(&path).unwrap();
-        std::fs::remove_file(b.dir().join("HEAD")).unwrap();
+        b.break_for_test();
         let r = check_bundle(&b, Findings::default(), Report::default(), &c[0], &c[1]);
         assert_eq!(result(&r), ResultValue::Incomplete);
         assert!(

@@ -198,6 +198,9 @@ fn resolve_in(
     };
     let snap = match crate::change::snapshot(b, &commit) {
         Ok(s) => s,
+        // Unlike the change check, a refused tree (`ExportError::Tree`) is not
+        // told apart here: either way the revision cannot be read, so the
+        // reference is not fetched, with the reason (as before this distinction).
         Err(e) => return not_fetched(f, out, reference, e.to_string()),
     };
     let Some(h) = snap.history.as_ref() else {
@@ -309,10 +312,8 @@ mod tests {
         let b = Bundle::open(&bundle).unwrap();
         let (f, out) = resolve(&b);
         assert_eq!(out["result"], "resolved", "{out} {:?}", f.items);
-        // Without HEAD git no longer takes the directory for a repository, so
-        // every git command fails (this relies on git's repository discovery, and
-        // on the temp directory not lying inside another repository).
-        std::fs::remove_file(b.dir().join("HEAD")).unwrap();
+        // A broken repository: every git command fails.
+        b.break_for_test();
         let (f, out) = resolve(&b);
         assert_eq!(out["result"], "notFetched", "{out}");
         assert!(!f.failed(RF), "{:?}", f.items);
