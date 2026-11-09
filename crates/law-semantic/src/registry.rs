@@ -90,9 +90,13 @@ impl Registry {
         for _ in 0..16 {
             let rec = match self.records.get(&id) {
                 Some(rec) => rec,
-                None => match self.aliases.get(&id.to_ascii_lowercase()) {
-                    Some(target) if self.records.contains_key(target) => &self.records[target],
-                    _ => return Resolution::NotFetched(format!("{id} is not in the registry")),
+                None => match self
+                    .aliases
+                    .get(&id.to_ascii_lowercase())
+                    .and_then(|target| self.records.get(target))
+                {
+                    Some(rec) => rec,
+                    None => return Resolution::NotFetched(format!("{id} is not in the registry")),
                 },
             };
             match rec["status"].as_str() {

@@ -124,7 +124,11 @@ fn resolve(bundle: &Path, registry_dir: &Path, reference: &str, f: &mut Findings
             return;
         }
     };
-    let branch = reg.records[&record]["repository"]["canonicalBranch"]
+    let Some(rec) = reg.records.get(&record) else {
+        *out = json!({"result": "notFetched"});
+        return;
+    };
+    let branch = rec["repository"]["canonicalBranch"]
         .as_str()
         .unwrap_or("main")
         .to_owned();

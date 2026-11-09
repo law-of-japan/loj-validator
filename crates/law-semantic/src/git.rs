@@ -63,6 +63,23 @@ fn safe_name(name: &str) -> Result<(), String> {
     Ok(())
 }
 
+#[cfg(windows)]
+const NULL_DEVICE: &str = "NUL";
+#[cfg(not(windows))]
+const NULL_DEVICE: &str = "/dev/null";
+
+/// A revision argument from the caller (CLI, reference string). Refuse values git
+/// could read as an option, or that carry whitespace or control characters.
+fn revision(rev: &str) -> Result<(), String> {
+    if rev.is_empty()
+        || rev.starts_with('-')
+        || rev.chars().any(|c| c.is_whitespace() || c.is_control())
+    {
+        return Err(format!("not a revision: {rev:?}"));
+    }
+    Ok(())
+}
+
 /// Strip a verbatim `\\?\` prefix, which git would read as a host name.
 #[cfg(windows)]
 fn git_path(path: PathBuf) -> PathBuf {
@@ -102,12 +119,23 @@ impl Bundle {
         ])?;
         Ok(b)
     }
+    /// Run git in the bundle's repository, isolated from the caller's git
+    /// environment (`GIT_DIR`, `GIT_CONFIG_*`, …) and from the user and system
+    /// configuration, so the result depends only on the bundle.
     fn git(&self, args: &[&str]) -> Result<Vec<u8>, String> {
-        let out = Command::new("git")
+        let mut cmd = Command::new("git");
+        for (key, _) in std::env::vars_os() {
+            if key.to_string_lossy().starts_with("GIT_") {
+                cmd.env_remove(key);
+            }
+        }
+        let out = cmd
             .arg("-C")
             .arg(&self.dir)
             .args(["-c", "core.autocrlf=false", "-c", "core.safecrlf=false"])
             .args(args)
+            .env("GIT_CONFIG_NOSYSTEM", "1")
+            .env("GIT_CONFIG_GLOBAL", NULL_DEVICE)
             .env("GIT_TERMINAL_PROMPT", "0")
             .output()
             .map_err(|e| format!("git is not available: {e}"))?;
@@ -124,6 +152,7 @@ impl Bundle {
     }
     /// The full hash of an existing commit, if the object is present.
     pub fn commit(&self, rev: &str) -> Option<String> {
+        revision(rev).ok()?;
         self.text(&[
             "rev-parse",
             "--verify",
@@ -135,10 +164,14 @@ impl Bundle {
         self.commit(&format!("refs/heads/{name}"))
     }
     pub fn is_ancestor(&self, a: &str, b: &str) -> bool {
-        self.git(&["merge-base", "--is-ancestor", a, b]).is_ok()
+        revision(a).is_ok()
+            && revision(b).is_ok()
+            && self.git(&["merge-base", "--is-ancestor", a, b]).is_ok()
     }
     /// Commits of `base..head`, oldest first, each with its first parent.
     pub fn range(&self, base: &str, head: &str) -> Option<Vec<(String, Option<String>)>> {
+        revision(base).ok()?;
+        revision(head).ok()?;
         let list = self.text(&[
             "rev-list",
             "--reverse",
@@ -159,12 +192,14 @@ impl Bundle {
     /// The raw commit message (UTF-8, CHG-03). The header ends at the first empty
     /// line; continuation lines of multi-line headers (e.g. `gpgsig`) start with a space.
     pub fn message(&self, commit: &str) -> Option<String> {
+        revision(commit).ok()?;
         let raw = self.git(&["cat-file", "commit", commit]).ok()?;
         let raw = String::from_utf8(raw).ok()?;
         raw.split_once("\n\n").map(|(_, m)| m.to_owned())
     }
     /// A blob at `commit:path`, raw.
     pub fn blob(&self, commit: &str, path: &str) -> Option<Vec<u8>> {
+        revision(commit).ok()?;
         self.git(&["cat-file", "blob", &format!("{commit}:{path}")])
             .ok()
     }
@@ -172,6 +207,7 @@ impl Bundle {
     /// name is checked before anything is written; symbolic links, submodules and
     /// non-UTF-8 names are refused with an `Err`, never followed or written.
     pub fn export(&self, commit: &str) -> Result<PathBuf, String> {
+        revision(commit)?;
         let listing = self.git(&["ls-tree", "-r", "-z", "--full-tree", commit])?;
         let mut entries = Vec::new();
         for entry in listing.split(|b| *b == 0).filter(|n| !n.is_empty()) {
@@ -288,10 +324,18 @@ mod tests {
         fn run(&self, args: &[&str], stdin: Option<&[u8]>) -> String {
             use std::io::Write;
             use std::process::Stdio;
-            let mut child = Command::new("git")
+            let mut cmd = Command::new("git");
+            for (key, _) in std::env::vars_os() {
+                if key.to_string_lossy().starts_with("GIT_") {
+                    cmd.env_remove(key);
+                }
+            }
+            let mut child = cmd
                 .arg("-C")
                 .arg(&self.0)
                 .args(args)
+                .env("GIT_CONFIG_NOSYSTEM", "1")
+                .env("GIT_CONFIG_GLOBAL", NULL_DEVICE)
                 .env("GIT_AUTHOR_NAME", "t")
                 .env("GIT_AUTHOR_EMAIL", "t@example.invalid")
                 .env("GIT_COMMITTER_NAME", "t")
@@ -375,5 +419,21 @@ mod tests {
     #[test]
     fn case_collisions_are_refused() {
         refused(&[("100644", "blob", "A.yaml"), ("100644", "blob", "a.yaml")]);
+    }
+
+    #[test]
+    fn option_like_revisions_are_refused() {
+        for bad in ["", "-h", "--all", "--output=x", "a b", "a\nb"] {
+            assert!(revision(bad).is_err(), "{bad:?}");
+        }
+        let s = Scratch::new();
+        let b = Bundle::open(&s.bundle(&[("100644", "blob", "history.yaml")])).unwrap();
+        let head = b.branch("main").unwrap();
+        assert!(revision(&head).is_ok());
+        assert_eq!(b.commit("--all"), None);
+        assert!(!b.is_ancestor("--all", &head));
+        assert_eq!(b.range("--all", &head), None);
+        assert_eq!(b.message("--all"), None);
+        assert!(b.export("--all").is_err());
     }
 }
