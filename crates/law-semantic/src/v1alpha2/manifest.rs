@@ -335,7 +335,7 @@ mod tests {
 
     #[test]
     fn invalid_sources_consume_total_budget_before_retention() {
-        let dir = std::env::temp_dir().join(format!("loj-budget-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("loj2-budget-{}", std::process::id()));
         fs::create_dir_all(&dir).unwrap();
         for bytes in [b"\xffabc".as_slice(), b"\xef\xbb\xbfa", b"a\0bc", b"a\rbc"] {
             let path = dir.join("input.md");
@@ -382,7 +382,7 @@ mod tests {
 
     #[test]
     fn mixed_valid_and_invalid_sources_share_exact_budget() {
-        let dir = std::env::temp_dir().join(format!("loj-mixed-budget-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("loj2-mixed-budget-{}", std::process::id()));
         fs::create_dir_all(&dir).unwrap();
         let path = dir.join("input.md");
         let mut ctx = Context::default();
