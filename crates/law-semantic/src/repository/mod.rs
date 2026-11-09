@@ -152,8 +152,11 @@ pub fn check(repo: &Path, checks: &[Check]) -> Report {
             scope_nodes(h, &asts, &mut f);
         }
     }
+    if wants(Check::REBUILD) {
+        crate::rebuild::check(repo, h.as_ref(), &asts, &mut f);
+    }
     let mut out = Report::default();
-    for c in [HS, EVIDENCE] {
+    for c in [HS, EVIDENCE, Check::REBUILD] {
         out.set(c, f.result(c));
     }
     for (c, r) in out.results {

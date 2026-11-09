@@ -329,3 +329,8 @@ fn registry_v1alpha1() {
 fn common_records_v1alpha1() {
     suite_kinds("common/v1alpha1", &["records"]);
 }
+
+#[test]
+fn rebuild_v1alpha1() {
+    suite("loj-rebuild/v1alpha1");
+}

@@ -17,6 +17,7 @@ pub mod checks;
 pub mod common;
 pub mod mapping;
 pub mod number;
+pub mod rebuild;
 pub mod references;
 pub mod registry;
 pub mod repository;
