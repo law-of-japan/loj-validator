@@ -106,7 +106,9 @@ const GIT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(120);
 type Output = (std::process::ExitStatus, Vec<u8>, Vec<u8>);
 
 /// Run `cmd`, reading its output on separate threads so a full pipe never blocks
-/// it, and kill it if it runs longer than `limit`.
+/// it, and kill it if it runs longer than `limit`. Only the direct child is killed:
+/// this assumes plain git commands, which (with hooks disabled) start no process
+/// that would keep the pipes open after git exits.
 fn run_with_timeout(mut cmd: Command, limit: std::time::Duration) -> Result<Output, String> {
     use std::io::Read;
     use std::process::Stdio;
@@ -164,18 +166,29 @@ const NULL_DEVICE: &str = "NUL";
 #[cfg(not(windows))]
 const NULL_DEVICE: &str = "/dev/null";
 
-/// A revision argument from the caller (CLI, reference string). Refuse values git
-/// could read as an option, a range (`..`), or that carry whitespace or control
-/// characters.
+/// A revision argument from the caller (CLI, reference string, registry). Only a
+/// commit hash (4 to 64 lowercase hex digits) or `refs/heads/<branch>` is accepted,
+/// so no value can act as an option, a range or a rev expression (`^`, `~`, `:`,
+/// `@{`, …).
 fn revision(rev: &str) -> Result<(), String> {
-    if rev.is_empty()
-        || rev.starts_with('-')
-        || rev.contains("..")
-        || rev.chars().any(|c| c.is_whitespace() || c.is_control())
-    {
-        return Err(format!("not a revision: {rev:?}"));
+    let hash = (4..=64).contains(&rev.len())
+        && rev.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'));
+    let branch = rev.strip_prefix("refs/heads/").is_some_and(|name| {
+        !name.is_empty()
+            && !name.starts_with(['-', '/', '.'])
+            && !name.ends_with(['/', '.'])
+            && !name.contains("..")
+            && !name.contains("//")
+            && !name.ends_with(".lock")
+            && name
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'-' | b'_' | b'.' | b'/'))
+    });
+    if hash || branch {
+        Ok(())
+    } else {
+        Err(format!("not a commit hash or branch: {rev:?}"))
     }
-    Ok(())
 }
 
 /// Strip a verbatim `\\?\` prefix, which git would read as a host name.
@@ -605,8 +618,29 @@ mod tests {
             "a\nb",
             "a..b",
             "a...b",
+            "HEAD",
+            "abc",
+            "ABCDEF12",
+            "abcd^",
+            "abcd~1",
+            "abcd:history.yaml",
+            "main@{1}",
+            "refs/heads/",
+            "refs/heads/-x",
+            "refs/heads/a..b",
+            "refs/heads/a^",
+            "refs/heads/x.lock",
+            "refs/tags/v1",
         ] {
             assert!(revision(bad).is_err(), "{bad:?}");
+        }
+        for ok in [
+            "abcd",
+            "0123456789abcdef0123456789abcdef01234567",
+            "refs/heads/main",
+            "refs/heads/feat/x-1",
+        ] {
+            assert!(revision(ok).is_ok(), "{ok:?}");
         }
         let s = Scratch::new();
         let b = Bundle::open(&s.bundle(&[("100644", "blob", "history.yaml")])).unwrap();
