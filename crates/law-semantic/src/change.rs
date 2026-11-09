@@ -248,7 +248,7 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
                             "undetermined",
                             "CHG-02",
                             COMMON,
-                            format!("{c}: {e}"),
+                            format!("{c}: tree refused: {e}"),
                             &at,
                             "",
                         );

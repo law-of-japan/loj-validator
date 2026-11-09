@@ -163,8 +163,9 @@ fn run_with_timeout(mut cmd: Command, limit: std::time::Duration) -> Result<Outp
 
 /// Why a git command that ran to the end failed.
 /// Only the first line of stderr, cut to `MAX_REASON` characters and with control
-/// characters (terminal escapes, `\r`) replaced by `?`, goes into the report:
-/// stderr can be long, and a bundle chooses part of it.
+/// characters (terminal escapes, `\r`) and invisible format characters (bidi
+/// overrides, zero-width marks) replaced by `?`, goes into the report: stderr can
+/// be long, and a bundle chooses part of it.
 fn failure(status: &std::process::ExitStatus, stderr: &[u8]) -> String {
     const MAX_REASON: usize = 300;
     let stderr = String::from_utf8_lossy(stderr);
@@ -172,7 +173,13 @@ fn failure(status: &std::process::ExitStatus, stderr: &[u8]) -> String {
     let mut stderr: String = first
         .chars()
         .take(MAX_REASON)
-        .map(|c| if c.is_control() { '?' } else { c })
+        .map(|c| {
+            if c.is_control() || invisible(c) {
+                '?'
+            } else {
+                c
+            }
+        })
         .collect();
     if first.chars().count() > MAX_REASON {
         stderr.push('…');
@@ -182,6 +189,13 @@ fn failure(status: &std::process::ExitStatus, stderr: &[u8]) -> String {
     } else {
         format!("git failed ({status}): {stderr}")
     }
+}
+
+/// A format character that changes how text around it is shown without being
+/// seen itself: zero-width marks, bidi embeddings, overrides and isolates, and
+/// the byte order mark.
+fn invisible(c: char) -> bool {
+    matches!(c, '\u{200B}'..='\u{200F}' | '\u{202A}'..='\u{202E}' | '\u{2060}'..='\u{2069}' | '\u{FEFF}')
 }
 
 #[cfg(windows)]
@@ -857,6 +871,8 @@ pub(crate) mod tests {
         };
         let reason = failure(&status, b"fatal: \x1b[31mred\x1b[0m\rx\nsecond line");
         assert!(reason.ends_with("fatal: ?[31mred?[0m?x"), "{reason}");
+        let reason = failure(&status, "a\u{202E}b\u{200B}c".as_bytes());
+        assert!(reason.ends_with("a?b?c"), "{reason}");
         let long = "x".repeat(1000);
         let reason = failure(&status, long.as_bytes());
         assert!(
