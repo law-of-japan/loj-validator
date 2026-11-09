@@ -1,6 +1,8 @@
 //! Minimal read-only access to a `git bundle` through the `git` command.
 //! Blobs are read raw (no line-ending conversion), so byte positions hold.
-use std::path::{Path, PathBuf};
+//! A bundle is untrusted input: tree entry names are checked before anything is
+//! written, and only regular files are exported.
+use std::path::{Component, Path, PathBuf};
 use std::process::Command;
 
 /// A bare repository fetched from a bundle into a temporary directory.
@@ -9,49 +11,93 @@ pub struct Bundle {
     exports: std::cell::RefCell<Vec<PathBuf>>,
 }
 
-fn temp(prefix: &str) -> PathBuf {
+/// Create a fresh, empty temporary directory. `create_dir` fails if the name is
+/// already taken, so a directory planted in the shared temp location is never reused.
+fn temp(prefix: &str) -> Result<PathBuf, String> {
     use std::sync::atomic::{AtomicU64, Ordering};
     static N: AtomicU64 = AtomicU64::new(0);
-    let nanos = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_or(0, |d| d.as_nanos());
-    std::env::temp_dir().join(format!(
-        "{prefix}-{}-{nanos}-{}",
-        std::process::id(),
-        N.fetch_add(1, Ordering::Relaxed)
-    ))
+    let base = std::env::temp_dir();
+    for _ in 0..16 {
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |d| d.as_nanos());
+        let dir = base.join(format!(
+            "{prefix}-{}-{nanos}-{}",
+            std::process::id(),
+            N.fetch_add(1, Ordering::Relaxed)
+        ));
+        match std::fs::create_dir(&dir) {
+            Ok(()) => return Ok(dir),
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
+            Err(e) => return Err(format!("cannot create a temporary directory: {e}")),
+        }
+    }
+    Err("cannot create a fresh temporary directory".into())
+}
+
+/// Reject a tree entry name that could escape the export directory or that is not
+/// portable: empty, absolute, `.`/`..`/empty components, a `.git` component (any case),
+/// or a `:` or `\`.
+fn safe_name(name: &str) -> Result<(), String> {
+    let bad = || Err(format!("unsafe path in the bundle tree: {name:?}"));
+    if name.is_empty() || name.contains(['\\', ':']) || name.starts_with('/') {
+        return bad();
+    }
+    if name
+        .split('/')
+        .any(|c| c.is_empty() || c == "." || c == ".." || c.eq_ignore_ascii_case(".git"))
+    {
+        return bad();
+    }
+    if !Path::new(name)
+        .components()
+        .all(|c| matches!(c, Component::Normal(_)))
+    {
+        return bad();
+    }
+    Ok(())
+}
+
+/// Strip a verbatim `\\?\` prefix, which git would read as a host name.
+#[cfg(windows)]
+fn git_path(path: PathBuf) -> PathBuf {
+    let text = path.to_string_lossy().into_owned();
+    match text.strip_prefix(r"\\?\") {
+        Some(rest) => PathBuf::from(rest),
+        None => path,
+    }
+}
+#[cfg(not(windows))]
+fn git_path(path: PathBuf) -> PathBuf {
+    path
 }
 
 impl Bundle {
     /// Fetch every branch of the bundle. `Err` means the input is not available.
     pub fn open(bundle: &Path) -> Result<Bundle, String> {
-        let bundle = bundle
-            .canonicalize()
-            .map_err(|e| format!("bundle unreadable: {e}"))?;
-        // A verbatim `\?\` prefix would be read by git as a host name.
-        let text = bundle.to_string_lossy().into_owned();
-        let bundle = PathBuf::from(text.strip_prefix(r"\\?\").unwrap_or(&text));
-        let dir = temp("loj-bundle");
+        let bundle = git_path(
+            bundle
+                .canonicalize()
+                .map_err(|e| format!("bundle unreadable: {e}"))?,
+        );
         let b = Bundle {
-            dir,
+            dir: temp("loj-bundle")?,
             exports: Default::default(),
         };
-        b.git(&["init", "--quiet", "--bare", "."], true)?;
-        b.git(
-            &[
-                "fetch",
-                "--quiet",
-                &bundle.to_string_lossy(),
-                "+refs/heads/*:refs/heads/*",
-            ],
-            false,
-        )?;
+        b.git(&["init", "--quiet", "--bare", "."])?;
+        b.git(&[
+            "-c",
+            "transfer.fsckObjects=true",
+            "-c",
+            "fetch.fsckObjects=true",
+            "fetch",
+            "--quiet",
+            &bundle.to_string_lossy(),
+            "+refs/heads/*:refs/heads/*",
+        ])?;
         Ok(b)
     }
-    fn git(&self, args: &[&str], create: bool) -> Result<Vec<u8>, String> {
-        if create {
-            std::fs::create_dir_all(&self.dir).map_err(|e| e.to_string())?;
-        }
+    fn git(&self, args: &[&str]) -> Result<Vec<u8>, String> {
         let out = Command::new("git")
             .arg("-C")
             .arg(&self.dir)
@@ -66,7 +112,7 @@ impl Bundle {
         Ok(out.stdout)
     }
     fn text(&self, args: &[&str]) -> Option<String> {
-        self.git(args, false)
+        self.git(args)
             .ok()
             .and_then(|b| String::from_utf8(b).ok())
             .map(|s| s.trim().to_owned())
@@ -84,8 +130,7 @@ impl Bundle {
         self.commit(&format!("refs/heads/{name}"))
     }
     pub fn is_ancestor(&self, a: &str, b: &str) -> bool {
-        self.git(&["merge-base", "--is-ancestor", a, b], false)
-            .is_ok()
+        self.git(&["merge-base", "--is-ancestor", a, b]).is_ok()
     }
     /// Commits of `base..head`, oldest first, each with its first parent.
     pub fn range(&self, base: &str, head: &str) -> Option<Vec<(String, Option<String>)>> {
@@ -106,23 +151,47 @@ impl Bundle {
                 .collect(),
         )
     }
-    /// The raw commit message (UTF-8, CHG-03).
+    /// The raw commit message (UTF-8, CHG-03). The header ends at the first empty
+    /// line; continuation lines of multi-line headers (e.g. `gpgsig`) start with a space.
     pub fn message(&self, commit: &str) -> Option<String> {
-        let raw = self.git(&["cat-file", "commit", commit], false).ok()?;
+        let raw = self.git(&["cat-file", "commit", commit]).ok()?;
         let raw = String::from_utf8(raw).ok()?;
         raw.split_once("\n\n").map(|(_, m)| m.to_owned())
     }
     /// A blob at `commit:path`, raw.
     pub fn blob(&self, commit: &str, path: &str) -> Option<Vec<u8>> {
-        self.git(&["cat-file", "blob", &format!("{commit}:{path}")], false)
+        self.git(&["cat-file", "blob", &format!("{commit}:{path}")])
             .ok()
     }
-    /// Write the tree of `commit` to a fresh directory, byte for byte.
+    /// Write the tree of `commit` to a fresh directory, byte for byte. Every entry
+    /// name is checked before anything is written; symbolic links, submodules and
+    /// non-UTF-8 names are refused with an `Err`, never followed or written.
     pub fn export(&self, commit: &str) -> Result<PathBuf, String> {
-        let names = self.git(&["ls-tree", "-r", "-z", "--name-only", commit], false)?;
-        let out = temp("loj-tree");
-        for name in names.split(|b| *b == 0).filter(|n| !n.is_empty()) {
-            let name = String::from_utf8(name.to_vec()).map_err(|e| e.to_string())?;
+        let listing = self.git(&["ls-tree", "-r", "-z", "--full-tree", commit])?;
+        let mut entries = Vec::new();
+        for entry in listing.split(|b| *b == 0).filter(|n| !n.is_empty()) {
+            let entry = String::from_utf8(entry.to_vec()).map_err(|_| {
+                format!(
+                    "non-UTF-8 path in the bundle tree: {:?}",
+                    String::from_utf8_lossy(entry)
+                )
+            })?;
+            let (meta, name) = entry
+                .split_once('\t')
+                .ok_or_else(|| format!("unexpected ls-tree entry: {entry:?}"))?;
+            let mode = meta.split(' ').next().unwrap_or("");
+            safe_name(name)?;
+            if !matches!(mode, "100644" | "100755") {
+                return Err(format!(
+                    "unsupported tree entry (mode {mode}) in the bundle: {name:?}"
+                ));
+            }
+            entries.push(name.to_owned());
+        }
+        let out = temp("loj-tree")?;
+        // Registered before writing, so a failure part-way still removes the tree.
+        self.exports.borrow_mut().push(out.clone());
+        for name in entries {
             let bytes = self
                 .blob(commit, &name)
                 .ok_or_else(|| format!("cannot read {name}"))?;
@@ -132,8 +201,6 @@ impl Bundle {
             }
             std::fs::write(&path, bytes).map_err(|e| e.to_string())?;
         }
-        std::fs::create_dir_all(&out).map_err(|e| e.to_string())?;
-        self.exports.borrow_mut().push(out.clone());
         Ok(out)
     }
 }
@@ -144,5 +211,135 @@ impl Drop for Bundle {
             let _ = std::fs::remove_dir_all(d);
         }
         let _ = std::fs::remove_dir_all(&self.dir);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn safe_names() {
+        for ok in [
+            "history.yaml",
+            "versions/98mj5vgx/law.yaml",
+            "a.b/c..d",
+            ".gitattributes",
+        ] {
+            assert!(safe_name(ok).is_ok(), "{ok}");
+        }
+        for bad in [
+            "",
+            "/etc/passwd",
+            "..",
+            "../x",
+            "a/../../x",
+            "./x",
+            "a//b",
+            "a/",
+            ".git/config",
+            "a/.GIT/hooks/x",
+            "C:/x",
+            "a:b",
+            r"a\b",
+            r"..\x",
+        ] {
+            assert!(safe_name(bad).is_err(), "{bad}");
+        }
+    }
+
+    /// A scratch repository with git commands, for building hostile bundles.
+    struct Scratch(PathBuf);
+    impl Scratch {
+        fn new() -> Scratch {
+            let s = Scratch(temp("loj-test").unwrap());
+            s.run(&["init", "--quiet", "-b", "main"], None);
+            s
+        }
+        fn run(&self, args: &[&str], stdin: Option<&[u8]>) -> String {
+            use std::io::Write;
+            use std::process::Stdio;
+            let mut child = Command::new("git")
+                .arg("-C")
+                .arg(&self.0)
+                .args(args)
+                .env("GIT_AUTHOR_NAME", "t")
+                .env("GIT_AUTHOR_EMAIL", "t@example.invalid")
+                .env("GIT_COMMITTER_NAME", "t")
+                .env("GIT_COMMITTER_EMAIL", "t@example.invalid")
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()
+                .unwrap();
+            child
+                .stdin
+                .take()
+                .unwrap()
+                .write_all(stdin.unwrap_or(b""))
+                .unwrap();
+            let out = child.wait_with_output().unwrap();
+            assert!(
+                out.status.success(),
+                "git {args:?}: {}",
+                String::from_utf8_lossy(&out.stderr)
+            );
+            String::from_utf8(out.stdout).unwrap().trim().to_owned()
+        }
+        /// Commit a tree made of `(mode, type, name)` entries holding `content`, and
+        /// bundle `main`.
+        fn bundle(&self, entries: &[(&str, &str, &str)]) -> PathBuf {
+            let blob = self.run(&["hash-object", "-w", "--stdin"], Some(b"x\n"));
+            let mut spec = String::new();
+            for (mode, kind, name) in entries {
+                spec.push_str(&format!("{mode} {kind} {blob}\t{name}\n"));
+            }
+            let tree = self.run(&["mktree"], Some(spec.as_bytes()));
+            let commit = self.run(&["commit-tree", &tree, "-m", "t"], None);
+            self.run(&["update-ref", "refs/heads/main", &commit], None);
+            let path = self.0.join("t.bundle");
+            self.run(&["bundle", "create", &path.to_string_lossy(), "main"], None);
+            path
+        }
+    }
+    impl Drop for Scratch {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
+    }
+
+    /// The bundle is either refused when fetched (fsck) or its export fails; it never
+    /// writes outside the export directory.
+    fn refused(entries: &[(&str, &str, &str)]) {
+        let s = Scratch::new();
+        let path = s.bundle(entries);
+        let Ok(b) = Bundle::open(&path) else { return };
+        let head = b.branch("main").unwrap();
+        assert!(b.export(&head).is_err(), "{entries:?}");
+        assert!(b.exports.borrow().is_empty(), "nothing was written");
+    }
+
+    #[test]
+    fn regular_tree_exports() {
+        let s = Scratch::new();
+        let path = s.bundle(&[("100644", "blob", "history.yaml")]);
+        let b = Bundle::open(&path).unwrap();
+        let out = b.export(&b.branch("main").unwrap()).unwrap();
+        assert_eq!(std::fs::read(out.join("history.yaml")).unwrap(), b"x\n");
+        drop(b);
+        assert!(!out.exists(), "the export is removed with the bundle");
+    }
+
+    #[test]
+    fn traversal_names_are_refused() {
+        refused(&[("100644", "blob", "..")]);
+        refused(&[("100644", "blob", ".git")]);
+        refused(&[("100644", "blob", "a:b")]);
+        refused(&[("100644", "blob", r"..\x")]);
+    }
+
+    #[test]
+    fn symlinks_are_refused() {
+        refused(&[("120000", "blob", "link")]);
     }
 }
