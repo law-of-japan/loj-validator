@@ -31,7 +31,13 @@ pub(crate) struct Snapshot {
 
 pub(crate) fn snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, String> {
     let dir = b.export(commit)?;
-    let history_bytes = b.blob(commit, "history.yaml");
+    // The export holds every blob byte for byte, so the raw manifest is read from
+    // it rather than from git again.
+    let history_bytes = match std::fs::read(dir.join("history.yaml")) {
+        Ok(bytes) => Some(bytes),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
+        Err(e) => return Err(format!("cannot read history.yaml at {commit}: {e}")),
+    };
     let history = match load_yaml(&dir.join("history.yaml")) {
         Loaded::Ok(v, _) => Some(v),
         _ => None,
@@ -86,6 +92,15 @@ fn trailers(message: &str) -> (Vec<String>, Option<Vec<String>>) {
     (kinds, revisions)
 }
 
+/// End the check as incomplete (VAL-04), with `why` as the reason.
+fn undetermined(mut f: Findings, report: Report, why: String) -> Report {
+    f.incomplete.insert(CH);
+    f.note(CH, "undetermined", "CHG-02", COMMON, why, "", "");
+    let mut r = f.into_report(&[CH]);
+    r.target = report.target;
+    r
+}
+
 pub fn check(bundle: &Path, base: &str, head: &str) -> Report {
     let mut f = Findings::default();
     let mut report = Report::default();
@@ -111,29 +126,44 @@ pub fn check(bundle: &Path, base: &str, head: &str) -> Report {
     report
         .target
         .insert("repository".into(), json!(bundle.to_string_lossy()));
-    let (Some(base), Some(head)) = (b.commit(base), b.commit(head)) else {
-        f.incomplete.insert(CH);
-        f.note(
-            CH,
-            "undetermined",
-            "CHG-02",
-            COMMON,
-            "base or head commit is not in the bundle",
-            "",
-            "",
-        );
-        return f.into_report(&[CH]);
+    // A git failure leaves the check incomplete with its reason (VAL-04); it is
+    // never reported as a finding about the data.
+    let (base, head) = match (b.commit(base), b.commit(head)) {
+        (Ok(Some(base)), Ok(Some(head))) => (base, head),
+        (Err(e), _) | (_, Err(e)) => return undetermined(f, report, e),
+        _ => {
+            let why = "base or head commit is not in the bundle".into();
+            return undetermined(f, report, why);
+        }
     };
     report.target.insert("commit".into(), json!(head));
     f.applicable.insert(CH);
-    let Some(commits) = b.range(&base, &head) else {
-        f.incomplete.insert(CH);
-        return f.into_report(&[CH]);
+    let commits = match b.range(&base, &head) {
+        Ok(c) => c,
+        Err(e) => return undetermined(f, report, e),
     };
     let mut cache: BTreeMap<String, Snapshot> = BTreeMap::new();
     for (commit, parent) in commits {
         let at = format!("commit {commit}");
-        let message = b.message(&commit).unwrap_or_default();
+        let message = match b.message(&commit) {
+            Ok(Some(m)) => m,
+            Ok(None) => {
+                f.error(
+                    CH,
+                    "CHG-03",
+                    COMMON,
+                    format!("{commit}: the commit message is not UTF-8"),
+                    &at,
+                    "",
+                );
+                continue;
+            }
+            Err(e) => {
+                f.incomplete.insert(CH);
+                f.note(CH, "undetermined", "CHG-03", COMMON, e, &at, "");
+                continue;
+            }
+        };
         let (kinds, revisions) = trailers(&message);
         let kind = match kinds.as_slice() {
             [k] if KINDS.contains(&k.as_str()) => k.clone(),

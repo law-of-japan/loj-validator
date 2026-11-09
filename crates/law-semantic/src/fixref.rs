@@ -132,42 +132,49 @@ fn resolve(bundle: &Path, registry_dir: &Path, reference: &str, f: &mut Findings
         .as_str()
         .unwrap_or("main")
         .to_owned();
+    // The repository could not be read (git missing or failing, an unusable tree):
+    // the reference is not fetched, with the reason, and never reported as
+    // unresolvable (VAL-04).
+    let not_fetched = |f: &mut Findings, out: &mut Value, why: String| {
+        f.note(RF, "undetermined", "FIXREF-06", COMMON, why, reference, "");
+        *out = json!({"result": "notFetched"});
+    };
     let b = match Bundle::open(bundle) {
         Ok(b) => b,
-        Err(_) => {
+        Err(e) => return not_fetched(f, out, e),
+    };
+    let tip = match b.branch(&branch) {
+        Ok(Some(tip)) => tip,
+        Ok(None) => {
             *out = json!({"result": "notFetched"});
             return;
         }
-    };
-    let Some(tip) = b.branch(&branch) else {
-        *out = json!({"result": "notFetched"});
-        return;
+        Err(e) => return not_fetched(f, out, e),
     };
     let commit = match &p.commit {
         None => tip.clone(), // FIXREF-05: latest record version of the canonical branch
         Some(c) => match b.commit(c) {
-            Some(full) if full == *c => {
-                if !b.is_ancestor(c, &tip) {
+            Ok(Some(full)) if full == *c => match b.is_ancestor(c, &tip) {
+                Ok(true) => full,
+                Ok(false) => {
                     return err(
                         f,
                         "FIXREF-04",
                         format!("{c} is not reachable from {branch}"),
                     );
                 }
-                full
-            }
-            _ => {
+                Err(e) => return not_fetched(f, out, e),
+            },
+            Ok(_) => {
                 *out = json!({"result": "notFetched"});
                 return;
             }
+            Err(e) => return not_fetched(f, out, e),
         },
     };
     let snap = match crate::change::snapshot(&b, &commit) {
         Ok(s) => s,
-        Err(_) => {
-            *out = json!({"result": "notFetched"});
-            return;
-        }
+        Err(e) => return not_fetched(f, out, e),
     };
     let Some(h) = snap.history.as_ref() else {
         return err(f, "FIXREF-06", format!("no history manifest at {commit}"));
