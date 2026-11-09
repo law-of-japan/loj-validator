@@ -462,17 +462,11 @@ mod tests {
         let s = Scratch::new();
         let blob = s.run(&["hash-object", "-w", "--stdin"], Some(b""));
         let tree = |name: &str| {
-            let spec = format!(
-                "100644 blob {blob}	{name}
-"
-            );
+            let spec = format!("100644 blob {blob}\t{name}\n");
             s.run(&["mktree"], Some(spec.as_bytes()))
         };
         let (good, bad) = (tree("history.yaml"), tree("a:b"));
-        let msg = "m
-
-LoJ-Change: metadata
-";
+        let msg = "m\n\nLoJ-Change: metadata\n";
         let base = s.run(&["commit-tree", &good, "-m", msg], None);
         let mid = s.run(&["commit-tree", &bad, "-p", &base, "-m", msg], None);
         let head = s.run(&["commit-tree", &good, "-p", &mid, "-m", msg], None);

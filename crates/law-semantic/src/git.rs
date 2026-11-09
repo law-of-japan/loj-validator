@@ -829,11 +829,7 @@ pub(crate) mod tests {
     #[test]
     fn ancestry_is_yes_or_no() {
         let s = Scratch::new();
-        let (path, c) = s.chain(&[
-            b"a
-", b"b
-",
-        ]);
+        let (path, c) = s.chain(&[b"a\n", b"b\n"]);
         let b = Bundle::open(&path).unwrap();
         assert_eq!(b.is_ancestor(&c[0], &c[1]), Ok(true));
         assert_eq!(b.is_ancestor(&c[1], &c[0]), Ok(false));

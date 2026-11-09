@@ -138,8 +138,8 @@ fn resolve(bundle: &Path, registry_dir: &Path, reference: &str, f: &mut Findings
     }
 }
 
-/// The repository could not be read (git missing or failing, an unusable tree):
-/// the reference is not fetched, with the reason, and never reported as
+/// The repository could not be read (git missing or failing, an unusable tree,
+/// no canonical branch): the reference is not fetched, with the reason, and never reported as
 /// unresolvable (VAL-04). `check` marks the check incomplete for every notFetched
 /// result; the note only adds the reason. The note carries FIXREF-06, the rule
 /// that defines the result values, notFetched among them.
@@ -165,10 +165,10 @@ fn resolve_in(
     let tip = match b.branch(branch) {
         Ok(Some(tip)) => tip,
         // The canonical branch is not in the bundle: the bundle does not hold the
-        // record's history, so the reference is not fetched (no git failure to note).
+        // record's history, so the reference is not fetched, and the note says why.
         Ok(None) => {
-            *out = json!({"result": "notFetched"});
-            return;
+            let why = format!("the canonical branch {branch} is not in the bundle");
+            return not_fetched(f, out, reference, why);
         }
         Err(e) => return not_fetched(f, out, reference, e),
     };
