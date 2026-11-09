@@ -372,9 +372,12 @@ impl Bundle {
     /// Write the tree of `commit` to a fresh directory, byte for byte. Every entry
     /// name is checked before anything is written; symbolic links, submodules and
     /// non-UTF-8 names are refused with an `Err`, never followed or written.
-    pub fn export(&self, commit: &str) -> Result<PathBuf, String> {
+    pub fn export(&self, commit: &str) -> Result<PathBuf, ExportError> {
+        use ExportError::Environment;
         revision(commit)?;
-        let listing = self.git(&["ls-tree", "-r", "-z", "-l", "--full-tree", commit])?;
+        let listing = self
+            .git(&["ls-tree", "-r", "-z", "-l", "--full-tree", commit])
+            .map_err(Environment)?;
         let mut entries = Vec::new();
         let mut total: u64 = 0;
         for entry in listing.split(|b| *b == 0).filter(|n| !n.is_empty()) {
@@ -392,7 +395,8 @@ impl Bundle {
             if !matches!(mode, "100644" | "100755") {
                 return Err(format!(
                     "unsupported tree entry (mode {mode}) in the bundle: {name:?}"
-                ));
+                )
+                .into());
             }
             // The same budget as a version package (16 MiB per file, 128 MiB in
             // all), checked from the tree before anything is read or written.
@@ -405,10 +409,11 @@ impl Bundle {
             if size > MAX_FILE || total > MAX_TOTAL {
                 return Err(format!(
                     "bundle tree exceeds the input budget (16 MiB/file, 128 MiB total) at {name:?}"
-                ));
+                )
+                .into());
             }
             if entries.len() >= MAX_ENTRIES {
-                return Err(format!("bundle tree has more than {MAX_ENTRIES} files"));
+                return Err(format!("bundle tree has more than {MAX_ENTRIES} files").into());
             }
             entries.push(name.to_owned());
         }
@@ -428,22 +433,48 @@ impl Bundle {
                 if *seen != prefix {
                     return Err(format!(
                         "paths differing only by case in the bundle: {seen:?} and {prefix:?}"
-                    ));
+                    )
+                    .into());
                 }
             }
         }
-        let out = temp("loj-tree")?;
+        let out = temp("loj-tree").map_err(Environment)?;
         // Registered before writing, so a failure part-way still removes the tree.
         self.exports.borrow_mut().push(out.clone());
         for name in entries {
-            let bytes = self.blob(commit, &name)?;
+            let bytes = self.blob(commit, &name).map_err(Environment)?;
             let path = out.join(&name);
             if let Some(p) = path.parent() {
-                std::fs::create_dir_all(p).map_err(|e| e.to_string())?;
+                std::fs::create_dir_all(p).map_err(|e| Environment(e.to_string()))?;
             }
-            std::fs::write(&path, bytes).map_err(|e| e.to_string())?;
+            std::fs::write(&path, bytes).map_err(|e| Environment(e.to_string()))?;
         }
         Ok(out)
+    }
+}
+
+/// Why a tree could not be exported.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ExportError {
+    /// The tree itself is refused (an unsafe or non-UTF-8 name, an unsupported
+    /// entry, the input budget, a case collision): a property of that commit.
+    Tree(String),
+    /// Git failed, or the export could not be written: a property of the
+    /// environment, which other commits would hit too.
+    Environment(String),
+}
+
+impl From<String> for ExportError {
+    fn from(e: String) -> Self {
+        ExportError::Tree(e)
+    }
+}
+
+impl std::fmt::Display for ExportError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ExportError::Tree(e) | ExportError::Environment(e) => f.write_str(e),
+        }
     }
 }
 
@@ -661,7 +692,10 @@ pub(crate) mod tests {
         let s = Scratch::new();
         let big = vec![b'x'; MAX_FILE as usize + 1];
         let b = Bundle::open(&s.bundle_with(&big, &[("100644", "blob", "law.yaml")])).unwrap();
-        let err = b.export(&b.branch("main").unwrap().unwrap()).unwrap_err();
+        let err = b
+            .export(&b.branch("main").unwrap().unwrap())
+            .unwrap_err()
+            .to_string();
         assert!(err.contains("input budget"), "{err}");
         assert!(b.exports.borrow().is_empty(), "nothing was written");
         // Nine 16 MiB files exceed the 128 MiB total.
@@ -760,6 +794,24 @@ pub(crate) mod tests {
         s.run(&["bundle", "create", &path.to_string_lossy(), "main"], None);
         let b = Bundle::open(&path).unwrap();
         assert_eq!(b.message(&c), Ok(Some(String::new())));
+    }
+
+    /// A refused tree is a `Tree` error; a git failure while exporting is an
+    /// `Environment` error, so the change check can stop on it.
+    #[test]
+    fn export_errors_say_whether_git_failed() {
+        let s = Scratch::new();
+        let b = Bundle::open(&s.bundle(&[("100644", "blob", "a:b")])).unwrap();
+        let head = b.branch("main").unwrap().unwrap();
+        assert!(matches!(b.export(&head), Err(ExportError::Tree(_))));
+        let s = Scratch::new();
+        let b = Bundle::open(&s.bundle(&[("100644", "blob", "history.yaml")])).unwrap();
+        let head = b.branch("main").unwrap().unwrap();
+        std::fs::remove_file(b.dir.join("HEAD")).unwrap();
+        assert!(matches!(
+            b.export(&head),
+            Err(ExportError::Environment(e)) if e.starts_with("git failed")
+        ));
     }
 
     /// An absent object is `Ok(None)`; a git failure is `Err`, never "absent".

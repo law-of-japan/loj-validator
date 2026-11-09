@@ -198,7 +198,7 @@ fn resolve_in(
     };
     let snap = match crate::change::snapshot(b, &commit) {
         Ok(s) => s,
-        Err(e) => return not_fetched(f, out, reference, e),
+        Err(e) => return not_fetched(f, out, reference, e.to_string()),
     };
     let Some(h) = snap.history.as_ref() else {
         return err(f, "FIXREF-06", format!("no history manifest at {commit}"));

@@ -42,6 +42,13 @@ cannot be selected.
   runners' git. Without git, those checks are `incomplete` with a "git is not
   available" diagnostic. Only `refs/heads/*` is fetched from a bundle, so tags and
   other refs are not resolvable.
+- A git command that fails after the bundle is open (timeout, output cap, any exit
+  status other than the "absent" status 1) is never reported as a finding about the
+  data. The change check ends as `incomplete` at the first such failure, with a
+  "git failed" (or timeout/output) diagnostic; a reference is `notFetched` with that
+  reason. A tree refused for its content is noted for that commit only. These
+  reports, like the one for a base or head missing from the bundle, carry
+  `target.repository`.
 - A bundle is untrusted. git runs isolated from the caller's environment, user and
   system configuration and hooks, with `fsckObjects`, a 120 s timeout per command and
   a cap on kept output. Bundle files over 1 GiB are refused. The exported tree is

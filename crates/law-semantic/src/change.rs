@@ -2,8 +2,8 @@
 //! CHG-02, CHG-03, CHG-04), reported apart from the conformance levels.
 use crate::common::findings::Findings;
 use crate::common::{load_yaml, Check, Loaded, Report, COMMON};
-use crate::git::Bundle;
-use serde_json::{json, Value};
+use crate::git::{Bundle, ExportError};
+use serde_json::{json, Map, Value};
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -29,7 +29,7 @@ pub(crate) struct Snapshot {
     pub packages: BTreeMap<String, String>,
 }
 
-pub(crate) fn snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, String> {
+pub(crate) fn snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError> {
     let dir = b.export(commit)?;
     // The export holds every blob byte for byte, so the raw manifest is read from
     // it rather than from git again. No file of that name (absent, or a directory
@@ -39,7 +39,11 @@ pub(crate) fn snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, String> {
     let history_bytes = match std::fs::read(&manifest) {
         Ok(bytes) => Some(bytes),
         Err(_) if !manifest.is_file() => None,
-        Err(e) => return Err(format!("cannot read history.yaml at {commit}: {e}")),
+        Err(e) => {
+            return Err(ExportError::Environment(format!(
+                "cannot read history.yaml at {commit}: {e}"
+            )))
+        }
     };
     let history = match load_yaml(&dir.join("history.yaml")) {
         Loaded::Ok(v, _) => Some(v),
@@ -99,11 +103,11 @@ fn trailers(message: &str) -> (Vec<String>, Option<Vec<String>>) {
 /// carries CHG-02, the rule of the change check as a whole, whichever step (commit
 /// resolution, range, message) could not be completed: the spec gives no rule of
 /// its own for an undetermined change check.
-fn undetermined(mut f: Findings, report: Report, why: String) -> Report {
+fn undetermined(mut f: Findings, target: Map<String, Value>, why: String) -> Report {
     f.incomplete.insert(CH);
     f.note(CH, "undetermined", "CHG-02", COMMON, why, "", "");
     let mut r = f.into_report(&[CH]);
-    r.target = report.target;
+    r.target = target;
     r
 }
 
@@ -136,25 +140,24 @@ pub fn check(bundle: &Path, base: &str, head: &str) -> Report {
 }
 
 /// The change check on an opened bundle. A git failure is never reported as a
-/// finding about the data. A failure to resolve the commits, list the range or
-/// read a message ends the check as incomplete with its reason (VAL-04), so a
-/// broken git is not noted once per commit. A tree that cannot be exported is
-/// noted for that commit and the check goes on: the cause may lie in that tree
-/// (an unsafe name, the input budget) rather than in git.
+/// finding about the data: it ends the check as incomplete with its reason
+/// (VAL-04) at the first failure, so a broken git is not noted (or waited for)
+/// once per commit. A tree refused for its content (an unsafe name, the input
+/// budget) is noted for that commit and the check goes on.
 fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, head: &str) -> Report {
     let (base, head) = match (b.commit(base), b.commit(head)) {
         (Ok(Some(base)), Ok(Some(head))) => (base, head),
-        (Err(e), _) | (_, Err(e)) => return undetermined(f, report, e),
+        (Err(e), _) | (_, Err(e)) => return undetermined(f, report.target, e),
         _ => {
             let why = "base or head commit is not in the bundle".into();
-            return undetermined(f, report, why);
+            return undetermined(f, report.target, why);
         }
     };
     report.target.insert("commit".into(), json!(head));
     f.applicable.insert(CH);
     let commits = match b.range(&base, &head) {
         Ok(c) => c,
-        Err(e) => return undetermined(f, report, e),
+        Err(e) => return undetermined(f, report.target, e),
     };
     let mut cache: BTreeMap<String, Snapshot> = BTreeMap::new();
     for (commit, parent) in commits {
@@ -172,7 +175,7 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
                 );
                 continue;
             }
-            Err(e) => return undetermined(f, report, format!("{commit}: {e}")),
+            Err(e) => return undetermined(f, report.target, format!("{commit}: {e}")),
         };
         let (kinds, revisions) = trailers(&message);
         let kind = match kinds.as_slice() {
@@ -231,7 +234,10 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
                     Ok(s) => {
                         cache.insert(c.clone(), s);
                     }
-                    Err(e) => {
+                    Err(ExportError::Environment(e)) => {
+                        return undetermined(f, report.target, format!("{c}: {e}"));
+                    }
+                    Err(ExportError::Tree(e)) => {
                         f.incomplete.insert(CH);
                         f.note(CH, "undetermined", "CHG-02", COMMON, e, &at, "");
                     }
