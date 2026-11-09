@@ -11,8 +11,9 @@ pub struct Bundle {
     exports: std::cell::RefCell<Vec<PathBuf>>,
 }
 
-/// Create a fresh, empty temporary directory. `create_dir` fails if the name is
-/// already taken, so a directory planted in the shared temp location is never reused.
+/// Create a fresh, empty temporary directory, readable only by the owner on Unix.
+/// Creation fails if the name is already taken, so a directory planted in the shared
+/// temp location is never reused.
 fn temp(prefix: &str) -> Result<PathBuf, String> {
     use std::sync::atomic::{AtomicU64, Ordering};
     static N: AtomicU64 = AtomicU64::new(0);
@@ -26,7 +27,14 @@ fn temp(prefix: &str) -> Result<PathBuf, String> {
             std::process::id(),
             N.fetch_add(1, Ordering::Relaxed)
         ));
-        match std::fs::create_dir(&dir) {
+        #[cfg(unix)]
+        let created = {
+            use std::os::unix::fs::DirBuilderExt;
+            std::fs::DirBuilder::new().mode(0o700).create(&dir)
+        };
+        #[cfg(not(unix))]
+        let created = std::fs::DirBuilder::new().create(&dir);
+        match created {
             Ok(()) => return Ok(dir),
             Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
             Err(e) => return Err(format!("cannot create a temporary directory: {e}")),
@@ -55,6 +63,7 @@ fn safe_name(name: &str) -> Result<(), String> {
             || c.ends_with(['.', ' '])
             || c.eq_ignore_ascii_case(".git")
             || c.eq_ignore_ascii_case("git~1")
+            || windows_reserved(c)
     }) {
         return bad();
     }
@@ -67,7 +76,24 @@ fn safe_name(name: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// A Windows device name (`CON`, `NUL`, `COM1`, …), with or without an extension.
+fn windows_reserved(component: &str) -> bool {
+    let stem = component
+        .split('.')
+        .next()
+        .unwrap_or("")
+        .to_ascii_uppercase();
+    matches!(stem.as_str(), "CON" | "PRN" | "AUX" | "NUL")
+        || (stem.len() == 4
+            && (stem.starts_with("COM") || stem.starts_with("LPT"))
+            && stem.as_bytes()[3].is_ascii_digit()
+            && stem.as_bytes()[3] != b'0')
+}
+
 const MAX_FILE: u64 = 16 * 1024 * 1024;
+/// The largest bundle file fetched. The tree budget below bounds what is exported;
+/// this bounds what the fetch can write, history included.
+const MAX_BUNDLE: u64 = 1024 * 1024 * 1024;
 const MAX_TOTAL: u64 = 128 * 1024 * 1024;
 const MAX_ENTRIES: usize = 100_000;
 
@@ -77,10 +103,12 @@ const NULL_DEVICE: &str = "NUL";
 const NULL_DEVICE: &str = "/dev/null";
 
 /// A revision argument from the caller (CLI, reference string). Refuse values git
-/// could read as an option, or that carry whitespace or control characters.
+/// could read as an option, a range (`..`), or that carry whitespace or control
+/// characters.
 fn revision(rev: &str) -> Result<(), String> {
     if rev.is_empty()
         || rev.starts_with('-')
+        || rev.contains("..")
         || rev.chars().any(|c| c.is_whitespace() || c.is_control())
     {
         return Err(format!("not a revision: {rev:?}"));
@@ -110,6 +138,12 @@ impl Bundle {
                 .canonicalize()
                 .map_err(|e| format!("bundle unreadable: {e}"))?,
         );
+        let size = std::fs::metadata(&bundle)
+            .map_err(|e| format!("bundle unreadable: {e}"))?
+            .len();
+        if size > MAX_BUNDLE {
+            return Err(format!("bundle is larger than {MAX_BUNDLE} bytes"));
+        }
         let b = Bundle {
             dir: temp("loj-bundle")?,
             exports: Default::default(),
@@ -311,6 +345,9 @@ mod tests {
             "versions/98mj5vgx/law.yaml",
             "a.b/c..d",
             ".gitattributes",
+            "console.md",
+            "com0.md",
+            "COM10",
         ] {
             assert!(safe_name(ok).is_ok(), "{ok}");
         }
@@ -336,6 +373,10 @@ mod tests {
             "a\nb",
             "a\tb",
             "a\u{7f}b",
+            "CON",
+            "a/nul.txt",
+            "com1.md",
+            "LPT9",
         ] {
             assert!(safe_name(bad).is_err(), "{bad}");
         }
@@ -474,7 +515,16 @@ mod tests {
 
     #[test]
     fn option_like_revisions_are_refused() {
-        for bad in ["", "-h", "--all", "--output=x", "a b", "a\nb"] {
+        for bad in [
+            "",
+            "-h",
+            "--all",
+            "--output=x",
+            "a b",
+            "a\nb",
+            "a..b",
+            "a...b",
+        ] {
             assert!(revision(bad).is_err(), "{bad:?}");
         }
         let s = Scratch::new();
