@@ -97,6 +97,52 @@ const MAX_BUNDLE: u64 = 1024 * 1024 * 1024;
 const MAX_TOTAL: u64 = 128 * 1024 * 1024;
 const MAX_ENTRIES: usize = 100_000;
 
+/// The longest one git command may run before it is killed.
+const GIT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(120);
+
+type Output = (std::process::ExitStatus, Vec<u8>, Vec<u8>);
+
+/// Run `cmd`, reading its output on separate threads so a full pipe never blocks
+/// it, and kill it if it runs longer than `limit`.
+fn run_with_timeout(mut cmd: Command, limit: std::time::Duration) -> Result<Output, String> {
+    use std::io::Read;
+    use std::process::Stdio;
+    let mut child = cmd
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("git is not available: {e}"))?;
+    let reader = |pipe: Option<Box<dyn Read + Send>>| {
+        std::thread::spawn(move || {
+            let mut buf = Vec::new();
+            if let Some(mut p) = pipe {
+                let _ = p.read_to_end(&mut buf);
+            }
+            buf
+        })
+    };
+    let out = reader(child.stdout.take().map(|p| Box::new(p) as _));
+    let err = reader(child.stderr.take().map(|p| Box::new(p) as _));
+    let start = std::time::Instant::now();
+    let status = loop {
+        match child.try_wait().map_err(|e| e.to_string())? {
+            Some(status) => break status,
+            None if start.elapsed() > limit => {
+                let _ = child.kill();
+                let _ = child.wait();
+                return Err(format!("git did not finish within {} s", limit.as_secs()));
+            }
+            None => std::thread::sleep(std::time::Duration::from_millis(5)),
+        }
+    };
+    Ok((
+        status,
+        out.join().unwrap_or_default(),
+        err.join().unwrap_or_default(),
+    ))
+}
+
 #[cfg(windows)]
 const NULL_DEVICE: &str = "NUL";
 #[cfg(not(windows))]
@@ -171,20 +217,18 @@ impl Bundle {
                 cmd.env_remove(key);
             }
         }
-        let out = cmd
-            .arg("-C")
+        cmd.arg("-C")
             .arg(&self.dir)
             .args(["-c", "core.autocrlf=false", "-c", "core.safecrlf=false"])
             .args(args)
             .env("GIT_CONFIG_NOSYSTEM", "1")
             .env("GIT_CONFIG_GLOBAL", NULL_DEVICE)
-            .env("GIT_TERMINAL_PROMPT", "0")
-            .output()
-            .map_err(|e| format!("git is not available: {e}"))?;
-        if !out.status.success() {
-            return Err(String::from_utf8_lossy(&out.stderr).trim().to_owned());
+            .env("GIT_TERMINAL_PROMPT", "0");
+        let (status, stdout, stderr) = run_with_timeout(cmd, GIT_TIMEOUT)?;
+        if !status.success() {
+            return Err(String::from_utf8_lossy(&stderr).trim().to_owned());
         }
-        Ok(out.stdout)
+        Ok(stdout)
     }
     fn text(&self, args: &[&str]) -> Option<String> {
         self.git(args)
@@ -511,6 +555,26 @@ mod tests {
             .collect();
         let b = Bundle::open(&s.bundle_with(&full, &entries)).unwrap();
         assert!(b.export(&b.branch("main").unwrap()).is_err());
+    }
+
+    #[test]
+    fn slow_commands_are_killed() {
+        #[cfg(windows)]
+        let cmd = {
+            let mut c = Command::new("ping");
+            c.args(["-n", "30", "127.0.0.1"]);
+            c
+        };
+        #[cfg(not(windows))]
+        let cmd = {
+            let mut c = Command::new("sleep");
+            c.arg("30");
+            c
+        };
+        let start = std::time::Instant::now();
+        let err = run_with_timeout(cmd, std::time::Duration::from_millis(300)).unwrap_err();
+        assert!(err.contains("did not finish"), "{err}");
+        assert!(start.elapsed() < std::time::Duration::from_secs(10));
     }
 
     #[test]
