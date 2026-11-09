@@ -58,6 +58,11 @@ v1alpha1の正式適合データはライセンス・commit・SHA-256一覧と�
 `LOJ_CONFORMANCE_REPORT`に絶対パスを設定すると、ケース別JSON結果を保存します。
 
 [設計と制限](docs/v1alpha1-implementation.md)を参照してください。
+次期仕様（`loj/v1alpha2`、履歴マニフェスト、字体注記、登録台帳、再構築報告、L3・L4、変更・参照の検査）は
+[次期仕様の実装](docs/next-spec-implementation.md)を参照してください。
+`law.yaml`とディレクトリの既定は次期仕様で、v1alpha1は`--profile v1alpha1`で選びます。
+次期仕様の適合ケースは`cargo test -p law-semantic --test next_conformance --locked`で実行し、
+`LOJ_CONFORMANCE_REPORT_DIR`にディレクトリを設定すると、suiteごとのJSON結果を保存します。
 固定テストの成功は、未知の全入力への完全適合や法的正確性の証明ではありません。
 
 ## 使い方
