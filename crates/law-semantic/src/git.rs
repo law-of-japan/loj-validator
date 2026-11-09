@@ -97,6 +97,9 @@ const MAX_BUNDLE: u64 = 1024 * 1024 * 1024;
 const MAX_TOTAL: u64 = 128 * 1024 * 1024;
 const MAX_ENTRIES: usize = 100_000;
 
+/// The most output kept from one git command (a blob is at most MAX_FILE).
+const MAX_OUTPUT: u64 = 2 * MAX_TOTAL;
+
 /// The longest one git command may run before it is killed.
 const GIT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(120);
 
@@ -115,16 +118,25 @@ fn run_with_timeout(mut cmd: Command, limit: std::time::Duration) -> Result<Outp
         .map_err(|e| format!("git is not available: {e}"))?;
     let reader = |pipe: Option<Box<dyn Read + Send>>| {
         std::thread::spawn(move || {
+            // Keep at most MAX_OUTPUT bytes; drain the rest so git never blocks on
+            // a full pipe, and report the overflow.
             let mut buf = Vec::new();
+            let mut overflow = false;
             if let Some(mut p) = pipe {
-                let _ = p.read_to_end(&mut buf);
+                let _ = (&mut p).take(MAX_OUTPUT + 1).read_to_end(&mut buf);
+                if buf.len() as u64 > MAX_OUTPUT {
+                    buf.truncate(MAX_OUTPUT as usize);
+                    overflow = true;
+                    let _ = std::io::copy(&mut p, &mut std::io::sink());
+                }
             }
-            buf
+            (buf, overflow)
         })
     };
     let out = reader(child.stdout.take().map(|p| Box::new(p) as _));
     let err = reader(child.stderr.take().map(|p| Box::new(p) as _));
     let start = std::time::Instant::now();
+    let mut pause = std::time::Duration::from_millis(1);
     let status = loop {
         match child.try_wait().map_err(|e| e.to_string())? {
             Some(status) => break status,
@@ -133,14 +145,18 @@ fn run_with_timeout(mut cmd: Command, limit: std::time::Duration) -> Result<Outp
                 let _ = child.wait();
                 return Err(format!("git did not finish within {} s", limit.as_secs()));
             }
-            None => std::thread::sleep(std::time::Duration::from_millis(5)),
+            None => {
+                std::thread::sleep(pause);
+                pause = (pause * 2).min(std::time::Duration::from_millis(50));
+            }
         }
     };
-    Ok((
-        status,
-        out.join().unwrap_or_default(),
-        err.join().unwrap_or_default(),
-    ))
+    let (stdout, overflow) = out.join().unwrap_or_default();
+    let (stderr, _) = err.join().unwrap_or_default();
+    if overflow {
+        return Err(format!("git output is larger than {MAX_OUTPUT} bytes"));
+    }
+    Ok((status, stdout, stderr))
 }
 
 #[cfg(windows)]
@@ -220,6 +236,7 @@ impl Bundle {
         cmd.arg("-C")
             .arg(&self.dir)
             .args(["-c", "core.autocrlf=false", "-c", "core.safecrlf=false"])
+            .args(["-c", &format!("core.hooksPath={NULL_DEVICE}")])
             .args(args)
             .env("GIT_CONFIG_NOSYSTEM", "1")
             .env("GIT_CONFIG_GLOBAL", NULL_DEVICE)

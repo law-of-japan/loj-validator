@@ -38,6 +38,15 @@ cannot be selected.
   no defined form in this version, so the default is `loj`, the space of the
   conformance registries (CONF-01).
 - Git inputs use the `git` command; blobs are read raw so byte positions hold.
+- A bundle is untrusted. git runs isolated from the caller's environment, user and
+  system configuration and hooks, with `fsckObjects`, a 120 s timeout per command and
+  a cap on kept output. Bundle files over 1 GiB are refused. The exported tree is
+  checked before anything is written: safe, portable, case-distinct names, regular
+  files only, 16 MiB per file, 128 MiB and 100,000 files in all.
+- Known limit: the fetch itself is bounded only by the bundle size and the timeout.
+  A highly compressible bundle can unpack to more objects than its size suggests.
+  Run the change and reference checks on untrusted bundles in a disposable
+  environment with a disk quota.
 
 ## CLI
 
