@@ -2,3 +2,6 @@
 # Fixed conformance byte ranges include LF, CRLF, BOM and bare CR specimens.
 /vendor/loj-spec/** -text -whitespace
 /vendor/loj-spec-v1alpha1/** -text -whitespace
+# Vendored copies of loj-spec (see COMMIT and SHA256SUMS.json); GitHub collapses
+# them in diffs.
+/vendor/** linguist-generated=true
