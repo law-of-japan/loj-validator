@@ -2,7 +2,9 @@
 //! `loj-history`, `loj-glyphs`, `loj-registry`, `loj-rebuild` kinds):
 //! strict byte and YAML loading (CORE-03), and the check report
 //! (`schemas/common/v1alpha1/report.schema.json`).
+pub mod findings;
 pub mod report;
+pub mod time;
 pub mod yaml;
 
 pub use report::{Check, Diagnostic, Report, ResultValue};

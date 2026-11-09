@@ -74,6 +74,16 @@ fn run(case: &Value, checks: &[Check]) -> Actual {
                 positions: r.positions,
             }
         }
+        "repository" => Actual {
+            report: law_semantic::checks::run(
+                &law_semantic::checks::Input::Repository(
+                    root.join(input["path"].as_str().unwrap()),
+                ),
+                checks,
+            ),
+            ast: None,
+            positions: Vec::new(),
+        },
         other => panic!("input kind not implemented yet: {other}"),
     }
 }
@@ -243,4 +253,14 @@ fn suite(name: &str) {
 #[test]
 fn package_v1alpha2() {
     suite("v1alpha2");
+}
+
+#[test]
+fn history_v1alpha1() {
+    suite("loj-history/v1alpha1");
+}
+
+#[test]
+fn glyphs_v1alpha1() {
+    suite("loj-glyphs/v1alpha1");
 }

@@ -18,6 +18,7 @@ pub mod common;
 pub mod mapping;
 pub mod number;
 pub mod references;
+pub mod repository;
 pub mod v1alpha1;
 pub mod v1alpha2;
 pub mod validation;
