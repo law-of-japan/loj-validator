@@ -107,3 +107,27 @@ fn repository_registry_and_records() {
     assert_eq!(code, 3, "{r}");
     assert_eq!(r["references"][0]["result"], "notFetched");
 }
+
+#[test]
+fn change_and_reference() {
+    let c = "vendor/loj-spec/conformance/common/v1alpha1";
+    let (code, r) = json(&[
+        "check",
+        &format!("{c}/invalid/common-006/repo.bundle"),
+        "--base=d7b514444a5f766269025e52d6dda8b9671df556",
+        "--head=35b3c1b815e242be90211750b851b17b1c835b0a",
+    ]);
+    assert_eq!(code, 1, "{r}");
+    assert_eq!(r["results"][0]["check"], "change");
+    let (code, r) = json(&[
+        "check",
+        &format!("{c}/valid/common-004/repo.bundle"),
+        &format!("--registry={c}/valid/common-008/registry"),
+        "--reference=loj:loj/20990101-act-1/b7k2m9qd",
+    ]);
+    assert_eq!(code, 0, "{r}");
+    assert_eq!(
+        r["resolution"]["commit"],
+        "f59ef0fb1025fcc7bb6b168631c4efb673bbdece"
+    );
+}

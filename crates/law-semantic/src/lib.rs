@@ -13,8 +13,11 @@
 //!
 //! Functions that walk an AST require it to satisfy [`SEMANTIC_SCHEMA`]; the
 //! public entry points check this and return `Err` instead of panicking.
+pub mod change;
 pub mod checks;
 pub mod common;
+pub mod fixref;
+pub mod git;
 pub mod mapping;
 pub mod number;
 pub mod rebuild;

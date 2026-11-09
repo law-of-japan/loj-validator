@@ -108,7 +108,31 @@ fn run(case: &Value, checks: &[Check]) -> Actual {
             ast: None,
             positions: Vec::new(),
         },
-        other => panic!("input kind not implemented yet: {other}"),
+        "change" => Actual {
+            report: law_semantic::checks::run(
+                &law_semantic::checks::Input::Change {
+                    bundle: root.join(input["bundle"].as_str().unwrap()),
+                    base: input["base"].as_str().unwrap().into(),
+                    head: input["head"].as_str().unwrap().into(),
+                },
+                checks,
+            ),
+            ast: None,
+            positions: Vec::new(),
+        },
+        "reference" => Actual {
+            report: law_semantic::checks::run(
+                &law_semantic::checks::Input::Reference {
+                    bundle: root.join(input["bundle"].as_str().unwrap()),
+                    registry: root.join(input["registry"].as_str().unwrap()),
+                    reference: input["reference"].as_str().unwrap().into(),
+                },
+                checks,
+            ),
+            ast: None,
+            positions: Vec::new(),
+        },
+        other => panic!("unknown input kind: {other}"),
     }
 }
 
@@ -326,8 +350,8 @@ fn registry_v1alpha1() {
 }
 
 #[test]
-fn common_records_v1alpha1() {
-    suite_kinds("common/v1alpha1", &["records"]);
+fn common_v1alpha1() {
+    suite("common/v1alpha1");
 }
 
 #[test]

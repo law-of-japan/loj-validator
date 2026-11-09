@@ -67,7 +67,7 @@ impl Input {
 }
 
 /// Run the selected checks. Checks that do not apply to the input are
-/// reported as `notApplicable`; unimplemented ones as `incomplete`.
+/// reported as `notApplicable`.
 pub fn run(input: &Input, checks: &[Check]) -> Report {
     let mut report = match input {
         Input::Package(p) => crate::v1alpha2::check(p, checks).report,
@@ -77,13 +77,12 @@ pub fn run(input: &Input, checks: &[Check]) -> Report {
             registry,
             repositories,
         } => crate::xref::check(registry, repositories, checks),
-        _ => {
-            let mut r = Report::default();
-            for c in checks {
-                r.set(*c, crate::common::ResultValue::Incomplete);
-            }
-            r
-        }
+        Input::Change { bundle, base, head } => crate::change::check(bundle, base, head),
+        Input::Reference {
+            bundle,
+            registry,
+            reference,
+        } => crate::fixref::check(bundle, registry, reference),
     };
     for c in checks {
         if report.result(*c).is_none() {
