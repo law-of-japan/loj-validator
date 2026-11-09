@@ -1,0 +1,729 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://law-of-japan.github.io/loj-spec/schemas/loj-history/v1alpha1/history.schema.json",
+  "$comment": "Canonical identifier only; publication at this URI is not required.",
+  "title": "LoJ history manifest",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": "loj-history/v1alpha1"
+    },
+    "record": {
+      "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/RecordRef"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Source"
+      },
+      "minItems": 0
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/localId"
+          },
+          "type": {
+            "enum": [
+              "amends",
+              "totallyRevises",
+              "repeals",
+              "succeeds"
+            ]
+          },
+          "from": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/RecordRef"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/localId"
+                },
+                "scope": {
+                  "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Scope"
+                },
+                "effective": {
+                  "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/TimePoint"
+                },
+                "evidence": {
+                  "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/evidenceList"
+                },
+                "verification": {
+                  "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Verification"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "scope",
+                "effective",
+                "evidence",
+                "verification"
+              ],
+              "allOf": [
+                {
+                  "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/claimRule"
+                }
+              ]
+            },
+            "minItems": 1
+          },
+          "status": {
+            "enum": [
+              "active",
+              "retracted"
+            ]
+          },
+          "evidence": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/evidenceList"
+          },
+          "verification": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Verification"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "type",
+          "from",
+          "status",
+          "evidence",
+          "verification"
+        ],
+        "allOf": [
+          {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/claimRule"
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "enum": [
+                    "amends",
+                    "totallyRevises",
+                    "repeals"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "items"
+              ]
+            }
+          }
+        ]
+      },
+      "minItems": 0
+    },
+    "revisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/revisionId"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "origin": {
+            "enum": [
+              "enactment",
+              "totalRevision",
+              "coverageStart"
+            ]
+          },
+          "totallyRevises": {
+            "type": "object",
+            "properties": {
+              "record": {
+                "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/RecordRef"
+              },
+              "relation": {
+                "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/localId"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "record",
+              "relation"
+            ]
+          },
+          "basedOn": {
+            "oneOf": [
+              {
+                "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/revisionId"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "state": {
+                    "const": "unknown"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "state",
+                  "reason"
+                ]
+              }
+            ]
+          },
+          "basis": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "relation": {
+                      "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/localId"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/localId"
+                      },
+                      "minItems": 1
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "relation",
+                    "items"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "enactment": {
+                      "type": "object",
+                      "properties": {
+                        "scope": {
+                          "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Scope"
+                        },
+                        "evidence": {
+                          "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/evidenceList"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "required": [
+                        "scope",
+                        "evidence"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "enactment"
+                  ]
+                }
+              ]
+            },
+            "minItems": 1
+          },
+          "effective": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/TimePoint"
+          },
+          "applicability": {
+            "type": "object",
+            "properties": {
+              "state": {
+                "enum": [
+                  "noneConfirmed",
+                  "unsurveyed",
+                  "conditions"
+                ]
+              },
+              "conditions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "scope": {
+                      "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Scope"
+                    },
+                    "text": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "machineEvaluable": {
+                      "type": "boolean"
+                    },
+                    "evidence": {
+                      "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/evidenceList"
+                    },
+                    "verification": {
+                      "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Verification"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "scope",
+                    "text",
+                    "evidence",
+                    "verification"
+                  ],
+                  "allOf": [
+                    {
+                      "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/claimRule"
+                    }
+                  ]
+                },
+                "minItems": 1
+              },
+              "evidence": {
+                "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/evidenceList"
+              }
+            },
+            "required": [
+              "state"
+            ],
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "state": {
+                      "const": "conditions"
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "conditions"
+                  ]
+                },
+                "else": {
+                  "not": {
+                    "required": [
+                      "conditions"
+                    ]
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "state": {
+                      "const": "noneConfirmed"
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "evidence"
+                  ],
+                  "properties": {
+                    "evidence": {
+                      "minItems": 1
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "text": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "enum": [
+                  "complete",
+                  "partial",
+                  "absent"
+                ]
+              },
+              "package": {
+                "type": "string",
+                "pattern": "^(?:[A-Za-z0-9_.-]+/)*law\\.yaml$"
+              },
+              "gaps": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Scope"
+                },
+                "minItems": 1
+              },
+              "sources": {
+                "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/evidenceList"
+              },
+              "glyphs": {
+                "enum": [
+                  "verified",
+                  "unverified"
+                ]
+              },
+              "glyphNotes": {
+                "type": "string",
+                "pattern": "^(?:[A-Za-z0-9_.-]+/)*[A-Za-z0-9_.-]+\\.yaml$"
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "status": {
+                      "enum": [
+                        "complete",
+                        "partial"
+                      ]
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "sources",
+                    "glyphs"
+                  ],
+                  "properties": {
+                    "sources": {
+                      "minItems": 1
+                    }
+                  }
+                },
+                "else": {
+                  "not": {
+                    "anyOf": [
+                      {
+                        "required": [
+                          "package"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "sources"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "glyphs"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "glyphNotes"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "status": {
+                      "const": "partial"
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "gaps"
+                  ]
+                },
+                "else": {
+                  "not": {
+                    "required": [
+                      "gaps"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "externalIds": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "issuer": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "kind": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "value": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "evidence": {
+                  "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/evidenceList"
+                },
+                "verification": {
+                  "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Verification"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "issuer",
+                "kind",
+                "value",
+                "evidence",
+                "verification"
+              ],
+              "allOf": [
+                {
+                  "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/claimRule"
+                }
+              ]
+            },
+            "minItems": 0
+          },
+          "status": {
+            "enum": [
+              "active",
+              "retracted",
+              "merged",
+              "split"
+            ]
+          },
+          "replacedBy": {
+            "type": "object",
+            "properties": {
+              "revisions": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/revisionId"
+                },
+                "minItems": 1
+              },
+              "evidence": {
+                "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/evidenceList"
+              },
+              "verification": {
+                "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Verification"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "revisions",
+              "evidence",
+              "verification"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "effective",
+          "applicability",
+          "text",
+          "status"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "origin"
+              ]
+            },
+            "then": {
+              "not": {
+                "required": [
+                  "basedOn"
+                ]
+              }
+            },
+            "else": {
+              "required": [
+                "basedOn",
+                "basis"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "origin": {
+                  "const": "totalRevision"
+                }
+              },
+              "required": [
+                "origin"
+              ]
+            },
+            "then": {
+              "required": [
+                "totallyRevises"
+              ]
+            },
+            "else": {
+              "not": {
+                "required": [
+                  "totallyRevises"
+                ]
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "enum": [
+                    "merged",
+                    "split"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "replacedBy"
+              ]
+            },
+            "else": {
+              "not": {
+                "required": [
+                  "replacedBy"
+                ]
+              }
+            }
+          }
+        ],
+        "$comment": "basis may accompany origin enactment (staged enforcement); validator checks HIST-05."
+      },
+      "minItems": 1
+    },
+    "coverage": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "enum": [
+            "confirmed",
+            "unconfirmed"
+          ]
+        },
+        "surveyed": {
+          "type": "array",
+          "items": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/TextNote"
+          },
+          "minItems": 0
+        },
+        "knownGaps": {
+          "type": "array",
+          "items": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/TextNote"
+          },
+          "minItems": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "state"
+      ]
+    },
+    "termination": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "repealed",
+              "totallyRevised",
+              "expired"
+            ]
+          },
+          "relation": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/localId"
+          },
+          "effective": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/TimePoint"
+          },
+          "evidence": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/evidenceList"
+          },
+          "verification": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Verification"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "enum": [
+                    "repealed",
+                    "totallyRevised"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "relation"
+              ],
+              "not": {
+                "anyOf": [
+                  {
+                    "required": [
+                      "effective"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "evidence"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "verification"
+                    ]
+                  }
+                ]
+              }
+            },
+            "else": {
+              "required": [
+                "effective",
+                "evidence",
+                "verification"
+              ],
+              "not": {
+                "required": [
+                  "relation"
+                ]
+              }
+            }
+          },
+          {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/claimRule"
+          }
+        ]
+      },
+      "minItems": 1
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "record",
+    "sources",
+    "relations",
+    "revisions",
+    "coverage"
+  ]
+}

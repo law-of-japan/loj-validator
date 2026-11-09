@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/report.schema.json",
+  "$comment": "Canonical identifier only; publication at this URI is not required.",
+  "title": "LoJ check report",
+  "type": "object",
+  "properties": {
+    "target": {
+      "type": "object",
+      "properties": {
+        "repository": {
+          "type": "string"
+        },
+        "commit": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "check": {
+            "enum": [
+              "L0",
+              "L1",
+              "L2",
+              "L3",
+              "L4",
+              "registry",
+              "rebuild",
+              "change",
+              "reference"
+            ]
+          },
+          "category": {
+            "enum": [
+              "historyStructure",
+              "evidence",
+              "sourceMatch",
+              "relationResolution",
+              "relationConsistency",
+              "timeConsistency",
+              "clauseReference"
+            ]
+          },
+          "result": {
+            "enum": [
+              "pass",
+              "fail",
+              "notApplicable",
+              "incomplete"
+            ]
+          }
+        },
+        "required": [
+          "check",
+          "result"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "check": {
+                  "enum": [
+                    "L3",
+                    "L4"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "category"
+              ]
+            },
+            "else": {
+              "not": {
+                "required": [
+                  "category"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rule": {
+            "type": "string",
+            "pattern": "^[A-Z]+-[0-9]{2}$"
+          },
+          "schemaVersion": {
+            "type": "string",
+            "pattern": "^(loj|loj-history|loj-glyphs|loj-registry|loj-rebuild)/v[0-9]+(alpha|beta)?[0-9]*$|^common/v1alpha1$"
+          },
+          "class": {
+            "enum": [
+              "error",
+              "warning",
+              "undetermined",
+              "pending"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "message": {
+            "type": "string"
+          },
+          "location": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "rule",
+          "schemaVersion",
+          "class"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "result": {
+            "enum": [
+              "resolved",
+              "notFetched",
+              "nonexistentConfirmed"
+            ]
+          }
+        },
+        "required": [
+          "target",
+          "result"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "resolution": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "enum": [
+            "resolved",
+            "notFetched",
+            "error"
+          ]
+        },
+        "record": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "path": {
+          "type": "string"
+        },
+        "node": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "results",
+    "diagnostics"
+  ],
+  "additionalProperties": false
+}

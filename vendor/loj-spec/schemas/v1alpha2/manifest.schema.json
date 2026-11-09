@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://law-of-japan.github.io/loj-spec/schemas/v1alpha2/manifest.schema.json",
+  "$comment": "Canonical identifier only; publication at this URI is not required.",
+  "title": "LoJ version package manifest loj/v1alpha2",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": "loj/v1alpha2"
+    },
+    "law": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9-]*$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "enum": [
+            "constitution",
+            "act",
+            "cabinetOrder",
+            "imperialOrder",
+            "ministerialOrdinance",
+            "rule",
+            "ordinance",
+            "other"
+          ]
+        },
+        "number": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "promulgatedAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date",
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "language": {
+          "const": "ja"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "type",
+        "number",
+        "promulgatedAt",
+        "language"
+      ],
+      "additionalProperties": false
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^(?:[A-Za-z0-9_.-]+/)*[A-Za-z0-9_.-]+\\.md$"
+          },
+          "parent": {
+            "type": "string",
+            "pattern": "^(main|supplement/[a-z][a-z0-9-]*|appendix/[a-z][a-z0-9-]*)$"
+          }
+        },
+        "required": [
+          "path",
+          "parent"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "supplements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "key",
+          "title"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "appendices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "key",
+          "title"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "minItems": 0
+    },
+    "unsupportedFeatures": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 0
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "law",
+    "documents"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,642 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://law-of-japan.github.io/loj-spec/schemas/loj-registry/v1alpha1/record.schema.json",
+  "$comment": "repository is also required when relations or revisions are recorded (REG-02); checked by the registry checks (REG-01).",
+  "title": "LoJ registry record",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": "loj-registry/v1alpha1"
+    },
+    "id": {
+      "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/recordId"
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1
+    },
+    "aliases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/recordId"
+          },
+          "evidence": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/evidenceList"
+          },
+          "verification": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Verification"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "evidence",
+          "verification"
+        ],
+        "allOf": [
+          {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/claimRule"
+          }
+        ]
+      },
+      "minItems": 0
+    },
+    "status": {
+      "enum": [
+        "provisional",
+        "active",
+        "merged",
+        "split",
+        "withdrawn"
+      ]
+    },
+    "identity": {
+      "type": "object",
+      "properties": {
+        "evidence": {
+          "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/evidenceList"
+        },
+        "verification": {
+          "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Verification"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "evidence",
+        "verification"
+      ],
+      "allOf": [
+        {
+          "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/claimRule"
+        }
+      ]
+    },
+    "text": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "enum": [
+            "collected",
+            "notCollected",
+            "nonexistentConfirmed"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "state"
+      ]
+    },
+    "repository": {
+      "type": "object",
+      "properties": {
+        "location": {
+          "type": "string",
+          "minLength": 1
+        },
+        "canonicalBranch": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "location",
+        "canonicalBranch"
+      ]
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Source"
+      },
+      "minItems": 0
+    },
+    "numbers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/localId"
+          },
+          "state": {
+            "enum": [
+              "exists",
+              "nonexistent",
+              "unknown",
+              "illegible",
+              "conflicting"
+            ]
+          },
+          "raw": {
+            "oneOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "source": {
+                      "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/localId"
+                    },
+                    "raw": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "source",
+                    "raw"
+                  ]
+                },
+                "minItems": 2
+              }
+            ]
+          },
+          "structured": {
+            "type": "object",
+            "properties": {
+              "system": {
+                "type": "string",
+                "minLength": 1
+              },
+              "period": {
+                "type": "object",
+                "properties": {
+                  "raw": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "gregorian": {
+                    "type": "object",
+                    "properties": {
+                      "from": {
+                        "type": "string",
+                        "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+                        "format": "date"
+                      },
+                      "to": {
+                        "type": "string",
+                        "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+                        "format": "date"
+                      }
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                      "from",
+                      "to"
+                    ]
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "raw"
+                ]
+              },
+              "issuer": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              },
+              "series": {
+                "type": "object",
+                "properties": {
+                  "state": {
+                    "enum": [
+                      "regular",
+                      "none",
+                      "unknown"
+                    ]
+                  },
+                  "raw": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "state"
+                ]
+              },
+              "number": {
+                "type": "string",
+                "pattern": "^[1-9][0-9]{0,3}(-[1-9][0-9]{0,3})*$"
+              }
+            },
+            "additionalProperties": false
+          },
+          "decision": {
+            "enum": [
+              "adopted",
+              "pending",
+              "retracted"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "supersedes": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/localId"
+          },
+          "glyphs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/localId"
+                },
+                "field": {
+                  "enum": [
+                    "text",
+                    "display"
+                  ]
+                },
+                "offset": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "recorded": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "ambiguous",
+                    "illegible",
+                    "unencodable",
+                    "literal",
+                    "spacing",
+                    "variance",
+                    "sourceEdit",
+                    "selected"
+                  ]
+                },
+                "candidates": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 2,
+                  "uniqueItems": true
+                },
+                "basis": {
+                  "enum": [
+                    "unifiedDefault",
+                    "otherSource",
+                    "sameSource",
+                    "provisional",
+                    "undetermined"
+                  ]
+                },
+                "description": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "evidence": {
+                  "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/evidenceList"
+                },
+                "verification": {
+                  "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Verification"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "offset",
+                "recorded",
+                "kind",
+                "evidence",
+                "verification"
+              ],
+              "allOf": [
+                {
+                  "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/claimRule"
+                },
+                {
+                  "properties": {
+                    "evidence": {
+                      "minItems": 1
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "kind": {
+                        "const": "ambiguous"
+                      }
+                    }
+                  },
+                  "then": {
+                    "required": [
+                      "candidates",
+                      "basis"
+                    ]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "unencodable",
+                          "sourceEdit"
+                        ]
+                      }
+                    }
+                  },
+                  "then": {
+                    "required": [
+                      "description"
+                    ]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "illegible",
+                          "unencodable",
+                          "literal"
+                        ]
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "recorded": {
+                        "const": "〓"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "basis": {
+                        "const": "undetermined"
+                      }
+                    },
+                    "required": [
+                      "basis"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "recorded": {
+                        "const": "〓"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "kind": {
+                        "const": "spacing"
+                      }
+                    }
+                  },
+                  "then": {},
+                  "else": {
+                    "properties": {
+                      "recorded": {
+                        "minLength": 1
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "minItems": 0
+          },
+          "evidence": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/evidenceList"
+          },
+          "verification": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Verification"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "state",
+          "decision",
+          "evidence",
+          "verification"
+        ],
+        "allOf": [
+          {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/claimRule"
+          },
+          {
+            "if": {
+              "properties": {
+                "state": {
+                  "enum": [
+                    "exists",
+                    "illegible",
+                    "conflicting"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "raw"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "state": {
+                  "const": "conflicting"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "raw": {
+                  "type": "array"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "raw": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "minItems": 0
+    },
+    "externalIds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "issuer": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/evidenceList"
+          },
+          "verification": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Verification"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "issuer",
+          "kind",
+          "value",
+          "evidence",
+          "verification"
+        ],
+        "allOf": [
+          {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/claimRule"
+          }
+        ]
+      },
+      "minItems": 0
+    },
+    "replacedBy": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "record": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/RecordRef"
+          },
+          "evidence": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/evidenceList"
+          },
+          "verification": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Verification"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "record",
+          "evidence",
+          "verification"
+        ],
+        "allOf": [
+          {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/claimRule"
+          }
+        ]
+      },
+      "minItems": 1
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "status",
+    "identity",
+    "text",
+    "sources",
+    "numbers",
+    "externalIds"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "text": {
+            "properties": {
+              "state": {
+                "const": "collected"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "repository"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "merged",
+              "split"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "replacedBy"
+        ]
+      },
+      "else": {
+        "not": {
+          "required": [
+            "replacedBy"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "provisional"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "verification": {
+                "properties": {
+                  "state": {
+                    "not": {
+                      "const": "confirmed"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

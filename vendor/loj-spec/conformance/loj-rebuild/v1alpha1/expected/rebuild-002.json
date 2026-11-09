@@ -1,0 +1,15 @@
+{
+  "results": [
+    {
+      "check": "rebuild",
+      "result": "fail"
+    }
+  ],
+  "diagnostics": [
+    {
+      "rule": "REBR-02",
+      "schemaVersion": "loj-rebuild/v1alpha1",
+      "class": "error"
+    }
+  ]
+}

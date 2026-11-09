@@ -16,15 +16,16 @@ L0〜L4の定義と現行仕様との対応は[適合レベル定義](docs/confo
 `b704631b6501a0a01c1eb6faf99cfe16a4bccfa9`のL0/L1で検証します。
 
 ```sh
-loj-validator check .
-loj-validator check law.yaml --level L0
-loj-validator check . --level L1 --format json --strict
-loj-validator check path/to/manifest.yaml --profile v1alpha1
+loj-validator check . --profile v1alpha1
+loj-validator check law.yaml --profile v1alpha1 --level L0
+loj-validator check . --profile v1alpha1 --level L1 --format json --strict
 loj-validator check legacy.md --profile legacy --structure-schema schemas/law-of-japan.structure.yaml
 ```
 
-ディレクトリまたは`law.yaml`は新形式を自動選択します。既定はL1。
-`--profile v1alpha1`で明示選択できます。新形式では法令IDと構造をManifestから取得するため、
+**互換性のない変更:** ディレクトリと`law.yaml`の既定は、次期仕様（`loj/v1alpha2`）になりました。
+v1alpha1のデータは`--profile v1alpha1`を付けて検査します。付けずに検査すると、
+`schemaVersion`が`loj/v1alpha1`なので、知らない版として「未完了」（終了コード3）になります。
+v1alpha1の既定のレベルはL1です。v1alpha1では法令IDと構造をManifestから取得するため、
 `--law-id`と`--structure-schema`は併用できません。既存のプロファイルJSON指定と旧APIは維持しています。
 以下の従来の「使い方」はlegacy形式の説明です。
 
@@ -51,12 +52,18 @@ JSONの`ast`はL1合格時のみ完全な規範ASTを返し、L0または不合�
 ファイル伸長の検出には最大1バイトの先読みを許し、超過入力を保持せず読込を停止します。
 保持する元入力バイト量の上限であり、JSONやASTを含むプロセスメモリの上限ではありません。
 
-正式適合データはライセンス・commit・SHA-256一覧とともに`vendor/loj-spec`へ固定し、
+v1alpha1の正式適合データはライセンス・commit・SHA-256一覧とともに`vendor/loj-spec-v1alpha1`へ、
+次期仕様（`loj/v1alpha2`ほか）の`spec`・`schemas`・`conformance`は`vendor/loj-spec`へ固定し、
 `cargo test --workspace --locked`で全正式ケースを検査します。
 個別実行は`cargo test -p law-semantic --test v1alpha1_conformance --locked`です。
 `LOJ_CONFORMANCE_REPORT`に絶対パスを設定すると、ケース別JSON結果を保存します。
 
 [設計と制限](docs/v1alpha1-implementation.md)を参照してください。
+次期仕様（`loj/v1alpha2`、履歴マニフェスト、字体注記、登録台帳、再構築報告、L3・L4、変更・参照の検査）は
+[次期仕様の実装](docs/next-spec-implementation.md)を参照してください。
+`law.yaml`とディレクトリの既定は次期仕様で、v1alpha1は`--profile v1alpha1`で選びます。
+次期仕様の適合ケースは`cargo test -p law-semantic --test next_conformance --locked`で実行し、
+`LOJ_CONFORMANCE_REPORT_DIR`にディレクトリを設定すると、suiteごとのJSON結果を保存します。
 固定テストの成功は、未知の全入力への完全適合や法的正確性の証明ではありません。
 
 ## 使い方

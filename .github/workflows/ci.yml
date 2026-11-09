@@ -49,10 +49,26 @@ jobs:
         run: cargo build --workspace --locked
       - name: Test
         run: cargo test --workspace --locked
+      # The conformance suites also run in the Test step above; these steps run them
+      # again only to write the per-case reports, which are uploaded below.
       - name: Formal v1alpha1 conformance (pinned vendored specification)
+        shell: bash
         env:
-          LOJ_CONFORMANCE_REPORT: ${{ github.workspace }}/v1alpha1-conformance.json
-        run: cargo test -p law-semantic --test v1alpha1_conformance --locked -- --nocapture
+          LOJ_CONFORMANCE_REPORT: ${{ github.workspace }}/conformance-reports/v1alpha1-conformance.json
+        run: |
+          mkdir -p conformance-reports
+          cargo test -p law-semantic --test v1alpha1_conformance --locked -- --nocapture
+      - name: Formal next-spec conformance (pinned vendored specification)
+        env:
+          LOJ_CONFORMANCE_REPORT_DIR: ${{ github.workspace }}/conformance-reports
+        run: cargo test -p law-semantic --test next_conformance --locked -- --nocapture
+      - name: Upload conformance reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: conformance-reports-${{ matrix.os }}-${{ matrix.toolchain }}
+          path: conformance-reports/
+          if-no-files-found: warn
       - name: Clippy
         if: matrix.os == 'ubuntu-latest' && matrix.toolchain == 'stable'
         run: cargo clippy --workspace --all-targets --locked -- -D warnings

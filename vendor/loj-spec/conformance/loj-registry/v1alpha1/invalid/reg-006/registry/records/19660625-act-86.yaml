@@ -1,0 +1,34 @@
+schemaVersion: loj-registry/v1alpha1
+id: 19660625-act-86
+label: 国民の祝日に関する法律の一部を改正する法律（昭和四十一年法律第八十六号）
+status: provisional
+aliases:
+  - id: 19660625-law-86
+    evidence: [{source: src-legacy-19480720-law-178, locator: "supplementary_provision.md（commit 4505a64）の附則のリンク"}]
+    verification: {state: confirmed}
+identity:
+  evidence: [{source: src-goshomei-s41-86, locator: 1・2画像}]
+  verification: {state: confirmed}
+text: {state: notCollected}
+sources:
+  - id: src-legacy-19480720-law-178
+    kind: other
+    title: 旧リポジトリ law-of-japan/19480720-law-178
+    uri: https://github.com/law-of-japan/19480720-law-178
+  - id: src-goshomei-s41-86
+    kind: promulgation
+    title: 国民の祝日に関する法律の一部を改正する法律・御署名原本・昭和四十一年・第四巻・法律第八十六号（国立公文書館 御42643100）
+    uri: https://www.digital.archives.go.jp/file/686000
+numbers:
+  - id: n1
+    state: exists
+    raw: 法律第八十六号
+    structured:
+      system: 法律
+      period: {raw: 昭和四十一年, gregorian: {from: "1966-01-01", to: "1966-12-31"}}
+      series: {state: regular}
+      number: "86"
+    evidence: [{source: src-goshomei-s41-86, locator: 2画像 冒頭}]
+    verification: {state: unverified, reason: 官報と未照合}
+    decision: adopted
+externalIds: []

@@ -1,0 +1,12 @@
+{
+  "resolution": {
+    "result": "error"
+  },
+  "diagnostics": [
+    {
+      "rule": "FIXREF-04",
+      "schemaVersion": "common/v1alpha1",
+      "class": "error"
+    }
+  ]
+}

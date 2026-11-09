@@ -1,0 +1,16 @@
+schemaVersion: loj/v1alpha2
+law:
+  id: "19480720-law-179"
+  title: "國民の祝日に関する法律"
+  type: act
+  number: "昭和二十三年法律第百七十八号"
+  promulgatedAt: "1948-07-20"
+  language: ja
+supplements:
+  - key: original
+    title: "附　則"
+documents:
+  - path: main.md
+    parent: main
+  - path: supplement.md
+    parent: supplement/original

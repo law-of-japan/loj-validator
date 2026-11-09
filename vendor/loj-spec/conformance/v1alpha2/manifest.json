@@ -1,0 +1,2022 @@
+{
+  "suite": "loj/v1alpha2",
+  "cases": [
+    {
+      "id": "pkg-001",
+      "title": "単一項",
+      "requirements": [
+        "DIR-01",
+        "DIR-02",
+        "AST-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-001/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-001.json",
+      "success": true
+    },
+    {
+      "id": "pkg-002",
+      "title": "複数項",
+      "requirements": [
+        "DIR-02",
+        "DISP-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-002/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-002.json",
+      "success": true
+    },
+    {
+      "id": "pkg-003",
+      "title": "複数号",
+      "requirements": [
+        "DIR-02",
+        "DISP-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-003/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-003.json",
+      "success": true
+    },
+    {
+      "id": "pkg-004",
+      "title": "号の細分",
+      "requirements": [
+        "DIR-02",
+        "ID-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-004/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-004.json",
+      "success": true
+    },
+    {
+      "id": "pkg-005",
+      "title": "複数段落",
+      "requirements": [
+        "MD-02",
+        "AST-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-005/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-005.json",
+      "success": true
+    },
+    {
+      "id": "pkg-006",
+      "title": "終了不一致",
+      "requirements": [
+        "DIR-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-006/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-006.json",
+      "success": false
+    },
+    {
+      "id": "pkg-007",
+      "title": "項外の号",
+      "requirements": [
+        "DIR-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-007/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-007.json",
+      "success": false
+    },
+    {
+      "id": "pkg-008",
+      "title": "項番号重複",
+      "requirements": [
+        "DIR-02",
+        "AST-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-008/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-008.json",
+      "success": false
+    },
+    {
+      "id": "pkg-009",
+      "title": "枝番号",
+      "requirements": [
+        "NUM-01",
+        "ID-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-009/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-009.json",
+      "success": true
+    },
+    {
+      "id": "pkg-010",
+      "title": "表示番号不一致",
+      "requirements": [
+        "DISP-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-010/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-010.json",
+      "success": false
+    },
+    {
+      "id": "pkg-011",
+      "title": "コード内マーカー",
+      "requirements": [
+        "MD-01",
+        "MD-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-011/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-011.json",
+      "success": true
+    },
+    {
+      "id": "pkg-012",
+      "title": "通常HTMLコメント",
+      "requirements": [
+        "MD-01",
+        "MD-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-012/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-012.json",
+      "success": true
+    },
+    {
+      "id": "pkg-013",
+      "title": "属性欠落",
+      "requirements": [
+        "DIR-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-013/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-013.json",
+      "success": false
+    },
+    {
+      "id": "pkg-014",
+      "title": "属性重複",
+      "requirements": [
+        "DIR-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-014/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-014.json",
+      "success": false
+    },
+    {
+      "id": "pkg-015",
+      "title": "未知属性",
+      "requirements": [
+        "DIR-01",
+        "BASIC-04"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-015/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-015.json",
+      "success": false
+    },
+    {
+      "id": "pkg-016",
+      "title": "複数ファイル統合",
+      "requirements": [
+        "MAN-03",
+        "HEAD-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-016/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-016.json",
+      "success": true
+    },
+    {
+      "id": "pkg-017",
+      "title": "分割前と同じASTとID",
+      "requirements": [
+        "MAN-03",
+        "ID-01",
+        "ID-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-017/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-017.json",
+      "success": true
+    },
+    {
+      "id": "pkg-018",
+      "title": "日本語UTF-8位置",
+      "requirements": [
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-018/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-018.json",
+      "success": true
+    },
+    {
+      "id": "pkg-019",
+      "title": "CRLF位置",
+      "requirements": [
+        "BASIC-02",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-019/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-019.json",
+      "success": true
+    },
+    {
+      "id": "pkg-020",
+      "title": "Manifest未知フィールド",
+      "requirements": [
+        "MAN-01"
+      ],
+      "check": "L0",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-020/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-020.json",
+      "success": false
+    },
+    {
+      "id": "pkg-021",
+      "title": "本則と附則の番号空間",
+      "requirements": [
+        "HEAD-03",
+        "ID-01",
+        "MAN-03"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-021/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-021.json",
+      "success": true
+    },
+    {
+      "id": "pkg-022",
+      "title": "不正Markdown見出し",
+      "requirements": [
+        "MD-03",
+        "HEAD-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-022/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-022.json",
+      "success": false
+    },
+    {
+      "id": "pkg-023",
+      "title": "マーカーなし本文",
+      "requirements": [
+        "MD-03"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-023/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-023.json",
+      "success": false
+    },
+    {
+      "id": "pkg-024",
+      "title": "引用リスト強調リンク",
+      "requirements": [
+        "MD-02",
+        "AST-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-024/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-024.json",
+      "success": true
+    },
+    {
+      "id": "pkg-025",
+      "title": "不正参照もL1では原文保持",
+      "requirements": [
+        "REF-01",
+        "MD-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-025/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-025.json",
+      "success": true
+    },
+    {
+      "id": "pkg-026",
+      "title": "不正参照の将来L2例",
+      "requirements": [
+        "REF-01"
+      ],
+      "check": "L2",
+      "normative": false,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-026/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-026.json",
+      "success": false
+    },
+    {
+      "id": "pkg-027",
+      "title": "空ファイル",
+      "requirements": [
+        "BASIC-02"
+      ],
+      "check": "L0",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-027/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-027.json",
+      "success": false
+    },
+    {
+      "id": "pkg-028",
+      "title": "空項",
+      "requirements": [
+        "DIR-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-028/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-028.json",
+      "success": false
+    },
+    {
+      "id": "pkg-029",
+      "title": "未閉鎖",
+      "requirements": [
+        "DIR-02",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-029/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-029.json",
+      "success": false
+    },
+    {
+      "id": "pkg-030",
+      "title": "未知マーカー",
+      "requirements": [
+        "DIR-01",
+        "BASIC-04"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-030/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-030.json",
+      "success": false
+    },
+    {
+      "id": "pkg-031",
+      "title": "引用符属性",
+      "requirements": [
+        "DIR-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-031/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-031.json",
+      "success": false
+    },
+    {
+      "id": "pkg-032",
+      "title": "先頭ゼロ",
+      "requirements": [
+        "DIR-01",
+        "NUM-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-032/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-032.json",
+      "success": false
+    },
+    {
+      "id": "pkg-033",
+      "title": "レベル飛越し",
+      "requirements": [
+        "DIR-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-033/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-033.json",
+      "success": false
+    },
+    {
+      "id": "pkg-034",
+      "title": "削除条",
+      "requirements": [
+        "HEAD-04",
+        "ID-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-034/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-034.json",
+      "success": true
+    },
+    {
+      "id": "pkg-035",
+      "title": "見出しレベルは所属と独立",
+      "requirements": [
+        "HEAD-01",
+        "HEAD-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-035/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-035.json",
+      "success": true
+    },
+    {
+      "id": "pkg-036",
+      "title": "無番号見出し拒否",
+      "requirements": [
+        "HEAD-01",
+        "BASIC-03"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-036/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-036.json",
+      "success": false
+    },
+    {
+      "id": "pkg-037",
+      "title": "親本文は子の後も保存",
+      "requirements": [
+        "AST-01",
+        "MD-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-037/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-037.json",
+      "success": true
+    },
+    {
+      "id": "pkg-038",
+      "title": "パストラバーサル",
+      "requirements": [
+        "MAN-02"
+      ],
+      "check": "L0",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-038/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-038.json",
+      "success": false
+    },
+    {
+      "id": "pkg-039",
+      "title": "ファイル重複",
+      "requirements": [
+        "MAN-02"
+      ],
+      "check": "L0",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-039/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-039.json",
+      "success": false
+    },
+    {
+      "id": "pkg-040",
+      "title": "未定義附則キー",
+      "requirements": [
+        "MAN-03"
+      ],
+      "check": "L0",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-040/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-040.json",
+      "success": false
+    },
+    {
+      "id": "pkg-041",
+      "title": "存在しない日付",
+      "requirements": [
+        "MAN-01"
+      ],
+      "check": "L0",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-041/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-041.json",
+      "success": false
+    },
+    {
+      "id": "pkg-042",
+      "title": "未対応構造の申告",
+      "requirements": [
+        "BASIC-03"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-042/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-042.json",
+      "success": false
+    },
+    {
+      "id": "pkg-043",
+      "title": "ファイルを跨ぐ項を拒否",
+      "requirements": [
+        "MAN-03",
+        "DIR-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-043/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-043.json",
+      "success": false
+    },
+    {
+      "id": "pkg-044",
+      "title": "Setext拒否",
+      "requirements": [
+        "HEAD-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-044/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-044.json",
+      "success": false
+    },
+    {
+      "id": "pkg-045",
+      "title": "raw HTML内保護",
+      "requirements": [
+        "MD-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-045/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-045.json",
+      "success": true
+    },
+    {
+      "id": "pkg-046",
+      "title": "複数行予約マーカー",
+      "requirements": [
+        "DIR-01",
+        "MD-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-046/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-046.json",
+      "success": false
+    },
+    {
+      "id": "pkg-047",
+      "title": "大文字予約マーカー",
+      "requirements": [
+        "DIR-01",
+        "MD-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-047/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-047.json",
+      "success": false
+    },
+    {
+      "id": "pkg-048",
+      "title": "全角番号",
+      "requirements": [
+        "NUM-01",
+        "DISP-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-048/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-048.json",
+      "success": true
+    },
+    {
+      "id": "pkg-049",
+      "title": "非標準漢数字",
+      "requirements": [
+        "NUM-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-049/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-049.json",
+      "success": false
+    },
+    {
+      "id": "pkg-050",
+      "title": "章を跨ぐ条重複",
+      "requirements": [
+        "HEAD-02",
+        "AST-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-050/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-050.json",
+      "success": false
+    },
+    {
+      "id": "pkg-051",
+      "title": "条のない附則",
+      "requirements": [
+        "HEAD-03",
+        "DIR-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-051/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-051.json",
+      "success": true
+    },
+    {
+      "id": "pkg-052",
+      "title": "不透明な附属資料",
+      "requirements": [
+        "HEAD-03",
+        "MD-02",
+        "AST-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-052/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-052.json",
+      "success": true
+    },
+    {
+      "id": "pkg-053",
+      "title": "細分10階層",
+      "requirements": [
+        "DIR-02",
+        "ID-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-053/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-053.json",
+      "success": true
+    },
+    {
+      "id": "pkg-054",
+      "title": "分類全階層",
+      "requirements": [
+        "HEAD-02",
+        "AST-01",
+        "ID-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-054/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-054.json",
+      "success": true
+    },
+    {
+      "id": "pkg-055",
+      "title": "先頭空白マーカー",
+      "requirements": [
+        "MD-01",
+        "DIR-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-055/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-055.json",
+      "success": false
+    },
+    {
+      "id": "pkg-056",
+      "title": "BOM禁止",
+      "requirements": [
+        "BASIC-02"
+      ],
+      "check": "L0",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-056/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-056.json",
+      "success": false
+    },
+    {
+      "id": "pkg-057",
+      "title": "単独CR禁止",
+      "requirements": [
+        "BASIC-02"
+      ],
+      "check": "L0",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-057/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-057.json",
+      "success": false
+    },
+    {
+      "id": "pkg-058",
+      "title": "未知バージョン",
+      "requirements": [
+        "BASIC-01"
+      ],
+      "check": "L0",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-058/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-058.json",
+      "success": false
+    },
+    {
+      "id": "pkg-059",
+      "title": "YAML重複キー",
+      "requirements": [
+        "MAN-01"
+      ],
+      "check": "L0",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-059/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-059.json",
+      "success": false
+    },
+    {
+      "id": "pkg-060",
+      "title": "別scopeから戻る順序",
+      "requirements": [
+        "MAN-03"
+      ],
+      "check": "L0",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-060/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-060.json",
+      "success": false
+    },
+    {
+      "id": "pkg-061",
+      "title": "完全サンプル",
+      "requirements": [
+        "MAN-03",
+        "AST-01",
+        "ID-01",
+        "REF-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-061/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-061.json",
+      "success": true
+    },
+    {
+      "id": "pkg-062",
+      "title": "複数附則の独立キー",
+      "requirements": [
+        "HEAD-03",
+        "ID-01",
+        "MAN-03"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-062/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-062.json",
+      "success": true
+    },
+    {
+      "id": "pkg-063",
+      "title": "引用リスト内マーカー保護",
+      "requirements": [
+        "MD-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-063/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-063.json",
+      "success": true
+    },
+    {
+      "id": "pkg-064",
+      "title": "インデントコード保護",
+      "requirements": [
+        "MD-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-064/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-064.json",
+      "success": true
+    },
+    {
+      "id": "pkg-065",
+      "title": "末尾改行なし",
+      "requirements": [
+        "BASIC-02",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-065/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-065.json",
+      "success": true
+    },
+    {
+      "id": "pkg-066",
+      "title": "附則見出しでscopeを変えない",
+      "requirements": [
+        "HEAD-03"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-066/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-066.json",
+      "success": false
+    },
+    {
+      "id": "pkg-067",
+      "title": "削除条の項を拒否",
+      "requirements": [
+        "HEAD-04"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-067/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-067.json",
+      "success": false
+    },
+    {
+      "id": "pkg-068",
+      "title": "数字の幅混在を拒否",
+      "requirements": [
+        "NUM-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-068/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-068.json",
+      "success": false
+    },
+    {
+      "id": "pkg-069",
+      "title": "マーカータブを拒否",
+      "requirements": [
+        "DIR-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-069/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-069.json",
+      "success": false
+    },
+    {
+      "id": "pkg-070",
+      "title": "終了属性を拒否",
+      "requirements": [
+        "DIR-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-070/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-070.json",
+      "success": false
+    },
+    {
+      "id": "pkg-071",
+      "title": "本文中の見出しを拒否",
+      "requirements": [
+        "DIR-02",
+        "MD-03"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-071/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-071.json",
+      "success": false
+    },
+    {
+      "id": "pkg-072",
+      "title": "分類見出し再掲を拒否",
+      "requirements": [
+        "HEAD-02",
+        "MAN-03"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-072/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-072.json",
+      "success": false
+    },
+    {
+      "id": "pkg-073",
+      "title": "欠番と逆順を保持",
+      "requirements": [
+        "HEAD-02",
+        "AST-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-073/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-073.json",
+      "success": true
+    },
+    {
+      "id": "pkg-074",
+      "title": "字母細分は未対応",
+      "requirements": [
+        "DISP-01",
+        "BASIC-03"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-074/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-074.json",
+      "success": false
+    },
+    {
+      "id": "pkg-075",
+      "title": "属性順の交換",
+      "requirements": [
+        "DIR-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-075/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-075.json",
+      "success": true
+    },
+    {
+      "id": "pkg-076",
+      "title": "附属資料の段落・見出し・リスト分割",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-076/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-076.json",
+      "success": true
+    },
+    {
+      "id": "pkg-077",
+      "title": "附属資料の空白だけの後続を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-077/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-077.json",
+      "success": false
+    },
+    {
+      "id": "pkg-078",
+      "title": "非最終の明示閉鎖フェンス",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-078/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-078.json",
+      "success": true
+    },
+    {
+      "id": "pkg-079",
+      "title": "非最終の未閉鎖フェンスを拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-079/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-079.json",
+      "success": false
+    },
+    {
+      "id": "pkg-080",
+      "title": "短い閉じフェンスを拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-080/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-080.json",
+      "success": false
+    },
+    {
+      "id": "pkg-081",
+      "title": "異なる文字種の閉じフェンスを拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-081/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-081.json",
+      "success": false
+    },
+    {
+      "id": "pkg-082",
+      "title": "引用内のチルダフェンス閉鎖",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-082/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-082.json",
+      "success": true
+    },
+    {
+      "id": "pkg-083",
+      "title": "引用終了だけのフェンスを拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-083/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-083.json",
+      "success": false
+    },
+    {
+      "id": "pkg-084",
+      "title": "最終ファイルの未閉鎖フェンスを許可",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-084/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-084.json",
+      "success": true
+    },
+    {
+      "id": "pkg-085",
+      "title": "非最終HTML種類1の終端",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-085/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-085.json",
+      "success": true
+    },
+    {
+      "id": "pkg-086",
+      "title": "非最終HTML種類1の暗黙終端を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-086/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-086.json",
+      "success": false
+    },
+    {
+      "id": "pkg-087",
+      "title": "非最終HTML種類2の終端",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-087/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-087.json",
+      "success": true
+    },
+    {
+      "id": "pkg-088",
+      "title": "非最終HTML種類2の暗黙終端を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-088/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-088.json",
+      "success": false
+    },
+    {
+      "id": "pkg-089",
+      "title": "非最終HTML種類3の終端",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-089/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-089.json",
+      "success": true
+    },
+    {
+      "id": "pkg-090",
+      "title": "非最終HTML種類3の暗黙終端を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-090/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-090.json",
+      "success": false
+    },
+    {
+      "id": "pkg-091",
+      "title": "非最終HTML種類4の終端",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-091/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-091.json",
+      "success": true
+    },
+    {
+      "id": "pkg-092",
+      "title": "非最終HTML種類4の暗黙終端を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-092/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-092.json",
+      "success": false
+    },
+    {
+      "id": "pkg-093",
+      "title": "非最終HTML種類5の終端",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-093/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-093.json",
+      "success": true
+    },
+    {
+      "id": "pkg-094",
+      "title": "非最終HTML種類5の暗黙終端を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-094/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-094.json",
+      "success": false
+    },
+    {
+      "id": "pkg-095",
+      "title": "非最終HTML種類6の終端",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-095/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-095.json",
+      "success": true
+    },
+    {
+      "id": "pkg-096",
+      "title": "非最終HTML種類6の暗黙終端を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-096/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-096.json",
+      "success": false
+    },
+    {
+      "id": "pkg-097",
+      "title": "非最終HTML種類7の終端",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-097/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-097.json",
+      "success": true
+    },
+    {
+      "id": "pkg-098",
+      "title": "非最終HTML種類7の暗黙終端を拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-098/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-098.json",
+      "success": false
+    },
+    {
+      "id": "pkg-099",
+      "title": "最終HTMLのEOF終端を許可",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-099/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-099.json",
+      "success": true
+    },
+    {
+      "id": "pkg-100",
+      "title": "分割附属資料でも予約マーカー禁止",
+      "requirements": [
+        "HEAD-03",
+        "MAN-03"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-100/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-100.json",
+      "success": false
+    },
+    {
+      "id": "pkg-101",
+      "title": "CRLF明示閉鎖フェンス",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-101/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-101.json",
+      "success": true
+    },
+    {
+      "id": "pkg-102",
+      "title": "CRLF未閉鎖フェンスを拒否",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-102/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-102.json",
+      "success": false
+    },
+    {
+      "id": "pkg-103",
+      "title": "附属資料のファイル別参照定義",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-103/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-103.json",
+      "success": true
+    },
+    {
+      "id": "pkg-104",
+      "title": "インデントコードのフェンス風本文",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-104/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-104.json",
+      "success": true
+    },
+    {
+      "id": "pkg-105",
+      "title": "後続の先頭空行を本文保存",
+      "requirements": [
+        "MAN-03",
+        "HEAD-03",
+        "AST-01",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-105/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-105.json",
+      "success": true
+    },
+    {
+      "id": "pkg-106",
+      "title": "旧字体・互換漢字・結合文字・異体字セレクタの保存",
+      "requirements": [
+        "CHAR-01",
+        "BASIC-02",
+        "SRC-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-106/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-106.json",
+      "success": true
+    },
+    {
+      "id": "pkg-107",
+      "title": "旧字体の条ラベルと「ノ」の枝番号",
+      "requirements": [
+        "HEAD-01",
+        "NUM-01",
+        "ID-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-107/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-107.json",
+      "success": true
+    },
+    {
+      "id": "pkg-108",
+      "title": "附則の見出しの字間",
+      "requirements": [
+        "HEAD-03",
+        "MD-04",
+        "AST-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-108/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-108.json",
+      "success": true
+    },
+    {
+      "id": "pkg-109",
+      "title": "無番号の項",
+      "requirements": [
+        "PARA-01",
+        "DISP-01",
+        "ID-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-109/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-109.json",
+      "success": true
+    },
+    {
+      "id": "pkg-110",
+      "title": "項の本文の中の表",
+      "requirements": [
+        "TABLE-01",
+        "TABLE-02",
+        "TABLE-03",
+        "ID-01",
+        "AST-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-110/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-110.json",
+      "success": true
+    },
+    {
+      "id": "pkg-111",
+      "title": "制定文と前文",
+      "requirements": [
+        "PRE-01",
+        "PRE-02",
+        "ID-01",
+        "AST-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-111/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-111.json",
+      "success": true
+    },
+    {
+      "id": "pkg-112",
+      "title": "無番号の項と番号のある項の混在",
+      "requirements": [
+        "PARA-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-112/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-112.json",
+      "success": false
+    },
+    {
+      "id": "pkg-113",
+      "title": "項が一つの親での無番号の項",
+      "requirements": [
+        "PARA-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-113/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-113.json",
+      "success": false
+    },
+    {
+      "id": "pkg-114",
+      "title": "項の本文の中のGFMの表",
+      "requirements": [
+        "TABLE-01",
+        "MD-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-114/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-114.json",
+      "success": false
+    },
+    {
+      "id": "pkg-115",
+      "title": "行のkeyの重複",
+      "requirements": [
+        "TABLE-02",
+        "ID-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-115/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-115.json",
+      "success": false
+    },
+    {
+      "id": "pkg-116",
+      "title": "行のkeyの形式（大文字）",
+      "requirements": [
+        "TABLE-02",
+        "DIR-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-116/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-116.json",
+      "success": false
+    },
+    {
+      "id": "pkg-117",
+      "title": "セルの結合に値1を書く",
+      "requirements": [
+        "TABLE-03"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-117/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-117.json",
+      "success": false
+    },
+    {
+      "id": "pkg-118",
+      "title": "セルの中の項",
+      "requirements": [
+        "TABLE-03",
+        "DIR-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-118/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-118.json",
+      "success": false
+    },
+    {
+      "id": "pkg-119",
+      "title": "表の直下の本文",
+      "requirements": [
+        "DIR-02",
+        "TABLE-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-119/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-119.json",
+      "success": false
+    },
+    {
+      "id": "pkg-120",
+      "title": "見出しの後の前文",
+      "requirements": [
+        "PRE-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-120/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-120.json",
+      "success": false
+    },
+    {
+      "id": "pkg-121",
+      "title": "前文の後の制定文",
+      "requirements": [
+        "PRE-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-121/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-121.json",
+      "success": false
+    },
+    {
+      "id": "pkg-122",
+      "title": "表にない字体の条ラベル",
+      "requirements": [
+        "HEAD-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-122/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-122.json",
+      "success": false
+    },
+    {
+      "id": "pkg-123",
+      "title": "附則の見出しの半角空白",
+      "requirements": [
+        "HEAD-03"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-123/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-123.json",
+      "success": false
+    },
+    {
+      "id": "pkg-124",
+      "title": "v1alpha1のschemaVersion",
+      "requirements": [
+        "BASIC-01"
+      ],
+      "check": "L0",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-124/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-124.json",
+      "success": false
+    }
+  ]
+}

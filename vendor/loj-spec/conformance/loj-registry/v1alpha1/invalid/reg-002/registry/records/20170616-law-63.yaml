@@ -1,0 +1,26 @@
+schemaVersion: loj-registry/v1alpha1
+id: 20170616-law-63
+label: 天皇の退位等に関する皇室典範特例法（平成二十九年法律第六十三号）
+status: active
+identity:
+  evidence: [{source: src-egov-h29-63, locator: 法令名}]
+  verification: {state: unverified, reason: 官報と未照合}
+text: {state: notCollected}
+repository:
+  location: github.com/law-of-japan/20170616-law-63
+  canonicalBranch: main
+sources:
+  - {id: src-egov-h29-63, kind: egov, title: e-Gov 天皇の退位等に関する皇室典範特例法, uri: https://laws.e-gov.go.jp/law/429AC0000000063}
+numbers:
+  - id: n1
+    state: exists
+    raw: 法律第六十三号
+    structured:
+      system: 法律
+      period: {raw: 平成二十九年, gregorian: {from: "2017-01-01", to: "2017-12-31"}}
+      series: {state: regular}
+      number: "63"
+    evidence: [{source: src-egov-h29-63, locator: 法令番号}]
+    verification: {state: unverified, reason: 官報と未照合}
+    decision: adopted
+externalIds: []

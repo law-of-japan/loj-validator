@@ -1,0 +1,16 @@
+{
+  "results": [
+    {
+      "check": "L3",
+      "category": "evidence",
+      "result": "fail"
+    }
+  ],
+  "diagnostics": [
+    {
+      "rule": "GLYPH-04",
+      "schemaVersion": "loj-glyphs/v1alpha1",
+      "class": "error"
+    }
+  ]
+}

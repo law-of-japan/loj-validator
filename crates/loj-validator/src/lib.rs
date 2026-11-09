@@ -7,6 +7,7 @@
 //!
 //! Both layers run whenever the input is readable, independently of each
 //! other's outcome. A configuration error in one layer does not stop the other.
+pub mod next;
 use serde_json::{json, Map, Value};
 use std::fs;
 use std::path::Path;

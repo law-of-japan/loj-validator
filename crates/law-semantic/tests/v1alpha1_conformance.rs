@@ -82,7 +82,7 @@ fn unknown_version_requires_expected_error_cause() {
 
 #[test]
 fn official_conformance() {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../vendor/loj-spec");
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../vendor/loj-spec-v1alpha1");
     assert_eq!(
         fs::read_to_string(root.join("COMMIT")).unwrap().trim(),
         law_semantic::v1alpha1::SPEC_COMMIT

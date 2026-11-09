@@ -1,0 +1,130 @@
+{
+  "suite": "loj-registry/v1alpha1",
+  "cases": [
+    {
+      "id": "reg-001",
+      "title": "登録台帳の三つのRecord",
+      "requirements": [
+        "REG-01",
+        "REG-02",
+        "REG-03",
+        "REG-05",
+        "RID-02"
+      ],
+      "check": "registry",
+      "normative": true,
+      "input": {
+        "kind": "registry",
+        "path": "conformance/loj-registry/v1alpha1/valid/reg-001/registry"
+      },
+      "expected": "conformance/loj-registry/v1alpha1/expected/reg-001.json",
+      "success": true
+    },
+    {
+      "id": "reg-002",
+      "title": "ファイル名とIDの不一致",
+      "requirements": [
+        "REG-01"
+      ],
+      "check": "registry",
+      "normative": true,
+      "input": {
+        "kind": "registry",
+        "path": "conformance/loj-registry/v1alpha1/invalid/reg-002/registry"
+      },
+      "expected": "conformance/loj-registry/v1alpha1/expected/reg-002.json",
+      "success": false
+    },
+    {
+      "id": "reg-003",
+      "title": "採用中の番号主張が二つ",
+      "requirements": [
+        "REG-03"
+      ],
+      "check": "registry",
+      "normative": true,
+      "input": {
+        "kind": "registry",
+        "path": "conformance/loj-registry/v1alpha1/invalid/reg-003/registry"
+      },
+      "expected": "conformance/loj-registry/v1alpha1/expected/reg-003.json",
+      "success": false
+    },
+    {
+      "id": "reg-004",
+      "title": "訂正前の主張が見つからない",
+      "requirements": [
+        "REG-04"
+      ],
+      "check": "registry",
+      "normative": true,
+      "input": {
+        "kind": "registry",
+        "path": "conformance/loj-registry/v1alpha1/invalid/reg-004/registry"
+      },
+      "expected": "conformance/loj-registry/v1alpha1/expected/reg-004.json",
+      "success": false
+    },
+    {
+      "id": "reg-005",
+      "title": "採番期間を西暦年だけにする",
+      "requirements": [
+        "REG-03"
+      ],
+      "check": "registry",
+      "normative": true,
+      "input": {
+        "kind": "registry",
+        "path": "conformance/loj-registry/v1alpha1/invalid/reg-005/registry"
+      },
+      "expected": "conformance/loj-registry/v1alpha1/expected/reg-005.json",
+      "success": false
+    },
+    {
+      "id": "reg-006",
+      "title": "仮登録で同一性を確認済みにする",
+      "requirements": [
+        "REG-02"
+      ],
+      "check": "registry",
+      "normative": true,
+      "input": {
+        "kind": "registry",
+        "path": "conformance/loj-registry/v1alpha1/invalid/reg-006/registry"
+      },
+      "expected": "conformance/loj-registry/v1alpha1/expected/reg-006.json",
+      "success": false
+    },
+    {
+      "id": "reg-007",
+      "title": "本文がある法令にリポジトリがない",
+      "requirements": [
+        "REG-02"
+      ],
+      "check": "registry",
+      "normative": true,
+      "input": {
+        "kind": "registry",
+        "path": "conformance/loj-registry/v1alpha1/invalid/reg-007/registry"
+      },
+      "expected": "conformance/loj-registry/v1alpha1/expected/reg-007.json",
+      "success": false
+    },
+    {
+      "id": "reg-008",
+      "title": "別名と大小文字だけが違うRecord ID",
+      "requirements": [
+        "RID-01",
+        "RID-02"
+      ],
+      "check": "registry",
+      "normative": true,
+      "input": {
+        "kind": "registry",
+        "path": "conformance/loj-registry/v1alpha1/invalid/reg-008/registry"
+      },
+      "expected": "conformance/loj-registry/v1alpha1/expected/reg-008.json",
+      "success": false
+    }
+  ]
+}

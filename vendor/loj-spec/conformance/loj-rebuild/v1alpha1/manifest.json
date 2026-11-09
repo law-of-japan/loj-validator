@@ -1,0 +1,69 @@
+{
+  "suite": "loj-rebuild/v1alpha1",
+  "cases": [
+    {
+      "id": "rebuild-001",
+      "title": "祝日法の再構築報告",
+      "requirements": [
+        "REBR-01",
+        "REBR-02",
+        "REBR-03",
+        "REBR-04",
+        "REBR-05"
+      ],
+      "check": "rebuild",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/valid/hist-001/repo"
+      },
+      "expected": "conformance/loj-rebuild/v1alpha1/expected/rebuild-001.json",
+      "success": true
+    },
+    {
+      "id": "rebuild-002",
+      "title": "短縮した旧commit",
+      "requirements": [
+        "REBR-02"
+      ],
+      "check": "rebuild",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-rebuild/v1alpha1/invalid/rebuild-002/repo"
+      },
+      "expected": "conformance/loj-rebuild/v1alpha1/expected/rebuild-002.json",
+      "success": false
+    },
+    {
+      "id": "rebuild-003",
+      "title": "履歴マニフェストにない資料",
+      "requirements": [
+        "REBR-02"
+      ],
+      "check": "rebuild",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-rebuild/v1alpha1/invalid/rebuild-003/repo"
+      },
+      "expected": "conformance/loj-rebuild/v1alpha1/expected/rebuild-003.json",
+      "success": false
+    },
+    {
+      "id": "rebuild-004",
+      "title": "存在しないRevisionへの対応",
+      "requirements": [
+        "REBR-04"
+      ],
+      "check": "rebuild",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-rebuild/v1alpha1/invalid/rebuild-004/repo"
+      },
+      "expected": "conformance/loj-rebuild/v1alpha1/expected/rebuild-004.json",
+      "success": false
+    }
+  ]
+}

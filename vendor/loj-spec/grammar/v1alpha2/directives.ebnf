@@ -1,0 +1,29 @@
+(* ISO-style EBNF for loj/v1alpha2 markers. Applied only in MD-01 eligible regions; no line ending here.
+   Attribute order is free (DIR-01); the alternatives below list the permitted sets, not an order. *)
+marker = open | close ;
+open = "<!-- loj:", (paragraph | item | subitem | table | row | cell
+                    | "preamble" | "enact-statement"), " -->" ;
+paragraph = "paragraph", spaces, attrs(number_attr, [numbering_attr]) ;
+item = "item", spaces, number_attr ;
+subitem = "subitem", spaces, attrs(level_attr, number_attr) ;
+table = "table", spaces, number_attr ;
+row = "row", spaces, key_attr ;
+cell = "cell", [spaces, attrs([rowspan_attr], [colspan_attr])] ;
+close = "<!-- loj:end-", ("paragraph" | "item" | "subitem" | "table" | "row" | "cell"
+                         | "preamble" | "enact-statement"), " -->" ;
+(* attrs(a, b, ...) = the listed attributes in any order, each once, separated by spaces;
+   optional ones may be absent. *)
+number_attr = "number=", number ;
+numbering_attr = "numbering=", ("explicit" | "implicit") ;
+level_attr = "level=", (nonzero | "10") ;
+key_attr = "key=", crockford, crockford, crockford, crockford ;
+rowspan_attr = "rowspan=", span ;
+colspan_attr = "colspan=", span ;
+span = ("2" | "3" | "4" | "5" | "6" | "7" | "8" | "9") | (nonzero, digit, {digit}) ;
+number = component, {"-", component} ;
+component = nonzero, [digit, [digit, [digit]]] ;
+nonzero = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+digit = "0" | nonzero ;
+crockford = digit | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "j" | "k" | "m" | "n"
+          | "p" | "q" | "r" | "s" | "t" | "v" | "w" | "x" | "y" | "z" ;
+spaces = " ", {" "} ;

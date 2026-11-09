@@ -1,0 +1,229 @@
+{
+  "suite": "common/v1alpha1",
+  "cases": [
+    {
+      "id": "common-001",
+      "title": "特例法の施行の日と祝日法の改正の時点（T-04）",
+      "requirements": [
+        "XREF-01",
+        "XREF-03",
+        "VAL-06"
+      ],
+      "check": "L4",
+      "category": "timeConsistency",
+      "normative": true,
+      "input": {
+        "kind": "records",
+        "registry": "conformance/loj-registry/v1alpha1/valid/reg-001/registry",
+        "repositories": [
+          "conformance/loj-history/v1alpha1/valid/hist-003/repo",
+          "conformance/loj-history/v1alpha1/valid/hist-004/repo"
+        ]
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-001.json",
+      "success": true
+    },
+    {
+      "id": "common-002",
+      "title": "sameAsの参照先と時点が食い違う",
+      "requirements": [
+        "XREF-03",
+        "TIME-07"
+      ],
+      "check": "L4",
+      "category": "timeConsistency",
+      "normative": true,
+      "input": {
+        "kind": "records",
+        "registry": "conformance/loj-registry/v1alpha1/valid/reg-001/registry",
+        "repositories": [
+          "conformance/loj-history/v1alpha1/valid/hist-003/repo",
+          "conformance/common/v1alpha1/invalid/common-002/hist-004"
+        ]
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-002.json",
+      "success": false
+    },
+    {
+      "id": "common-003",
+      "title": "参照先のRecordを収録していない",
+      "requirements": [
+        "XREF-03",
+        "VAL-04",
+        "VAL-06"
+      ],
+      "check": "L4",
+      "category": "timeConsistency",
+      "normative": true,
+      "input": {
+        "kind": "records",
+        "registry": "conformance/loj-registry/v1alpha1/valid/reg-001/registry",
+        "repositories": [
+          "conformance/loj-history/v1alpha1/valid/hist-004/repo"
+        ]
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-003.json",
+      "success": true
+    },
+    {
+      "id": "common-004",
+      "title": "記録訂正の宣言と変更",
+      "requirements": [
+        "CHG-01",
+        "CHG-02",
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-004/repo.bundle",
+        "base": "02086ca793ace385b61e6fa5692709895e7e9b0e",
+        "head": "8b678d2467c3b9eab705300a35c17b5b57acc37b"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-004.json",
+      "success": true
+    },
+    {
+      "id": "common-005",
+      "title": "ASTを変えない書式変更",
+      "requirements": [
+        "CHG-02",
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-004/repo.bundle",
+        "base": "8b678d2467c3b9eab705300a35c17b5b57acc37b",
+        "head": "d7b514444a5f766269025e52d6dda8b9671df556"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-005.json",
+      "success": true
+    },
+    {
+      "id": "common-006",
+      "title": "変更の種類の宣言がない",
+      "requirements": [
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-006/repo.bundle",
+        "base": "d7b514444a5f766269025e52d6dda8b9671df556",
+        "head": "35b3c1b815e242be90211750b851b17b1c835b0a"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-006.json",
+      "success": false
+    },
+    {
+      "id": "common-007",
+      "title": "書式変更と宣言してASTを変える",
+      "requirements": [
+        "CHG-02"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-007/repo.bundle",
+        "base": "35b3c1b815e242be90211750b851b17b1c835b0a",
+        "head": "f59ef0fb1025fcc7bb6b168631c4efb673bbdece"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-007.json",
+      "success": false
+    },
+    {
+      "id": "common-008",
+      "title": "固定参照で訂正前の本文を指す",
+      "requirements": [
+        "FIXREF-02",
+        "FIXREF-03",
+        "FIXREF-07"
+      ],
+      "check": "reference",
+      "normative": true,
+      "input": {
+        "kind": "reference",
+        "bundle": "conformance/common/v1alpha1/valid/common-004/repo.bundle",
+        "registry": "conformance/common/v1alpha1/valid/common-008/registry",
+        "reference": "loj:loj/20990101-act-1/b7k2m9qd@02086ca793ace385b61e6fa5692709895e7e9b0e#20990101-act-1/main/article/1/paragraph/1"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-008.json",
+      "success": true
+    },
+    {
+      "id": "common-009",
+      "title": "Revision参照は最新の記録版に解決する",
+      "requirements": [
+        "FIXREF-05"
+      ],
+      "check": "reference",
+      "normative": true,
+      "input": {
+        "kind": "reference",
+        "bundle": "conformance/common/v1alpha1/valid/common-004/repo.bundle",
+        "registry": "conformance/common/v1alpha1/valid/common-008/registry",
+        "reference": "loj:loj/20990101-act-1/b7k2m9qd"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-009.json",
+      "success": true
+    },
+    {
+      "id": "common-010",
+      "title": "commitのないノードの指定",
+      "requirements": [
+        "FIXREF-07",
+        "FIXREF-06"
+      ],
+      "check": "reference",
+      "normative": true,
+      "input": {
+        "kind": "reference",
+        "bundle": "conformance/common/v1alpha1/invalid/common-010/repo.bundle",
+        "registry": "conformance/common/v1alpha1/invalid/common-010/registry",
+        "reference": "loj:loj/20990101-act-1/b7k2m9qd#20990101-act-1/main/article/1/paragraph/1"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-010.json",
+      "success": false
+    },
+    {
+      "id": "common-011",
+      "title": "短縮したcommit",
+      "requirements": [
+        "FIXREF-04",
+        "FIXREF-06"
+      ],
+      "check": "reference",
+      "normative": true,
+      "input": {
+        "kind": "reference",
+        "bundle": "conformance/common/v1alpha1/invalid/common-011/repo.bundle",
+        "registry": "conformance/common/v1alpha1/invalid/common-011/registry",
+        "reference": "loj:loj/20990101-act-1/b7k2m9qd@02086ca"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-011.json",
+      "success": false
+    },
+    {
+      "id": "common-012",
+      "title": "そのcommitにないRevision",
+      "requirements": [
+        "FIXREF-06"
+      ],
+      "check": "reference",
+      "normative": true,
+      "input": {
+        "kind": "reference",
+        "bundle": "conformance/common/v1alpha1/invalid/common-012/repo.bundle",
+        "registry": "conformance/common/v1alpha1/invalid/common-012/registry",
+        "reference": "loj:loj/20990101-act-1/zzzzzzzz@02086ca793ace385b61e6fa5692709895e7e9b0e"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-012.json",
+      "success": false
+    }
+  ]
+}

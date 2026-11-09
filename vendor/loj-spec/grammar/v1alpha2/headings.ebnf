@@ -1,0 +1,19 @@
+(* Applies to HEAD-01 document-level ATX lines of loj/v1alpha2 only. No trailing EOL here. *)
+heading = hashes, " ", (group | article | supplement) ;
+hashes = "#", ["#", ["#", ["#", ["#", ["#"]]]]] ;
+group = "第", numeral, ("編" | "章" | "節" | "款" | "目"), branches, gap, title ;
+article = "第", numeral, ("条" | "條"), branches, ["（", caption, "）"] ;
+supplement = "附", {"　"}, "則" ;     (* HEAD-03: zero or more U+3000 between the two characters *)
+branches = {("の" | "ノ"), numeral} ;  (* NUM-01 *)
+gap = " " | "　" ;
+numeral = ascii_decimal | fullwidth_decimal | japanese ;
+ascii_decimal = ? ASCII decimal 1..9999, no leading zero ? ;
+fullwidth_decimal = ? Fullwidth decimal １..９９９９, no leading zero ? ;
+japanese = ? Canonical positional Japanese 1..9999 per NUM-01 ? ;
+title = ? Nonempty plain text, no inline markup, CR/LF or trailing whitespace ? ;
+caption = ? Nonempty plain text, no parentheses, inline markup, CR/LF or trailing whitespace ? ;
+(* Appendix: hashes + SPACE + exact manifest title; see HEAD-03.
+   Only the first appendix file requires this heading. Later appendix files may
+   begin with any nonblank Markdown body, per MAN-03. Cross-file block completion
+   is a semantic constraint in MAN-03, not a heading token production.
+   Legal hierarchy is rank-based, never hashes-based. *)

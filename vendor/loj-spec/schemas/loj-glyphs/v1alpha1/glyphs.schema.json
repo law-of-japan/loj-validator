@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://law-of-japan.github.io/loj-spec/schemas/loj-glyphs/v1alpha1/glyphs.schema.json",
+  "$comment": "Canonical identifier only; publication at this URI is not required.",
+  "title": "LoJ glyph notes",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": "loj-glyphs/v1alpha1"
+    },
+    "revision": {
+      "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/revisionId"
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/localId"
+          },
+          "field": {
+            "enum": [
+              "text",
+              "display"
+            ]
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "recorded": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "ambiguous",
+              "illegible",
+              "unencodable",
+              "literal",
+              "spacing",
+              "variance",
+              "sourceEdit",
+              "selected"
+            ]
+          },
+          "candidates": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 2,
+            "uniqueItems": true
+          },
+          "basis": {
+            "enum": [
+              "unifiedDefault",
+              "otherSource",
+              "sameSource",
+              "provisional",
+              "undetermined"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/evidenceList"
+          },
+          "verification": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Verification"
+          },
+          "node": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "node",
+          "offset",
+          "recorded",
+          "kind",
+          "evidence",
+          "verification"
+        ],
+        "allOf": [
+          {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/claimRule"
+          },
+          {
+            "properties": {
+              "evidence": {
+                "minItems": 1
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "ambiguous"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "candidates",
+                "basis"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "unencodable",
+                    "sourceEdit"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "description"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "illegible",
+                    "unencodable",
+                    "literal"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "recorded": {
+                  "const": "〓"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "basis": {
+                  "const": "undetermined"
+                }
+              },
+              "required": [
+                "basis"
+              ]
+            },
+            "then": {
+              "properties": {
+                "recorded": {
+                  "const": "〓"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "spacing"
+                }
+              }
+            },
+            "then": {},
+            "else": {
+              "properties": {
+                "recorded": {
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        ]
+      },
+      "minItems": 0
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "revision",
+    "notes"
+  ]
+}

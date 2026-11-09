@@ -1,0 +1,576 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json",
+  "$comment": "Canonical identifier only; publication at this URI is not required.",
+  "title": "LoJ common types",
+  "$defs": {
+    "recordId": {
+      "type": "string",
+      "pattern": "^(?:[0-9a-hjkmnp-tv-z]{10}|[A-Za-z0-9][A-Za-z0-9-]*)$",
+      "$comment": "New IDs: 10 lowercase Crockford chars (RID-02). Existing IDs keep the MAN-01 form."
+    },
+    "revisionId": {
+      "type": "string",
+      "pattern": "^[0-9a-hjkmnp-tv-z]{8}$"
+    },
+    "spaceId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "localId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+      "$comment": "File-local opaque id (relations, items, notes, sources, claims)."
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "format": "date"
+    },
+    "RecordRef": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/recordId"
+        },
+        "space": {
+          "$ref": "#/$defs/spaceId"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ]
+    },
+    "Evidence": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/localId"
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "locator"
+      ]
+    },
+    "evidenceList": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Evidence"
+      },
+      "minItems": 0
+    },
+    "Source": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/localId"
+        },
+        "kind": {
+          "enum": [
+            "promulgation",
+            "officialCorrection",
+            "index",
+            "egov",
+            "other"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "uri": {
+          "type": "string",
+          "format": "uri"
+        },
+        "fixed": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "title"
+      ]
+    },
+    "Verification": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "enum": [
+            "unverified",
+            "confirmed",
+            "disputed",
+            "retracted"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "state"
+      ]
+    },
+    "claimRule": {
+      "if": {
+        "properties": {
+          "verification": {
+            "properties": {
+              "state": {
+                "const": "confirmed"
+              }
+            },
+            "required": [
+              "state"
+            ]
+          }
+        },
+        "required": [
+          "verification"
+        ]
+      },
+      "then": {
+        "properties": {
+          "evidence": {
+            "minItems": 1
+          }
+        },
+        "required": [
+          "evidence"
+        ]
+      }
+    },
+    "Scope": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ]
+    },
+    "Calc": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "sameDay"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "op"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "nextDay"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "op"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "afterElapsed"
+            },
+            "unit": {
+              "enum": [
+                "day",
+                "month",
+                "year"
+              ]
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "op",
+            "unit",
+            "count"
+          ]
+        }
+      ]
+    },
+    "Delegation": {
+      "type": "object",
+      "properties": {
+        "raw": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence": {
+          "$ref": "#/$defs/evidenceList"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "raw",
+        "evidence"
+      ]
+    },
+    "DeterminedBy": {
+      "type": "object",
+      "properties": {
+        "record": {
+          "$ref": "#/$defs/RecordRef"
+        },
+        "evidence": {
+          "$ref": "#/$defs/evidenceList"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "record",
+        "evidence"
+      ]
+    },
+    "SameAs": {
+      "type": "object",
+      "properties": {
+        "record": {
+          "$ref": "#/$defs/RecordRef"
+        },
+        "revision": {
+          "$ref": "#/$defs/revisionId"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "record",
+        "revision"
+      ]
+    },
+    "TimePoint": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "enum": [
+            "date",
+            "derived",
+            "pending",
+            "unknown",
+            "notApplicable"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "pattern": "^[0-9]{4}(-[0-9]{2}(-[0-9]{2})?)?$"
+        },
+        "raw": {
+          "type": "string",
+          "minLength": 1
+        },
+        "precision": {
+          "enum": [
+            "day",
+            "month",
+            "year"
+          ]
+        },
+        "rule": {
+          "type": "string",
+          "minLength": 1
+        },
+        "calc": {
+          "$ref": "#/$defs/Calc"
+        },
+        "base": {
+          "$ref": "#/$defs/TimePoint"
+        },
+        "delegation": {
+          "$ref": "#/$defs/Delegation"
+        },
+        "determinedBy": {
+          "$ref": "#/$defs/DeterminedBy"
+        },
+        "sameAs": {
+          "$ref": "#/$defs/SameAs"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "surveyed": {
+          "$ref": "#/$defs/evidenceList"
+        },
+        "evidence": {
+          "$ref": "#/$defs/evidenceList"
+        },
+        "verification": {
+          "$ref": "#/$defs/Verification"
+        }
+      },
+      "required": [
+        "state"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "$ref": "#/$defs/claimRule"
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "date"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "value",
+              "raw",
+              "precision",
+              "evidence",
+              "verification"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "rule"
+                  ]
+                },
+                {
+                  "required": [
+                    "calc"
+                  ]
+                },
+                {
+                  "required": [
+                    "base"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "precision": {
+                "const": "day"
+              }
+            },
+            "required": [
+              "precision"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "precision": {
+                "const": "month"
+              }
+            },
+            "required": [
+              "precision"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "pattern": "^[0-9]{4}-[0-9]{2}$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "precision": {
+                "const": "year"
+              }
+            },
+            "required": [
+              "precision"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "pattern": "^[0-9]{4}$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "derived"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "rule",
+              "base",
+              "raw",
+              "evidence",
+              "verification"
+            ]
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "rule"
+                  ]
+                },
+                {
+                  "required": [
+                    "calc"
+                  ]
+                },
+                {
+                  "required": [
+                    "base"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "pending"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "raw",
+              "delegation",
+              "evidence",
+              "verification"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "value"
+                  ]
+                },
+                {
+                  "required": [
+                    "determinedBy"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "unknown",
+                  "notApplicable"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "reason"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "value"
+                  ]
+                },
+                {
+                  "required": [
+                    "raw"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "determinedBy"
+            ]
+          },
+          "then": {
+            "required": [
+              "delegation"
+            ]
+          }
+        }
+      ],
+      "$comment": "derived.value is required only when base is a date; checked by TIME-03 (validator)."
+    },
+    "TextNote": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence": {
+          "$ref": "#/$defs/evidenceList"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ]
+    }
+  }
+}

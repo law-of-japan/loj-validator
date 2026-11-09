@@ -1,0 +1,25 @@
+{
+  "results": [
+    {
+      "check": "L1",
+      "result": "fail"
+    },
+    {
+      "check": "L3",
+      "category": "evidence",
+      "result": "incomplete"
+    },
+    {
+      "check": "L3",
+      "category": "historyStructure",
+      "result": "pass"
+    }
+  ],
+  "diagnostics": [
+    {
+      "rule": "HEAD-01",
+      "schemaVersion": "loj/v1alpha2",
+      "class": "error"
+    }
+  ]
+}
