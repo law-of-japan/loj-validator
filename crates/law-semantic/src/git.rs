@@ -355,7 +355,8 @@ impl Bundle {
         let Ok(raw) = String::from_utf8(raw) else {
             return Ok(None);
         };
-        // A commit object with no blank line after the header has no message.
+        // A commit object with no blank line after the header has no message;
+        // like an empty message, it declares no trailer (CHG-03).
         Ok(Some(
             raw.split_once("\n\n")
                 .map(|(_, m)| m.to_owned())
@@ -373,30 +374,32 @@ impl Bundle {
     /// name is checked before anything is written; symbolic links, submodules and
     /// non-UTF-8 names are refused with an `Err`, never followed or written.
     pub fn export(&self, commit: &str) -> Result<PathBuf, ExportError> {
-        use ExportError::Environment;
-        revision(commit)?;
+        use ExportError::{Environment, Tree};
+        revision(commit).map_err(Environment)?;
         let listing = self
             .git(&["ls-tree", "-r", "-z", "-l", "--full-tree", commit])
             .map_err(Environment)?;
         let mut entries = Vec::new();
         let mut total: u64 = 0;
         for entry in listing.split(|b| *b == 0).filter(|n| !n.is_empty()) {
-            let entry = String::from_utf8(entry.to_vec()).map_err(|_| {
-                format!(
-                    "non-UTF-8 path in the bundle tree: {:?}",
-                    String::from_utf8_lossy(entry)
-                )
-            })?;
+            let entry = String::from_utf8(entry.to_vec())
+                .map_err(|_| {
+                    format!(
+                        "non-UTF-8 path in the bundle tree: {:?}",
+                        String::from_utf8_lossy(entry)
+                    )
+                })
+                .map_err(Tree)?;
             let (meta, name) = entry
                 .split_once('\t')
-                .ok_or_else(|| format!("unexpected ls-tree entry: {entry:?}"))?;
+                .ok_or_else(|| format!("unexpected ls-tree entry: {entry:?}"))
+                .map_err(Tree)?;
             let mode = meta.split(' ').next().unwrap_or("");
-            safe_name(name)?;
+            safe_name(name).map_err(Tree)?;
             if !matches!(mode, "100644" | "100755") {
-                return Err(format!(
+                return Err(Tree(format!(
                     "unsupported tree entry (mode {mode}) in the bundle: {name:?}"
-                )
-                .into());
+                )));
             }
             // The same budget as a version package (16 MiB per file, 128 MiB in
             // all), checked from the tree before anything is read or written.
@@ -404,16 +407,18 @@ impl Bundle {
                 .split_whitespace()
                 .last()
                 .and_then(|s| s.parse().ok())
-                .ok_or_else(|| format!("unexpected ls-tree entry: {entry:?}"))?;
+                .ok_or_else(|| format!("unexpected ls-tree entry: {entry:?}"))
+                .map_err(Tree)?;
             total = total.saturating_add(size);
             if size > MAX_FILE || total > MAX_TOTAL {
-                return Err(format!(
+                return Err(Tree(format!(
                     "bundle tree exceeds the input budget (16 MiB/file, 128 MiB total) at {name:?}"
-                )
-                .into());
+                )));
             }
             if entries.len() >= MAX_ENTRIES {
-                return Err(format!("bundle tree has more than {MAX_ENTRIES} files").into());
+                return Err(Tree(format!(
+                    "bundle tree has more than {MAX_ENTRIES} files"
+                )));
             }
             entries.push(name.to_owned());
         }
@@ -431,10 +436,9 @@ impl Bundle {
                     .entry(prefix.to_lowercase())
                     .or_insert_with(|| prefix.clone());
                 if *seen != prefix {
-                    return Err(format!(
+                    return Err(Tree(format!(
                         "paths differing only by case in the bundle: {seen:?} and {prefix:?}"
-                    )
-                    .into());
+                    )));
                 }
             }
         }
@@ -462,12 +466,6 @@ pub enum ExportError {
     /// Git failed, or the export could not be written: a property of the
     /// environment, which other commits would hit too.
     Environment(String),
-}
-
-impl From<String> for ExportError {
-    fn from(e: String) -> Self {
-        ExportError::Tree(e)
-    }
 }
 
 impl std::fmt::Display for ExportError {
@@ -606,7 +604,11 @@ pub(crate) mod tests {
         /// Commit `tree` (a tree hash) on `main`, and bundle `main`.
         pub(crate) fn bundle_tree(&self, tree: &str) -> PathBuf {
             let commit = self.run(&["commit-tree", tree, "-m", "t"], None);
-            self.run(&["update-ref", "refs/heads/main", &commit], None);
+            self.bundle_head(&commit)
+        }
+        /// Point `main` at `commit`, and bundle `main`.
+        pub(crate) fn bundle_head(&self, commit: &str) -> PathBuf {
+            self.run(&["update-ref", "refs/heads/main", commit], None);
             let path = self.0.join("t.bundle");
             self.run(&["bundle", "create", &path.to_string_lossy(), "main"], None);
             path

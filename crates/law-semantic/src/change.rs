@@ -36,14 +36,13 @@ pub(crate) fn snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError
     // in the tree) is no manifest, a finding about the data; only a failure to read
     // a file that is there leaves the check undetermined.
     let manifest = dir.join("history.yaml");
-    let history_bytes = match std::fs::read(&manifest) {
-        Ok(bytes) => Some(bytes),
-        Err(_) if !manifest.is_file() => None,
-        Err(e) => {
-            return Err(ExportError::Environment(format!(
-                "cannot read history.yaml at {commit}: {e}"
-            )))
-        }
+    let history_bytes = if manifest.is_file() {
+        let bytes = std::fs::read(&manifest).map_err(|e| {
+            ExportError::Environment(format!("cannot read history.yaml at {commit}: {e}"))
+        })?;
+        Some(bytes)
+    } else {
+        None
     };
     let history = match load_yaml(&dir.join("history.yaml")) {
         Loaded::Ok(v, _) => Some(v),
@@ -159,7 +158,9 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
         Ok(c) => c,
         Err(e) => return undetermined(f, report.target, e),
     };
-    let mut cache: BTreeMap<String, Snapshot> = BTreeMap::new();
+    // A refused tree is cached as `None`, so it is exported and noted only once
+    // even when the commit is both a parent and a child in the range.
+    let mut cache: BTreeMap<String, Option<Snapshot>> = BTreeMap::new();
     for (commit, parent) in commits {
         let at = format!("commit {commit}");
         let message = match b.message(&commit) {
@@ -232,19 +233,29 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
             if !cache.contains_key(c.as_str()) {
                 match snapshot(b, c) {
                     Ok(s) => {
-                        cache.insert(c.clone(), s);
+                        cache.insert(c.clone(), Some(s));
                     }
                     Err(ExportError::Environment(e)) => {
                         return undetermined(f, report.target, format!("{c}: {e}"));
                     }
                     Err(ExportError::Tree(e)) => {
                         f.incomplete.insert(CH);
-                        f.note(CH, "undetermined", "CHG-02", COMMON, e, &at, "");
+                        f.note(
+                            CH,
+                            "undetermined",
+                            "CHG-02",
+                            COMMON,
+                            format!("{c}: {e}"),
+                            &at,
+                            "",
+                        );
+                        cache.insert(c.clone(), None);
                     }
                 }
             }
         }
-        let (Some(before), Some(after)) = (cache.get(&parent), cache.get(&commit)) else {
+        let (Some(Some(before)), Some(Some(after))) = (cache.get(&parent), cache.get(&commit))
+        else {
             continue;
         };
         if matches!(
@@ -440,6 +451,37 @@ mod tests {
             "{:?}",
             r.diagnostics
         );
+    }
+
+    /// A refused tree is exported and noted once, even when its commit is both a
+    /// child and a parent in the range.
+    #[test]
+    fn refused_tree_is_noted_once() {
+        let s = Scratch::new();
+        let blob = s.run(&["hash-object", "-w", "--stdin"], Some(b""));
+        let tree = |name: &str| {
+            let spec = format!(
+                "100644 blob {blob}	{name}
+"
+            );
+            s.run(&["mktree"], Some(spec.as_bytes()))
+        };
+        let (good, bad) = (tree("history.yaml"), tree("a:b"));
+        let msg = "m
+
+LoJ-Change: metadata
+";
+        let base = s.run(&["commit-tree", &good, "-m", msg], None);
+        let mid = s.run(&["commit-tree", &bad, "-p", &base, "-m", msg], None);
+        let head = s.run(&["commit-tree", &good, "-p", &mid, "-m", msg], None);
+        let r = check(&s.bundle_head(&head), &base, &head);
+        assert_eq!(result(&r), ResultValue::Incomplete, "{:?}", r.diagnostics);
+        let notes = r
+            .diagnostics
+            .iter()
+            .filter(|d| d.message.starts_with(&format!("{mid}:")))
+            .count();
+        assert_eq!(notes, 1, "{:?}", r.diagnostics);
     }
 
     /// A directory named `history.yaml` is no manifest, not an unreadable one.
