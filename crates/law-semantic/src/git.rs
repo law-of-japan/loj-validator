@@ -38,10 +38,14 @@ fn temp(prefix: &str) -> Result<PathBuf, String> {
 /// Reject a tree entry name that could escape the export directory or that is not
 /// portable: empty, absolute, `.`/`..`/empty components, a `.git` component (any case),
 /// a `:` or `\`, and the Windows/macOS aliases of `.git` (a component ending in `.` or
-/// a space, or the short name `GIT~1`).
+/// a space, or the short name `GIT~1`), and control characters such as a newline.
 fn safe_name(name: &str) -> Result<(), String> {
     let bad = || Err(format!("unsafe path in the bundle tree: {name:?}"));
-    if name.is_empty() || name.contains(['\\', ':']) || name.starts_with('/') {
+    if name.is_empty()
+        || name.contains(['\\', ':'])
+        || name.starts_with('/')
+        || name.chars().any(char::is_control)
+    {
         return bad();
     }
     if name.split('/').any(|c| {
@@ -62,6 +66,10 @@ fn safe_name(name: &str) -> Result<(), String> {
     }
     Ok(())
 }
+
+const MAX_FILE: u64 = 16 * 1024 * 1024;
+const MAX_TOTAL: u64 = 128 * 1024 * 1024;
+const MAX_ENTRIES: usize = 100_000;
 
 #[cfg(windows)]
 const NULL_DEVICE: &str = "NUL";
@@ -208,8 +216,9 @@ impl Bundle {
     /// non-UTF-8 names are refused with an `Err`, never followed or written.
     pub fn export(&self, commit: &str) -> Result<PathBuf, String> {
         revision(commit)?;
-        let listing = self.git(&["ls-tree", "-r", "-z", "--full-tree", commit])?;
+        let listing = self.git(&["ls-tree", "-r", "-z", "-l", "--full-tree", commit])?;
         let mut entries = Vec::new();
+        let mut total: u64 = 0;
         for entry in listing.split(|b| *b == 0).filter(|n| !n.is_empty()) {
             let entry = String::from_utf8(entry.to_vec()).map_err(|_| {
                 format!(
@@ -226,6 +235,22 @@ impl Bundle {
                 return Err(format!(
                     "unsupported tree entry (mode {mode}) in the bundle: {name:?}"
                 ));
+            }
+            // The same budget as a version package (16 MiB per file, 128 MiB in
+            // all), checked from the tree before anything is read or written.
+            let size: u64 = meta
+                .split_whitespace()
+                .last()
+                .and_then(|s| s.parse().ok())
+                .ok_or_else(|| format!("unexpected ls-tree entry: {entry:?}"))?;
+            total = total.saturating_add(size);
+            if size > MAX_FILE || total > MAX_TOTAL {
+                return Err(format!(
+                    "bundle tree exceeds the input budget (16 MiB/file, 128 MiB total) at {name:?}"
+                ));
+            }
+            if entries.len() >= MAX_ENTRIES {
+                return Err(format!("bundle tree has more than {MAX_ENTRIES} files"));
             }
             entries.push(name.to_owned());
         }
@@ -308,6 +333,9 @@ mod tests {
             "a:b",
             r"a\b",
             r"..\x",
+            "a\nb",
+            "a\tb",
+            "a\u{7f}b",
         ] {
             assert!(safe_name(bad).is_err(), "{bad}");
         }
@@ -359,10 +387,13 @@ mod tests {
             );
             String::from_utf8(out.stdout).unwrap().trim().to_owned()
         }
-        /// Commit a tree made of `(mode, type, name)` entries holding `content`, and
+        /// Commit a tree made of `(mode, type, name)` entries holding `x\n`, and
         /// bundle `main`.
         fn bundle(&self, entries: &[(&str, &str, &str)]) -> PathBuf {
-            let blob = self.run(&["hash-object", "-w", "--stdin"], Some(b"x\n"));
+            self.bundle_with(b"x\n", entries)
+        }
+        fn bundle_with(&self, content: &[u8], entries: &[(&str, &str, &str)]) -> PathBuf {
+            let blob = self.run(&["hash-object", "-w", "--stdin"], Some(content));
             let mut spec = String::new();
             for (mode, kind, name) in entries {
                 spec.push_str(&format!("{mode} {kind} {blob}\t{name}\n"));
@@ -419,6 +450,26 @@ mod tests {
     #[test]
     fn case_collisions_are_refused() {
         refused(&[("100644", "blob", "A.yaml"), ("100644", "blob", "a.yaml")]);
+    }
+
+    #[test]
+    fn oversized_files_are_refused() {
+        let s = Scratch::new();
+        let big = vec![b'x'; MAX_FILE as usize + 1];
+        let b = Bundle::open(&s.bundle_with(&big, &[("100644", "blob", "law.yaml")])).unwrap();
+        let err = b.export(&b.branch("main").unwrap()).unwrap_err();
+        assert!(err.contains("input budget"), "{err}");
+        assert!(b.exports.borrow().is_empty(), "nothing was written");
+        // Nine 16 MiB files exceed the 128 MiB total.
+        let s = Scratch::new();
+        let full = vec![b'x'; MAX_FILE as usize];
+        let names: Vec<String> = (0..9).map(|i| format!("f{i}.md")).collect();
+        let entries: Vec<_> = names
+            .iter()
+            .map(|n| ("100644", "blob", n.as_str()))
+            .collect();
+        let b = Bundle::open(&s.bundle_with(&full, &entries)).unwrap();
+        assert!(b.export(&b.branch("main").unwrap()).is_err());
     }
 
     #[test]
