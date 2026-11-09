@@ -139,7 +139,7 @@ fn resolve(bundle: &Path, registry_dir: &Path, reference: &str, f: &mut Findings
 }
 
 /// The repository could not be read (git missing or failing, an unusable tree,
-/// no canonical branch): the reference is not fetched, with the reason, and never reported as
+/// no canonical branch or commit): the reference is not fetched, with the reason, and never reported as
 /// unresolvable (VAL-04). `check` marks the check incomplete for every notFetched
 /// result; the note only adds the reason. The note carries FIXREF-06, the rule
 /// that defines the result values, notFetched among them.
@@ -186,12 +186,11 @@ fn resolve_in(
                 }
                 Err(e) => return not_fetched(f, out, reference, e),
             },
-            // The commit is not in the bundle, or `c` names it by an abbreviated
-            // hash (FIXREF-04 asks for the full one): not fetched, and no git
-            // failure to note.
+            // `resolve` has already refused an abbreviated hash (FIXREF-04), and a
+            // full hash resolves to itself, so this is a commit not in the bundle.
             Ok(_) => {
-                *out = json!({"result": "notFetched"});
-                return;
+                let why = format!("commit {c} is not in the bundle");
+                return not_fetched(f, out, reference, why);
             }
             Err(e) => return not_fetched(f, out, reference, e),
         },

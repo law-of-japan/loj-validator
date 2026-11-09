@@ -169,7 +169,7 @@ fn failure(status: &std::process::ExitStatus, stderr: &[u8]) -> String {
     let stderr = String::from_utf8_lossy(stderr);
     let first = stderr.trim().lines().next().unwrap_or("");
     let mut stderr: String = first.chars().take(MAX_REASON).collect();
-    if stderr.len() < first.len() {
+    if first.chars().count() > MAX_REASON {
         stderr.push('…');
     }
     if stderr.is_empty() {
