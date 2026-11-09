@@ -37,16 +37,21 @@ fn temp(prefix: &str) -> Result<PathBuf, String> {
 
 /// Reject a tree entry name that could escape the export directory or that is not
 /// portable: empty, absolute, `.`/`..`/empty components, a `.git` component (any case),
-/// or a `:` or `\`.
+/// a `:` or `\`, and the Windows/macOS aliases of `.git` (a component ending in `.` or
+/// a space, or the short name `GIT~1`).
 fn safe_name(name: &str) -> Result<(), String> {
     let bad = || Err(format!("unsafe path in the bundle tree: {name:?}"));
     if name.is_empty() || name.contains(['\\', ':']) || name.starts_with('/') {
         return bad();
     }
-    if name
-        .split('/')
-        .any(|c| c.is_empty() || c == "." || c == ".." || c.eq_ignore_ascii_case(".git"))
-    {
+    if name.split('/').any(|c| {
+        c.is_empty()
+            || c == "."
+            || c == ".."
+            || c.ends_with(['.', ' '])
+            || c.eq_ignore_ascii_case(".git")
+            || c.eq_ignore_ascii_case("git~1")
+    }) {
         return bad();
     }
     if !Path::new(name)
@@ -188,6 +193,26 @@ impl Bundle {
             }
             entries.push(name.to_owned());
         }
+        // Names (and directory prefixes) that differ only by case would overwrite
+        // each other on a case-insensitive file system.
+        let mut folded = std::collections::BTreeMap::new();
+        for name in &entries {
+            let mut prefix = String::new();
+            for part in name.split('/') {
+                if !prefix.is_empty() {
+                    prefix.push('/');
+                }
+                prefix.push_str(part);
+                let seen = folded
+                    .entry(prefix.to_lowercase())
+                    .or_insert_with(|| prefix.clone());
+                if *seen != prefix {
+                    return Err(format!(
+                        "paths differing only by case in the bundle: {seen:?} and {prefix:?}"
+                    ));
+                }
+            }
+        }
         let out = temp("loj-tree")?;
         // Registered before writing, so a failure part-way still removes the tree.
         self.exports.borrow_mut().push(out.clone());
@@ -239,6 +264,10 @@ mod tests {
             "a/",
             ".git/config",
             "a/.GIT/hooks/x",
+            ".git./config",
+            ".git /config",
+            "GIT~1/config",
+            "a/law.yaml.",
             "C:/x",
             "a:b",
             r"a\b",
@@ -341,5 +370,10 @@ mod tests {
     #[test]
     fn symlinks_are_refused() {
         refused(&[("120000", "blob", "link")]);
+    }
+
+    #[test]
+    fn case_collisions_are_refused() {
+        refused(&[("100644", "blob", "A.yaml"), ("100644", "blob", "a.yaml")]);
     }
 }
