@@ -265,7 +265,9 @@ impl Bundle {
 
     /// Run a git command whose exit status 1 means "no" (the object is absent, the
     /// commit is not an ancestor): `Ok(Some(stdout))` on 0, `Ok(None)` on 1, and
-    /// `Err` when git failed (timeout, output limit, any other status).
+    /// `Err` when git failed (timeout, output limit, any other status). Use it only
+    /// for such commands (`rev-parse --verify --quiet`, `merge-base --is-ancestor`):
+    /// for most git commands, 1 is a failure.
     fn probe(&self, args: &[&str]) -> Result<Option<Vec<u8>>, String> {
         let (status, stdout, stderr) = self.run(args)?;
         match status.code() {
@@ -384,6 +386,9 @@ impl Bundle {
     /// non-UTF-8 names are refused with an `Err`, never followed or written.
     pub fn export(&self, commit: &str) -> Result<PathBuf, ExportError> {
         use ExportError::{Environment, Tree};
+        // Callers pass resolved hashes; an invalid one is a caller bug, which must
+        // stop the check like an environment failure rather than be noted as a
+        // property of the tree.
         revision(commit).map_err(Environment)?;
         let listing = self
             .git(&["ls-tree", "-r", "-z", "-l", "--full-tree", commit])
