@@ -162,13 +162,18 @@ fn run_with_timeout(mut cmd: Command, limit: std::time::Duration) -> Result<Outp
 }
 
 /// Why a git command that ran to the end failed.
-/// Only the first line of stderr, cut to `MAX_REASON` characters, goes into the
-/// report: stderr can be long, and a bundle chooses part of it.
+/// Only the first line of stderr, cut to `MAX_REASON` characters and with control
+/// characters (terminal escapes, `\r`) replaced by `?`, goes into the report:
+/// stderr can be long, and a bundle chooses part of it.
 fn failure(status: &std::process::ExitStatus, stderr: &[u8]) -> String {
     const MAX_REASON: usize = 300;
     let stderr = String::from_utf8_lossy(stderr);
     let first = stderr.trim().lines().next().unwrap_or("");
-    let mut stderr: String = first.chars().take(MAX_REASON).collect();
+    let mut stderr: String = first
+        .chars()
+        .take(MAX_REASON)
+        .map(|c| if c.is_control() { '?' } else { c })
+        .collect();
     if first.chars().count() > MAX_REASON {
         stderr.push('…');
     }
@@ -835,6 +840,29 @@ pub(crate) mod tests {
             b.export(&head),
             Err(ExportError::Environment(e)) if e.starts_with("git failed")
         ));
+    }
+
+    /// The reason is one line, bounded, and free of control characters.
+    #[test]
+    fn failure_reasons_are_bounded_and_clean() {
+        #[cfg(windows)]
+        let status = {
+            use std::os::windows::process::ExitStatusExt;
+            std::process::ExitStatus::from_raw(128)
+        };
+        #[cfg(unix)]
+        let status = {
+            use std::os::unix::process::ExitStatusExt;
+            std::process::ExitStatus::from_raw(128 << 8)
+        };
+        let reason = failure(&status, b"fatal: \x1b[31mred\x1b[0m\rx\nsecond line");
+        assert!(reason.ends_with("fatal: ?[31mred?[0m?x"), "{reason}");
+        let long = "x".repeat(1000);
+        let reason = failure(&status, long.as_bytes());
+        assert!(
+            reason.ends_with('…') && reason.chars().count() < 400,
+            "{reason}"
+        );
     }
 
     /// `probe` maps exit status 0 and 1 of `merge-base --is-ancestor` to yes and no.

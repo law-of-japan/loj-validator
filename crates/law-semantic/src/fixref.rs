@@ -2,7 +2,7 @@
 //! reported apart from the conformance levels.
 use crate::common::findings::Findings;
 use crate::common::{Check, Report, COMMON};
-use crate::git::Bundle;
+use crate::git::{Bundle, ExportError};
 use crate::registry::{self, Resolution};
 use serde_json::{json, Map, Value};
 use std::path::Path;
@@ -201,7 +201,10 @@ fn resolve_in(
         // Unlike the change check, a refused tree (`ExportError::Tree`) is not
         // told apart here: either way the revision cannot be read, so the
         // reference is not fetched, with the reason (as before this distinction).
-        Err(e) => return not_fetched(f, out, reference, e.to_string()),
+        Err(ExportError::Tree(e)) => {
+            return not_fetched(f, out, reference, format!("tree refused: {e}"));
+        }
+        Err(ExportError::Environment(e)) => return not_fetched(f, out, reference, e),
     };
     let Some(h) = snap.history.as_ref() else {
         return err(f, "FIXREF-06", format!("no history manifest at {commit}"));
