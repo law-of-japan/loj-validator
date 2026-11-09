@@ -162,8 +162,6 @@ fn resolve_in(
     let err = |f: &mut Findings, rule: &str, msg: String| {
         f.error(RF, rule, COMMON, msg, reference, "");
     };
-    let not_fetched =
-        |f: &mut Findings, out: &mut Value, why: String| not_fetched(f, out, reference, why);
     let tip = match b.branch(branch) {
         Ok(Some(tip)) => tip,
         // The canonical branch is not in the bundle: the bundle does not hold the
@@ -172,7 +170,7 @@ fn resolve_in(
             *out = json!({"result": "notFetched"});
             return;
         }
-        Err(e) => return not_fetched(f, out, e),
+        Err(e) => return not_fetched(f, out, reference, e),
     };
     let commit = match &p.commit {
         None => tip.clone(), // FIXREF-05: latest record version of the canonical branch
@@ -186,18 +184,21 @@ fn resolve_in(
                         format!("{c} is not reachable from {branch}"),
                     );
                 }
-                Err(e) => return not_fetched(f, out, e),
+                Err(e) => return not_fetched(f, out, reference, e),
             },
+            // The commit is not in the bundle, or `c` names it by an abbreviated
+            // hash (FIXREF-04 asks for the full one): not fetched, and no git
+            // failure to note.
             Ok(_) => {
                 *out = json!({"result": "notFetched"});
                 return;
             }
-            Err(e) => return not_fetched(f, out, e),
+            Err(e) => return not_fetched(f, out, reference, e),
         },
     };
     let snap = match crate::change::snapshot(b, &commit) {
         Ok(s) => s,
-        Err(e) => return not_fetched(f, out, e),
+        Err(e) => return not_fetched(f, out, reference, e),
     };
     let Some(h) = snap.history.as_ref() else {
         return err(f, "FIXREF-06", format!("no history manifest at {commit}"));

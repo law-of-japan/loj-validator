@@ -247,9 +247,7 @@ impl Bundle {
         ])?;
         Ok(b)
     }
-    /// Run git in the bundle's repository, isolated from the caller's git
-    /// environment (`GIT_DIR`, `GIT_CONFIG_*`, …) and from the user and system
-    /// configuration, so the result depends only on the bundle.
+    /// Run a git command that must succeed: its stdout, or `Err` when git failed.
     fn git(&self, args: &[&str]) -> Result<Vec<u8>, String> {
         let (status, stdout, stderr) = self.run(args)?;
         if !status.success() {
@@ -257,6 +255,7 @@ impl Bundle {
         }
         Ok(stdout)
     }
+
     /// Run a git command whose exit status 1 means "no" (the object is absent, the
     /// commit is not an ancestor): `Ok(Some(stdout))` on 0, `Ok(None)` on 1, and
     /// `Err` when git failed (timeout, output limit, any other status).
@@ -268,6 +267,11 @@ impl Bundle {
             _ => Err(failure(&status, &stderr)),
         }
     }
+
+    /// Run git in the bundle's repository, isolated from the caller's git
+    /// environment (`GIT_DIR`, `GIT_CONFIG_*`, …) and from the user and system
+    /// configuration, so the result depends only on the bundle. `Err` means git
+    /// did not run to the end (not started, timed out, output over the limit).
     fn run(&self, args: &[&str]) -> Result<Output, String> {
         let mut cmd = Command::new("git");
         for (key, _) in std::env::vars_os() {
