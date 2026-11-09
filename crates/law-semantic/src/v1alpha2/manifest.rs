@@ -174,13 +174,12 @@ pub(super) fn load(path: &Path, ctx: &mut Context) -> Option<(Value, Documents)>
     if manifest["schemaVersion"] != SCHEMA_VERSION {
         // VAL-04: an unknown or other version is unprocessable, never read as this one.
         ctx.incomplete = true;
-        ctx.diag(
-            "BASIC-01",
-            "Unsupported schemaVersion",
-            "law.yaml",
-            0,
-            source.len(),
-        );
+        let message = if manifest["schemaVersion"] == "loj/v1alpha1" {
+            "Unsupported schemaVersion loj/v1alpha1; check it with --profile v1alpha1"
+        } else {
+            "Unsupported schemaVersion"
+        };
+        ctx.diag("BASIC-01", message, "law.yaml", 0, source.len());
         ctx.diagnostics.last_mut().unwrap().1.code = "loj/v1alpha2/unsupported-version".into();
         return None;
     }

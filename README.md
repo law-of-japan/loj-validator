@@ -16,15 +16,16 @@ L0〜L4の定義と現行仕様との対応は[適合レベル定義](docs/confo
 `b704631b6501a0a01c1eb6faf99cfe16a4bccfa9`のL0/L1で検証します。
 
 ```sh
-loj-validator check .
-loj-validator check law.yaml --level L0
-loj-validator check . --level L1 --format json --strict
-loj-validator check path/to/manifest.yaml --profile v1alpha1
+loj-validator check . --profile v1alpha1
+loj-validator check law.yaml --profile v1alpha1 --level L0
+loj-validator check . --profile v1alpha1 --level L1 --format json --strict
 loj-validator check legacy.md --profile legacy --structure-schema schemas/law-of-japan.structure.yaml
 ```
 
-ディレクトリまたは`law.yaml`は新形式を自動選択します。既定はL1。
-`--profile v1alpha1`で明示選択できます。新形式では法令IDと構造をManifestから取得するため、
+**互換性のない変更:** ディレクトリと`law.yaml`の既定は、次期仕様（`loj/v1alpha2`）になりました。
+v1alpha1のデータは`--profile v1alpha1`を付けて検査します。付けずに検査すると、
+`schemaVersion`が`loj/v1alpha1`なので、知らない版として「未完了」（終了コード3）になります。
+v1alpha1の既定のレベルはL1です。v1alpha1では法令IDと構造をManifestから取得するため、
 `--law-id`と`--structure-schema`は併用できません。既存のプロファイルJSON指定と旧APIは維持しています。
 以下の従来の「使い方」はlegacy形式の説明です。
 

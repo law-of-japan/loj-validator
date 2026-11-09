@@ -38,6 +38,10 @@ cannot be selected.
   no defined form in this version, so the default is `loj`, the space of the
   conformance registries (CONF-01).
 - Git inputs use the `git` command; blobs are read raw so byte positions hold.
+  The change and reference checks need `git` 2.32 or later on `PATH` (for `GIT_CONFIG_GLOBAL`); CI uses the
+  runners' git. Without git, those checks are `incomplete` with a "git is not
+  available" diagnostic. Only `refs/heads/*` is fetched from a bundle, so tags and
+  other refs are not resolvable.
 - A bundle is untrusted. git runs isolated from the caller's environment, user and
   system configuration and hooks, with `fsckObjects`, a 120 s timeout per command and
   a cap on kept output. Bundle files over 1 GiB are refused. The exported tree is
