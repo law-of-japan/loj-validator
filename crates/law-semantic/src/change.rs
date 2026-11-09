@@ -126,8 +126,13 @@ pub fn check(bundle: &Path, base: &str, head: &str) -> Report {
     report
         .target
         .insert("repository".into(), json!(bundle.to_string_lossy()));
-    // A git failure leaves the check incomplete with its reason (VAL-04); it is
-    // never reported as a finding about the data.
+    check_bundle(&b, f, report, base, head)
+}
+
+/// The change check on an opened bundle. A git failure ends the check as
+/// incomplete with its reason (VAL-04), at the first failure: it is never reported
+/// as a finding about the data, and a broken git is not noted once per commit.
+fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, head: &str) -> Report {
     let (base, head) = match (b.commit(base), b.commit(head)) {
         (Ok(Some(base)), Ok(Some(head))) => (base, head),
         (Err(e), _) | (_, Err(e)) => return undetermined(f, report, e),
@@ -158,11 +163,7 @@ pub fn check(bundle: &Path, base: &str, head: &str) -> Report {
                 );
                 continue;
             }
-            Err(e) => {
-                f.incomplete.insert(CH);
-                f.note(CH, "undetermined", "CHG-03", COMMON, e, &at, "");
-                continue;
-            }
+            Err(e) => return undetermined(f, report, format!("{commit}: {e}")),
         };
         let (kinds, revisions) = trailers(&message);
         let kind = match kinds.as_slice() {
@@ -217,7 +218,7 @@ pub fn check(bundle: &Path, base: &str, head: &str) -> Report {
         };
         for c in [&parent, &commit] {
             if !cache.contains_key(c.as_str()) {
-                match snapshot(&b, c) {
+                match snapshot(b, c) {
                     Ok(s) => {
                         cache.insert(c.clone(), s);
                     }
@@ -374,4 +375,48 @@ pub fn check(bundle: &Path, base: &str, head: &str) -> Report {
     let mut r = f.into_report(&[CH]);
     r.target = report.target;
     r
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::common::ResultValue;
+    use crate::git::tests::Scratch;
+
+    fn result(r: &Report) -> ResultValue {
+        r.results.iter().find(|(c, _)| *c == CH).unwrap().1
+    }
+
+    #[test]
+    fn non_utf8_message_is_a_chg03_error() {
+        let s = Scratch::new();
+        let (path, c) = s.chain(&[b"base\n", b"bad \xff\xfe\n"]);
+        let r = check(&path, &c[0], &c[1]);
+        assert_eq!(result(&r), ResultValue::Fail);
+        assert!(
+            r.diagnostics
+                .iter()
+                .any(|d| d.rule == "CHG-03" && d.message.contains("not UTF-8")),
+            "{:?}",
+            r.diagnostics
+        );
+    }
+
+    /// When git cannot read the repository, the check is incomplete with the
+    /// reason, and reports no finding about the data.
+    #[test]
+    fn git_failure_is_incomplete_not_a_finding() {
+        let s = Scratch::new();
+        let (path, c) = s.chain(&[b"base\n", b"head\n\nLoJ-Change: metadata\n"]);
+        let b = Bundle::open(&path).unwrap();
+        std::fs::remove_dir_all(b.dir().join("objects")).unwrap();
+        let r = check_bundle(&b, Findings::default(), Report::default(), &c[0], &c[1]);
+        assert_eq!(result(&r), ResultValue::Incomplete);
+        assert!(
+            r.diagnostics.iter().all(|d| !d.is_error()),
+            "{:?}",
+            r.diagnostics
+        );
+        assert!(r.diagnostics.iter().any(|d| d.class == "undetermined"));
+    }
 }

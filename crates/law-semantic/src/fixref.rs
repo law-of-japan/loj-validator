@@ -134,7 +134,8 @@ fn resolve(bundle: &Path, registry_dir: &Path, reference: &str, f: &mut Findings
         .to_owned();
     // The repository could not be read (git missing or failing, an unusable tree):
     // the reference is not fetched, with the reason, and never reported as
-    // unresolvable (VAL-04).
+    // unresolvable (VAL-04). `check` marks the check incomplete for every
+    // notFetched result; the note only adds the reason.
     let not_fetched = |f: &mut Findings, out: &mut Value, why: String| {
         f.note(RF, "undetermined", "FIXREF-06", COMMON, why, reference, "");
         *out = json!({"result": "notFetched"});
@@ -145,6 +146,8 @@ fn resolve(bundle: &Path, registry_dir: &Path, reference: &str, f: &mut Findings
     };
     let tip = match b.branch(&branch) {
         Ok(Some(tip)) => tip,
+        // The canonical branch is not in the bundle: the bundle does not hold the
+        // record's history, so the reference is not fetched (no git failure to note).
         Ok(None) => {
             *out = json!({"result": "notFetched"});
             return;

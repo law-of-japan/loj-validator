@@ -317,8 +317,9 @@ impl Bundle {
             .probe(&["merge-base", "--is-ancestor", a, b])?
             .is_some())
     }
-    /// Commits of `base..head` (both existing commits), oldest first, each with its
-    /// first parent. `Err` means git failed.
+    /// Commits of `base..head`, oldest first, each with its first parent. Both must
+    /// be resolved commits (callers pass the hashes `commit` returned); an invalid
+    /// revision is an `Err`, like a git failure.
     pub fn range(&self, base: &str, head: &str) -> Result<Vec<(String, Option<String>)>, String> {
         revision(base)?;
         revision(head)?;
@@ -350,6 +351,7 @@ impl Bundle {
         let Ok(raw) = String::from_utf8(raw) else {
             return Ok(None);
         };
+        // A commit object with no blank line after the header has no message.
         Ok(Some(
             raw.split_once("\n\n")
                 .map(|(_, m)| m.to_owned())
@@ -441,6 +443,14 @@ impl Bundle {
     }
 }
 
+#[cfg(test)]
+impl Bundle {
+    /// The repository directory, for tests that break it after opening.
+    pub(crate) fn dir(&self) -> &Path {
+        &self.dir
+    }
+}
+
 impl Drop for Bundle {
     fn drop(&mut self) {
         for d in self.exports.borrow().iter() {
@@ -451,7 +461,7 @@ impl Drop for Bundle {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
 
     #[test]
@@ -499,14 +509,14 @@ mod tests {
     }
 
     /// A scratch repository with git commands, for building hostile bundles.
-    struct Scratch(PathBuf);
+    pub(crate) struct Scratch(PathBuf);
     impl Scratch {
-        fn new() -> Scratch {
+        pub(crate) fn new() -> Scratch {
             let s = Scratch(temp("loj-test").unwrap());
             s.run(&["init", "--quiet", "-b", "main"], None);
             s
         }
-        fn run(&self, args: &[&str], stdin: Option<&[u8]>) -> String {
+        pub(crate) fn run(&self, args: &[&str], stdin: Option<&[u8]>) -> String {
             use std::io::Write;
             use std::process::Stdio;
             let mut cmd = Command::new("git");
@@ -546,7 +556,7 @@ mod tests {
         }
         /// Commit a tree made of `(mode, type, name)` entries holding `x\n`, and
         /// bundle `main`.
-        fn bundle(&self, entries: &[(&str, &str, &str)]) -> PathBuf {
+        pub(crate) fn bundle(&self, entries: &[(&str, &str, &str)]) -> PathBuf {
             self.bundle_with(b"x\n", entries)
         }
         fn bundle_with(&self, content: &[u8], entries: &[(&str, &str, &str)]) -> PathBuf {
@@ -561,6 +571,35 @@ mod tests {
             let path = self.0.join("t.bundle");
             self.run(&["bundle", "create", &path.to_string_lossy(), "main"], None);
             path
+        }
+        /// A chain of commits on `main`, one per message, all with the same tree
+        /// holding an empty `history.yaml`; bundle `main` and return the bundle and
+        /// the commits, oldest first. The commit objects are written byte for byte,
+        /// so a message need not be UTF-8 (`commit-tree` would re-encode it).
+        pub(crate) fn chain(&self, messages: &[&[u8]]) -> (PathBuf, Vec<String>) {
+            let blob = self.run(&["hash-object", "-w", "--stdin"], Some(b""));
+            let spec = format!("100644 blob {blob}\thistory.yaml\n");
+            let tree = self.run(&["mktree"], Some(spec.as_bytes()));
+            let mut commits: Vec<String> = Vec::new();
+            for message in messages {
+                let mut raw = format!("tree {tree}\n").into_bytes();
+                if let Some(parent) = commits.last() {
+                    raw.extend(format!("parent {parent}\n").bytes());
+                }
+                raw.extend(b"author t <t@example.invalid> 0 +0000\n");
+                raw.extend(b"committer t <t@example.invalid> 0 +0000\n\n");
+                raw.extend(*message);
+                let c = self.run(
+                    &["hash-object", "-t", "commit", "-w", "--stdin"],
+                    Some(&raw),
+                );
+                commits.push(c);
+            }
+            let head = commits.last().expect("at least one message");
+            self.run(&["update-ref", "refs/heads/main", head], None);
+            let path = self.0.join("t.bundle");
+            self.run(&["bundle", "create", &path.to_string_lossy(), "main"], None);
+            (path, commits)
         }
     }
     impl Drop for Scratch {
