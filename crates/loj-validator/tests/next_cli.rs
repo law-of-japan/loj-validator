@@ -74,3 +74,36 @@ fn failures_incomplete_and_reserved_checks() {
     assert_eq!(code, 3);
     assert_eq!(r["results"][0]["result"], "notApplicable");
 }
+
+#[test]
+fn repository_registry_and_records() {
+    let base = "vendor/loj-spec/conformance";
+    let (code, r) = json(&[
+        "check",
+        &format!("{base}/loj-history/v1alpha1/valid/hist-001/repo"),
+        "--level=L3",
+    ]);
+    assert_eq!(code, 0, "{r}");
+    assert_eq!(r["results"].as_array().unwrap().len(), 2);
+    let (code, r) = json(&[
+        "check",
+        &format!("{base}/loj-glyphs/v1alpha1/invalid/glyph-009/repo"),
+        "--level=L1",
+        "--category=evidence",
+    ]);
+    assert_eq!(code, 1, "{r}");
+    let (code, r) = json(&[
+        "check",
+        &format!("{base}/loj-registry/v1alpha1/invalid/reg-003/registry"),
+    ]);
+    assert_eq!(code, 1);
+    assert_eq!(r["results"][0]["check"], "registry");
+    let (code, r) = json(&[
+        "check",
+        &format!("--registry={base}/loj-registry/v1alpha1/valid/reg-001/registry"),
+        &format!("--repository={base}/loj-history/v1alpha1/valid/hist-004/repo"),
+        "--category=timeConsistency",
+    ]);
+    assert_eq!(code, 3, "{r}");
+    assert_eq!(r["references"][0]["result"], "notFetched");
+}

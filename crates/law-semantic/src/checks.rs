@@ -72,6 +72,11 @@ pub fn run(input: &Input, checks: &[Check]) -> Report {
     let mut report = match input {
         Input::Package(p) => crate::v1alpha2::check(p, checks).report,
         Input::Repository(p) => crate::repository::check(p, checks),
+        Input::Registry(p) => crate::registry::check(p),
+        Input::Records {
+            registry,
+            repositories,
+        } => crate::xref::check(registry, repositories, checks),
         _ => {
             let mut r = Report::default();
             for c in checks {

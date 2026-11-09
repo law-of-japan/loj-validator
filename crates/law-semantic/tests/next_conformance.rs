@@ -84,6 +84,30 @@ fn run(case: &Value, checks: &[Check]) -> Actual {
             ast: None,
             positions: Vec::new(),
         },
+        "registry" => Actual {
+            report: law_semantic::checks::run(
+                &law_semantic::checks::Input::Registry(root.join(input["path"].as_str().unwrap())),
+                checks,
+            ),
+            ast: None,
+            positions: Vec::new(),
+        },
+        "records" => Actual {
+            report: law_semantic::checks::run(
+                &law_semantic::checks::Input::Records {
+                    registry: root.join(input["registry"].as_str().unwrap()),
+                    repositories: input["repositories"]
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .map(|p| root.join(p.as_str().unwrap()))
+                        .collect(),
+                },
+                checks,
+            ),
+            ast: None,
+            positions: Vec::new(),
+        },
         other => panic!("input kind not implemented yet: {other}"),
     }
 }
@@ -194,17 +218,39 @@ fn problems(case: &Value, expected: &Value, actual: &Actual) -> Vec<String> {
             }
         }
     }
-    for key in ["references", "resolution"] {
-        if let Some(want) = expected.get(key) {
-            if json.get(key) != Some(want) {
-                problems.push(format!("{key}: expected {want}, got {:?}", json.get(key)));
+    // References: every expected entry is reported (its given fields match).
+    // The guide defines no exact comparison for them; see the stage 3 note.
+    if let Some(want) = expected["references"].as_array() {
+        let got = json["references"].as_array().cloned().unwrap_or_default();
+        for w in want {
+            let found = got.iter().any(|g| {
+                w.as_object()
+                    .unwrap()
+                    .iter()
+                    .all(|(k, v)| g.get(k) == Some(v))
+            });
+            if !found {
+                problems.push(format!("missing reference {w}; got {got:?}"));
             }
+        }
+    }
+    if let Some(want) = expected.get("resolution") {
+        if json.get("resolution") != Some(want) {
+            problems.push(format!(
+                "resolution: expected {want}, got {:?}",
+                json.get("resolution")
+            ));
         }
     }
     problems
 }
 
 fn suite(name: &str) {
+    suite_kinds(name, &[]);
+}
+
+/// Run the cases of a suite whose input kind is listed (all when empty).
+fn suite_kinds(name: &str, kinds: &[&str]) {
     let root = root();
     let index = read_json(&root.join(format!("conformance/{name}/manifest.json")));
     let report_schema = law_semantic::common::validator(
@@ -215,6 +261,9 @@ fn suite(name: &str) {
     let mut failures = Vec::new();
     let (mut passed, mut informative) = (0, 0);
     for case in index["cases"].as_array().unwrap() {
+        if !kinds.is_empty() && !kinds.contains(&case["input"]["kind"].as_str().unwrap()) {
+            continue;
+        }
         if case["normative"] != true {
             informative += 1;
             results.push(json!({"id":case["id"],"result":"informative: not counted"}));
@@ -239,12 +288,18 @@ fn suite(name: &str) {
         );
     }
     let total = results.len() - informative;
+    let name = &if kinds.is_empty() {
+        name.to_owned()
+    } else {
+        format!("{name}[{}]", kinds.join(","))
+    };
     eprintln!(
         "{name}: {passed}/{total} normative cases passed, {} failed, {informative} informative not counted",
         total - passed
     );
     if let Some(dir) = std::env::var_os("LOJ_CONFORMANCE_REPORT_DIR") {
-        let path = Path::new(&dir).join(format!("{}.json", name.replace('/', "-")));
+        let path =
+            Path::new(&dir).join(format!("{}.json", name.replace(['/', '[', ']', ','], "-")));
         fs::write(path, serde_json::to_vec_pretty(&results).unwrap()).unwrap();
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));
@@ -263,4 +318,14 @@ fn history_v1alpha1() {
 #[test]
 fn glyphs_v1alpha1() {
     suite("loj-glyphs/v1alpha1");
+}
+
+#[test]
+fn registry_v1alpha1() {
+    suite("loj-registry/v1alpha1");
+}
+
+#[test]
+fn common_records_v1alpha1() {
+    suite_kinds("common/v1alpha1", &["records"]);
 }
