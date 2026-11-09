@@ -1,0 +1,9 @@
+{
+  "diagnostics": [
+    {
+      "rule": "TABLE-03",
+      "schemaVersion": "loj/v1alpha2",
+      "class": "error"
+    }
+  ]
+}

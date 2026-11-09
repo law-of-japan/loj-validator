@@ -1,0 +1,13 @@
+schemaVersion: loj-registry/v1alpha1
+id: 20990101-act-1
+label: 架空雲保管法
+status: active
+identity:
+  evidence: [{source: src-fiction, locator: 題名}]
+  verification: {state: confirmed}
+text: {state: collected}
+repository: {location: example.invalid/20990101-act-1, canonicalBranch: main}
+sources:
+  - {id: src-fiction, kind: other, title: 架空の原典}
+numbers: []
+externalIds: []

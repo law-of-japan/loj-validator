@@ -508,6 +508,7 @@ dependencies = [
 name = "loj-validator"
 version = "0.1.0"
 dependencies = [
+ "jsonschema",
  "law-semantic",
  "schematter-lib",
  "serde_json",

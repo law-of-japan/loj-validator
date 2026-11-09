@@ -1,0 +1,108 @@
+{
+  "ast": {
+    "schemaVersion": "loj/v1alpha2",
+    "law": {
+      "id": "20990101-act-1",
+      "title": "架空雲保管法（実在しないサンプル）",
+      "type": "act",
+      "number": "架空法律第一号",
+      "promulgatedAt": "2099-01-01",
+      "language": "ja"
+    },
+    "root": {
+      "kind": "Law",
+      "number": null,
+      "display": "架空雲保管法（実在しないサンプル）",
+      "content": [
+        {
+          "kind": "MainProvision",
+          "number": null,
+          "display": "",
+          "content": [
+            {
+              "kind": "Article",
+              "number": "1",
+              "display": "第一条",
+              "content": [
+                {
+                  "kind": "Paragraph",
+                  "number": "1",
+                  "display": "",
+                  "content": [
+                    {
+                      "text": "架空の雲を保管する。\n"
+                    }
+                  ],
+                  "id": "20990101-act-1/main/article/1/paragraph/1",
+                  "numbering": "explicit"
+                }
+              ],
+              "status": "active",
+              "id": "20990101-act-1/main/article/1"
+            }
+          ],
+          "id": "20990101-act-1/main"
+        },
+        {
+          "kind": "SupplementaryProvision",
+          "number": null,
+          "display": "附則",
+          "content": [
+            {
+              "kind": "Article",
+              "number": "1",
+              "display": "第一条",
+              "content": [
+                {
+                  "kind": "Paragraph",
+                  "number": "1",
+                  "display": "",
+                  "content": [
+                    {
+                      "text": "架空の雲を保管する。\n"
+                    }
+                  ],
+                  "id": "20990101-act-1/supplement/original/article/1/paragraph/1",
+                  "numbering": "explicit"
+                }
+              ],
+              "status": "active",
+              "id": "20990101-act-1/supplement/original/article/1"
+            }
+          ],
+          "id": "20990101-act-1/supplement/original"
+        },
+        {
+          "kind": "SupplementaryProvision",
+          "number": null,
+          "display": "附則",
+          "content": [
+            {
+              "kind": "Article",
+              "number": "1",
+              "display": "第一条",
+              "content": [
+                {
+                  "kind": "Paragraph",
+                  "number": "1",
+                  "display": "",
+                  "content": [
+                    {
+                      "text": "架空の雲を保管する。\n"
+                    }
+                  ],
+                  "id": "20990101-act-1/supplement/amend-1/article/1/paragraph/1",
+                  "numbering": "explicit"
+                }
+              ],
+              "status": "active",
+              "id": "20990101-act-1/supplement/amend-1/article/1"
+            }
+          ],
+          "id": "20990101-act-1/supplement/amend-1"
+        }
+      ],
+      "id": "20990101-act-1"
+    }
+  }
+}

@@ -1,0 +1,306 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://law-of-japan.github.io/loj-spec/schemas/loj-rebuild/v1alpha1/rebuild.schema.json",
+  "$comment": "Canonical identifier only; publication at this URI is not required.",
+  "title": "LoJ rebuild report",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": "loj-rebuild/v1alpha1"
+    },
+    "record": {
+      "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/RecordRef"
+    },
+    "legacy": {
+      "type": "object",
+      "properties": {
+        "repository": {
+          "type": "string",
+          "minLength": 1
+        },
+        "frozenAt": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "frozenAt"
+      ]
+    },
+    "sourceChecks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/localId"
+          },
+          "glyphs": {
+            "enum": [
+              "preserved",
+              "normalized",
+              "unknown"
+            ]
+          },
+          "evidence": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/evidenceList"
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "source",
+          "glyphs",
+          "evidence"
+        ]
+      },
+      "minItems": 0
+    },
+    "mappings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "commit": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          },
+          "revisions": {
+            "type": "array",
+            "items": {
+              "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/revisionId"
+            },
+            "minItems": 0
+          },
+          "verification": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Verification"
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "commit",
+          "revisions",
+          "verification"
+        ]
+      },
+      "minItems": 0
+    },
+    "pending": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "commit": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "label",
+          "reason"
+        ]
+      },
+      "minItems": 0
+    },
+    "differences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "revision": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/revisionId"
+          },
+          "class": {
+            "enum": [
+              "wording",
+              "structure",
+              "omission",
+              "glyph"
+            ]
+          },
+          "legacy": {
+            "type": "object",
+            "properties": {
+              "commit": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{40}$"
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "commit",
+              "path"
+            ]
+          },
+          "node": {
+            "type": "string",
+            "minLength": 1
+          },
+          "scope": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Scope"
+          },
+          "recorded": {
+            "type": "string",
+            "minLength": 1
+          },
+          "legacyText": {
+            "type": "string",
+            "minLength": 1
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 0
+          },
+          "evidence": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/evidenceList"
+          },
+          "verification": {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Verification"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "revision",
+          "class",
+          "legacy",
+          "evidence",
+          "verification"
+        ],
+        "allOf": [
+          {
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/claimRule"
+          },
+          {
+            "if": {
+              "properties": {
+                "class": {
+                  "const": "wording"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "node",
+                "recorded",
+                "legacyText"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "class": {
+                  "const": "structure"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "node",
+                "note"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "class": {
+                  "const": "omission"
+                }
+              }
+            },
+            "then": {
+              "anyOf": [
+                {
+                  "required": [
+                    "node"
+                  ]
+                },
+                {
+                  "required": [
+                    "scope"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "class": {
+                  "const": "glyph"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "count"
+              ]
+            },
+            "else": {
+              "not": {
+                "anyOf": [
+                  {
+                    "required": [
+                      "count"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "examples"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "minItems": 0
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "record",
+    "legacy",
+    "sourceChecks",
+    "mappings",
+    "pending",
+    "differences"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "results": [
+    {
+      "check": "L4",
+      "category": "relationResolution",
+      "result": "pass"
+    },
+    {
+      "check": "L4",
+      "category": "timeConsistency",
+      "result": "pass"
+    }
+  ],
+  "references": [
+    {
+      "target": "loj/20170616-law-63",
+      "result": "resolved"
+    }
+  ]
+}

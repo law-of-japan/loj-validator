@@ -1,0 +1,15 @@
+{
+  "results": [
+    {
+      "check": "L4",
+      "category": "timeConsistency",
+      "result": "incomplete"
+    }
+  ],
+  "references": [
+    {
+      "target": "loj/20170616-law-63/q3c8h0tw",
+      "result": "notFetched"
+    }
+  ]
+}

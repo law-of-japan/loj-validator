@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://law-of-japan.github.io/loj-spec/schemas/v1alpha1/expected.schema.json",
+  "$comment": "Canonical identifier only; publication at this URI is not required.",
+  "type": "object",
+  "properties": {
+    "ast": {
+      "$ref": "ast.schema.json"
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rule": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "rule"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "positions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "nodeId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "start": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "end": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "nodeId",
+          "path",
+          "start",
+          "end"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    }
+  },
+  "required": [],
+  "additionalProperties": false,
+  "oneOf": [
+    {
+      "required": [
+        "ast"
+      ],
+      "not": {
+        "required": [
+          "diagnostics"
+        ]
+      }
+    },
+    {
+      "required": [
+        "diagnostics"
+      ],
+      "not": {
+        "required": [
+          "ast"
+        ]
+      }
+    }
+  ]
+}

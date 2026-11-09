@@ -1,0 +1,17 @@
+{
+  "results": [
+    {
+      "check": "L0",
+      "result": "notApplicable"
+    },
+    {
+      "check": "L1",
+      "result": "notApplicable"
+    },
+    {
+      "check": "L3",
+      "category": "historyStructure",
+      "result": "pass"
+    }
+  ]
+}

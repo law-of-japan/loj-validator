@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://law-of-japan.github.io/loj-spec/schemas/v1alpha1/conformance.schema.json",
+  "$comment": "Canonical identifier only; publication at this URI is not required.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": "loj/v1alpha1"
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^T[0-9]{3}$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "requirements": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "level": {
+            "enum": [
+              "L0",
+              "L1",
+              "L2"
+            ]
+          },
+          "normative": {
+            "type": "boolean"
+          },
+          "input": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expected": {
+            "type": "string",
+            "minLength": 1
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "requirements",
+          "level",
+          "normative",
+          "input",
+          "expected",
+          "success"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "cases"
+  ],
+  "additionalProperties": false
+}

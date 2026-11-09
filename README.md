@@ -51,7 +51,8 @@ JSONの`ast`はL1合格時のみ完全な規範ASTを返し、L0または不合�
 ファイル伸長の検出には最大1バイトの先読みを許し、超過入力を保持せず読込を停止します。
 保持する元入力バイト量の上限であり、JSONやASTを含むプロセスメモリの上限ではありません。
 
-正式適合データはライセンス・commit・SHA-256一覧とともに`vendor/loj-spec`へ固定し、
+v1alpha1の正式適合データはライセンス・commit・SHA-256一覧とともに`vendor/loj-spec-v1alpha1`へ、
+次期仕様（`loj/v1alpha2`ほか）の`spec`・`schemas`・`conformance`は`vendor/loj-spec`へ固定し、
 `cargo test --workspace --locked`で全正式ケースを検査します。
 個別実行は`cargo test -p law-semantic --test v1alpha1_conformance --locked`です。
 `LOJ_CONFORMANCE_REPORT`に絶対パスを設定すると、ケース別JSON結果を保存します。

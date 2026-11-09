@@ -1,0 +1,9 @@
+{
+  "results": [
+    {
+      "check": "L3",
+      "category": "historyStructure",
+      "result": "pass"
+    }
+  ]
+}

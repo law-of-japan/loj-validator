@@ -1,0 +1,9 @@
+{
+  "diagnostics": [
+    {
+      "rule": "DISP-01",
+      "schemaVersion": "loj/v1alpha2",
+      "class": "error"
+    }
+  ]
+}

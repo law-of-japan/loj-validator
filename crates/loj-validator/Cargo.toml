@@ -11,3 +11,6 @@ license.workspace = true
 law-semantic = { workspace = true }
 schematter-lib = { workspace = true }
 serde_json = { workspace = true }
+
+[dev-dependencies]
+jsonschema = { workspace = true }

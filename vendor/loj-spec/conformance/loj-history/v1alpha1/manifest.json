@@ -1,0 +1,263 @@
+{
+  "suite": "loj-history/v1alpha1",
+  "cases": [
+    {
+      "id": "hist-001",
+      "title": "祝日法の制定時と最初の改正後の版",
+      "requirements": [
+        "HIST-01",
+        "HIST-02",
+        "HIST-03",
+        "HIST-04",
+        "HIST-05",
+        "HIST-06",
+        "HIST-07",
+        "HIST-08",
+        "HIST-10",
+        "HIST-11",
+        "REV-01",
+        "REV-03",
+        "REV-04"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/valid/hist-001/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-001.json",
+      "success": true
+    },
+    {
+      "id": "hist-002",
+      "title": "履歴だけの法令リポジトリ（旧特許法の廃止）",
+      "requirements": [
+        "HIST-01",
+        "HIST-03",
+        "HIST-12"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/valid/hist-002/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-002.json",
+      "success": true
+    },
+    {
+      "id": "hist-003",
+      "title": "条件付きの失効（皇室典範特例法）",
+      "requirements": [
+        "HIST-12",
+        "TIME-04"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/valid/hist-003/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-003.json",
+      "success": true
+    },
+    {
+      "id": "hist-004",
+      "title": "他のRecordの時点を参照する改正（T-04）",
+      "requirements": [
+        "HIST-03",
+        "HIST-05",
+        "TIME-03",
+        "TIME-07"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/valid/hist-004/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-004.json",
+      "success": true
+    },
+    {
+      "id": "hist-005",
+      "title": "Revisionの未知のフィールド",
+      "requirements": [
+        "HIST-01"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-005/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-005.json",
+      "success": false
+    },
+    {
+      "id": "hist-006",
+      "title": "revision_idの形式",
+      "requirements": [
+        "REV-01"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-006/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-006.json",
+      "success": false
+    },
+    {
+      "id": "hist-007",
+      "title": "関係の内訳のidの重複",
+      "requirements": [
+        "HIST-03"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-007/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-007.json",
+      "success": false
+    },
+    {
+      "id": "hist-008",
+      "title": "内訳にない成立根拠",
+      "requirements": [
+        "HIST-05"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-008/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-008.json",
+      "success": false
+    },
+    {
+      "id": "hist-009",
+      "title": "存在しない基礎状態",
+      "requirements": [
+        "HIST-04"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-009/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-009.json",
+      "success": false
+    },
+    {
+      "id": "hist-010",
+      "title": "本文のない版の版パッケージ",
+      "requirements": [
+        "HIST-08"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-010/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-010.json",
+      "success": false
+    },
+    {
+      "id": "hist-011",
+      "title": "law.idとRecord IDの不一致",
+      "requirements": [
+        "HIST-02"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-011/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-011.json",
+      "success": false
+    },
+    {
+      "id": "hist-012",
+      "title": "原表記のない確定日",
+      "requirements": [
+        "TIME-01"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-012/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-012.json",
+      "success": false
+    },
+    {
+      "id": "hist-013",
+      "title": "根拠のない確認済みの時点",
+      "requirements": [
+        "TYPE-05"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-013/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-013.json",
+      "success": false
+    },
+    {
+      "id": "hist-014",
+      "title": "効力の終了の種類と関係の種類の不一致",
+      "requirements": [
+        "HIST-12"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-014/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-014.json",
+      "success": false
+    },
+    {
+      "id": "hist-015",
+      "title": "calcと計算結果の不一致",
+      "requirements": [
+        "TIME-03"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-015/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-015.json",
+      "success": false
+    }
+  ]
+}

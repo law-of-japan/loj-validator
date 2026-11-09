@@ -11,10 +11,26 @@ const USAGE: &str = "usage: loj-validator check INPUT.md --structure-schema PATH
   --law-id ID              semantic law identity (default: \"law\")
   --format json|text       output format (default: text)
 
-v1alpha1: loj-validator check DIR|law.yaml [--profile v1alpha1] [--level L0|L1]
+v1alpha1: loj-validator check DIR|law.yaml --profile v1alpha1 [--level L0|L1]
           [--format json|text] [--strict]
 Legacy default profile may also be selected with --profile legacy.
+Without --profile, --structure-schema or a .md input, check uses the next
+specification (loj/v1alpha2); see below.
 exit codes: 0 passed, 1 validation failure, 2 tool/configuration error, 3 incomplete";
+
+/// Inputs that keep the legacy or v1alpha1 pipelines; everything else is the next spec.
+fn uses_next_spec(args: &[String]) -> bool {
+    args.first().map(String::as_str) == Some("check")
+        && !args[1..].iter().any(|a| {
+            a.starts_with("--profile")
+                || a.starts_with("--structure-schema")
+                || a.starts_with("--law-id")
+                || a == "--strict"
+                || a == "-h"
+                || a == "--help"
+                || (!a.starts_with("--") && a.ends_with(".md"))
+        })
+}
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Format {
@@ -126,9 +142,7 @@ fn parse(args: &[String]) -> Result<Parsed, String> {
     }
     let input = input.ok_or("missing INPUT.md or repository")?;
     let profile_name = profile.as_deref().and_then(|p| p.to_str());
-    let v1alpha1 = profile_name == Some("v1alpha1")
-        || (profile.is_none()
-            && (input.is_dir() || input.file_name().is_some_and(|p| p == "law.yaml")));
+    let v1alpha1 = profile_name == Some("v1alpha1");
     if v1alpha1 && (structure_schema.is_some() || law_id.is_some()) {
         return Err("v1alpha1 gets schema and law identity from law.yaml".into());
     }
@@ -173,6 +187,32 @@ fn emit(report: &Report, format: Format) -> i32 {
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let format = requested_format(&args);
+    if uses_next_spec(&args) {
+        match loj_validator::next::parse(&args[1..]) {
+            Ok(a) => {
+                let (text, code) = std::panic::catch_unwind(|| loj_validator::next::execute(&a))
+                    .unwrap_or_else(|_| ("error: validator panicked; this is a bug".into(), 2));
+                if writeln!(std::io::stdout().lock(), "{}", text.trim_end()).is_err() {
+                    process::exit(2);
+                }
+                process::exit(code);
+            }
+            Err(message) => {
+                if format == Format::Json {
+                    process::exit(emit(&error_report("usage", &message, None), format));
+                }
+                eprintln!(
+                    "error: {message}
+
+{USAGE}
+
+{}",
+                    loj_validator::next::USAGE
+                );
+                process::exit(2);
+            }
+        }
+    }
     let parsed = match parse(&args) {
         Ok(p) => p,
         Err(message) => {
@@ -185,7 +225,12 @@ fn main() {
     };
     let args = match parsed {
         Parsed::Help => {
-            println!("{USAGE}");
+            println!(
+                "{USAGE}
+
+{}",
+                loj_validator::next::USAGE
+            );
             return;
         }
         Parsed::Version => {

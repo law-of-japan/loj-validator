@@ -1,0 +1,15 @@
+{
+  "results": [
+    {
+      "check": "registry",
+      "result": "fail"
+    }
+  ],
+  "diagnostics": [
+    {
+      "rule": "REG-03",
+      "schemaVersion": "loj-registry/v1alpha1",
+      "class": "error"
+    }
+  ]
+}

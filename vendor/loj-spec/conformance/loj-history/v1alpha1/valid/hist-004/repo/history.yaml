@@ -1,0 +1,62 @@
+schemaVersion: loj-history/v1alpha1
+record: {id: 19480720-law-178, label: 昭和二十三年法律第百七十八号}
+sources:
+  - {id: src-egov-h29-63, kind: egov, title: e-Gov 天皇の退位等に関する皇室典範特例法, uri: https://laws.e-gov.go.jp/law/429AC0000000063}
+relations:
+  - id: rel-h29-63
+    type: amends
+    from: {id: 20170616-law-63, label: 平成二十九年法律第六十三号}
+    evidence: [{source: src-egov-h29-63, locator: 附則第十条}]
+    verification: {state: unverified, reason: 官報と未照合}
+    status: active
+    items:
+      - id: i1
+        scope: {text: 第二条天皇誕生日の項}
+        effective:
+          state: derived
+          rule: この法律の施行の日の翌日
+          calc: {op: nextDay}
+          base:
+            state: date
+            value: "2019-04-30"
+            raw: 平成三十一年四月三十日
+            precision: day
+            sameAs: {record: {id: 20170616-law-63}, revision: q3c8h0tw}
+            evidence: [{source: src-egov-h29-63, locator: 附則第一条第一項}]
+            verification: {state: unverified, reason: 施行期日政令と未照合}
+          value: "2019-05-01"
+          raw: 附則第十条及び第十一条の規定はこの法律の施行の日の翌日から施行する
+          evidence: [{source: src-egov-h29-63, locator: 附則第一条第一項ただし書}]
+          verification: {state: unverified, reason: 基礎の時点が未照合}
+        evidence: [{source: src-egov-h29-63, locator: 附則第十条}]
+        verification: {state: unverified, reason: 官報と未照合}
+revisions:
+  - id: 7m2d4xq1
+    origin: coverageStart
+    effective: {state: unknown, reason: 試作で省略}
+    applicability: {state: unsurveyed}
+    text: {status: absent}
+    status: active
+  - id: k0p1vg0m
+    basedOn: 7m2d4xq1
+    basis: [{relation: rel-h29-63, items: [i1]}]
+    effective:
+      state: derived
+      rule: この法律の施行の日の翌日
+      calc: {op: nextDay}
+      base:
+        state: date
+        value: "2019-04-30"
+        raw: 平成三十一年四月三十日
+        precision: day
+        sameAs: {record: {id: 20170616-law-63}, revision: q3c8h0tw}
+        evidence: [{source: src-egov-h29-63, locator: 附則第一条第一項}]
+        verification: {state: unverified, reason: 施行期日政令と未照合}
+      value: "2019-05-01"
+      raw: 附則第十条及び第十一条の規定はこの法律の施行の日の翌日から施行する
+      evidence: [{source: src-egov-h29-63, locator: 附則第一条第一項ただし書}]
+      verification: {state: unverified, reason: 基礎の時点が未照合}
+    applicability: {state: unsurveyed}
+    text: {status: absent}
+    status: active
+coverage: {state: unconfirmed}

@@ -1,0 +1,158 @@
+{
+  "suite": "loj-glyphs/v1alpha1",
+  "cases": [
+    {
+      "id": "glyph-001",
+      "title": "祝日法の版の字体注記",
+      "requirements": [
+        "GLYPH-01",
+        "GLYPH-02",
+        "GLYPH-04",
+        "GLYPH-05",
+        "GLYPH-06",
+        "GLYPH-09",
+        "GLYPH-10",
+        "GLYPH-11"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/valid/hist-001/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-001.json",
+      "success": true
+    },
+    {
+      "id": "glyph-002",
+      "title": "注記の位置のずれ",
+      "requirements": [
+        "GLYPH-04"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-002/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-002.json",
+      "success": false
+    },
+    {
+      "id": "glyph-003",
+      "title": "注記のノードが解決できない",
+      "requirements": [
+        "GLYPH-04"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-003/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-003.json",
+      "success": false
+    },
+    {
+      "id": "glyph-004",
+      "title": "行のkeyを変えて注記が古くなる",
+      "requirements": [
+        "GLYPH-04"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-004/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-004.json",
+      "success": false
+    },
+    {
+      "id": "glyph-005",
+      "title": "候補が一つだけの曖昧な字",
+      "requirements": [
+        "GLYPH-05"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-005/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-005.json",
+      "success": false
+    },
+    {
+      "id": "glyph-006",
+      "title": "注記のない〓",
+      "requirements": [
+        "GLYPH-02"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-006/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-006.json",
+      "success": false
+    },
+    {
+      "id": "glyph-007",
+      "title": "注記のrevisionの不一致",
+      "requirements": [
+        "GLYPH-01"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-007/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-007.json",
+      "success": false
+    },
+    {
+      "id": "glyph-008",
+      "title": "注記のない互換漢字",
+      "requirements": [
+        "GLYPH-11"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-008/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-008.json",
+      "success": false
+    },
+    {
+      "id": "glyph-009",
+      "title": "版パッケージのL1が不合格のときの字体注記",
+      "requirements": [
+        "GLYPH-11",
+        "VAL-02",
+        "VAL-04"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-009/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-009.json",
+      "success": false
+    }
+  ]
+}

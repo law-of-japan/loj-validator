@@ -21,9 +21,9 @@ fn repository_and_manifest_selection_and_levels() {
     let output = Command::new(env!("CARGO_BIN_EXE_loj-validator"))
         .current_dir(
             Path::new(env!("CARGO_MANIFEST_DIR"))
-                .join("../../vendor/loj-spec/conformance/valid/T001"),
+                .join("../../vendor/loj-spec-v1alpha1/conformance/valid/T001"),
         )
-        .args(["check", "law.yaml", "--format=json"])
+        .args(["check", "law.yaml", "--profile=v1alpha1", "--format=json"])
         .output()
         .unwrap();
     assert!(
@@ -32,17 +32,17 @@ fn repository_and_manifest_selection_and_levels() {
         String::from_utf8_lossy(&output.stdout)
     );
     for path in [
-        "vendor/loj-spec/conformance/valid/T001",
-        "vendor/loj-spec/conformance/valid/T001/law.yaml",
+        "vendor/loj-spec-v1alpha1/conformance/valid/T001",
+        "vendor/loj-spec-v1alpha1/conformance/valid/T001/law.yaml",
     ] {
-        let (code, r) = run(&["check", path, "--format", "json"]);
+        let (code, r) = run(&["check", path, "--profile", "v1alpha1", "--format", "json"]);
         assert_eq!(code, 0);
         assert_eq!(r["status"], "Passed");
         assert!(r["ast"].is_object());
     }
     let (code, r) = run(&[
         "check",
-        "vendor/loj-spec/conformance/invalid/T042",
+        "vendor/loj-spec-v1alpha1/conformance/invalid/T042",
         "--level=L0",
         "--profile=v1alpha1",
         "--strict",
@@ -52,7 +52,8 @@ fn repository_and_manifest_selection_and_levels() {
     assert!(r["ast"].is_null());
     let (code, r) = run(&[
         "check",
-        "vendor/loj-spec/conformance/invalid/T042",
+        "vendor/loj-spec-v1alpha1/conformance/invalid/T042",
+        "--profile=v1alpha1",
         "--format=json",
     ]);
     assert_eq!(code, 1);

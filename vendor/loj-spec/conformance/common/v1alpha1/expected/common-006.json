@@ -1,0 +1,15 @@
+{
+  "results": [
+    {
+      "check": "change",
+      "result": "fail"
+    }
+  ],
+  "diagnostics": [
+    {
+      "rule": "CHG-03",
+      "schemaVersion": "common/v1alpha1",
+      "class": "error"
+    }
+  ]
+}

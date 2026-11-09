@@ -9,9 +9,9 @@ use std::path::Path;
 
 pub const SPEC_COMMIT: &str = "b704631b6501a0a01c1eb6faf99cfe16a4bccfa9";
 pub const MANIFEST_SCHEMA: &str =
-    include_str!("../../../../vendor/loj-spec/schemas/v1alpha1/manifest.schema.json");
+    include_str!("../../../../vendor/loj-spec-v1alpha1/schemas/v1alpha1/manifest.schema.json");
 pub const AST_SCHEMA: &str =
-    include_str!("../../../../vendor/loj-spec/schemas/v1alpha1/ast.schema.json");
+    include_str!("../../../../vendor/loj-spec-v1alpha1/schemas/v1alpha1/ast.schema.json");
 pub const MAX_FILE_BYTES: u64 = 16 * 1024 * 1024;
 pub const MAX_TOTAL_BYTES: usize = 128 * 1024 * 1024;
 

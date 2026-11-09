@@ -53,6 +53,10 @@ jobs:
         env:
           LOJ_CONFORMANCE_REPORT: ${{ github.workspace }}/v1alpha1-conformance.json
         run: cargo test -p law-semantic --test v1alpha1_conformance --locked -- --nocapture
+      - name: Formal next-spec conformance (pinned vendored specification)
+        env:
+          LOJ_CONFORMANCE_REPORT_DIR: ${{ github.workspace }}
+        run: cargo test -p law-semantic --test next_conformance --locked -- --nocapture
       - name: Clippy
         if: matrix.os == 'ubuntu-latest' && matrix.toolchain == 'stable'
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
