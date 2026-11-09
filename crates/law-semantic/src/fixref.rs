@@ -139,10 +139,11 @@ fn resolve(bundle: &Path, registry_dir: &Path, reference: &str, f: &mut Findings
 }
 
 /// The repository could not be read (git missing or failing, an unusable tree,
-/// no canonical branch or commit): the reference is not fetched, with the reason, and never reported as
-/// unresolvable (VAL-04). `check` marks the check incomplete for every notFetched
-/// result; the note only adds the reason. The note carries FIXREF-06, the rule
-/// that defines the result values, notFetched among them.
+/// no canonical branch or commit): the reference is not fetched, with the
+/// reason, and never reported as unresolvable (VAL-04). `check` marks the check
+/// incomplete for every notFetched result; the note only adds the reason. The
+/// note carries FIXREF-06, the rule that defines the result values, notFetched
+/// among them.
 fn not_fetched(f: &mut Findings, out: &mut Value, reference: &str, why: String) {
     f.note(RF, "undetermined", "FIXREF-06", COMMON, why, reference, "");
     *out = json!({"result": "notFetched"});
@@ -308,7 +309,9 @@ mod tests {
         let b = Bundle::open(&bundle).unwrap();
         let (f, out) = resolve(&b);
         assert_eq!(out["result"], "resolved", "{out} {:?}", f.items);
-        // Without HEAD the directory is no repository: every git command fails.
+        // Without HEAD git no longer takes the directory for a repository, so
+        // every git command fails (this relies on git's repository discovery, and
+        // on the temp directory not lying inside another repository).
         std::fs::remove_file(b.dir().join("HEAD")).unwrap();
         let (f, out) = resolve(&b);
         assert_eq!(out["result"], "notFetched", "{out}");

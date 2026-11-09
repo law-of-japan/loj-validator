@@ -431,8 +431,10 @@ mod tests {
     }
 
     /// When git fails (not "absent"), the check is incomplete with git's reason,
-    /// and reports no finding about the data. Without `HEAD` the directory is no
-    /// repository, so every git command exits with status 128.
+    /// and reports no finding about the data. Without `HEAD` git no longer takes
+    /// the directory for a repository, so every git command exits with status 128
+    /// (this relies on git's repository discovery, and on the temp directory not
+    /// lying inside another repository).
     #[test]
     fn git_failure_is_incomplete_not_a_finding() {
         let s = Scratch::new();
