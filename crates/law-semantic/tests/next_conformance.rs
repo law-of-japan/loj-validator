@@ -243,7 +243,7 @@ fn problems(case: &Value, expected: &Value, actual: &Actual) -> Vec<String> {
         }
     }
     // References: every expected entry is reported (its given fields match).
-    // The guide defines no exact comparison for them; see the stage 3 note.
+    // CONF-01: listed references must be reported; extra ones are allowed.
     if let Some(want) = expected["references"].as_array() {
         let got = json["references"].as_array().cloned().unwrap_or_default();
         for w in want {

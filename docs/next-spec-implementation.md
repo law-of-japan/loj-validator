@@ -1,7 +1,7 @@
 # Next specification implementation (loj/v1alpha2 and the new kinds)
 
-Target: loj-spec commit `c4149e7e8ad54f3262bd592ea4bde493cce54e26`, vendored as
-`spec`, `schemas`, `conformance` and `LICENSE` in `vendor/loj-spec` with `COMMIT` and
+Target: loj-spec commit `4ac8f2b47c98e76fa5ccda35d7a3ee60f0816ad4`, vendored as
+`spec`, `schemas`, `conformance`, `grammar/v1alpha2` and `LICENSE` in `vendor/loj-spec` with `COMMIT` and
 `SHA256SUMS.json`. The v1alpha1 fixtures of `b704631` stay unchanged in
 `vendor/loj-spec-v1alpha1`; the v1alpha1 and legacy pipelines are unchanged.
 
@@ -35,7 +35,8 @@ cannot be selected.
   `incomplete` (GLYPH-11).
 - L4 `notFetched` references make the category `incomplete`, never `fail`.
 - The registration space is read from `space.yaml` `id` when present; `space.yaml` has
-  no defined form in this version, so the default is `loj`.
+  no defined form in this version, so the default is `loj`, the space of the
+  conformance registries (CONF-01).
 - Git inputs use the `git` command; blobs are read raw so byte positions hold.
 
 ## CLI
@@ -59,9 +60,8 @@ or nothing passed.
   exactly, expected positions are present.
 - Failure: every expected `error` diagnostic (`rule` + `schemaVersion`) is present;
   without expected results the case's own check must not pass.
-- `references`: every expected entry is present (the guide does not define an exact
-  comparison; common-001 lists only the Record reference although its
-  `timeConsistency: pass` requires the `sameAs` Revision reference to be resolved too).
+- `references` (CONF-01): every expected entry is reported with the same `target` and
+  `result`; extra references are allowed.
 - `resolution`: exact.
 
 | Suite | Normative | Passed | Informative (not counted) |
