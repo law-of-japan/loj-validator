@@ -2,7 +2,7 @@
 //! reported apart from the conformance levels.
 use crate::common::findings::Findings;
 use crate::common::{Check, Report, COMMON};
-use crate::git::Bundle;
+use crate::git::{Bundle, ExportError};
 use crate::registry::{self, Resolution};
 use serde_json::{json, Map, Value};
 use std::path::Path;
@@ -132,42 +132,79 @@ fn resolve(bundle: &Path, registry_dir: &Path, reference: &str, f: &mut Findings
         .as_str()
         .unwrap_or("main")
         .to_owned();
-    let b = match Bundle::open(bundle) {
-        Ok(b) => b,
-        Err(_) => {
-            *out = json!({"result": "notFetched"});
-            return;
-        }
+    match Bundle::open(bundle) {
+        Ok(b) => resolve_in(&b, &p, &record, &branch, reference, f, out),
+        Err(e) => not_fetched(f, out, reference, e),
+    }
+}
+
+/// The repository could not be read (git missing or failing, an unusable tree,
+/// no canonical branch or commit): the reference is not fetched, with the
+/// reason, and never reported as unresolvable (VAL-04). `check` marks the check
+/// incomplete for every notFetched result; the note only adds the reason. The
+/// note carries FIXREF-06, the rule that defines the result values, notFetched
+/// among them.
+fn not_fetched(f: &mut Findings, out: &mut Value, reference: &str, why: String) {
+    f.note(RF, "undetermined", "FIXREF-06", COMMON, why, reference, "");
+    *out = json!({"result": "notFetched"});
+}
+
+/// Resolve `p` in an opened bundle holding `record`, whose canonical branch is
+/// `branch`.
+fn resolve_in(
+    b: &Bundle,
+    p: &Parsed,
+    record: &str,
+    branch: &str,
+    reference: &str,
+    f: &mut Findings,
+    out: &mut Value,
+) {
+    let err = |f: &mut Findings, rule: &str, msg: String| {
+        f.error(RF, rule, COMMON, msg, reference, "");
     };
-    let Some(tip) = b.branch(&branch) else {
-        *out = json!({"result": "notFetched"});
-        return;
+    let tip = match b.branch(branch) {
+        Ok(Some(tip)) => tip,
+        // The canonical branch is not in the bundle: the bundle does not hold the
+        // record's history, so the reference is not fetched, and the note says why.
+        Ok(None) => {
+            let why = format!("the canonical branch {branch} is not in the bundle");
+            return not_fetched(f, out, reference, why);
+        }
+        Err(e) => return not_fetched(f, out, reference, e),
     };
     let commit = match &p.commit {
         None => tip.clone(), // FIXREF-05: latest record version of the canonical branch
         Some(c) => match b.commit(c) {
-            Some(full) if full == *c => {
-                if !b.is_ancestor(c, &tip) {
+            Ok(Some(full)) if full == *c => match b.is_ancestor(c, &tip) {
+                Ok(true) => full,
+                Ok(false) => {
                     return err(
                         f,
                         "FIXREF-04",
                         format!("{c} is not reachable from {branch}"),
                     );
                 }
-                full
+                Err(e) => return not_fetched(f, out, reference, e),
+            },
+            // `resolve` has already refused an abbreviated hash (FIXREF-04), and a
+            // full hash resolves to itself, so this is a commit not in the bundle.
+            Ok(_) => {
+                let why = format!("commit {c} is not in the bundle");
+                return not_fetched(f, out, reference, why);
             }
-            _ => {
-                *out = json!({"result": "notFetched"});
-                return;
-            }
+            Err(e) => return not_fetched(f, out, reference, e),
         },
     };
-    let snap = match crate::change::snapshot(&b, &commit) {
+    let snap = match crate::change::snapshot(b, &commit) {
         Ok(s) => s,
-        Err(_) => {
-            *out = json!({"result": "notFetched"});
-            return;
+        // Unlike the change check, a refused tree (`ExportError::Tree`) gets the
+        // same result as a git failure: either way the revision cannot be read,
+        // so the reference is not fetched. Only the reason says which it was.
+        Err(ExportError::Tree(e)) => {
+            return not_fetched(f, out, reference, format!("tree refused: {e}"));
         }
+        Err(ExportError::Environment(e)) => return not_fetched(f, out, reference, e),
     };
     let Some(h) = snap.history.as_ref() else {
         return err(f, "FIXREF-06", format!("no history manifest at {commit}"));
@@ -258,5 +295,37 @@ mod tests {
         assert!(parse("lo:loj/a/b").is_err());
         assert!(!full_hash("02086ca"));
         assert!(full_hash(&"a".repeat(64)));
+    }
+
+    /// A git failure after the bundle is open leaves the reference not fetched,
+    /// with git's reason, and reports no error about the reference.
+    #[test]
+    fn git_failure_is_not_fetched_not_an_error() {
+        let bundle = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../vendor/loj-spec/conformance/common/v1alpha1/valid/common-004/repo.bundle");
+        let reference = "loj:loj/20990101-act-1/b7k2m9qd";
+        let p = parse(reference).unwrap();
+        let resolve = |b: &Bundle| {
+            let mut f = Findings::default();
+            let mut out = json!({"result": "error"});
+            resolve_in(b, &p, "20990101-act-1", "main", reference, &mut f, &mut out);
+            (f, out)
+        };
+        // The unbroken bundle resolves.
+        let b = Bundle::open(&bundle).unwrap();
+        let (f, out) = resolve(&b);
+        assert_eq!(out["result"], "resolved", "{out} {:?}", f.items);
+        // A broken repository: every git command fails.
+        b.break_for_test();
+        let (f, out) = resolve(&b);
+        assert_eq!(out["result"], "notFetched", "{out}");
+        assert!(!f.failed(RF), "{:?}", f.items);
+        assert!(
+            f.items
+                .iter()
+                .any(|(_, d)| d.class == "undetermined" && d.message.starts_with("git failed")),
+            "{:?}",
+            f.items
+        );
     }
 }

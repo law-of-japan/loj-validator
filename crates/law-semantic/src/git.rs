@@ -161,6 +161,55 @@ fn run_with_timeout(mut cmd: Command, limit: std::time::Duration) -> Result<Outp
     Ok((status, stdout, stderr))
 }
 
+/// Why a git command that ran to the end failed.
+///
+/// Only the first line of stderr, cut to `MAX_REASON` characters and with control
+/// characters (terminal escapes, `\r`) and invisible format characters (bidi
+/// overrides, zero-width marks) replaced by `?`, goes into the report: stderr can
+/// be long, and a bundle chooses part of it.
+fn failure(status: &std::process::ExitStatus, stderr: &[u8]) -> String {
+    const MAX_REASON: usize = 300;
+    let text = String::from_utf8_lossy(stderr);
+    let first = text.trim().lines().next().unwrap_or("");
+    let mut reason: String = first
+        .chars()
+        .take(MAX_REASON)
+        .map(|c| {
+            if c.is_control() || invisible(c) {
+                '?'
+            } else {
+                c
+            }
+        })
+        .collect();
+    if first.chars().nth(MAX_REASON).is_some() {
+        reason.push('…');
+    }
+    if reason.is_empty() {
+        format!("git failed ({status})")
+    } else {
+        format!("git failed ({status}): {reason}")
+    }
+}
+
+/// A format character that changes how text around it is shown without being
+/// seen itself: the soft hyphen, the Arabic letter mark, the Mongolian vowel
+/// separator, zero-width marks, bidi embeddings, overrides and isolates, and the
+/// byte order mark. The list is deliberately short, not every `Cf` character:
+/// it covers what can hide or reorder text, without a Unicode-category crate.
+fn invisible(c: char) -> bool {
+    matches!(
+        c,
+        '\u{00AD}'
+            | '\u{061C}'
+            | '\u{180E}'
+            | '\u{200B}'..='\u{200F}'
+            | '\u{202A}'..='\u{202E}'
+            | '\u{2060}'..='\u{2069}'
+            | '\u{FEFF}'
+    )
+}
+
 #[cfg(windows)]
 const NULL_DEVICE: &str = "NUL";
 #[cfg(not(windows))]
@@ -236,10 +285,35 @@ impl Bundle {
         ])?;
         Ok(b)
     }
+    /// Run a git command that must succeed: its stdout, or `Err` when git failed.
+    fn git(&self, args: &[&str]) -> Result<Vec<u8>, String> {
+        let (status, stdout, stderr) = self.run(args)?;
+        if !status.success() {
+            return Err(failure(&status, &stderr));
+        }
+        Ok(stdout)
+    }
+
+    /// Run a git command whose exit status 1 means "no" (the object is absent, the
+    /// commit is not an ancestor): `Ok(Some(stdout))` on 0, `Ok(None)` on 1, and
+    /// `Err` when git failed (timeout, output limit, any other status). Use it only
+    /// for such commands (`rev-parse --verify --quiet`, `merge-base --is-ancestor`):
+    /// for most git commands, 1 is a failure.
+    fn probe(&self, args: &[&str]) -> Result<Option<Vec<u8>>, String> {
+        let (status, stdout, stderr) = self.run(args)?;
+        match status.code() {
+            Some(0) => Ok(Some(stdout)),
+            Some(1) => Ok(None),
+            // Any other status, or none (git was killed by a signal).
+            _ => Err(failure(&status, &stderr)),
+        }
+    }
+
     /// Run git in the bundle's repository, isolated from the caller's git
     /// environment (`GIT_DIR`, `GIT_CONFIG_*`, …) and from the user and system
-    /// configuration, so the result depends only on the bundle.
-    fn git(&self, args: &[&str]) -> Result<Vec<u8>, String> {
+    /// configuration, so the result depends only on the bundle. `Err` means git
+    /// did not run to the end (not started, timed out, output over the limit).
+    fn run(&self, args: &[&str]) -> Result<Output, String> {
         let mut cmd = Command::new("git");
         for (key, _) in std::env::vars_os() {
             if key.to_string_lossy().starts_with("GIT_") {
@@ -254,95 +328,123 @@ impl Bundle {
             .env("GIT_CONFIG_NOSYSTEM", "1")
             .env("GIT_CONFIG_GLOBAL", NULL_DEVICE)
             .env("GIT_TERMINAL_PROMPT", "0");
-        let (status, stdout, stderr) = run_with_timeout(cmd, GIT_TIMEOUT)?;
-        if !status.success() {
-            return Err(String::from_utf8_lossy(&stderr).trim().to_owned());
+        run_with_timeout(cmd, GIT_TIMEOUT)
+    }
+    /// The full hash of a commit. `Ok(None)` means the revision is not a commit
+    /// hash or branch, or no such commit is in the bundle; `Err` means git failed.
+    pub fn commit(&self, rev: &str) -> Result<Option<String>, String> {
+        if revision(rev).is_err() {
+            return Ok(None);
         }
-        Ok(stdout)
-    }
-    fn text(&self, args: &[&str]) -> Option<String> {
-        self.git(args)
-            .ok()
-            .and_then(|b| String::from_utf8(b).ok())
-            .map(|s| s.trim().to_owned())
-    }
-    /// The full hash of an existing commit, if the object is present.
-    pub fn commit(&self, rev: &str) -> Option<String> {
-        revision(rev).ok()?;
-        self.text(&[
+        let out = self.probe(&[
             "rev-parse",
             "--verify",
             "--quiet",
             &format!("{rev}^{{commit}}"),
-        ])
+        ])?;
+        out.map(|b| {
+            String::from_utf8(b)
+                .map(|s| s.trim().to_owned())
+                .map_err(|_| "git printed a non-UTF-8 commit hash".to_owned())
+        })
+        .transpose()
     }
-    pub fn branch(&self, name: &str) -> Option<String> {
+    pub fn branch(&self, name: &str) -> Result<Option<String>, String> {
         self.commit(&format!("refs/heads/{name}"))
     }
-    pub fn is_ancestor(&self, a: &str, b: &str) -> bool {
-        revision(a).is_ok()
-            && revision(b).is_ok()
-            && self.git(&["merge-base", "--is-ancestor", a, b]).is_ok()
+    /// Whether `a` is an ancestor of `b`. Both must be resolved commits (callers
+    /// pass the hashes `commit` returned): an invalid revision is an `Err`, never
+    /// "not an ancestor", and so is a git failure or a commit missing from the
+    /// bundle.
+    pub fn is_ancestor(&self, a: &str, b: &str) -> Result<bool, String> {
+        revision(a)?;
+        revision(b)?;
+        Ok(self
+            .probe(&["merge-base", "--is-ancestor", a, b])?
+            .is_some())
     }
-    /// Commits of `base..head`, oldest first, each with its first parent.
-    pub fn range(&self, base: &str, head: &str) -> Option<Vec<(String, Option<String>)>> {
-        revision(base).ok()?;
-        revision(head).ok()?;
-        let list = self.text(&[
+    /// Commits of `base..head`, oldest first, each with its first parent. Both must
+    /// be resolved commits (callers pass the hashes `commit` returned); an invalid
+    /// revision is an `Err`, like a git failure.
+    pub fn range(&self, base: &str, head: &str) -> Result<Vec<(String, Option<String>)>, String> {
+        revision(base)?;
+        revision(head)?;
+        let list = self.git(&[
             "rev-list",
             "--reverse",
             "--parents",
             &format!("{base}..{head}"),
         ])?;
-        Some(
-            list.lines()
-                .filter(|l| !l.is_empty())
-                .map(|l| {
-                    let mut w = l.split(' ');
-                    let c = w.next().unwrap_or("").to_owned();
-                    (c, w.next().map(str::to_owned))
-                })
-                .collect(),
-        )
+        let list = String::from_utf8(list)
+            .map_err(|_| "git printed a non-UTF-8 commit list".to_owned())?;
+        Ok(list
+            .lines()
+            .filter(|l| !l.is_empty())
+            .map(|l| {
+                let mut w = l.split(' ');
+                let c = w.next().unwrap_or("").to_owned();
+                (c, w.next().map(str::to_owned))
+            })
+            .collect())
     }
     /// The raw commit message (UTF-8, CHG-03). The header ends at the first empty
     /// line; continuation lines of multi-line headers (e.g. `gpgsig`) start with a space.
-    pub fn message(&self, commit: &str) -> Option<String> {
-        revision(commit).ok()?;
-        let raw = self.git(&["cat-file", "commit", commit]).ok()?;
-        let raw = String::from_utf8(raw).ok()?;
-        raw.split_once("\n\n").map(|(_, m)| m.to_owned())
+    /// `commit` must exist. `Ok(None)` means the commit object is not UTF-8; `Err`
+    /// means git failed.
+    pub fn message(&self, commit: &str) -> Result<Option<String>, String> {
+        revision(commit)?;
+        let raw = self.git(&["cat-file", "commit", commit])?;
+        let Ok(raw) = String::from_utf8(raw) else {
+            return Ok(None);
+        };
+        // A commit object with no blank line after the header has no message;
+        // like an empty message, it declares no trailer (CHG-03).
+        Ok(Some(
+            raw.split_once("\n\n")
+                .map(|(_, m)| m.to_owned())
+                .unwrap_or_default(),
+        ))
     }
-    /// A blob at `commit:path`, raw.
-    pub fn blob(&self, commit: &str, path: &str) -> Option<Vec<u8>> {
-        revision(commit).ok()?;
+    /// The blob at `commit:path`, raw, for an entry listed in the tree. `Err`
+    /// means git failed.
+    fn blob(&self, commit: &str, path: &str) -> Result<Vec<u8>, String> {
+        revision(commit)?;
         self.git(&["cat-file", "blob", &format!("{commit}:{path}")])
-            .ok()
+            .map_err(|e| format!("cannot read {path}: {e}"))
     }
     /// Write the tree of `commit` to a fresh directory, byte for byte. Every entry
     /// name is checked before anything is written; symbolic links, submodules and
     /// non-UTF-8 names are refused with an `Err`, never followed or written.
-    pub fn export(&self, commit: &str) -> Result<PathBuf, String> {
-        revision(commit)?;
-        let listing = self.git(&["ls-tree", "-r", "-z", "-l", "--full-tree", commit])?;
+    pub fn export(&self, commit: &str) -> Result<PathBuf, ExportError> {
+        use ExportError::{Environment, Tree};
+        // Callers pass resolved hashes; an invalid one is a caller bug, which must
+        // stop the check like an environment failure rather than be noted as a
+        // property of the tree.
+        revision(commit).map_err(Environment)?;
+        let listing = self
+            .git(&["ls-tree", "-r", "-z", "-l", "--full-tree", commit])
+            .map_err(Environment)?;
         let mut entries = Vec::new();
         let mut total: u64 = 0;
         for entry in listing.split(|b| *b == 0).filter(|n| !n.is_empty()) {
-            let entry = String::from_utf8(entry.to_vec()).map_err(|_| {
-                format!(
-                    "non-UTF-8 path in the bundle tree: {:?}",
-                    String::from_utf8_lossy(entry)
-                )
-            })?;
+            let entry = String::from_utf8(entry.to_vec())
+                .map_err(|_| {
+                    format!(
+                        "non-UTF-8 path in the bundle tree: {:?}",
+                        String::from_utf8_lossy(entry)
+                    )
+                })
+                .map_err(Tree)?;
             let (meta, name) = entry
                 .split_once('\t')
-                .ok_or_else(|| format!("unexpected ls-tree entry: {entry:?}"))?;
+                .ok_or_else(|| format!("unexpected ls-tree entry: {entry:?}"))
+                .map_err(Tree)?;
             let mode = meta.split(' ').next().unwrap_or("");
-            safe_name(name)?;
+            safe_name(name).map_err(Tree)?;
             if !matches!(mode, "100644" | "100755") {
-                return Err(format!(
+                return Err(Tree(format!(
                     "unsupported tree entry (mode {mode}) in the bundle: {name:?}"
-                ));
+                )));
             }
             // The same budget as a version package (16 MiB per file, 128 MiB in
             // all), checked from the tree before anything is read or written.
@@ -350,15 +452,18 @@ impl Bundle {
                 .split_whitespace()
                 .last()
                 .and_then(|s| s.parse().ok())
-                .ok_or_else(|| format!("unexpected ls-tree entry: {entry:?}"))?;
+                .ok_or_else(|| format!("unexpected ls-tree entry: {entry:?}"))
+                .map_err(Tree)?;
             total = total.saturating_add(size);
             if size > MAX_FILE || total > MAX_TOTAL {
-                return Err(format!(
+                return Err(Tree(format!(
                     "bundle tree exceeds the input budget (16 MiB/file, 128 MiB total) at {name:?}"
-                ));
+                )));
             }
             if entries.len() >= MAX_ENTRIES {
-                return Err(format!("bundle tree has more than {MAX_ENTRIES} files"));
+                return Err(Tree(format!(
+                    "bundle tree has more than {MAX_ENTRIES} files"
+                )));
             }
             entries.push(name.to_owned());
         }
@@ -376,26 +481,58 @@ impl Bundle {
                     .entry(prefix.to_lowercase())
                     .or_insert_with(|| prefix.clone());
                 if *seen != prefix {
-                    return Err(format!(
+                    return Err(Tree(format!(
                         "paths differing only by case in the bundle: {seen:?} and {prefix:?}"
-                    ));
+                    )));
                 }
             }
         }
-        let out = temp("loj-tree")?;
+        let out = temp("loj-tree").map_err(Environment)?;
         // Registered before writing, so a failure part-way still removes the tree.
         self.exports.borrow_mut().push(out.clone());
         for name in entries {
-            let bytes = self
-                .blob(commit, &name)
-                .ok_or_else(|| format!("cannot read {name}"))?;
+            let bytes = self.blob(commit, &name).map_err(Environment)?;
             let path = out.join(&name);
             if let Some(p) = path.parent() {
-                std::fs::create_dir_all(p).map_err(|e| e.to_string())?;
+                std::fs::create_dir_all(p).map_err(|e| Environment(e.to_string()))?;
             }
-            std::fs::write(&path, bytes).map_err(|e| e.to_string())?;
+            std::fs::write(&path, bytes).map_err(|e| Environment(e.to_string()))?;
         }
         Ok(out)
+    }
+}
+
+/// Why a tree could not be exported.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ExportError {
+    /// The tree itself is refused (an unsafe or non-UTF-8 name, an unsupported
+    /// entry, the input budget, a case collision): a property of that commit.
+    Tree(String),
+    /// Git failed, or the export could not be written: a property of the
+    /// environment, which other commits would hit too.
+    Environment(String),
+}
+
+impl std::fmt::Display for ExportError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ExportError::Tree(e) | ExportError::Environment(e) => f.write_str(e),
+        }
+    }
+}
+
+#[cfg(test)]
+impl Bundle {
+    /// Break the repository so that every later git command fails with status
+    /// 128 ("bad config line"). Unlike removing `HEAD`, this does not depend on
+    /// git's repository discovery or on where the temp directory lies.
+    pub(crate) fn break_for_test(&self) {
+        std::fs::write(
+            self.dir.join("config"),
+            "[[[bad
+",
+        )
+        .unwrap();
     }
 }
 
@@ -409,7 +546,7 @@ impl Drop for Bundle {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
 
     #[test]
@@ -457,14 +594,14 @@ mod tests {
     }
 
     /// A scratch repository with git commands, for building hostile bundles.
-    struct Scratch(PathBuf);
+    pub(crate) struct Scratch(PathBuf);
     impl Scratch {
-        fn new() -> Scratch {
+        pub(crate) fn new() -> Scratch {
             let s = Scratch(temp("loj-test").unwrap());
             s.run(&["init", "--quiet", "-b", "main"], None);
             s
         }
-        fn run(&self, args: &[&str], stdin: Option<&[u8]>) -> String {
+        pub(crate) fn run(&self, args: &[&str], stdin: Option<&[u8]>) -> String {
             use std::io::Write;
             use std::process::Stdio;
             let mut cmd = Command::new("git");
@@ -504,7 +641,7 @@ mod tests {
         }
         /// Commit a tree made of `(mode, type, name)` entries holding `x\n`, and
         /// bundle `main`.
-        fn bundle(&self, entries: &[(&str, &str, &str)]) -> PathBuf {
+        pub(crate) fn bundle(&self, entries: &[(&str, &str, &str)]) -> PathBuf {
             self.bundle_with(b"x\n", entries)
         }
         fn bundle_with(&self, content: &[u8], entries: &[(&str, &str, &str)]) -> PathBuf {
@@ -514,11 +651,48 @@ mod tests {
                 spec.push_str(&format!("{mode} {kind} {blob}\t{name}\n"));
             }
             let tree = self.run(&["mktree"], Some(spec.as_bytes()));
-            let commit = self.run(&["commit-tree", &tree, "-m", "t"], None);
-            self.run(&["update-ref", "refs/heads/main", &commit], None);
+            self.bundle_tree(&tree)
+        }
+        /// Commit `tree` (a tree hash) on `main`, and bundle `main`.
+        pub(crate) fn bundle_tree(&self, tree: &str) -> PathBuf {
+            let commit = self.run(&["commit-tree", tree, "-m", "t"], None);
+            self.bundle_head(&commit)
+        }
+        /// Point `main` at `commit`, and bundle `main`.
+        pub(crate) fn bundle_head(&self, commit: &str) -> PathBuf {
+            self.run(&["update-ref", "refs/heads/main", commit], None);
             let path = self.0.join("t.bundle");
             self.run(&["bundle", "create", &path.to_string_lossy(), "main"], None);
             path
+        }
+        /// A chain of commits on `main`, one per message, all with the same tree
+        /// holding an empty `history.yaml`; bundle `main` and return the bundle and
+        /// the commits, oldest first. The commit objects are written byte for byte,
+        /// so a message need not be UTF-8 (`commit-tree` would re-encode it).
+        pub(crate) fn chain(&self, messages: &[&[u8]]) -> (PathBuf, Vec<String>) {
+            let blob = self.run(&["hash-object", "-w", "--stdin"], Some(b""));
+            let spec = format!("100644 blob {blob}\thistory.yaml\n");
+            let tree = self.run(&["mktree"], Some(spec.as_bytes()));
+            let mut commits: Vec<String> = Vec::new();
+            for message in messages {
+                let mut raw = format!("tree {tree}\n").into_bytes();
+                if let Some(parent) = commits.last() {
+                    raw.extend(format!("parent {parent}\n").bytes());
+                }
+                raw.extend(b"author t <t@example.invalid> 0 +0000\n");
+                raw.extend(b"committer t <t@example.invalid> 0 +0000\n\n");
+                raw.extend(*message);
+                let c = self.run(
+                    &["hash-object", "-t", "commit", "-w", "--stdin"],
+                    Some(&raw),
+                );
+                commits.push(c);
+            }
+            let head = commits.last().expect("at least one message");
+            self.run(&["update-ref", "refs/heads/main", head], None);
+            let path = self.0.join("t.bundle");
+            self.run(&["bundle", "create", &path.to_string_lossy(), "main"], None);
+            (path, commits)
         }
     }
     impl Drop for Scratch {
@@ -533,7 +707,7 @@ mod tests {
         let s = Scratch::new();
         let path = s.bundle(entries);
         let Ok(b) = Bundle::open(&path) else { return };
-        let head = b.branch("main").unwrap();
+        let head = b.branch("main").unwrap().unwrap();
         assert!(b.export(&head).is_err(), "{entries:?}");
         assert!(b.exports.borrow().is_empty(), "nothing was written");
     }
@@ -543,7 +717,7 @@ mod tests {
         let s = Scratch::new();
         let path = s.bundle(&[("100644", "blob", "history.yaml")]);
         let b = Bundle::open(&path).unwrap();
-        let out = b.export(&b.branch("main").unwrap()).unwrap();
+        let out = b.export(&b.branch("main").unwrap().unwrap()).unwrap();
         assert_eq!(std::fs::read(out.join("history.yaml")).unwrap(), b"x\n");
         drop(b);
         assert!(!out.exists(), "the export is removed with the bundle");
@@ -572,7 +746,10 @@ mod tests {
         let s = Scratch::new();
         let big = vec![b'x'; MAX_FILE as usize + 1];
         let b = Bundle::open(&s.bundle_with(&big, &[("100644", "blob", "law.yaml")])).unwrap();
-        let err = b.export(&b.branch("main").unwrap()).unwrap_err();
+        let err = b
+            .export(&b.branch("main").unwrap().unwrap())
+            .unwrap_err()
+            .to_string();
         assert!(err.contains("input budget"), "{err}");
         assert!(b.exports.borrow().is_empty(), "nothing was written");
         // Nine 16 MiB files exceed the 128 MiB total.
@@ -584,7 +761,7 @@ mod tests {
             .map(|n| ("100644", "blob", n.as_str()))
             .collect();
         let b = Bundle::open(&s.bundle_with(&full, &entries)).unwrap();
-        assert!(b.export(&b.branch("main").unwrap()).is_err());
+        assert!(b.export(&b.branch("main").unwrap().unwrap()).is_err());
     }
 
     #[test]
@@ -644,12 +821,120 @@ mod tests {
         }
         let s = Scratch::new();
         let b = Bundle::open(&s.bundle(&[("100644", "blob", "history.yaml")])).unwrap();
-        let head = b.branch("main").unwrap();
+        let head = b.branch("main").unwrap().unwrap();
         assert!(revision(&head).is_ok());
-        assert_eq!(b.commit("--all"), None);
-        assert!(!b.is_ancestor("--all", &head));
-        assert_eq!(b.range("--all", &head), None);
-        assert_eq!(b.message("--all"), None);
+        assert_eq!(b.commit("--all"), Ok(None));
+        assert!(b.is_ancestor("--all", &head).is_err());
+        assert!(b.range("--all", &head).is_err());
+        assert!(b.message("--all").is_err());
         assert!(b.export("--all").is_err());
+    }
+
+    /// A commit object that ends after its header (no blank line) has an empty
+    /// message, which the change check reports as declaring no `LoJ-Change`.
+    #[test]
+    fn commit_without_blank_line_has_empty_message() {
+        let s = Scratch::new();
+        let tree = s.run(&["mktree"], Some(b""));
+        let raw = format!(
+            "tree {tree}\nauthor t <t@example.invalid> 0 +0000\ncommitter t <t@example.invalid> 0 +0000\n"
+        );
+        let c = s.run(
+            &["hash-object", "-t", "commit", "-w", "--stdin"],
+            Some(raw.as_bytes()),
+        );
+        s.run(&["update-ref", "refs/heads/main", &c], None);
+        let path = s.0.join("t.bundle");
+        s.run(&["bundle", "create", &path.to_string_lossy(), "main"], None);
+        let b = Bundle::open(&path).unwrap();
+        assert_eq!(b.message(&c), Ok(Some(String::new())));
+    }
+
+    /// A refused tree is a `Tree` error; a git failure while exporting is an
+    /// `Environment` error, so the change check can stop on it.
+    #[test]
+    fn export_errors_say_whether_git_failed() {
+        let s = Scratch::new();
+        let b = Bundle::open(&s.bundle(&[("100644", "blob", "a:b")])).unwrap();
+        let head = b.branch("main").unwrap().unwrap();
+        assert!(matches!(b.export(&head), Err(ExportError::Tree(_))));
+        let s = Scratch::new();
+        let b = Bundle::open(&s.bundle(&[("100644", "blob", "history.yaml")])).unwrap();
+        let head = b.branch("main").unwrap().unwrap();
+        b.break_for_test();
+        assert!(matches!(
+            b.export(&head),
+            Err(ExportError::Environment(e)) if e.starts_with("git failed")
+        ));
+    }
+
+    /// The reason is one line, bounded, and free of control characters.
+    #[test]
+    fn failure_reasons_are_bounded_and_clean() {
+        #[cfg(windows)]
+        let status = {
+            use std::os::windows::process::ExitStatusExt;
+            std::process::ExitStatus::from_raw(128)
+        };
+        #[cfg(unix)]
+        let status = {
+            use std::os::unix::process::ExitStatusExt;
+            std::process::ExitStatus::from_raw(128 << 8)
+        };
+        let reason = failure(&status, b"fatal: \x1b[31mred\x1b[0m\rx\nsecond line");
+        assert!(reason.ends_with("fatal: ?[31mred?[0m?x"), "{reason}");
+        let reason = failure(&status, "a\u{202E}b\u{200B}c".as_bytes());
+        assert!(reason.ends_with("a?b?c"), "{reason}");
+        // The edges of each range are inside; the characters just outside are not.
+        for c in [
+            '\u{00AD}', '\u{061C}', '\u{180E}', '\u{200B}', '\u{200F}', '\u{202A}', '\u{202E}',
+            '\u{2060}', '\u{2069}', '\u{FEFF}',
+        ] {
+            assert!(invisible(c), "{:04X}", c as u32);
+        }
+        for c in [
+            '\u{200A}', '\u{2010}', '\u{2029}', '\u{202F}', '\u{205F}', '\u{206A}',
+        ] {
+            assert!(!invisible(c), "{:04X}", c as u32);
+        }
+        let long = "x".repeat(1000);
+        let reason = failure(&status, long.as_bytes());
+        assert!(
+            reason.ends_with('…') && reason.chars().count() < 400,
+            "{reason}"
+        );
+    }
+
+    /// `probe` maps exit status 0 and 1 of `merge-base --is-ancestor` to yes and no.
+    #[test]
+    fn ancestry_is_yes_or_no() {
+        let s = Scratch::new();
+        let (path, c) = s.chain(&[b"a\n", b"b\n"]);
+        let b = Bundle::open(&path).unwrap();
+        assert_eq!(b.is_ancestor(&c[0], &c[1]), Ok(true));
+        assert_eq!(b.is_ancestor(&c[1], &c[0]), Ok(false));
+    }
+
+    /// An absent object is `Ok(None)`; a git failure is `Err`, never "absent".
+    #[test]
+    fn git_failures_are_not_absence() {
+        let s = Scratch::new();
+        let b = Bundle::open(&s.bundle(&[("100644", "blob", "history.yaml")])).unwrap();
+        let head = b.branch("main").unwrap().unwrap();
+        let absent = "0123456789abcdef0123456789abcdef01234567";
+        assert_eq!(b.commit(absent), Ok(None));
+        assert_eq!(b.branch("nope"), Ok(None));
+        assert_eq!(b.is_ancestor(&head, &head), Ok(true));
+        // A missing commit makes merge-base and cat-file fail (status 128).
+        assert!(b.is_ancestor(absent, &head).is_err());
+        assert!(b.message(absent).is_err());
+        let msg = b.message(&head).unwrap().unwrap();
+        assert_eq!(msg.trim(), "t");
+        // With the object store gone, reading the message fails instead of
+        // yielding an empty message.
+        std::fs::remove_dir_all(b.dir.join("objects")).unwrap();
+        let err = b.message(&head).unwrap_err();
+        assert!(err.starts_with("git failed"), "{err}");
+        assert!(b.range(&head, &head).is_err());
     }
 }

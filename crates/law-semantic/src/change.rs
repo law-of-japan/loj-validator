@@ -2,8 +2,8 @@
 //! CHG-02, CHG-03, CHG-04), reported apart from the conformance levels.
 use crate::common::findings::Findings;
 use crate::common::{load_yaml, Check, Loaded, Report, COMMON};
-use crate::git::Bundle;
-use serde_json::{json, Value};
+use crate::git::{Bundle, ExportError};
+use serde_json::{json, Map, Value};
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -29,9 +29,22 @@ pub(crate) struct Snapshot {
     pub packages: BTreeMap<String, String>,
 }
 
-pub(crate) fn snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, String> {
+pub(crate) fn snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError> {
     let dir = b.export(commit)?;
-    let history_bytes = b.blob(commit, "history.yaml");
+    // The export holds every blob byte for byte, so the raw manifest is read from
+    // it rather than from git again. No file of that name (absent, or a directory
+    // in the tree) is no manifest, a finding about the data; failing to look at or
+    // read the file leaves the check undetermined.
+    let manifest = dir.join("history.yaml");
+    let unreadable = |e: std::io::Error| {
+        ExportError::Environment(format!("cannot read history.yaml at {commit}: {e}"))
+    };
+    let history_bytes = match std::fs::metadata(&manifest) {
+        Ok(m) if m.is_file() => Some(std::fs::read(&manifest).map_err(unreadable)?),
+        Ok(_) => None,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
+        Err(e) => return Err(unreadable(e)),
+    };
     let history = match load_yaml(&dir.join("history.yaml")) {
         Loaded::Ok(v, _) => Some(v),
         _ => None,
@@ -86,6 +99,18 @@ fn trailers(message: &str) -> (Vec<String>, Option<Vec<String>>) {
     (kinds, revisions)
 }
 
+/// End the check as incomplete (VAL-04), with `why` as the reason. The note
+/// carries CHG-02, the rule of the change check as a whole, whichever step (commit
+/// resolution, range, message) could not be completed: the spec gives no rule of
+/// its own for an undetermined change check.
+fn undetermined(mut f: Findings, target: Map<String, Value>, why: String) -> Report {
+    f.incomplete.insert(CH);
+    f.note(CH, "undetermined", "CHG-02", COMMON, why, "", "");
+    let mut r = f.into_report(&[CH]);
+    r.target = target;
+    r
+}
+
 pub fn check(bundle: &Path, base: &str, head: &str) -> Report {
     let mut f = Findings::default();
     let mut report = Report::default();
@@ -111,29 +136,51 @@ pub fn check(bundle: &Path, base: &str, head: &str) -> Report {
     report
         .target
         .insert("repository".into(), json!(bundle.to_string_lossy()));
-    let (Some(base), Some(head)) = (b.commit(base), b.commit(head)) else {
-        f.incomplete.insert(CH);
-        f.note(
-            CH,
-            "undetermined",
-            "CHG-02",
-            COMMON,
-            "base or head commit is not in the bundle",
-            "",
-            "",
-        );
-        return f.into_report(&[CH]);
+    check_bundle(&b, f, report, base, head)
+}
+
+/// The change check on an opened bundle. A git failure is never reported as a
+/// finding about the data: it ends the check as incomplete with its reason
+/// (VAL-04) at the first failure, so a broken git is not noted (or waited for)
+/// once per commit. A tree refused for its content (an unsafe name, the input
+/// budget) is noted for that commit and the check goes on.
+fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, head: &str) -> Report {
+    let (base, head) = match (b.commit(base), b.commit(head)) {
+        (Ok(Some(base)), Ok(Some(head))) => (base, head),
+        (Err(e), _) | (_, Err(e)) => return undetermined(f, report.target, e),
+        _ => {
+            let why = "base or head commit is not in the bundle".into();
+            return undetermined(f, report.target, why);
+        }
     };
     report.target.insert("commit".into(), json!(head));
     f.applicable.insert(CH);
-    let Some(commits) = b.range(&base, &head) else {
-        f.incomplete.insert(CH);
-        return f.into_report(&[CH]);
+    let commits = match b.range(&base, &head) {
+        Ok(c) => c,
+        Err(e) => return undetermined(f, report.target, e),
     };
-    let mut cache: BTreeMap<String, Snapshot> = BTreeMap::new();
+    // A refused tree is cached as `None`, so it is exported and noted only once
+    // even when the commit is both a parent and a child in the range.
+    let mut cache: BTreeMap<String, Option<Snapshot>> = BTreeMap::new();
     for (commit, parent) in commits {
         let at = format!("commit {commit}");
-        let message = b.message(&commit).unwrap_or_default();
+        let message = match b.message(&commit) {
+            Ok(Some(m)) => m,
+            Ok(None) => {
+                f.error(
+                    CH,
+                    "CHG-03",
+                    COMMON,
+                    format!("{commit}: the commit message is not UTF-8"),
+                    &at,
+                    "",
+                );
+                // Without a readable message the change kind is unknown, so the
+                // commit's trees are not compared (as for a missing LoJ-Change).
+                continue;
+            }
+            Err(e) => return undetermined(f, report.target, format!("{commit}: {e}")),
+        };
         let (kinds, revisions) = trailers(&message);
         let kind = match kinds.as_slice() {
             [k] if KINDS.contains(&k.as_str()) => k.clone(),
@@ -187,18 +234,31 @@ pub fn check(bundle: &Path, base: &str, head: &str) -> Report {
         };
         for c in [&parent, &commit] {
             if !cache.contains_key(c.as_str()) {
-                match snapshot(&b, c) {
+                match snapshot(b, c) {
                     Ok(s) => {
-                        cache.insert(c.clone(), s);
+                        cache.insert(c.clone(), Some(s));
                     }
-                    Err(e) => {
+                    Err(ExportError::Environment(e)) => {
+                        return undetermined(f, report.target, format!("{c}: {e}"));
+                    }
+                    Err(ExportError::Tree(e)) => {
                         f.incomplete.insert(CH);
-                        f.note(CH, "undetermined", "CHG-02", COMMON, e, &at, "");
+                        f.note(
+                            CH,
+                            "undetermined",
+                            "CHG-02",
+                            COMMON,
+                            format!("{c}: tree refused: {e}"),
+                            &at,
+                            "",
+                        );
+                        cache.insert(c.clone(), None);
                     }
                 }
             }
         }
-        let (Some(before), Some(after)) = (cache.get(&parent), cache.get(&commit)) else {
+        let (Some(Some(before)), Some(Some(after))) = (cache.get(&parent), cache.get(&commit))
+        else {
             continue;
         };
         if matches!(
@@ -344,4 +404,95 @@ pub fn check(bundle: &Path, base: &str, head: &str) -> Report {
     let mut r = f.into_report(&[CH]);
     r.target = report.target;
     r
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::common::ResultValue;
+    use crate::git::tests::Scratch;
+
+    fn result(r: &Report) -> ResultValue {
+        r.results.iter().find(|(c, _)| *c == CH).unwrap().1
+    }
+
+    #[test]
+    fn non_utf8_message_is_a_chg03_error() {
+        let s = Scratch::new();
+        let (path, c) = s.chain(&[b"base\n", b"bad \xff\xfe\n"]);
+        let r = check(&path, &c[0], &c[1]);
+        assert_eq!(result(&r), ResultValue::Fail);
+        assert!(
+            r.diagnostics
+                .iter()
+                .any(|d| d.rule == "CHG-03" && d.message.contains("not UTF-8")),
+            "{:?}",
+            r.diagnostics
+        );
+    }
+
+    /// When git fails (not "absent"), the check is incomplete with git's reason,
+    /// and reports no finding about the data.
+    #[test]
+    fn git_failure_is_incomplete_not_a_finding() {
+        let s = Scratch::new();
+        let (path, c) = s.chain(&[b"base\n", b"head\n\nLoJ-Change: metadata\n"]);
+        let b = Bundle::open(&path).unwrap();
+        b.break_for_test();
+        let r = check_bundle(&b, Findings::default(), Report::default(), &c[0], &c[1]);
+        assert_eq!(result(&r), ResultValue::Incomplete);
+        assert!(
+            r.diagnostics.iter().all(|d| !d.is_error()),
+            "{:?}",
+            r.diagnostics
+        );
+        assert!(
+            r.diagnostics
+                .iter()
+                .any(|d| d.class == "undetermined" && d.message.starts_with("git failed")),
+            "{:?}",
+            r.diagnostics
+        );
+    }
+
+    /// A refused tree is exported and noted once, even when its commit is both a
+    /// child and a parent in the range.
+    #[test]
+    fn refused_tree_is_noted_once() {
+        let s = Scratch::new();
+        let blob = s.run(&["hash-object", "-w", "--stdin"], Some(b""));
+        let tree = |name: &str| {
+            let spec = format!("100644 blob {blob}\t{name}\n");
+            s.run(&["mktree"], Some(spec.as_bytes()))
+        };
+        let (good, bad) = (tree("history.yaml"), tree("a:b"));
+        let msg = "m\n\nLoJ-Change: metadata\n";
+        let base = s.run(&["commit-tree", &good, "-m", msg], None);
+        let mid = s.run(&["commit-tree", &bad, "-p", &base, "-m", msg], None);
+        let head = s.run(&["commit-tree", &good, "-p", &mid, "-m", msg], None);
+        let r = check(&s.bundle_head(&head), &base, &head);
+        assert_eq!(result(&r), ResultValue::Incomplete, "{:?}", r.diagnostics);
+        let notes = r
+            .diagnostics
+            .iter()
+            .filter(|d| d.message.starts_with(&format!("{mid}:")))
+            .count();
+        assert_eq!(notes, 1, "{:?}", r.diagnostics);
+    }
+
+    /// A directory named `history.yaml` is no manifest, not an unreadable one.
+    #[test]
+    fn history_directory_is_no_manifest() {
+        let s = Scratch::new();
+        let blob = s.run(&["hash-object", "-w", "--stdin"], Some(b"x\n"));
+        let inner = format!("100644 blob {blob}\tx\n");
+        let inner = s.run(&["mktree"], Some(inner.as_bytes()));
+        let outer = format!("040000 tree {inner}\thistory.yaml\n");
+        let outer = s.run(&["mktree"], Some(outer.as_bytes()));
+        let path = s.bundle_tree(&outer);
+        let b = Bundle::open(&path).unwrap();
+        let head = b.branch("main").unwrap().unwrap();
+        let snap = snapshot(&b, &head).unwrap();
+        assert!(snap.history.is_none() && snap.history_bytes.is_none());
+    }
 }
