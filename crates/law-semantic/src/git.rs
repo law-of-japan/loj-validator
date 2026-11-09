@@ -162,15 +162,16 @@ fn run_with_timeout(mut cmd: Command, limit: std::time::Duration) -> Result<Outp
 }
 
 /// Why a git command that ran to the end failed.
+///
 /// Only the first line of stderr, cut to `MAX_REASON` characters and with control
 /// characters (terminal escapes, `\r`) and invisible format characters (bidi
 /// overrides, zero-width marks) replaced by `?`, goes into the report: stderr can
 /// be long, and a bundle chooses part of it.
 fn failure(status: &std::process::ExitStatus, stderr: &[u8]) -> String {
     const MAX_REASON: usize = 300;
-    let stderr = String::from_utf8_lossy(stderr);
-    let first = stderr.trim().lines().next().unwrap_or("");
-    let mut stderr: String = first
+    let text = String::from_utf8_lossy(stderr);
+    let first = text.trim().lines().next().unwrap_or("");
+    let mut reason: String = first
         .chars()
         .take(MAX_REASON)
         .map(|c| {
@@ -182,20 +183,31 @@ fn failure(status: &std::process::ExitStatus, stderr: &[u8]) -> String {
         })
         .collect();
     if first.chars().count() > MAX_REASON {
-        stderr.push('…');
+        reason.push('…');
     }
-    if stderr.is_empty() {
+    if reason.is_empty() {
         format!("git failed ({status})")
     } else {
-        format!("git failed ({status}): {stderr}")
+        format!("git failed ({status}): {reason}")
     }
 }
 
 /// A format character that changes how text around it is shown without being
-/// seen itself: zero-width marks, bidi embeddings, overrides and isolates, and
-/// the byte order mark.
+/// seen itself: the soft hyphen, the Arabic letter mark, the Mongolian vowel
+/// separator, zero-width marks, bidi embeddings, overrides and isolates, and the
+/// byte order mark. The list is deliberately short, not every `Cf` character:
+/// it covers what can hide or reorder text, without a Unicode-category crate.
 fn invisible(c: char) -> bool {
-    matches!(c, '\u{200B}'..='\u{200F}' | '\u{202A}'..='\u{202E}' | '\u{2060}'..='\u{2069}' | '\u{FEFF}')
+    matches!(
+        c,
+        '\u{00AD}'
+            | '\u{061C}'
+            | '\u{180E}'
+            | '\u{200B}'..='\u{200F}'
+            | '\u{202A}'..='\u{202E}'
+            | '\u{2060}'..='\u{2069}'
+            | '\u{FEFF}'
+    )
 }
 
 #[cfg(windows)]
