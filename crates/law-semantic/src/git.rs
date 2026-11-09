@@ -162,9 +162,16 @@ fn run_with_timeout(mut cmd: Command, limit: std::time::Duration) -> Result<Outp
 }
 
 /// Why a git command that ran to the end failed.
+/// Only the first line of stderr, cut to `MAX_REASON` characters, goes into the
+/// report: stderr can be long, and a bundle chooses part of it.
 fn failure(status: &std::process::ExitStatus, stderr: &[u8]) -> String {
+    const MAX_REASON: usize = 300;
     let stderr = String::from_utf8_lossy(stderr);
-    let stderr = stderr.trim();
+    let first = stderr.trim().lines().next().unwrap_or("");
+    let mut stderr: String = first.chars().take(MAX_REASON).collect();
+    if stderr.len() < first.len() {
+        stderr.push('…');
+    }
     if stderr.is_empty() {
         format!("git failed ({status})")
     } else {
@@ -264,6 +271,7 @@ impl Bundle {
         match status.code() {
             Some(0) => Ok(Some(stdout)),
             Some(1) => Ok(None),
+            // Any other status, or none (git was killed by a signal).
             _ => Err(failure(&status, &stderr)),
         }
     }
@@ -311,12 +319,13 @@ impl Bundle {
     pub fn branch(&self, name: &str) -> Result<Option<String>, String> {
         self.commit(&format!("refs/heads/{name}"))
     }
-    /// Whether `a` is an ancestor of `b` (both existing commits). `Err` means git
-    /// failed, which includes a commit missing from the bundle.
+    /// Whether `a` is an ancestor of `b`. Both must be resolved commits (callers
+    /// pass the hashes `commit` returned): an invalid revision is an `Err`, never
+    /// "not an ancestor", and so is a git failure or a commit missing from the
+    /// bundle.
     pub fn is_ancestor(&self, a: &str, b: &str) -> Result<bool, String> {
-        if revision(a).is_err() || revision(b).is_err() {
-            return Ok(false);
-        }
+        revision(a)?;
+        revision(b)?;
         Ok(self
             .probe(&["merge-base", "--is-ancestor", a, b])?
             .is_some())
@@ -772,7 +781,7 @@ pub(crate) mod tests {
         let head = b.branch("main").unwrap().unwrap();
         assert!(revision(&head).is_ok());
         assert_eq!(b.commit("--all"), Ok(None));
-        assert_eq!(b.is_ancestor("--all", &head), Ok(false));
+        assert!(b.is_ancestor("--all", &head).is_err());
         assert!(b.range("--all", &head).is_err());
         assert!(b.message("--all").is_err());
         assert!(b.export("--all").is_err());
@@ -814,6 +823,20 @@ pub(crate) mod tests {
             b.export(&head),
             Err(ExportError::Environment(e)) if e.starts_with("git failed")
         ));
+    }
+
+    /// `probe` maps exit status 0 and 1 of `merge-base --is-ancestor` to yes and no.
+    #[test]
+    fn ancestry_is_yes_or_no() {
+        let s = Scratch::new();
+        let (path, c) = s.chain(&[
+            b"a
+", b"b
+",
+        ]);
+        let b = Bundle::open(&path).unwrap();
+        assert_eq!(b.is_ancestor(&c[0], &c[1]), Ok(true));
+        assert_eq!(b.is_ancestor(&c[1], &c[0]), Ok(false));
     }
 
     /// An absent object is `Ok(None)`; a git failure is `Err`, never "absent".

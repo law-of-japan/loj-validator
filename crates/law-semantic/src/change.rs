@@ -174,6 +174,8 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
                     &at,
                     "",
                 );
+                // Without a readable message the change kind is unknown, so the
+                // commit's trees are not compared (as for a missing LoJ-Change).
                 continue;
             }
             Err(e) => return undetermined(f, report.target, format!("{commit}: {e}")),
