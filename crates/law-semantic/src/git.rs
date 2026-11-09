@@ -182,7 +182,7 @@ fn failure(status: &std::process::ExitStatus, stderr: &[u8]) -> String {
             }
         })
         .collect();
-    if first.chars().count() > MAX_REASON {
+    if first.chars().nth(MAX_REASON).is_some() {
         reason.push('…');
     }
     if reason.is_empty() {
@@ -885,6 +885,18 @@ pub(crate) mod tests {
         assert!(reason.ends_with("fatal: ?[31mred?[0m?x"), "{reason}");
         let reason = failure(&status, "a\u{202E}b\u{200B}c".as_bytes());
         assert!(reason.ends_with("a?b?c"), "{reason}");
+        // The edges of each range are inside; the characters just outside are not.
+        for c in [
+            '\u{00AD}', '\u{061C}', '\u{180E}', '\u{200B}', '\u{200F}', '\u{202A}', '\u{202E}',
+            '\u{2060}', '\u{2069}', '\u{FEFF}',
+        ] {
+            assert!(invisible(c), "{:04X}", c as u32);
+        }
+        for c in [
+            '\u{200A}', '\u{2010}', '\u{2029}', '\u{202F}', '\u{205F}', '\u{206A}',
+        ] {
+            assert!(!invisible(c), "{:04X}", c as u32);
+        }
         let long = "x".repeat(1000);
         let reason = failure(&status, long.as_bytes());
         assert!(

@@ -198,9 +198,9 @@ fn resolve_in(
     };
     let snap = match crate::change::snapshot(b, &commit) {
         Ok(s) => s,
-        // Unlike the change check, a refused tree (`ExportError::Tree`) is not
-        // told apart here: either way the revision cannot be read, so the
-        // reference is not fetched, with the reason (as before this distinction).
+        // Unlike the change check, a refused tree (`ExportError::Tree`) gets the
+        // same result as a git failure: either way the revision cannot be read,
+        // so the reference is not fetched. Only the reason says which it was.
         Err(ExportError::Tree(e)) => {
             return not_fetched(f, out, reference, format!("tree refused: {e}"));
         }
