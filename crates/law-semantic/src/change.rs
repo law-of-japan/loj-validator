@@ -32,10 +32,13 @@ pub(crate) struct Snapshot {
 pub(crate) fn snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, String> {
     let dir = b.export(commit)?;
     // The export holds every blob byte for byte, so the raw manifest is read from
-    // it rather than from git again.
-    let history_bytes = match std::fs::read(dir.join("history.yaml")) {
+    // it rather than from git again. No file of that name (absent, or a directory
+    // in the tree) is no manifest, a finding about the data; only a failure to read
+    // a file that is there leaves the check undetermined.
+    let manifest = dir.join("history.yaml");
+    let history_bytes = match std::fs::read(&manifest) {
         Ok(bytes) => Some(bytes),
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
+        Err(_) if !manifest.is_file() => None,
         Err(e) => return Err(format!("cannot read history.yaml at {commit}: {e}")),
     };
     let history = match load_yaml(&dir.join("history.yaml")) {
@@ -92,7 +95,10 @@ fn trailers(message: &str) -> (Vec<String>, Option<Vec<String>>) {
     (kinds, revisions)
 }
 
-/// End the check as incomplete (VAL-04), with `why` as the reason.
+/// End the check as incomplete (VAL-04), with `why` as the reason. The note
+/// carries CHG-02, the rule of the change check as a whole, whichever step (commit
+/// resolution, range, message) could not be completed: the spec gives no rule of
+/// its own for an undetermined change check.
 fn undetermined(mut f: Findings, report: Report, why: String) -> Report {
     f.incomplete.insert(CH);
     f.note(CH, "undetermined", "CHG-02", COMMON, why, "", "");
@@ -402,14 +408,15 @@ mod tests {
         );
     }
 
-    /// When git cannot read the repository, the check is incomplete with the
-    /// reason, and reports no finding about the data.
+    /// When git fails (not "absent"), the check is incomplete with git's reason,
+    /// and reports no finding about the data. Without `HEAD` the directory is no
+    /// repository, so every git command exits with status 128.
     #[test]
     fn git_failure_is_incomplete_not_a_finding() {
         let s = Scratch::new();
         let (path, c) = s.chain(&[b"base\n", b"head\n\nLoJ-Change: metadata\n"]);
         let b = Bundle::open(&path).unwrap();
-        std::fs::remove_dir_all(b.dir().join("objects")).unwrap();
+        std::fs::remove_file(b.dir().join("HEAD")).unwrap();
         let r = check_bundle(&b, Findings::default(), Report::default(), &c[0], &c[1]);
         assert_eq!(result(&r), ResultValue::Incomplete);
         assert!(
@@ -417,6 +424,28 @@ mod tests {
             "{:?}",
             r.diagnostics
         );
-        assert!(r.diagnostics.iter().any(|d| d.class == "undetermined"));
+        assert!(
+            r.diagnostics
+                .iter()
+                .any(|d| d.class == "undetermined" && d.message.starts_with("git failed")),
+            "{:?}",
+            r.diagnostics
+        );
+    }
+
+    /// A directory named `history.yaml` is no manifest, not an unreadable one.
+    #[test]
+    fn history_directory_is_no_manifest() {
+        let s = Scratch::new();
+        let blob = s.run(&["hash-object", "-w", "--stdin"], Some(b"x\n"));
+        let inner = format!("100644 blob {blob}\tx\n");
+        let inner = s.run(&["mktree"], Some(inner.as_bytes()));
+        let outer = format!("040000 tree {inner}\thistory.yaml\n");
+        let outer = s.run(&["mktree"], Some(outer.as_bytes()));
+        let path = s.bundle_tree(&outer);
+        let b = Bundle::open(&path).unwrap();
+        let head = b.branch("main").unwrap().unwrap();
+        let snap = snapshot(&b, &head).unwrap();
+        assert!(snap.history.is_none() && snap.history_bytes.is_none());
     }
 }

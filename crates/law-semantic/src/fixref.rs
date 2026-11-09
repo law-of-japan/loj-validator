@@ -132,19 +132,39 @@ fn resolve(bundle: &Path, registry_dir: &Path, reference: &str, f: &mut Findings
         .as_str()
         .unwrap_or("main")
         .to_owned();
-    // The repository could not be read (git missing or failing, an unusable tree):
-    // the reference is not fetched, with the reason, and never reported as
-    // unresolvable (VAL-04). `check` marks the check incomplete for every
-    // notFetched result; the note only adds the reason.
-    let not_fetched = |f: &mut Findings, out: &mut Value, why: String| {
-        f.note(RF, "undetermined", "FIXREF-06", COMMON, why, reference, "");
-        *out = json!({"result": "notFetched"});
+    match Bundle::open(bundle) {
+        Ok(b) => resolve_in(&b, &p, &record, &branch, reference, f, out),
+        Err(e) => not_fetched(f, out, reference, e),
+    }
+}
+
+/// The repository could not be read (git missing or failing, an unusable tree):
+/// the reference is not fetched, with the reason, and never reported as
+/// unresolvable (VAL-04). `check` marks the check incomplete for every notFetched
+/// result; the note only adds the reason. The note carries FIXREF-06, the rule
+/// that defines the result values, notFetched among them.
+fn not_fetched(f: &mut Findings, out: &mut Value, reference: &str, why: String) {
+    f.note(RF, "undetermined", "FIXREF-06", COMMON, why, reference, "");
+    *out = json!({"result": "notFetched"});
+}
+
+/// Resolve `p` in an opened bundle holding `record`, whose canonical branch is
+/// `branch`.
+fn resolve_in(
+    b: &Bundle,
+    p: &Parsed,
+    record: &str,
+    branch: &str,
+    reference: &str,
+    f: &mut Findings,
+    out: &mut Value,
+) {
+    let err = |f: &mut Findings, rule: &str, msg: String| {
+        f.error(RF, rule, COMMON, msg, reference, "");
     };
-    let b = match Bundle::open(bundle) {
-        Ok(b) => b,
-        Err(e) => return not_fetched(f, out, e),
-    };
-    let tip = match b.branch(&branch) {
+    let not_fetched =
+        |f: &mut Findings, out: &mut Value, why: String| not_fetched(f, out, reference, why);
+    let tip = match b.branch(branch) {
         Ok(Some(tip)) => tip,
         // The canonical branch is not in the bundle: the bundle does not hold the
         // record's history, so the reference is not fetched (no git failure to note).
@@ -175,7 +195,7 @@ fn resolve(bundle: &Path, registry_dir: &Path, reference: &str, f: &mut Findings
             Err(e) => return not_fetched(f, out, e),
         },
     };
-    let snap = match crate::change::snapshot(&b, &commit) {
+    let snap = match crate::change::snapshot(b, &commit) {
         Ok(s) => s,
         Err(e) => return not_fetched(f, out, e),
     };
@@ -268,5 +288,37 @@ mod tests {
         assert!(parse("lo:loj/a/b").is_err());
         assert!(!full_hash("02086ca"));
         assert!(full_hash(&"a".repeat(64)));
+    }
+
+    /// A git failure after the bundle is open leaves the reference not fetched,
+    /// with git's reason, and reports no error about the reference.
+    #[test]
+    fn git_failure_is_not_fetched_not_an_error() {
+        let bundle = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../vendor/loj-spec/conformance/common/v1alpha1/valid/common-004/repo.bundle");
+        let reference = "loj:loj/20990101-act-1/b7k2m9qd";
+        let p = parse(reference).unwrap();
+        let resolve = |b: &Bundle| {
+            let mut f = Findings::default();
+            let mut out = json!({"result": "error"});
+            resolve_in(b, &p, "20990101-act-1", "main", reference, &mut f, &mut out);
+            (f, out)
+        };
+        // The unbroken bundle resolves.
+        let b = Bundle::open(&bundle).unwrap();
+        let (f, out) = resolve(&b);
+        assert_eq!(out["result"], "resolved", "{out} {:?}", f.items);
+        // Without HEAD the directory is no repository: every git command fails.
+        std::fs::remove_file(b.dir().join("HEAD")).unwrap();
+        let (f, out) = resolve(&b);
+        assert_eq!(out["result"], "notFetched", "{out}");
+        assert!(!f.failed(RF), "{:?}", f.items);
+        assert!(
+            f.items
+                .iter()
+                .any(|(_, d)| d.class == "undetermined" && d.message.starts_with("git failed")),
+            "{:?}",
+            f.items
+        );
     }
 }

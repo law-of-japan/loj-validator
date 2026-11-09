@@ -566,7 +566,11 @@ pub(crate) mod tests {
                 spec.push_str(&format!("{mode} {kind} {blob}\t{name}\n"));
             }
             let tree = self.run(&["mktree"], Some(spec.as_bytes()));
-            let commit = self.run(&["commit-tree", &tree, "-m", "t"], None);
+            self.bundle_tree(&tree)
+        }
+        /// Commit `tree` (a tree hash) on `main`, and bundle `main`.
+        pub(crate) fn bundle_tree(&self, tree: &str) -> PathBuf {
+            let commit = self.run(&["commit-tree", tree, "-m", "t"], None);
             self.run(&["update-ref", "refs/heads/main", &commit], None);
             let path = self.0.join("t.bundle");
             self.run(&["bundle", "create", &path.to_string_lossy(), "main"], None);
