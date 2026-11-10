@@ -1,6 +1,6 @@
 //! Semantic construction for loj/v1alpha2 (HEAD, DIR, DISP, AST, SRC, ID,
 //! PARA, TABLE, PRE). Derived from the v1alpha1 builder.
-use super::directives::marker;
+use super::directives::{marker, Marker};
 use super::kind::Kind;
 use super::Context;
 use crate::common::{
@@ -355,146 +355,263 @@ fn supplement_label(label: &str) -> Supplement {
     }
 }
 
-pub(super) fn build(
-    manifest: &Value,
-    documents: &[(String, String, String)],
-    ctx: &mut Context,
-) -> Value {
-    let law = manifest["law"]["id"].as_str().unwrap();
-    let mut nodes = vec![Node::new(
-        Kind::Law,
-        law.into(),
-        None,
-        manifest["law"]["title"].as_str().unwrap().into(),
-        "",
-        0..0,
-    )];
-    let mut ids = HashSet::from([law.to_owned()]);
-    let mut scopes = std::collections::HashMap::new();
-    let main = add(
-        &mut nodes,
-        0,
-        Node::new(
-            Kind::MainProvision,
-            format!("{law}/main"),
-            None,
-            String::new(),
-            "",
-            0..0,
-        ),
-        ctx,
-        &mut ids,
-    );
-    scopes.insert("main".to_owned(), main);
-    for (field, prefix, kind) in [
-        ("supplements", "supplement", Kind::SupplementaryProvision),
-        ("appendices", "appendix", Kind::AppendedMaterial),
-    ] {
-        if let Some(a) = manifest[field].as_array() {
-            for s in a {
-                let scope = format!("{prefix}/{}", s["key"].as_str().unwrap());
-                let i = add(
-                    &mut nodes,
-                    0,
-                    Node::new(
-                        kind,
-                        format!("{law}/{scope}"),
-                        None,
-                        if prefix == "supplement" {
-                            String::new()
-                        } else {
-                            s["title"].as_str().unwrap().into()
-                        },
-                        "",
-                        0..0,
-                    ),
-                    ctx,
-                    &mut ids,
+/// Rank of an article heading; classification headings have ranks 1 to 5.
+const ARTICLE_RANK: usize = 6;
+
+/// One structural line of a document: a heading or a reserved marker.
+struct Token {
+    heading: bool,
+    /// For a heading: CommonMark found nothing but plain text in it.
+    plain: bool,
+    span: Range<usize>,
+}
+
+/// The structural lines of `source`, in order, each widened to whole lines.
+fn tokens(source: &str) -> Vec<Token> {
+    let mut tokens = Vec::new();
+    for (kind, span) in blocks(source) {
+        let start = line_start(source, span.start);
+        let end = line_end(source, span.end.saturating_sub(1));
+        match kind {
+            BlockKind::Heading(plain) => tokens.push(Token {
+                heading: true,
+                plain,
+                span: start..end,
+            }),
+            BlockKind::Html if reserved(&source[start..end]) => tokens.push(Token {
+                heading: false,
+                plain: false,
+                span: start..end,
+            }),
+            _ => {}
+        }
+    }
+    tokens
+}
+
+/// HEAD-01: what may follow the number of a heading. An article takes an
+/// optional caption in full-width parentheses; a classification takes one
+/// space and a title.
+fn tail_ok(rank: usize, tail: &str) -> bool {
+    if rank == ARTICLE_RANK {
+        tail.is_empty()
+            || (tail.starts_with('（')
+                && tail.ends_with('）')
+                && tail.len() > 6
+                && !tail[3..tail.len() - 3].ends_with(char::is_whitespace)
+                && !tail[3..tail.len() - 3].contains(['（', '）', '(', ')']))
+    } else {
+        tail.strip_prefix([' ', '　'])
+            .is_some_and(|s| !s.is_empty() && !s.starts_with([' ', '　']))
+    }
+}
+
+/// DIR-02: whether the container that `m` opens may be a child of `p`.
+fn valid_parent(m: &Marker, p: &Node) -> bool {
+    match m.kind {
+        Kind::Paragraph => p.kind == Kind::Article || p.kind == Kind::SupplementaryProvision,
+        Kind::Item => p.kind == Kind::Paragraph,
+        Kind::Subitem => {
+            if m.level == 1 {
+                p.kind == Kind::Item
+            } else {
+                p.kind == Kind::Subitem && p.level + 1 == m.level
+            }
+        }
+        Kind::Table => matches!(p.kind, Kind::Paragraph | Kind::Item | Kind::Subitem),
+        Kind::Row => p.kind == Kind::Table,
+        _ => p.kind == Kind::Row,
+    }
+}
+
+/// The document being read and the state that ends with it.
+struct Document<'a> {
+    path: &'a str,
+    source: &'a str,
+    /// Node of the scope (main, a supplement or an appendix) the file belongs to.
+    scope: usize,
+    /// This is the first file of its scope.
+    first: bool,
+    appendix: bool,
+    supplementary: bool,
+    /// The scope heading (`附則`, or the appendix title) has been read.
+    special_heading: bool,
+    /// The article that following markers belong to.
+    article: Option<usize>,
+    /// Open containers, innermost last.
+    stack: Vec<usize>,
+    /// End of the last structural line that was handled.
+    cursor: usize,
+}
+
+/// MAN-03: how a later file of a scope begins, and how a nonfinal appendix
+/// file ends. `continued` says that the next file belongs to the same scope.
+fn file_boundaries(doc: &Document, tokens: &[Token], continued: bool, ctx: &mut Context) {
+    let (path, source) = (doc.path, doc.source);
+    if !doc.first && !doc.appendix {
+        let starts_with_structure = tokens.first().is_some_and(|t| {
+            t.heading
+                && source[..t.span.start].trim().is_empty()
+                && ATX
+                    .captures(bare(&source[t.span.clone()]))
+                    .is_some_and(|c| HEADING.is_match(&c[1]))
+        });
+        if !starts_with_structure {
+            ctx.diag(
+                "MAN-03",
+                "Subsequent file must start with an article or classification heading",
+                path,
+                0,
+                line_end(source, 0),
+            );
+        }
+    }
+    if doc.appendix {
+        if !doc.first && source.trim().is_empty() {
+            ctx.diag(
+                "MAN-03",
+                "Subsequent appendix file must contain nonblank text",
+                path,
+                0,
+                source.len(),
+            );
+        }
+        if continued {
+            for span in incomplete_split_blocks(source) {
+                ctx.diag(
+                    "MAN-03",
+                    "Nonfinal appendix block requires an explicit terminator",
+                    path,
+                    span.start,
+                    span.end,
                 );
-                scopes.insert(scope, i);
             }
         }
     }
-    let (heading_re, atx): (&Regex, &Regex) = (&HEADING, &ATX);
-    let mut previous = String::new();
-    let mut groups: Vec<usize> = Vec::new();
-    let mut visited = HashSet::new();
+}
+
+/// The tree under construction and the state that spans documents.
+struct Builder<'a> {
+    law: &'a str,
+    nodes: Vec<Node>,
+    ids: HashSet<String>,
+    /// Scope name (`main`, `supplement/…`, `appendix/…`) to its node.
+    scopes: std::collections::HashMap<String, usize>,
+    main: usize,
+    /// Open classification headings (Part to Division) of the current scope.
+    groups: Vec<usize>,
+    /// Scope name of the previous document.
+    previous: String,
+    visited: HashSet<String>,
     // PRE-01/02: only before the first structural heading of the main scope.
-    let mut main_heading_seen = false;
-    let mut preamble_seen = false;
-    for (document_index, (path, source, scope_name)) in documents.iter().enumerate() {
-        let Some(&scope) = scopes.get(scope_name) else {
-            continue;
-        };
-        if previous != *scope_name {
-            groups.clear();
-        }
-        previous = scope_name.clone();
-        let first = visited.insert(scope_name.clone());
-        let mut article = None;
-        let mut stack: Vec<usize> = Vec::new();
-        let mut cursor = 0;
-        let appendix = nodes[scope].kind == Kind::AppendedMaterial;
-        let supplementary = nodes[scope].kind == Kind::SupplementaryProvision;
-        let mut special_heading = appendix && !first;
-        let parsed = blocks(source);
-        let mut events = Vec::new();
-        for (kind, span) in parsed {
-            let start = line_start(source, span.start);
-            let end = line_end(source, span.end.saturating_sub(1));
-            match kind {
-                BlockKind::Heading(plain) => events.push((true, plain, start..end)),
-                BlockKind::Html if reserved(&source[start..end]) => {
-                    events.push((false, false, start..end))
-                }
-                _ => {}
-            }
-        }
-        if !first && !appendix {
-            let starts_with_structure = events.first().is_some_and(|(heading, _, span)| {
-                *heading
-                    && source[..span.start].trim().is_empty()
-                    && atx
-                        .captures(bare(&source[span.clone()]))
-                        .is_some_and(|c| heading_re.is_match(&c[1]))
-            });
-            if !starts_with_structure {
-                ctx.diag(
-                    "MAN-03",
-                    "Subsequent file must start with an article or classification heading",
-                    path,
-                    0,
-                    line_end(source, 0),
-                );
-            }
-        }
-        if appendix {
-            if !first && source.trim().is_empty() {
-                ctx.diag(
-                    "MAN-03",
-                    "Subsequent appendix file must contain nonblank text",
-                    path,
-                    0,
-                    source.len(),
-                );
-            }
-            if documents
-                .get(document_index + 1)
-                .is_some_and(|(_, _, next)| next == scope_name)
-            {
-                for span in incomplete_split_blocks(source) {
-                    ctx.diag(
-                        "MAN-03",
-                        "Nonfinal appendix block requires an explicit terminator",
-                        path,
-                        span.start,
-                        span.end,
+    main_heading_seen: bool,
+    preamble_seen: bool,
+}
+
+impl<'a> Builder<'a> {
+    /// The law node and one node per scope of the manifest.
+    fn new(manifest: &'a Value, ctx: &mut Context) -> Self {
+        let law = manifest["law"]["id"].as_str().unwrap();
+        let mut nodes = vec![Node::new(
+            Kind::Law,
+            law.into(),
+            None,
+            manifest["law"]["title"].as_str().unwrap().into(),
+            "",
+            0..0,
+        )];
+        let mut ids = HashSet::from([law.to_owned()]);
+        let mut scopes = std::collections::HashMap::new();
+        let main = add(
+            &mut nodes,
+            0,
+            Node::new(
+                Kind::MainProvision,
+                format!("{law}/main"),
+                None,
+                String::new(),
+                "",
+                0..0,
+            ),
+            ctx,
+            &mut ids,
+        );
+        scopes.insert("main".to_owned(), main);
+        for (field, prefix, kind) in [
+            ("supplements", "supplement", Kind::SupplementaryProvision),
+            ("appendices", "appendix", Kind::AppendedMaterial),
+        ] {
+            if let Some(a) = manifest[field].as_array() {
+                for s in a {
+                    let scope = format!("{prefix}/{}", s["key"].as_str().unwrap());
+                    let i = add(
+                        &mut nodes,
+                        0,
+                        Node::new(
+                            kind,
+                            format!("{law}/{scope}"),
+                            None,
+                            if prefix == "supplement" {
+                                String::new()
+                            } else {
+                                s["title"].as_str().unwrap().into()
+                            },
+                            "",
+                            0..0,
+                        ),
+                        ctx,
+                        &mut ids,
                     );
+                    scopes.insert(scope, i);
                 }
             }
         }
-        for (is_heading, heading_plain, span) in events {
-            if nodes.len() >= 20_000 || span.len() > 4096 {
+        Builder {
+            law,
+            nodes,
+            ids,
+            scopes,
+            main,
+            groups: Vec::new(),
+            previous: String::new(),
+            visited: HashSet::new(),
+            main_heading_seen: false,
+            preamble_seen: false,
+        }
+    }
+
+    /// Read document `index` into the tree.
+    fn read(&mut self, documents: &[(String, String, String)], index: usize, ctx: &mut Context) {
+        let (path, source, scope_name) = &documents[index];
+        let Some(&scope) = self.scopes.get(scope_name) else {
+            return;
+        };
+        if self.previous != *scope_name {
+            self.groups.clear();
+        }
+        self.previous = scope_name.clone();
+        let first = self.visited.insert(scope_name.clone());
+        let appendix = self.nodes[scope].kind == Kind::AppendedMaterial;
+        let mut doc = Document {
+            path,
+            source,
+            scope,
+            first,
+            appendix,
+            supplementary: self.nodes[scope].kind == Kind::SupplementaryProvision,
+            special_heading: appendix && !first,
+            article: None,
+            stack: Vec::new(),
+            cursor: 0,
+        };
+        let tokens = tokens(source);
+        let continued = documents
+            .get(index + 1)
+            .is_some_and(|(_, _, next)| next == scope_name);
+        file_boundaries(&doc, &tokens, continued, ctx);
+        for token in &tokens {
+            let span = &token.span;
+            if self.nodes.len() >= 20_000 || span.len() > 4096 {
                 ctx.incomplete = true;
                 ctx.diag(
                     "AST-01",
@@ -505,378 +622,48 @@ pub(super) fn build(
                 );
                 break;
             }
-            if span.start < cursor {
+            if span.start < doc.cursor {
                 continue;
             }
-            if let Some(&i) = stack.last() {
-                text(&mut nodes, i, source, path, cursor..span.start, ctx);
-            } else if appendix && special_heading {
-                text(&mut nodes, scope, source, path, cursor..span.start, ctx);
+            let before = doc.cursor..span.start;
+            if let Some(&i) = doc.stack.last() {
+                text(&mut self.nodes, i, source, path, before, ctx);
+            } else if appendix && doc.special_heading {
+                text(&mut self.nodes, scope, source, path, before, ctx);
             } else {
-                outside(&mut nodes, article, source, path, cursor..span.start, ctx);
+                outside(&mut self.nodes, doc.article, source, path, before, ctx);
             }
-            let raw = bare(&source[span.clone()]);
-            if is_heading {
-                if appendix && (!first || special_heading) {
-                    text(&mut nodes, scope, source, path, span.clone(), ctx);
-                    cursor = span.end;
-                    continue;
-                }
-                if scope == main {
-                    main_heading_seen = true;
-                }
-                if !stack.is_empty() {
-                    ctx.diag(
-                        "MD-03",
-                        "Heading inside explicit container",
-                        path,
-                        span.start,
-                        span.end,
-                    );
-                    for i in stack.drain(..) {
-                        ctx.diag(
-                            "DIR-02",
-                            "Unclosed before heading",
-                            path,
-                            nodes[i].span.start,
-                            nodes[i].span.end,
-                        );
-                    }
-                }
-                let label = atx.captures(raw).and_then(|c| c.get(1)).map(|m| m.as_str());
-                let plain = label.is_some_and(|l| {
-                    heading_plain && !l.ends_with(char::is_whitespace) && plain_heading(raw, l)
-                });
-                if !plain {
-                    ctx.diag(
-                        "HEAD-01",
-                        "Expected strict plain ATX heading",
-                        path,
-                        span.start,
-                        span.end,
-                    );
-                    cursor = span.end;
-                    continue;
-                }
-                let label = label.unwrap();
-                let supplement = supplement_label(label);
-                if matches!(supplement, Supplement::BadSpacing) {
-                    ctx.diag(
-                        "HEAD-03",
-                        "Supplement heading allows only U+3000 between 附 and 則",
-                        path,
-                        span.start,
-                        span.end,
-                    );
-                    cursor = span.end;
-                    continue;
-                }
-                let is_supplement = matches!(supplement, Supplement::Valid);
-                if (supplementary && is_supplement) || appendix {
-                    if !first
-                        || special_heading
-                        || span.start != 0
-                        || (appendix && label != nodes[scope].display)
-                    {
-                        ctx.diag(
-                            "HEAD-03",
-                            "Invalid scope heading",
-                            path,
-                            span.start,
-                            span.end,
-                        );
-                    }
-                    if supplementary && !special_heading {
-                        nodes[scope].display = label.into();
-                    }
-                    nodes[scope].path = path.clone();
-                    nodes[scope].span = span.clone();
-                    special_heading = true;
-                    cursor = span.end;
-                    continue;
-                }
-                if is_supplement {
-                    ctx.diag(
-                        "HEAD-03",
-                        "Supplement heading cannot change scope",
-                        path,
-                        span.start,
-                        span.end,
-                    );
-                    cursor = span.end;
-                    continue;
-                }
-                let Some(c) = heading_re.captures(label) else {
-                    ctx.diag(
-                        "HEAD-01",
-                        "Unrecognized legal heading",
-                        path,
-                        span.start,
-                        span.end,
-                    );
-                    cursor = span.end;
-                    continue;
-                };
-                let num = number(&format!("{}{}", &c[1], &c[3]), SEPARATORS, Digits::Any);
-                let Some(num) = num else {
-                    ctx.diag(
-                        "NUM-01",
-                        "Invalid legal numeral",
-                        path,
-                        span.start,
-                        span.end,
-                    );
-                    cursor = span.end;
-                    continue;
-                };
-                let (kind, rank) = match &c[2] {
-                    "編" => (Kind::Part, 1),
-                    "章" => (Kind::Chapter, 2),
-                    "節" => (Kind::Section, 3),
-                    "款" => (Kind::Subsection, 4),
-                    "目" => (Kind::Division, 5),
-                    _ => (Kind::Article, 6),
-                };
-                let tail = &c[4];
-                let tail_ok = if rank == 6 {
-                    tail.is_empty()
-                        || (tail.starts_with('（')
-                            && tail.ends_with('）')
-                            && tail.len() > 6
-                            && !tail[3..tail.len() - 3].ends_with(char::is_whitespace)
-                            && !tail[3..tail.len() - 3].contains(['（', '）', '(', ')']))
-                } else {
-                    tail.strip_prefix([' ', '　'])
-                        .is_some_and(|s| !s.is_empty() && !s.starts_with([' ', '　']))
-                };
-                if !tail_ok {
-                    ctx.diag(
-                        "HEAD-01",
-                        "Invalid heading title or caption",
-                        path,
-                        span.start,
-                        span.end,
-                    );
-                    cursor = span.end;
-                    continue;
-                }
-                if rank < 6 {
-                    while groups.last().is_some_and(|i| nodes[*i].rank >= rank) {
-                        groups.pop();
-                    }
-                }
-                let parent = groups.last().copied().unwrap_or(scope);
-                let id_parent = if rank == 6 { scope } else { parent };
-                let mut node = Node::new(
-                    kind,
-                    format!("{}/{}/{}", nodes[id_parent].id, kind.id_segment(), num),
-                    Some(num),
-                    label.into(),
-                    path,
-                    span.clone(),
-                );
-                node.rank = rank;
-                let index = add(&mut nodes, parent, node, ctx, &mut ids);
-                if rank == 6 {
-                    article = Some(index);
-                } else {
-                    groups.push(index);
-                    article = None;
-                }
+            if token.heading {
+                self.heading(&mut doc, token, ctx);
             } else {
-                if appendix {
-                    ctx.diag(
-                        "HEAD-03",
-                        "Reserved marker in appendix",
-                        path,
-                        span.start,
-                        span.end,
-                    );
-                    cursor = span.end;
-                    continue;
-                }
-                let m = match marker(raw) {
-                    Ok(m) => m,
-                    Err(e) => {
-                        ctx.diag(
-                            "DIR-01",
-                            "Invalid reserved marker syntax or attributes",
-                            path,
-                            span.start,
-                            span.end,
-                        );
-                        if let Some(rule) = e.also {
-                            ctx.diag(rule, "Invalid attribute value", path, span.start, span.end);
-                        }
-                        cursor = span.end;
-                        continue;
-                    }
-                };
-                if m.close {
-                    if let Some(&i) = stack.last() {
-                        if nodes[i].kind == m.kind {
-                            nodes[i].span.end = span.end;
-                            close(&mut nodes, i, ctx);
-                            stack.pop();
-                        } else {
-                            ctx.diag(
-                                "DIR-02",
-                                "Mismatched closing marker",
-                                path,
-                                span.start,
-                                span.end,
-                            );
-                        }
-                    } else {
-                        ctx.diag(
-                            "DIR-02",
-                            "Unexpected closing marker",
-                            path,
-                            span.start,
-                            span.end,
-                        );
-                    }
-                    cursor = span.end;
-                    continue;
-                }
-                if matches!(m.kind, Kind::Preamble | Kind::EnactStatement) {
-                    // PRE-01/PRE-02: document level, first main file, before any
-                    // structural heading; the enact statement precedes the preamble.
-                    let rule = if m.kind == Kind::Preamble {
-                        "PRE-01"
-                    } else {
-                        "PRE-02"
-                    };
-                    let placed = stack.is_empty()
-                        && article.is_none()
-                        && groups.is_empty()
-                        && scope == main
-                        && first
-                        && !main_heading_seen
-                        && (m.kind == Kind::Preamble || !preamble_seen);
-                    if !placed {
-                        ctx.diag(
-                            rule,
-                            "Preamble or enact statement out of place",
-                            path,
-                            span.start,
-                            span.end,
-                        );
-                        if !stack.is_empty() {
-                            ctx.diag("DIR-02", "Invalid legal parent", path, span.start, span.end);
-                        }
-                    }
-                    if m.kind == Kind::Preamble {
-                        preamble_seen = true;
-                    }
-                    let id = if m.kind == Kind::Preamble {
-                        format!("{law}/preamble")
-                    } else {
-                        format!("{law}/enact-statement")
-                    };
-                    let node = Node::new(m.kind, id, None, String::new(), path, span.clone());
-                    let i = add(&mut nodes, 0, node, ctx, &mut ids);
-                    stack.push(i);
-                    cursor = span.end;
-                    continue;
-                }
-                let parent = stack.last().copied().or(article).unwrap_or(scope);
-                let p = &nodes[parent];
-                let valid = match m.kind {
-                    Kind::Paragraph => {
-                        p.kind == Kind::Article || p.kind == Kind::SupplementaryProvision
-                    }
-                    Kind::Item => p.kind == Kind::Paragraph,
-                    Kind::Subitem => {
-                        if m.level == 1 {
-                            p.kind == Kind::Item
-                        } else {
-                            p.kind == Kind::Subitem && p.level + 1 == m.level
-                        }
-                    }
-                    Kind::Table => matches!(p.kind, Kind::Paragraph | Kind::Item | Kind::Subitem),
-                    Kind::Row => p.kind == Kind::Table,
-                    _ => p.kind == Kind::Row,
-                };
-                if !valid {
-                    ctx.diag(
-                        "DIR-02",
-                        "Invalid legal parent or subitem level",
-                        path,
-                        span.start,
-                        span.end,
-                    );
-                    if p.kind == Kind::Cell {
-                        ctx.diag(
-                            "TABLE-03",
-                            "A cell contains text only",
-                            path,
-                            span.start,
-                            span.end,
-                        );
-                    }
-                    cursor = span.end;
-                    continue;
-                }
-                if p.deleted {
-                    ctx.diag(
-                        "HEAD-04",
-                        "Deleted article cannot contain paragraphs",
-                        path,
-                        span.start,
-                        span.end,
-                    );
-                }
-                let (suffix, num) = match m.kind {
-                    Kind::Subitem => (
-                        format!("subitem/{}/{}", m.level, m.number.as_deref().unwrap()),
-                        m.number.clone(),
-                    ),
-                    Kind::Row => (format!("row/{}", m.key.as_deref().unwrap()), None),
-                    Kind::Cell => {
-                        let c = (p.children(&nodes, Kind::Cell).count() + 1).to_string();
-                        (format!("cell/{c}"), Some(c))
-                    }
-                    _ => (
-                        format!("{}/{}", m.kind.id_segment(), m.number.as_deref().unwrap()),
-                        m.number.clone(),
-                    ),
-                };
-                let mut node = Node::new(
-                    m.kind,
-                    format!("{}/{suffix}", p.id),
-                    num,
-                    String::new(),
-                    path,
-                    span.clone(),
-                );
-                node.level = m.level;
-                node.implicit = m.implicit;
-                node.key = m.key;
-                node.rowspan = m.rowspan;
-                node.colspan = m.colspan;
-                let i = add(&mut nodes, parent, node, ctx, &mut ids);
-                stack.push(i);
+                self.reserved_marker(&mut doc, span, ctx);
             }
-            cursor = span.end;
+            doc.cursor = span.end;
         }
-        if let Some(&i) = stack.last() {
-            text(&mut nodes, i, source, path, cursor..source.len(), ctx);
-        } else if appendix {
-            text(&mut nodes, scope, source, path, cursor..source.len(), ctx);
+        self.end_of_file(doc, ctx);
+    }
+
+    /// The text after the last structural line, and what the file left open.
+    fn end_of_file(&mut self, doc: Document, ctx: &mut Context) {
+        let (path, source) = (doc.path, doc.source);
+        let rest = doc.cursor..source.len();
+        if let Some(&i) = doc.stack.last() {
+            text(&mut self.nodes, i, source, path, rest, ctx);
+        } else if doc.appendix {
+            text(&mut self.nodes, doc.scope, source, path, rest, ctx);
         } else {
-            outside(&mut nodes, article, source, path, cursor..source.len(), ctx);
+            outside(&mut self.nodes, doc.article, source, path, rest, ctx);
         }
-        for i in stack {
+        for i in doc.stack {
             ctx.diag(
                 "DIR-02",
                 "Unclosed marker at file boundary",
                 path,
-                nodes[i].span.start,
-                nodes[i].span.end,
+                self.nodes[i].span.start,
+                self.nodes[i].span.end,
             );
         }
-        if first && (supplementary || appendix) && !special_heading {
+        if doc.first && (doc.supplementary || doc.appendix) && !doc.special_heading {
             ctx.diag(
                 "HEAD-03",
                 "Required initial scope heading missing",
@@ -886,26 +673,416 @@ pub(super) fn build(
             );
         }
     }
-    for i in 0..nodes.len() {
-        structure(&nodes, i, documents, law, ctx);
-    }
-    for n in &nodes {
-        if !n.path.is_empty() {
-            ctx.position(&n.id, &n.path, n.span.start, n.span.end);
-        } else {
-            ctx.source_map
-                .entry(n.id.clone())
-                .or_insert_with(|| json!([]));
+
+    /// A heading line (HEAD-01, HEAD-03, MD-03).
+    fn heading(&mut self, doc: &mut Document, token: &Token, ctx: &mut Context) {
+        let (path, source, span) = (doc.path, doc.source, &token.span);
+        if doc.appendix && (!doc.first || doc.special_heading) {
+            // After its title, a heading in an appendix is plain content.
+            text(&mut self.nodes, doc.scope, source, path, span.clone(), ctx);
+            return;
         }
-        for (j, c) in n.content.iter().enumerate() {
-            if let Content::Text(t, positions) = c {
-                let spans: Vec<Value> = positions.iter().map(Position::to_json).collect();
-                ctx.positions
-                    .push(json!({"nodeId":n.id,"contentIndex":j,"text":t,"spans":spans}));
+        if doc.scope == self.main {
+            self.main_heading_seen = true;
+        }
+        if !doc.stack.is_empty() {
+            ctx.diag(
+                "MD-03",
+                "Heading inside explicit container",
+                path,
+                span.start,
+                span.end,
+            );
+            for i in doc.stack.drain(..) {
+                ctx.diag(
+                    "DIR-02",
+                    "Unclosed before heading",
+                    path,
+                    self.nodes[i].span.start,
+                    self.nodes[i].span.end,
+                );
             }
         }
+        let raw = bare(&source[span.clone()]);
+        let label = ATX
+            .captures(raw)
+            .and_then(|c| c.get(1))
+            .map(|m| m.as_str())
+            .filter(|l| token.plain && !l.ends_with(char::is_whitespace) && plain_heading(raw, l));
+        let Some(label) = label else {
+            ctx.diag(
+                "HEAD-01",
+                "Expected strict plain ATX heading",
+                path,
+                span.start,
+                span.end,
+            );
+            return;
+        };
+        let supplement = supplement_label(label);
+        if matches!(supplement, Supplement::BadSpacing) {
+            ctx.diag(
+                "HEAD-03",
+                "Supplement heading allows only U+3000 between 附 and 則",
+                path,
+                span.start,
+                span.end,
+            );
+            return;
+        }
+        let is_supplement = matches!(supplement, Supplement::Valid);
+        if (doc.supplementary && is_supplement) || doc.appendix {
+            self.scope_heading(doc, label, span, ctx);
+        } else if is_supplement {
+            ctx.diag(
+                "HEAD-03",
+                "Supplement heading cannot change scope",
+                path,
+                span.start,
+                span.end,
+            );
+        } else {
+            self.structural_heading(doc, label, span, ctx);
+        }
     }
-    json!({"schemaVersion":super::SCHEMA_VERSION,"law":manifest["law"],"root":export(&nodes,0)})
+
+    /// HEAD-03: the heading that opens a supplement or an appendix.
+    fn scope_heading(
+        &mut self,
+        doc: &mut Document,
+        label: &str,
+        span: &Range<usize>,
+        ctx: &mut Context,
+    ) {
+        let scope = &mut self.nodes[doc.scope];
+        if !doc.first
+            || doc.special_heading
+            || span.start != 0
+            || (doc.appendix && label != scope.display)
+        {
+            ctx.diag(
+                "HEAD-03",
+                "Invalid scope heading",
+                doc.path,
+                span.start,
+                span.end,
+            );
+        }
+        if doc.supplementary && !doc.special_heading {
+            scope.display = label.into();
+        }
+        scope.path = doc.path.to_owned();
+        scope.span = span.clone();
+        doc.special_heading = true;
+    }
+
+    /// A classification or article heading (HEAD-01, NUM-01).
+    fn structural_heading(
+        &mut self,
+        doc: &mut Document,
+        label: &str,
+        span: &Range<usize>,
+        ctx: &mut Context,
+    ) {
+        let path = doc.path;
+        let Some(c) = HEADING.captures(label) else {
+            ctx.diag(
+                "HEAD-01",
+                "Unrecognized legal heading",
+                path,
+                span.start,
+                span.end,
+            );
+            return;
+        };
+        let num = number(&format!("{}{}", &c[1], &c[3]), SEPARATORS, Digits::Any);
+        let Some(num) = num else {
+            ctx.diag(
+                "NUM-01",
+                "Invalid legal numeral",
+                path,
+                span.start,
+                span.end,
+            );
+            return;
+        };
+        let (kind, rank) = match &c[2] {
+            "編" => (Kind::Part, 1),
+            "章" => (Kind::Chapter, 2),
+            "節" => (Kind::Section, 3),
+            "款" => (Kind::Subsection, 4),
+            "目" => (Kind::Division, 5),
+            _ => (Kind::Article, ARTICLE_RANK),
+        };
+        if !tail_ok(rank, &c[4]) {
+            ctx.diag(
+                "HEAD-01",
+                "Invalid heading title or caption",
+                path,
+                span.start,
+                span.end,
+            );
+            return;
+        }
+        if rank < ARTICLE_RANK {
+            while self
+                .groups
+                .last()
+                .is_some_and(|i| self.nodes[*i].rank >= rank)
+            {
+                self.groups.pop();
+            }
+        }
+        let parent = self.groups.last().copied().unwrap_or(doc.scope);
+        let id_parent = if rank == ARTICLE_RANK {
+            doc.scope
+        } else {
+            parent
+        };
+        let mut node = Node::new(
+            kind,
+            format!("{}/{}/{}", self.nodes[id_parent].id, kind.id_segment(), num),
+            Some(num),
+            label.into(),
+            path,
+            span.clone(),
+        );
+        node.rank = rank;
+        let index = add(&mut self.nodes, parent, node, ctx, &mut self.ids);
+        if rank == ARTICLE_RANK {
+            doc.article = Some(index);
+        } else {
+            self.groups.push(index);
+            doc.article = None;
+        }
+    }
+
+    /// A reserved marker line (DIR-01, DIR-02).
+    fn reserved_marker(&mut self, doc: &mut Document, span: &Range<usize>, ctx: &mut Context) {
+        let path = doc.path;
+        if doc.appendix {
+            ctx.diag(
+                "HEAD-03",
+                "Reserved marker in appendix",
+                path,
+                span.start,
+                span.end,
+            );
+            return;
+        }
+        let m = match marker(bare(&doc.source[span.clone()])) {
+            Ok(m) => m,
+            Err(e) => {
+                ctx.diag(
+                    "DIR-01",
+                    "Invalid reserved marker syntax or attributes",
+                    path,
+                    span.start,
+                    span.end,
+                );
+                if let Some(rule) = e.also {
+                    ctx.diag(rule, "Invalid attribute value", path, span.start, span.end);
+                }
+                return;
+            }
+        };
+        if m.close {
+            self.closing_marker(doc, &m, span, ctx);
+        } else if matches!(m.kind, Kind::Preamble | Kind::EnactStatement) {
+            self.front_matter(doc, &m, span, ctx);
+        } else {
+            self.container(doc, m, span, ctx);
+        }
+    }
+
+    /// DIR-02: a closing marker ends the innermost open container of its kind.
+    fn closing_marker(
+        &mut self,
+        doc: &mut Document,
+        m: &Marker,
+        span: &Range<usize>,
+        ctx: &mut Context,
+    ) {
+        let Some(&i) = doc.stack.last() else {
+            ctx.diag(
+                "DIR-02",
+                "Unexpected closing marker",
+                doc.path,
+                span.start,
+                span.end,
+            );
+            return;
+        };
+        if self.nodes[i].kind == m.kind {
+            self.nodes[i].span.end = span.end;
+            close(&mut self.nodes, i, ctx);
+            doc.stack.pop();
+        } else {
+            ctx.diag(
+                "DIR-02",
+                "Mismatched closing marker",
+                doc.path,
+                span.start,
+                span.end,
+            );
+        }
+    }
+
+    /// PRE-01/PRE-02: the preamble and the enact statement are at document
+    /// level, in the first main file, before any structural heading; the enact
+    /// statement precedes the preamble.
+    fn front_matter(
+        &mut self,
+        doc: &mut Document,
+        m: &Marker,
+        span: &Range<usize>,
+        ctx: &mut Context,
+    ) {
+        let path = doc.path;
+        let preamble = m.kind == Kind::Preamble;
+        let placed = doc.stack.is_empty()
+            && doc.article.is_none()
+            && self.groups.is_empty()
+            && doc.scope == self.main
+            && doc.first
+            && !self.main_heading_seen
+            && (preamble || !self.preamble_seen);
+        if !placed {
+            ctx.diag(
+                if preamble { "PRE-01" } else { "PRE-02" },
+                "Preamble or enact statement out of place",
+                path,
+                span.start,
+                span.end,
+            );
+            if !doc.stack.is_empty() {
+                ctx.diag("DIR-02", "Invalid legal parent", path, span.start, span.end);
+            }
+        }
+        if preamble {
+            self.preamble_seen = true;
+        }
+        let id = if preamble {
+            format!("{}/preamble", self.law)
+        } else {
+            format!("{}/enact-statement", self.law)
+        };
+        let node = Node::new(m.kind, id, None, String::new(), path, span.clone());
+        let i = add(&mut self.nodes, 0, node, ctx, &mut self.ids);
+        doc.stack.push(i);
+    }
+
+    /// An opening marker of a paragraph, item, subitem, table, row or cell.
+    fn container(&mut self, doc: &mut Document, m: Marker, span: &Range<usize>, ctx: &mut Context) {
+        let path = doc.path;
+        let parent = doc
+            .stack
+            .last()
+            .copied()
+            .or(doc.article)
+            .unwrap_or(doc.scope);
+        let p = &self.nodes[parent];
+        if !valid_parent(&m, p) {
+            ctx.diag(
+                "DIR-02",
+                "Invalid legal parent or subitem level",
+                path,
+                span.start,
+                span.end,
+            );
+            if p.kind == Kind::Cell {
+                ctx.diag(
+                    "TABLE-03",
+                    "A cell contains text only",
+                    path,
+                    span.start,
+                    span.end,
+                );
+            }
+            return;
+        }
+        if p.deleted {
+            ctx.diag(
+                "HEAD-04",
+                "Deleted article cannot contain paragraphs",
+                path,
+                span.start,
+                span.end,
+            );
+        }
+        let (suffix, num) = match m.kind {
+            Kind::Subitem => (
+                format!("subitem/{}/{}", m.level, m.number.as_deref().unwrap()),
+                m.number.clone(),
+            ),
+            Kind::Row => (format!("row/{}", m.key.as_deref().unwrap()), None),
+            Kind::Cell => {
+                let c = (p.children(&self.nodes, Kind::Cell).count() + 1).to_string();
+                (format!("cell/{c}"), Some(c))
+            }
+            _ => (
+                format!("{}/{}", m.kind.id_segment(), m.number.as_deref().unwrap()),
+                m.number.clone(),
+            ),
+        };
+        let mut node = Node::new(
+            m.kind,
+            format!("{}/{suffix}", p.id),
+            num,
+            String::new(),
+            path,
+            span.clone(),
+        );
+        node.level = m.level;
+        node.implicit = m.implicit;
+        node.key = m.key;
+        node.rowspan = m.rowspan;
+        node.colspan = m.colspan;
+        let i = add(&mut self.nodes, parent, node, ctx, &mut self.ids);
+        doc.stack.push(i);
+    }
+
+    /// Check the finished tree, record the positions (SRC-01) and export the AST.
+    fn finish(
+        self,
+        manifest: &Value,
+        documents: &[(String, String, String)],
+        ctx: &mut Context,
+    ) -> Value {
+        let nodes = &self.nodes;
+        for i in 0..nodes.len() {
+            structure(nodes, i, documents, self.law, ctx);
+        }
+        for n in nodes {
+            if !n.path.is_empty() {
+                ctx.position(&n.id, &n.path, n.span.start, n.span.end);
+            } else {
+                ctx.source_map
+                    .entry(n.id.clone())
+                    .or_insert_with(|| json!([]));
+            }
+            for (j, c) in n.content.iter().enumerate() {
+                if let Content::Text(t, positions) = c {
+                    let spans: Vec<Value> = positions.iter().map(Position::to_json).collect();
+                    ctx.positions
+                        .push(json!({"nodeId":n.id,"contentIndex":j,"text":t,"spans":spans}));
+                }
+            }
+        }
+        json!({"schemaVersion":super::SCHEMA_VERSION,"law":manifest["law"],"root":export(nodes,0)})
+    }
+}
+
+pub(super) fn build(
+    manifest: &Value,
+    documents: &[(String, String, String)],
+    ctx: &mut Context,
+) -> Value {
+    let mut builder = Builder::new(manifest, ctx);
+    for index in 0..documents.len() {
+        builder.read(documents, index, ctx);
+    }
+    builder.finish(manifest, documents, ctx)
 }
 
 /// Per-node checks that need the finished tree.
@@ -1090,5 +1267,107 @@ mod tests {
         assert_eq!(fragments.last(), &at(20, 21));
         let all: Vec<_> = fragments.iter().cloned().collect();
         assert_eq!(all, [at(3, 5), at(9, 12), at(20, 21)]);
+    }
+
+    #[test]
+    fn heading_tails() {
+        for ok in ["", "（目的）", "（目 的）"] {
+            assert!(tail_ok(ARTICLE_RANK, ok), "{ok:?}");
+        }
+        for bad in [
+            "（）",
+            "（目的） ",
+            "（目的 ）",
+            "（目（的））",
+            "（目(的）",
+            "(目的)",
+            " 目的",
+            "　（目的）",
+        ] {
+            assert!(!tail_ok(ARTICLE_RANK, bad), "{bad:?}");
+        }
+        for ok in ["　総則", " 総則", "　総則　通則"] {
+            assert!(tail_ok(2, ok), "{ok:?}");
+        }
+        for bad in ["", "総則", "　", "　　総則", " 　総則", "（総則）"] {
+            assert!(!tail_ok(2, bad), "{bad:?}");
+        }
+    }
+
+    #[test]
+    fn supplement_labels() {
+        for valid in ["附則", "附　則", "附　　則"] {
+            assert!(
+                matches!(supplement_label(valid), Supplement::Valid),
+                "{valid:?}"
+            );
+        }
+        for bad in ["附 則", "附\t則", "附　 則"] {
+            assert!(
+                matches!(supplement_label(bad), Supplement::BadSpacing),
+                "{bad:?}"
+            );
+        }
+        for no in ["附属書", "附x則", "則", "附則　抄", "第一条"] {
+            assert!(matches!(supplement_label(no), Supplement::No), "{no:?}");
+        }
+    }
+
+    #[test]
+    fn tokens_are_headings_and_reserved_markers_as_whole_lines() {
+        let source = "# 第一条\r\n\r\n<!-- loj:paragraph number=1 -->\r\n本文 *強調*\r\n\
+                      <!-- loj:end-paragraph -->\r\n\r\n<!-- 注記 -->\r\n## 第二条 *x*\r\n";
+        let found: Vec<(bool, bool, &str)> = tokens(source)
+            .iter()
+            .map(|t| (t.heading, t.plain, bare(&source[t.span.clone()])))
+            .collect();
+        assert_eq!(
+            found,
+            [
+                (true, true, "# 第一条"),
+                (false, false, "<!-- loj:paragraph number=1 -->"),
+                (false, false, "<!-- loj:end-paragraph -->"),
+                (true, false, "## 第二条 *x*"),
+            ]
+        );
+    }
+
+    #[test]
+    fn parents_of_containers() {
+        let node = |kind, level| {
+            let mut n = Node::new(kind, String::new(), None, String::new(), "", 0..0);
+            n.level = level;
+            n
+        };
+        let open = |s: &str| marker(s).ok().unwrap();
+        let paragraph = open("<!-- loj:paragraph number=1 -->");
+        assert!(valid_parent(&paragraph, &node(Kind::Article, 0)));
+        assert!(valid_parent(
+            &paragraph,
+            &node(Kind::SupplementaryProvision, 0)
+        ));
+        assert!(!valid_parent(&paragraph, &node(Kind::Chapter, 0)));
+        assert!(!valid_parent(&paragraph, &node(Kind::Paragraph, 0)));
+        let item = open("<!-- loj:item number=1 -->");
+        assert!(valid_parent(&item, &node(Kind::Paragraph, 0)));
+        assert!(!valid_parent(&item, &node(Kind::Article, 0)));
+        let first = open("<!-- loj:subitem number=1 level=1 -->");
+        assert!(valid_parent(&first, &node(Kind::Item, 0)));
+        assert!(!valid_parent(&first, &node(Kind::Subitem, 1)));
+        let third = open("<!-- loj:subitem number=1 level=3 -->");
+        assert!(valid_parent(&third, &node(Kind::Subitem, 2)));
+        assert!(!valid_parent(&third, &node(Kind::Subitem, 1)));
+        assert!(!valid_parent(&third, &node(Kind::Item, 0)));
+        let table = open("<!-- loj:table number=1 -->");
+        for kind in [Kind::Paragraph, Kind::Item, Kind::Subitem] {
+            assert!(valid_parent(&table, &node(kind, 0)));
+        }
+        assert!(!valid_parent(&table, &node(Kind::Cell, 0)));
+        let row = open("<!-- loj:row key=k3v9 -->");
+        assert!(valid_parent(&row, &node(Kind::Table, 0)));
+        assert!(!valid_parent(&row, &node(Kind::Row, 0)));
+        let cell = open("<!-- loj:cell -->");
+        assert!(valid_parent(&cell, &node(Kind::Row, 0)));
+        assert!(!valid_parent(&cell, &node(Kind::Table, 0)));
     }
 }
