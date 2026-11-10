@@ -134,7 +134,7 @@ fn resolve(bundle: &Path, registry_dir: &Path, reference: &str, f: &mut Findings
         .to_owned();
     match Bundle::open(bundle) {
         Ok(b) => resolve_in(&b, &p, &record, &branch, reference, f, out),
-        Err(e) => not_fetched(f, out, reference, e),
+        Err(e) => not_fetched(f, out, reference, e.to_string()),
     }
 }
 
@@ -179,7 +179,7 @@ fn resolve_in(
             let why = format!("the canonical branch {branch} is not in the bundle");
             return not_fetched(f, out, reference, why);
         }
-        Err(e) => return not_fetched(f, out, reference, e),
+        Err(e) => return not_fetched(f, out, reference, e.to_string()),
     };
     let commit = match &p.commit {
         None => tip.clone(), // FIXREF-05: latest record version of the canonical branch
@@ -193,7 +193,7 @@ fn resolve_in(
                         format!("{c} is not reachable from {branch}"),
                     );
                 }
-                Err(e) => return not_fetched(f, out, reference, e),
+                Err(e) => return not_fetched(f, out, reference, e.to_string()),
             },
             // `resolve` has already refused an abbreviated hash (FIXREF-04), and a
             // full hash resolves to itself, so this is a commit not in the bundle.
@@ -201,7 +201,7 @@ fn resolve_in(
                 let why = format!("commit {c} is not in the bundle");
                 return not_fetched(f, out, reference, why);
             }
-            Err(e) => return not_fetched(f, out, reference, e),
+            Err(e) => return not_fetched(f, out, reference, e.to_string()),
         },
     };
     let snap = match crate::change::snapshot(b, &commit) {
@@ -212,7 +212,7 @@ fn resolve_in(
         Err(ExportError::Tree(e)) => {
             return not_fetched(f, out, reference, format!("tree refused: {e}"));
         }
-        Err(ExportError::Environment(e)) => return not_fetched(f, out, reference, e),
+        Err(ExportError::Environment(e)) => return not_fetched(f, out, reference, e.to_string()),
     };
     let Some(h) = snap.history.as_ref() else {
         return err(f, "FIXREF-06", format!("no history manifest at {commit}"));

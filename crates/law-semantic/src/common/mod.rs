@@ -68,6 +68,32 @@ pub fn strict_text(bytes: Vec<u8>) -> Result<String, BytesError> {
     Ok(text)
 }
 
+/// Why a file could not be read. Each of these leaves a check incomplete:
+/// none says anything about the content of the file.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ReadError {
+    /// The file system refused (missing, no permission, …).
+    Io(String),
+    /// The path names something that is not a regular file.
+    NotRegularFile,
+    /// The file is larger than [`MAX_FILE_BYTES`].
+    TooLarge,
+}
+
+impl std::fmt::Display for ReadError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ReadError::Io(e) => f.write_str(e),
+            ReadError::NotRegularFile => f.write_str("not a regular file"),
+            ReadError::TooLarge => f.write_str("file exceeds the 16 MiB implementation limit"),
+        }
+    }
+}
+
+impl std::error::Error for ReadError {}
+
+impl std::error::Error for BytesError {}
+
 /// Outcome of reading one YAML file of a kind.
 pub enum Loaded {
     /// Parsed document and its source text.
@@ -82,7 +108,7 @@ pub enum Loaded {
 pub fn load_yaml(path: &std::path::Path) -> Loaded {
     let bytes = match read_limited(path) {
         Ok(b) => b,
-        Err(e) => return Loaded::Unreadable(e),
+        Err(e) => return Loaded::Unreadable(e.to_string()),
     };
     let text = match strict_text(bytes) {
         Ok(t) => t,
@@ -96,21 +122,22 @@ pub fn load_yaml(path: &std::path::Path) -> Loaded {
 }
 
 /// Read a regular file, refusing anything over [`MAX_FILE_BYTES`].
-pub fn read_limited(path: &std::path::Path) -> Result<Vec<u8>, String> {
+pub fn read_limited(path: &std::path::Path) -> Result<Vec<u8>, ReadError> {
     use std::io::Read;
-    let meta = std::fs::metadata(path).map_err(|e| e.to_string())?;
+    let io = |e: std::io::Error| ReadError::Io(e.to_string());
+    let meta = std::fs::metadata(path).map_err(io)?;
     if !meta.is_file() {
-        return Err("not a regular file".into());
+        return Err(ReadError::NotRegularFile);
     }
     if meta.len() > MAX_FILE_BYTES {
-        return Err("file exceeds the 16 MiB implementation limit".into());
+        return Err(ReadError::TooLarge);
     }
     let mut bytes = Vec::new();
     std::fs::File::open(path)
         .and_then(|f| f.take(MAX_FILE_BYTES + 1).read_to_end(&mut bytes))
-        .map_err(|e| e.to_string())?;
+        .map_err(io)?;
     if bytes.len() as u64 > MAX_FILE_BYTES {
-        return Err("file exceeds the 16 MiB implementation limit".into());
+        return Err(ReadError::TooLarge);
     }
     Ok(bytes)
 }
@@ -158,5 +185,40 @@ mod tests {
         // CJK compatibility ideographs survive untouched (CHAR-01).
         let s = "\u{fa51}\u{fa19}";
         assert_eq!(strict_text(s.as_bytes().to_vec()).unwrap(), s);
+    }
+
+    #[test]
+    fn reading_fails_with_a_kind_and_the_text_of_the_report() {
+        let dir = std::env::temp_dir().join(format!("loj-read-limited-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let file = dir.join("a.yaml");
+        std::fs::write(&file, b"a: 1\n").unwrap();
+        assert_eq!(read_limited(&file), Ok(b"a: 1\n".to_vec()));
+        assert_eq!(read_limited(&dir), Err(ReadError::NotRegularFile));
+        assert!(matches!(
+            read_limited(&dir.join("missing.yaml")),
+            Err(ReadError::Io(_))
+        ));
+        // Exactly the limit is read; one byte more is refused before reading.
+        let big = dir.join("big.yaml");
+        let f = std::fs::File::create(&big).unwrap();
+        f.set_len(MAX_FILE_BYTES).unwrap();
+        assert_eq!(
+            read_limited(&big).map(|b| b.len() as u64),
+            Ok(MAX_FILE_BYTES)
+        );
+        f.set_len(MAX_FILE_BYTES + 1).unwrap();
+        assert_eq!(read_limited(&big), Err(ReadError::TooLarge));
+        drop(f);
+        assert_eq!(ReadError::NotRegularFile.to_string(), "not a regular file");
+        assert_eq!(
+            ReadError::TooLarge.to_string(),
+            "file exceeds the 16 MiB implementation limit"
+        );
+        assert_eq!(ReadError::Io("denied".into()).to_string(), "denied");
+        // An unreadable file is not a finding about its content.
+        assert!(matches!(load_yaml(&dir), Loaded::Unreadable(e) if e == "not a regular file"));
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 }

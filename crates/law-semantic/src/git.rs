@@ -5,6 +5,58 @@
 use std::path::{Component, Path, PathBuf};
 use std::process::Command;
 
+/// Why a git operation gave no result. Every variant is a failure of the
+/// environment or of the caller, never a statement about the data in the
+/// bundle: a check that meets one is incomplete, not failed.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum GitError {
+    /// The bundle file cannot be read, or is over the size limit.
+    Bundle(String),
+    /// The file system failed (a temporary directory, an exported file).
+    Io(String),
+    /// `git` could not be started.
+    Unavailable(String),
+    /// `git` ran longer than the limit and was killed.
+    Timeout(std::time::Duration),
+    /// `git` printed more than the output limit.
+    OutputLimit,
+    /// `git` ran to the end and reported a failure. The text is the exit
+    /// status and the first line of stderr, bounded and without control
+    /// characters.
+    Failed(String),
+    /// A revision argument that is neither a commit hash nor a branch.
+    Revision(String),
+    /// `git` printed something that cannot be read.
+    Unexpected(&'static str),
+    /// A blob listed in the tree could not be read.
+    Blob { path: String, source: Box<GitError> },
+}
+
+impl std::fmt::Display for GitError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            GitError::Bundle(e) | GitError::Io(e) | GitError::Failed(e) => f.write_str(e),
+            GitError::Unavailable(e) => write!(f, "git is not available: {e}"),
+            GitError::Timeout(limit) => {
+                write!(f, "git did not finish within {} s", limit.as_secs())
+            }
+            GitError::OutputLimit => write!(f, "git output is larger than {MAX_OUTPUT} bytes"),
+            GitError::Revision(rev) => write!(f, "not a commit hash or branch: {rev:?}"),
+            GitError::Unexpected(what) => f.write_str(what),
+            GitError::Blob { path, source } => write!(f, "cannot read {path}: {source}"),
+        }
+    }
+}
+
+impl std::error::Error for GitError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            GitError::Blob { source, .. } => Some(source.as_ref()),
+            _ => None,
+        }
+    }
+}
+
 /// A bare repository fetched from a bundle into a temporary directory.
 pub struct Bundle {
     dir: PathBuf,
@@ -14,7 +66,7 @@ pub struct Bundle {
 /// Create a fresh, empty temporary directory, readable only by the owner on Unix.
 /// Creation fails if the name is already taken, so a directory planted in the shared
 /// temp location is never reused.
-fn temp(prefix: &str) -> Result<PathBuf, String> {
+fn temp(prefix: &str) -> Result<PathBuf, GitError> {
     use std::sync::atomic::{AtomicU64, Ordering};
     static N: AtomicU64 = AtomicU64::new(0);
     let base = std::env::temp_dir();
@@ -37,10 +89,16 @@ fn temp(prefix: &str) -> Result<PathBuf, String> {
         match created {
             Ok(()) => return Ok(dir),
             Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
-            Err(e) => return Err(format!("cannot create a temporary directory: {e}")),
+            Err(e) => {
+                return Err(GitError::Io(format!(
+                    "cannot create a temporary directory: {e}"
+                )))
+            }
         }
     }
-    Err("cannot create a fresh temporary directory".into())
+    Err(GitError::Io(
+        "cannot create a fresh temporary directory".into(),
+    ))
 }
 
 /// Reject a tree entry name that could escape the export directory or that is not
@@ -109,7 +167,7 @@ type Output = (std::process::ExitStatus, Vec<u8>, Vec<u8>);
 /// it, and kill it if it runs longer than `limit`. Only the direct child is killed:
 /// this assumes plain git commands, which (with hooks disabled) start no process
 /// that would keep the pipes open after git exits.
-fn run_with_timeout(mut cmd: Command, limit: std::time::Duration) -> Result<Output, String> {
+fn run_with_timeout(mut cmd: Command, limit: std::time::Duration) -> Result<Output, GitError> {
     use std::io::Read;
     use std::process::Stdio;
     let mut child = cmd
@@ -117,7 +175,7 @@ fn run_with_timeout(mut cmd: Command, limit: std::time::Duration) -> Result<Outp
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .map_err(|e| format!("git is not available: {e}"))?;
+        .map_err(|e| GitError::Unavailable(e.to_string()))?;
     let reader = |pipe: Option<Box<dyn Read + Send>>| {
         std::thread::spawn(move || {
             // Keep at most MAX_OUTPUT bytes; drain the rest so git never blocks on
@@ -140,12 +198,12 @@ fn run_with_timeout(mut cmd: Command, limit: std::time::Duration) -> Result<Outp
     let start = std::time::Instant::now();
     let mut pause = std::time::Duration::from_millis(1);
     let status = loop {
-        match child.try_wait().map_err(|e| e.to_string())? {
+        match child.try_wait().map_err(|e| GitError::Io(e.to_string()))? {
             Some(status) => break status,
             None if start.elapsed() > limit => {
                 let _ = child.kill();
                 let _ = child.wait();
-                return Err(format!("git did not finish within {} s", limit.as_secs()));
+                return Err(GitError::Timeout(limit));
             }
             None => {
                 std::thread::sleep(pause);
@@ -156,7 +214,7 @@ fn run_with_timeout(mut cmd: Command, limit: std::time::Duration) -> Result<Outp
     let (stdout, overflow) = out.join().unwrap_or_default();
     let (stderr, _) = err.join().unwrap_or_default();
     if overflow {
-        return Err(format!("git output is larger than {MAX_OUTPUT} bytes"));
+        return Err(GitError::OutputLimit);
     }
     Ok((status, stdout, stderr))
 }
@@ -219,7 +277,7 @@ const NULL_DEVICE: &str = "/dev/null";
 /// commit hash (4 to 64 lowercase hex digits) or `refs/heads/<branch>` is accepted,
 /// so no value can act as an option, a range or a rev expression (`^`, `~`, `:`,
 /// `@{`, …).
-fn revision(rev: &str) -> Result<(), String> {
+fn revision(rev: &str) -> Result<(), GitError> {
     let hash = (4..=64).contains(&rev.len())
         && rev.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'));
     let branch = rev.strip_prefix("refs/heads/").is_some_and(|name| {
@@ -236,7 +294,7 @@ fn revision(rev: &str) -> Result<(), String> {
     if hash || branch {
         Ok(())
     } else {
-        Err(format!("not a commit hash or branch: {rev:?}"))
+        Err(GitError::Revision(rev.to_owned()))
     }
 }
 
@@ -256,17 +314,19 @@ fn git_path(path: PathBuf) -> PathBuf {
 
 impl Bundle {
     /// Fetch every branch of the bundle. `Err` means the input is not available.
-    pub fn open(bundle: &Path) -> Result<Bundle, String> {
+    pub fn open(bundle: &Path) -> Result<Bundle, GitError> {
         let bundle = git_path(
             bundle
                 .canonicalize()
-                .map_err(|e| format!("bundle unreadable: {e}"))?,
+                .map_err(|e| GitError::Bundle(format!("bundle unreadable: {e}")))?,
         );
         let size = std::fs::metadata(&bundle)
-            .map_err(|e| format!("bundle unreadable: {e}"))?
+            .map_err(|e| GitError::Bundle(format!("bundle unreadable: {e}")))?
             .len();
         if size > MAX_BUNDLE {
-            return Err(format!("bundle is larger than {MAX_BUNDLE} bytes"));
+            return Err(GitError::Bundle(format!(
+                "bundle is larger than {MAX_BUNDLE} bytes"
+            )));
         }
         let b = Bundle {
             dir: temp("loj-bundle")?,
@@ -286,10 +346,10 @@ impl Bundle {
         Ok(b)
     }
     /// Run a git command that must succeed: its stdout, or `Err` when git failed.
-    fn git(&self, args: &[&str]) -> Result<Vec<u8>, String> {
+    fn git(&self, args: &[&str]) -> Result<Vec<u8>, GitError> {
         let (status, stdout, stderr) = self.run(args)?;
         if !status.success() {
-            return Err(failure(&status, &stderr));
+            return Err(GitError::Failed(failure(&status, &stderr)));
         }
         Ok(stdout)
     }
@@ -299,13 +359,13 @@ impl Bundle {
     /// `Err` when git failed (timeout, output limit, any other status). Use it only
     /// for such commands (`rev-parse --verify --quiet`, `merge-base --is-ancestor`):
     /// for most git commands, 1 is a failure.
-    fn probe(&self, args: &[&str]) -> Result<Option<Vec<u8>>, String> {
+    fn probe(&self, args: &[&str]) -> Result<Option<Vec<u8>>, GitError> {
         let (status, stdout, stderr) = self.run(args)?;
         match status.code() {
             Some(0) => Ok(Some(stdout)),
             Some(1) => Ok(None),
             // Any other status, or none (git was killed by a signal).
-            _ => Err(failure(&status, &stderr)),
+            _ => Err(GitError::Failed(failure(&status, &stderr))),
         }
     }
 
@@ -313,7 +373,7 @@ impl Bundle {
     /// environment (`GIT_DIR`, `GIT_CONFIG_*`, …) and from the user and system
     /// configuration, so the result depends only on the bundle. `Err` means git
     /// did not run to the end (not started, timed out, output over the limit).
-    fn run(&self, args: &[&str]) -> Result<Output, String> {
+    fn run(&self, args: &[&str]) -> Result<Output, GitError> {
         let mut cmd = Command::new("git");
         for (key, _) in std::env::vars_os() {
             if key.to_string_lossy().starts_with("GIT_") {
@@ -332,7 +392,7 @@ impl Bundle {
     }
     /// The full hash of a commit. `Ok(None)` means the revision is not a commit
     /// hash or branch, or no such commit is in the bundle; `Err` means git failed.
-    pub fn commit(&self, rev: &str) -> Result<Option<String>, String> {
+    pub fn commit(&self, rev: &str) -> Result<Option<String>, GitError> {
         if revision(rev).is_err() {
             return Ok(None);
         }
@@ -345,18 +405,18 @@ impl Bundle {
         out.map(|b| {
             String::from_utf8(b)
                 .map(|s| s.trim().to_owned())
-                .map_err(|_| "git printed a non-UTF-8 commit hash".to_owned())
+                .map_err(|_| GitError::Unexpected("git printed a non-UTF-8 commit hash"))
         })
         .transpose()
     }
-    pub fn branch(&self, name: &str) -> Result<Option<String>, String> {
+    pub fn branch(&self, name: &str) -> Result<Option<String>, GitError> {
         self.commit(&format!("refs/heads/{name}"))
     }
     /// Whether `a` is an ancestor of `b`. Both must be resolved commits (callers
     /// pass the hashes `commit` returned): an invalid revision is an `Err`, never
     /// "not an ancestor", and so is a git failure or a commit missing from the
     /// bundle.
-    pub fn is_ancestor(&self, a: &str, b: &str) -> Result<bool, String> {
+    pub fn is_ancestor(&self, a: &str, b: &str) -> Result<bool, GitError> {
         revision(a)?;
         revision(b)?;
         Ok(self
@@ -366,7 +426,7 @@ impl Bundle {
     /// Commits of `base..head`, oldest first, each with its first parent. Both must
     /// be resolved commits (callers pass the hashes `commit` returned); an invalid
     /// revision is an `Err`, like a git failure.
-    pub fn range(&self, base: &str, head: &str) -> Result<Vec<(String, Option<String>)>, String> {
+    pub fn range(&self, base: &str, head: &str) -> Result<Vec<(String, Option<String>)>, GitError> {
         revision(base)?;
         revision(head)?;
         let list = self.git(&[
@@ -376,7 +436,7 @@ impl Bundle {
             &format!("{base}..{head}"),
         ])?;
         let list = String::from_utf8(list)
-            .map_err(|_| "git printed a non-UTF-8 commit list".to_owned())?;
+            .map_err(|_| GitError::Unexpected("git printed a non-UTF-8 commit list"))?;
         Ok(list
             .lines()
             .filter(|l| !l.is_empty())
@@ -391,7 +451,7 @@ impl Bundle {
     /// line; continuation lines of multi-line headers (e.g. `gpgsig`) start with a space.
     /// `commit` must exist. `Ok(None)` means the commit object is not UTF-8; `Err`
     /// means git failed.
-    pub fn message(&self, commit: &str) -> Result<Option<String>, String> {
+    pub fn message(&self, commit: &str) -> Result<Option<String>, GitError> {
         revision(commit)?;
         let raw = self.git(&["cat-file", "commit", commit])?;
         let Ok(raw) = String::from_utf8(raw) else {
@@ -407,10 +467,13 @@ impl Bundle {
     }
     /// The blob at `commit:path`, raw, for an entry listed in the tree. `Err`
     /// means git failed.
-    fn blob(&self, commit: &str, path: &str) -> Result<Vec<u8>, String> {
+    fn blob(&self, commit: &str, path: &str) -> Result<Vec<u8>, GitError> {
         revision(commit)?;
         self.git(&["cat-file", "blob", &format!("{commit}:{path}")])
-            .map_err(|e| format!("cannot read {path}: {e}"))
+            .map_err(|e| GitError::Blob {
+                path: path.to_owned(),
+                source: Box::new(e),
+            })
     }
     /// Write the tree of `commit` to a fresh directory, byte for byte. Every entry
     /// name is checked before anything is written; symbolic links, submodules and
@@ -494,9 +557,9 @@ impl Bundle {
             let bytes = self.blob(commit, &name).map_err(Environment)?;
             let path = out.join(&name);
             if let Some(p) = path.parent() {
-                std::fs::create_dir_all(p).map_err(|e| Environment(e.to_string()))?;
+                std::fs::create_dir_all(p).map_err(|e| Environment(GitError::Io(e.to_string())))?;
             }
-            std::fs::write(&path, bytes).map_err(|e| Environment(e.to_string()))?;
+            std::fs::write(&path, bytes).map_err(|e| Environment(GitError::Io(e.to_string())))?;
         }
         Ok(out)
     }
@@ -510,13 +573,23 @@ pub enum ExportError {
     Tree(String),
     /// Git failed, or the export could not be written: a property of the
     /// environment, which other commits would hit too.
-    Environment(String),
+    Environment(GitError),
 }
 
 impl std::fmt::Display for ExportError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ExportError::Tree(e) | ExportError::Environment(e) => f.write_str(e),
+            ExportError::Tree(e) => f.write_str(e),
+            ExportError::Environment(e) => e.fmt(f),
+        }
+    }
+}
+
+impl std::error::Error for ExportError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            ExportError::Tree(_) => None,
+            ExportError::Environment(e) => Some(e),
         }
     }
 }
@@ -764,6 +837,93 @@ pub(crate) mod tests {
         assert!(b.export(&b.branch("main").unwrap().unwrap()).is_err());
     }
 
+    /// The texts go into reports, so they stay as they were before the errors
+    /// had a type.
+    #[test]
+    fn error_texts_are_stable() {
+        use std::error::Error;
+        let failed = GitError::Failed("git failed (exit code: 128): fatal: bad object".into());
+        let blob = GitError::Blob {
+            path: "law.yaml".into(),
+            source: Box::new(failed.clone()),
+        };
+        for (error, text) in [
+            (
+                GitError::Bundle("bundle unreadable: gone".into()),
+                "bundle unreadable: gone",
+            ),
+            (GitError::Io("disk full".into()), "disk full"),
+            (
+                GitError::Unavailable("program not found".into()),
+                "git is not available: program not found",
+            ),
+            (
+                GitError::Timeout(GIT_TIMEOUT),
+                "git did not finish within 120 s",
+            ),
+            (
+                GitError::OutputLimit,
+                "git output is larger than 268435456 bytes",
+            ),
+            (
+                GitError::Revision("--all".into()),
+                "not a commit hash or branch: \"--all\"",
+            ),
+            (
+                GitError::Unexpected("git printed a non-UTF-8 commit hash"),
+                "git printed a non-UTF-8 commit hash",
+            ),
+            (
+                blob.clone(),
+                "cannot read law.yaml: git failed (exit code: 128): fatal: bad object",
+            ),
+        ] {
+            assert_eq!(error.to_string(), text);
+        }
+        assert_eq!(
+            blob.source().map(ToString::to_string),
+            Some(failed.to_string())
+        );
+        assert!(failed.source().is_none());
+        // An export error reads as its cause, whichever kind it is.
+        let environment = ExportError::Environment(blob.clone());
+        assert_eq!(environment.to_string(), blob.to_string());
+        assert!(environment.source().is_some());
+        let tree = ExportError::Tree("unsafe path in the bundle tree: \"a:b\"".into());
+        assert_eq!(tree.to_string(), "unsafe path in the bundle tree: \"a:b\"");
+        assert!(tree.source().is_none());
+    }
+
+    #[test]
+    fn failures_have_a_kind() {
+        let missing = std::env::temp_dir().join(format!("loj-no-bundle-{}", std::process::id()));
+        assert!(matches!(
+            Bundle::open(&missing).err(),
+            Some(GitError::Bundle(e)) if e.starts_with("bundle unreadable: ")
+        ));
+        let s = Scratch::new();
+        let b = Bundle::open(&s.bundle(&[("100644", "blob", "history.yaml")])).unwrap();
+        let head = b.branch("main").unwrap().unwrap();
+        for result in [
+            b.is_ancestor("--all", &head).err(),
+            b.range("--all", &head).err(),
+            b.message("--all").err(),
+        ] {
+            assert_eq!(result, Some(GitError::Revision("--all".into())));
+        }
+        // A caller's invalid revision stops an export as an environment failure.
+        assert_eq!(
+            b.export("--all"),
+            Err(ExportError::Environment(GitError::Revision("--all".into())))
+        );
+        let mut cmd = Command::new("loj-no-such-program");
+        cmd.arg("x");
+        assert!(matches!(
+            run_with_timeout(cmd, GIT_TIMEOUT),
+            Err(GitError::Unavailable(_))
+        ));
+    }
+
     #[test]
     fn slow_commands_are_killed() {
         #[cfg(windows)]
@@ -780,7 +940,11 @@ pub(crate) mod tests {
         };
         let start = std::time::Instant::now();
         let err = run_with_timeout(cmd, std::time::Duration::from_millis(300)).unwrap_err();
-        assert!(err.contains("did not finish"), "{err}");
+        assert_eq!(
+            err,
+            GitError::Timeout(std::time::Duration::from_millis(300))
+        );
+        assert_eq!(err.to_string(), "git did not finish within 0 s");
         assert!(start.elapsed() < std::time::Duration::from_secs(10));
     }
 
@@ -864,7 +1028,7 @@ pub(crate) mod tests {
         b.break_for_test();
         assert!(matches!(
             b.export(&head),
-            Err(ExportError::Environment(e)) if e.starts_with("git failed")
+            Err(ExportError::Environment(GitError::Failed(_)))
         ));
     }
 
@@ -934,7 +1098,8 @@ pub(crate) mod tests {
         // yielding an empty message.
         std::fs::remove_dir_all(b.dir.join("objects")).unwrap();
         let err = b.message(&head).unwrap_err();
-        assert!(err.starts_with("git failed"), "{err}");
+        assert!(matches!(err, GitError::Failed(_)), "{err}");
+        assert!(err.to_string().starts_with("git failed"), "{err}");
         assert!(b.range(&head, &head).is_err());
     }
 }
