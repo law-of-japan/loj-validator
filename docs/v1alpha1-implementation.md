@@ -49,11 +49,12 @@ specific code `loj/v1alpha1/unsupported-version` with Error.
 ## Implemented pipeline and recovery
 
 - `v1alpha1/mod.rs`: public `check(Path, Level)`, status policy and independent AST Schema check.
-- `manifest.rs`: strict UTF-8 loading, YAML 1.2 events (duplicate keys checked before insertion),
-  closed JSON Schema with format assertions, scope resolution and ordered file loading.
-- `markdown.rs`: CommonMark top-level block ranges, exact raw line boundaries, plain ATX checks.
+- `manifest.rs`: strict UTF-8 loading, YAML 1.2 events (duplicate keys checked before insertion;
+  the parser is `common/yaml.rs` with the v1alpha1 nesting limit, the byte budget is
+  `common/budget.rs`), closed JSON Schema with format assertions, scope resolution and ordered file loading.
+- `common/markdown.rs` (shared with loj/v1alpha2): CommonMark top-level block ranges, exact raw line boundaries, plain ATX checks.
 - `directives.rs`: marker grammar, required/unknown/duplicate attributes, canonical numbers.
-- `number.rs`: strict canonical Japanese 1–9999 and independent decimal-width normalization.
+- `common/number.rs` (shared with loj/v1alpha2): strict canonical Japanese 1–9999 and independent decimal-width normalization.
 - `syntax.rs`: rank/context stack, matched container stack, ordered content arena, display
   validation, duplicate IDs and source mapping; export to the normative semantic JSON.
 

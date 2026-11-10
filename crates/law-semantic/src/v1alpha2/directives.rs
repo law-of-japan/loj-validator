@@ -1,6 +1,6 @@
 //! DIR-01 lexical grammar (grammar/v1alpha2/directives.ebnf), applied only to
 //! eligible CommonMark regions.
-use super::number::number;
+use crate::common::number::number;
 
 pub(super) struct Marker {
     pub(super) kind: &'static str,

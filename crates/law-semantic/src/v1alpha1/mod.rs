@@ -1,8 +1,6 @@
 //! Independent loj/v1alpha1 pipeline; legacy APIs and JSON remain unchanged.
 mod directives;
 mod manifest;
-mod markdown;
-mod number;
 mod syntax;
 use serde_json::{json, Value};
 use std::path::Path;

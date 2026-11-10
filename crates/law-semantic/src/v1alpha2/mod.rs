@@ -6,8 +6,6 @@
 //! the 條/ノ heading forms and the spaced supplement heading.
 mod directives;
 mod manifest;
-mod markdown;
-mod number;
 mod syntax;
 
 use crate::common::{validator, Check, Diagnostic, Report, ResultValue};

@@ -1,164 +1,29 @@
 use super::{Context, MANIFEST_SCHEMA, MAX_FILE_BYTES, MAX_TOTAL_BYTES};
-use serde_json::{json, Map, Value};
-use std::{collections::HashSet, fs, io::Read, path::Path};
-use yaml_rust2::{
-    parser::{Event, Parser},
-    scanner::{Scanner, TScalarStyle, TokenType},
-};
+use crate::common::budget::ReadBudget;
+use crate::common::yaml::{parse_with, Options};
+use serde_json::{json, Value};
+use std::{collections::HashSet, fs, path::Path};
 
 type Documents = Vec<(String, String, String)>;
 
+/// loj/v1alpha1 keeps its own nesting limit and error wording.
 fn yaml(source: &str) -> Result<Value, String> {
-    for token in Scanner::new(source.chars()) {
-        if matches!(token.1,TokenType::VersionDirective(major,minor) if (major,minor)!=(1,2)) {
-            return Err("Only YAML 1.2 is supported".into());
-        }
-    }
-    let mut parser = Parser::new_from_str(source);
-    fn next(parser: &mut Parser<std::str::Chars<'_>>) -> Result<Event, String> {
-        parser.next_token().map(|v| v.0).map_err(|e| e.to_string())
-    }
-    fn value(
-        parser: &mut Parser<std::str::Chars<'_>>,
-        event: Event,
-        depth: usize,
-    ) -> Result<Value, String> {
-        if depth > 32 {
-            return Err("YAML nesting exceeds 32".into());
-        }
-        match event {
-            Event::Scalar(s, style, 0, None) => {
-                if style != TScalarStyle::Plain {
-                    return Ok(Value::String(s));
-                }
-                if s.is_empty() || s == "~" {
-                    return Err("Use explicit JSON null".into());
-                }
-                if let Ok(v) = serde_json::from_str::<Value>(&s) {
-                    if !v.is_array() && !v.is_object() {
-                        return Ok(v);
-                    }
-                }
-                if s == "<<"
-                    || non_json_scalar(&s)
-                    || matches!(
-                        s.as_str(),
-                        "True"
-                            | "False"
-                            | "Null"
-                            | "TRUE"
-                            | "FALSE"
-                            | "NULL"
-                            | ".nan"
-                            | ".inf"
-                            | "-.inf"
-                    )
-                {
-                    return Err("Non-JSON plain scalar; quote strings such as dates".into());
-                }
-                Ok(Value::String(s))
-            }
-            Event::SequenceStart(0, None) => {
-                let mut a = Vec::new();
-                loop {
-                    let e = next(parser)?;
-                    if e == Event::SequenceEnd {
-                        break;
-                    }
-                    a.push(value(parser, e, depth + 1)?);
-                }
-                Ok(Value::Array(a))
-            }
-            Event::MappingStart(0, None) => {
-                let mut map = Map::new();
-                loop {
-                    let e = next(parser)?;
-                    if e == Event::MappingEnd {
-                        break;
-                    }
-                    let key = value(parser, e, depth + 1)?
-                        .as_str()
-                        .ok_or("Mapping keys must be strings")?
-                        .to_owned();
-                    if key == "<<" || map.contains_key(&key) {
-                        return Err("Duplicate or merge key".into());
-                    }
-                    let e = next(parser)?;
-                    map.insert(key, value(parser, e, depth + 1)?);
-                }
-                Ok(Value::Object(map))
-            }
-            _ => Err("Tags, anchors, aliases and non-JSON YAML are forbidden".into()),
-        }
-    }
-    if next(&mut parser)? != Event::StreamStart || next(&mut parser)? != Event::DocumentStart {
-        return Err("Expected one YAML document".into());
-    }
-    let e = next(&mut parser)?;
-    let v = value(&mut parser, e, 0)?;
-    if next(&mut parser)? != Event::DocumentEnd || next(&mut parser)? != Event::StreamEnd {
-        return Err("Multiple YAML documents".into());
-    }
-    Ok(v)
-}
-
-fn non_json_scalar(s: &str) -> bool {
-    static PATTERN: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
-    PATTERN.get_or_init(|| regex::Regex::new(r"^(?:[0-9]{4}-[0-9]{2}-[0-9]{2}(?:[Tt ].*)?|[-+]?(?:[0-9][0-9_.eE+-]*|\.[0-9][0-9eE+-]*|0[xXoObB][0-9a-fA-F_]+)|(?i:[-+]?\.(?:inf|nan)))$").unwrap()).is_match(s)
-}
-
-struct ReadBudget {
-    remaining: usize,
-    per_file: u64,
-}
-
-impl Default for ReadBudget {
-    fn default() -> Self {
-        Self {
-            remaining: MAX_TOTAL_BYTES,
-            per_file: MAX_FILE_BYTES,
-        }
-    }
-}
-
-impl ReadBudget {
-    // One bounded lookahead byte detects growth after metadata inspection.
-    // It is never retained; the caller stops loading on overflow.
-    fn read(&mut self, reader: impl Read) -> std::io::Result<(Vec<u8>, bool)> {
-        let limit = self.per_file.min(self.remaining as u64);
-        let mut bytes = Vec::new();
-        let result = reader.take(limit + 1).read_to_end(&mut bytes);
-        self.remaining = self.remaining.saturating_sub(bytes.len());
-        result?;
-        let exceeded = bytes.len() as u64 > limit;
-        Ok((bytes, exceeded))
-    }
+    parse_with(
+        source,
+        Options {
+            max_depth: 32,
+            name_duplicate_key: false,
+        },
+    )
 }
 
 fn read(path: &Path, name: &str, ctx: &mut Context, budget: &mut ReadBudget) -> Option<String> {
-    let limit = budget.per_file.min(budget.remaining as u64);
-    let result = (|| -> std::io::Result<Vec<u8>> {
-        if !fs::metadata(path)?.is_file() {
-            return Err(std::io::Error::other("Not a regular file"));
-        }
-        let f = fs::File::open(path)?;
-        let meta = f.metadata()?;
-        if !meta.is_file() {
-            return Err(std::io::Error::other("Not a regular file"));
-        }
-        if meta.len() > limit {
+    let bytes = match budget.read_file(path) {
+        Ok(Some(v)) => v,
+        Ok(None) => {
             ctx.incomplete = true;
-            return Ok(Vec::new());
+            Vec::new()
         }
-        let (bytes, exceeded) = budget.read(f)?;
-        if exceeded {
-            ctx.incomplete = true;
-            return Ok(Vec::new());
-        }
-        Ok(bytes)
-    })();
-    let bytes = match result {
-        Ok(v) => v,
         Err(e) => {
             ctx.error = true;
             ctx.diag("MAN-02", &e.to_string(), name, 0, 0);
@@ -235,7 +100,7 @@ fn linked(meta: &fs::Metadata) -> bool {
 }
 
 pub(super) fn load(path: &Path, ctx: &mut Context) -> Option<(Value, Documents)> {
-    let mut budget = ReadBudget::default();
+    let mut budget = ReadBudget::new(MAX_TOTAL_BYTES, MAX_FILE_BYTES);
     let source = read(path, "law.yaml", ctx, &mut budget)?;
     let manifest = match yaml(&source) {
         Ok(v) => v,
@@ -457,26 +322,6 @@ mod tests {
     }
 
     #[test]
-    fn streaming_read_is_bounded_even_when_length_is_unknown_or_changes() {
-        for (remaining, per_file, expected_read) in [(7, 100, 8), (100, 7, 8)] {
-            let mut budget = ReadBudget {
-                remaining,
-                per_file,
-            };
-            let (bytes, exceeded) = budget.read(std::io::repeat(b'x')).unwrap();
-            assert!(exceeded);
-            assert_eq!(bytes.len(), expected_read);
-            assert_eq!(budget.remaining, remaining.saturating_sub(expected_read));
-        }
-        let mut budget = ReadBudget {
-            remaining: 4,
-            per_file: 4,
-        };
-        assert!(!budget.read(b"abcd".as_slice()).unwrap().1);
-        assert_eq!(budget.remaining, 0);
-    }
-
-    #[test]
     fn mixed_valid_and_invalid_sources_share_exact_budget() {
         let dir = std::env::temp_dir().join(format!("loj-mixed-budget-{}", std::process::id()));
         fs::create_dir_all(&dir).unwrap();
@@ -503,21 +348,5 @@ mod tests {
         assert!(read(&path, "overflow.md", &mut ctx, &mut budget).is_none());
         assert!(ctx.incomplete);
         assert_eq!(ctx.sources.len(), 2);
-    }
-
-    #[test]
-    fn partial_io_failure_still_consumes_budget() {
-        let mut budget = ReadBudget {
-            remaining: 8,
-            per_file: 8,
-        };
-        struct Fails;
-        impl Read for Fails {
-            fn read(&mut self, _: &mut [u8]) -> std::io::Result<usize> {
-                Err(std::io::Error::other("simulated failure"))
-            }
-        }
-        assert!(budget.read(b"abcd".as_slice().chain(Fails)).is_err());
-        assert_eq!(budget.remaining, 4);
     }
 }

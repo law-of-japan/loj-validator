@@ -1,5 +1,5 @@
 //! DIR-01 lexical grammar, applied only to eligible CommonMark regions.
-use super::number::number;
+use crate::common::number::number;
 pub(super) struct Marker {
     pub(super) kind: &'static str,
     pub(super) close: bool,
@@ -36,7 +36,7 @@ pub(super) fn marker(s: &str) -> Option<Marker> {
     for word in words {
         let (k, v) = word.split_once('=')?;
         match k {
-            "number" if num.is_none() => num = Some(number(v, '-', 2)?),
+            "number" if num.is_none() => num = Some(number(v, &['-'], 2)?),
             "level" if level.is_none() => {
                 let n = v.parse::<usize>().ok()?;
                 if n == 0 || n > 10 || n.to_string() != v {

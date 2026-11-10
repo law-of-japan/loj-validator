@@ -1,6 +1,6 @@
+use super::directives::marker;
 use super::Context;
-use super::{
-    directives::marker,
+use crate::common::{
     markdown::{
         bare, blocks, incomplete_split_blocks, line_end, line_start, plain_heading, reserved,
         BlockKind,
@@ -10,6 +10,9 @@ use super::{
 use regex::Regex;
 use serde_json::{json, Value};
 use std::{collections::HashSet, ops::Range};
+
+/// loj/v1alpha1 accepts only `の` between the parts of a branch number.
+const SEPARATORS: &[char] = &['の'];
 
 fn re(pattern: &str) -> Regex {
     Regex::new(pattern).expect("constant regex")
@@ -154,7 +157,7 @@ fn display(nodes: &mut [Node], index: usize, ctx: &mut Context) {
         "Subitem" => 2,
         _ => 0,
     };
-    let parsed = number(token, 'の', mode);
+    let parsed = number(token, SEPARATORS, mode);
     let omitted = n.kind == "Paragraph" && n.number.as_deref() == Some("1") && parsed.is_none();
     if !omitted {
         n.display = token.into();
@@ -429,7 +432,7 @@ pub(super) fn build(
                     cursor = span.end;
                     continue;
                 };
-                let num = number(&format!("{}{}", &c[1], &c[3]), 'の', 0);
+                let num = number(&format!("{}{}", &c[1], &c[3]), SEPARATORS, 0);
                 let Some(num) = num else {
                     ctx.diag(
                         "NUM-01",

@@ -6,8 +6,28 @@ use yaml_rust2::{
     scanner::{Scanner, TScalarStyle, TokenType},
 };
 
+/// Limits and wording that differ between the callers of [`parse_with`].
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct Options {
+    /// Deepest allowed nesting of sequences and mappings.
+    pub(crate) max_depth: usize,
+    /// Whether the error for a duplicate or merge key names the key.
+    pub(crate) name_duplicate_key: bool,
+}
+
 /// Parse one YAML document into JSON values.
 pub fn parse(source: &str) -> Result<Value, String> {
+    parse_with(
+        source,
+        Options {
+            max_depth: 64,
+            name_duplicate_key: true,
+        },
+    )
+}
+
+/// [`parse`] with the nesting limit and error wording of `options`.
+pub(crate) fn parse_with(source: &str, options: Options) -> Result<Value, String> {
     for token in Scanner::new(source.chars()) {
         if matches!(token.1,TokenType::VersionDirective(major,minor) if (major,minor)!=(1,2)) {
             return Err("Only YAML 1.2 is supported".into());
@@ -21,9 +41,10 @@ pub fn parse(source: &str) -> Result<Value, String> {
         parser: &mut Parser<std::str::Chars<'_>>,
         event: Event,
         depth: usize,
+        options: Options,
     ) -> Result<Value, String> {
-        if depth > 64 {
-            return Err("YAML nesting exceeds 64".into());
+        if depth > options.max_depth {
+            return Err(format!("YAML nesting exceeds {}", options.max_depth));
         }
         match event {
             Event::Scalar(s, style, 0, None) => {
@@ -64,7 +85,7 @@ pub fn parse(source: &str) -> Result<Value, String> {
                     if e == Event::SequenceEnd {
                         break;
                     }
-                    a.push(value(parser, e, depth + 1)?);
+                    a.push(value(parser, e, depth + 1, options)?);
                 }
                 Ok(Value::Array(a))
             }
@@ -75,15 +96,19 @@ pub fn parse(source: &str) -> Result<Value, String> {
                     if e == Event::MappingEnd {
                         break;
                     }
-                    let key = value(parser, e, depth + 1)?
+                    let key = value(parser, e, depth + 1, options)?
                         .as_str()
                         .ok_or("Mapping keys must be strings")?
                         .to_owned();
                     if key == "<<" || map.contains_key(&key) {
-                        return Err(format!("Duplicate or merge key: {key}"));
+                        return Err(if options.name_duplicate_key {
+                            format!("Duplicate or merge key: {key}")
+                        } else {
+                            "Duplicate or merge key".into()
+                        });
                     }
                     let e = next(parser)?;
-                    map.insert(key, value(parser, e, depth + 1)?);
+                    map.insert(key, value(parser, e, depth + 1, options)?);
                 }
                 Ok(Value::Object(map))
             }
@@ -94,7 +119,7 @@ pub fn parse(source: &str) -> Result<Value, String> {
         return Err("Expected one YAML document".into());
     }
     let e = next(&mut parser)?;
-    let v = value(&mut parser, e, 0)?;
+    let v = value(&mut parser, e, 0, options)?;
     if next(&mut parser)? != Event::DocumentEnd || next(&mut parser)? != Event::StreamEnd {
         return Err("Multiple YAML documents".into());
     }
@@ -126,5 +151,42 @@ mod tests {
         }
         // Text is preserved exactly (no normalization).
         assert_eq!(parse("a: \"\u{fa51}\"\n").unwrap()["a"], "\u{fa51}");
+    }
+
+    fn nested(sequences: usize) -> String {
+        format!("a: {}1{}\n", "[".repeat(sequences), "]".repeat(sequences))
+    }
+
+    #[test]
+    fn nesting_limit_and_duplicate_key_wording_follow_the_options() {
+        // The scalar sits at depth `sequences + 1` (the mapping is depth 0).
+        assert!(parse(&nested(63)).is_ok());
+        assert_eq!(parse(&nested(64)).unwrap_err(), "YAML nesting exceeds 64");
+        let strict = Options {
+            max_depth: 32,
+            name_duplicate_key: false,
+        };
+        assert!(parse_with(&nested(31), strict).is_ok());
+        assert_eq!(
+            parse_with(&nested(32), strict).unwrap_err(),
+            "YAML nesting exceeds 32"
+        );
+        assert_eq!(
+            parse("a: 1\na: 2\n").unwrap_err(),
+            "Duplicate or merge key: a"
+        );
+        assert_eq!(
+            parse_with("a: 1\na: 2\n", strict).unwrap_err(),
+            "Duplicate or merge key"
+        );
+        // A plain `<<` is refused as a scalar; a quoted one reaches the key check.
+        assert_eq!(
+            parse_with("\"<<\": 1\n", strict).unwrap_err(),
+            "Duplicate or merge key"
+        );
+        assert_eq!(
+            parse("\"<<\": 1\n").unwrap_err(),
+            "Duplicate or merge key: <<"
+        );
     }
 }
