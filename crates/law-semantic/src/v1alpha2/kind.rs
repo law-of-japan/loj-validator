@@ -24,6 +24,29 @@ pub(super) enum Kind {
 }
 
 impl Kind {
+    /// Every kind. A test compares the names with the AST schema.
+    #[cfg(test)]
+    pub(super) const ALL: [Kind; 18] = [
+        Kind::Law,
+        Kind::MainProvision,
+        Kind::SupplementaryProvision,
+        Kind::AppendedMaterial,
+        Kind::Part,
+        Kind::Chapter,
+        Kind::Section,
+        Kind::Subsection,
+        Kind::Division,
+        Kind::Article,
+        Kind::Paragraph,
+        Kind::Item,
+        Kind::Subitem,
+        Kind::Table,
+        Kind::Row,
+        Kind::Cell,
+        Kind::Preamble,
+        Kind::EnactStatement,
+    ];
+
     /// The `kind` value in the AST.
     pub(super) fn as_str(self) -> &'static str {
         match self {
@@ -73,32 +96,42 @@ impl Kind {
 mod tests {
     use super::*;
 
+    /// Every `kind` list (`enum` or `const`) of the schema.
+    fn kind_lists(v: &serde_json::Value, out: &mut Vec<Vec<String>>) {
+        match v {
+            serde_json::Value::Object(m) => {
+                for (k, x) in m {
+                    if k == "kind" {
+                        let names = x["enum"].as_array().cloned().unwrap_or_default();
+                        let names = names.iter().chain(x.get("const"));
+                        out.push(
+                            names
+                                .filter_map(|n| n.as_str().map(str::to_owned))
+                                .collect(),
+                        );
+                    }
+                    kind_lists(x, out);
+                }
+            }
+            serde_json::Value::Array(a) => a.iter().for_each(|x| kind_lists(x, out)),
+            _ => {}
+        }
+    }
+
     #[test]
     fn names_are_the_kinds_of_the_ast_schema() {
         let schema: serde_json::Value = serde_json::from_str(super::super::AST_SCHEMA).unwrap();
-        let text = schema.to_string();
-        for kind in [
-            Kind::Law,
-            Kind::MainProvision,
-            Kind::SupplementaryProvision,
-            Kind::AppendedMaterial,
-            Kind::Part,
-            Kind::Chapter,
-            Kind::Section,
-            Kind::Subsection,
-            Kind::Division,
-            Kind::Article,
-            Kind::Paragraph,
-            Kind::Item,
-            Kind::Subitem,
-            Kind::Table,
-            Kind::Row,
-            Kind::Cell,
-            Kind::Preamble,
-            Kind::EnactStatement,
-        ] {
-            let name = kind.as_str();
-            assert!(text.contains(&format!("\"{name}\"")), "{name}");
+        let mut lists = Vec::new();
+        kind_lists(&schema, &mut lists);
+        // The longest list is the one of every node kind.
+        let mut expected = lists.iter().max_by_key(|l| l.len()).unwrap().clone();
+        expected.sort();
+        let mut actual: Vec<String> = Kind::ALL.iter().map(|k| k.as_str().to_owned()).collect();
+        actual.sort();
+        assert_eq!(actual, expected);
+        // No kind is named anywhere else in the schema that `Kind` lacks.
+        for name in lists.iter().flatten() {
+            assert!(actual.contains(name), "{name}");
         }
     }
 

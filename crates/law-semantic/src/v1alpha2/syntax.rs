@@ -36,10 +36,37 @@ impl Position {
         json!({"path":self.path,"start":self.start,"end":self.end})
     }
 }
+/// The source fragments that one run of own text was read from, in order.
+/// There is always at least one.
+#[derive(Clone, Debug)]
+struct Fragments {
+    first: Position,
+    rest: Vec<Position>,
+}
+impl Fragments {
+    fn new(first: Position) -> Self {
+        Fragments {
+            first,
+            rest: Vec::new(),
+        }
+    }
+    fn push(&mut self, position: Position) {
+        self.rest.push(position);
+    }
+    fn first(&self) -> &Position {
+        &self.first
+    }
+    fn last(&self) -> &Position {
+        self.rest.last().unwrap_or(&self.first)
+    }
+    fn iter(&self) -> impl Iterator<Item = &Position> {
+        std::iter::once(&self.first).chain(&self.rest)
+    }
+}
 #[derive(Clone)]
 enum Content {
-    /// Own text and the source fragments it was read from, in order (never empty).
-    Text(String, Vec<Position>),
+    /// Own text and where it was read from.
+    Text(String, Fragments),
     Node(usize),
 }
 struct Node {
@@ -206,7 +233,7 @@ fn text(
     } else {
         nodes[index]
             .content
-            .push(Content::Text(source[span].into(), vec![position]));
+            .push(Content::Text(source[span].into(), Fragments::new(position)));
     }
 }
 
@@ -287,8 +314,9 @@ fn close(nodes: &mut [Node], index: usize, ctx: &mut Context) {
     {
         // Locate this line even when own text has multiple source fragments.
         let mut relative = offset;
-        let mut pos = &positions[0];
-        for p in positions {
+        let mut pos = positions.first();
+        for p in positions.iter() {
+            // `text` records nonempty ranges only, so `start < end`.
             let len = p.end - p.start;
             pos = p;
             if relative < len {
@@ -988,15 +1016,13 @@ fn structure(
     if matches!(n.kind, Kind::Paragraph | Kind::Item | Kind::Subitem) {
         for c in &n.content {
             if let Content::Text(t, positions) = c {
-                if let (true, Some(first), Some(last)) =
-                    (has_gfm_table(t), positions.first(), positions.last())
-                {
+                if has_gfm_table(t) {
                     ctx.diag(
                         "TABLE-01",
                         "Write legal tables with table markers, not GFM tables",
-                        &first.path,
-                        first.start,
-                        last.end,
+                        &positions.first().path,
+                        positions.first().start,
+                        positions.last().end,
                     );
                 }
             }
@@ -1041,4 +1067,28 @@ fn outside(
         span.start,
         span.end,
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fragments_always_have_a_first_and_a_last() {
+        let at = |start, end| Position {
+            path: "a.md".into(),
+            start,
+            end,
+        };
+        let mut fragments = Fragments::new(at(3, 5));
+        assert_eq!(fragments.first(), &at(3, 5));
+        assert_eq!(fragments.last(), &at(3, 5));
+        assert_eq!(fragments.iter().count(), 1);
+        fragments.push(at(9, 12));
+        fragments.push(at(20, 21));
+        assert_eq!(fragments.first(), &at(3, 5));
+        assert_eq!(fragments.last(), &at(20, 21));
+        let all: Vec<_> = fragments.iter().cloned().collect();
+        assert_eq!(all, [at(3, 5), at(9, 12), at(20, 21)]);
+    }
 }
