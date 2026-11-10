@@ -1,4 +1,4 @@
-//! Strict NUM-01 normalization (loj/v1alpha2), independent of legacy numbering.
+//! Strict NUM-01 normalization (loj/v1alpha1 and loj/v1alpha2), independent of legacy numbering.
 use std::sync::OnceLock;
 fn japanese(n: u32) -> String {
     let digits = ['〇', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
@@ -48,8 +48,9 @@ fn component(s: &str, mode: u8) -> Option<String> {
     };
     (1..=9999).contains(&value).then(|| value.to_string())
 }
-/// `separators`: `の`/`ノ` for labels and display tokens (NUM-01), `-` for attributes.
-pub(super) fn number(s: &str, separators: &[char], mode: u8) -> Option<String> {
+/// `separators`: `-` for attributes; for labels and display tokens, `の` alone
+/// (loj/v1alpha1) or `の`/`ノ` (loj/v1alpha2, NUM-01).
+pub(crate) fn number(s: &str, separators: &[char], mode: u8) -> Option<String> {
     s.split(separators)
         .map(|s| component(s, mode))
         .collect::<Option<Vec<_>>>()
@@ -77,6 +78,9 @@ mod tests {
             number("十二ノ二の三", &['の', 'ノ'], 0),
             Some("12-2-3".into())
         );
+        // loj/v1alpha1 passes `の` alone, so `ノ` is not a separator there.
+        assert_eq!(number("十二の二の３", &['の'], 0), Some("12-2-3".into()));
+        assert_eq!(number("十二ノ二", &['の'], 0), None);
         assert_eq!(number("千十", &['の'], 0), Some("1010".into()));
         assert_eq!(number("1-01", &['-'], 2), None);
         assert_eq!(number("１", &['-'], 2), None);

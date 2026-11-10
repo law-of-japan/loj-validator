@@ -1,62 +1,18 @@
 use super::{manifest_validator, Context, MAX_FILE_BYTES, MAX_TOTAL_BYTES, SCHEMA_VERSION};
+use crate::common::budget::ReadBudget;
 use crate::common::yaml::parse as yaml;
 use serde_json::{json, Value};
-use std::{collections::HashSet, fs, io::Read, path::Path};
+use std::{collections::HashSet, fs, path::Path};
 
 type Documents = Vec<(String, String, String)>;
 
-struct ReadBudget {
-    remaining: usize,
-    per_file: u64,
-}
-
-impl Default for ReadBudget {
-    fn default() -> Self {
-        Self {
-            remaining: MAX_TOTAL_BYTES,
-            per_file: MAX_FILE_BYTES,
-        }
-    }
-}
-
-impl ReadBudget {
-    // One bounded lookahead byte detects growth after metadata inspection.
-    // It is never retained; the caller stops loading on overflow.
-    fn read(&mut self, reader: impl Read) -> std::io::Result<(Vec<u8>, bool)> {
-        let limit = self.per_file.min(self.remaining as u64);
-        let mut bytes = Vec::new();
-        let result = reader.take(limit + 1).read_to_end(&mut bytes);
-        self.remaining = self.remaining.saturating_sub(bytes.len());
-        result?;
-        let exceeded = bytes.len() as u64 > limit;
-        Ok((bytes, exceeded))
-    }
-}
-
 fn read(path: &Path, name: &str, ctx: &mut Context, budget: &mut ReadBudget) -> Option<String> {
-    let limit = budget.per_file.min(budget.remaining as u64);
-    let result = (|| -> std::io::Result<Vec<u8>> {
-        if !fs::metadata(path)?.is_file() {
-            return Err(std::io::Error::other("Not a regular file"));
-        }
-        let f = fs::File::open(path)?;
-        let meta = f.metadata()?;
-        if !meta.is_file() {
-            return Err(std::io::Error::other("Not a regular file"));
-        }
-        if meta.len() > limit {
+    let bytes = match budget.read_file(path) {
+        Ok(Some(v)) => v,
+        Ok(None) => {
             ctx.incomplete = true;
-            return Ok(Vec::new());
+            Vec::new()
         }
-        let (bytes, exceeded) = budget.read(f)?;
-        if exceeded {
-            ctx.incomplete = true;
-            return Ok(Vec::new());
-        }
-        Ok(bytes)
-    })();
-    let bytes = match result {
-        Ok(v) => v,
         Err(e) => {
             if name == "law.yaml" {
                 ctx.incomplete = true;
@@ -139,7 +95,7 @@ fn linked(meta: &fs::Metadata) -> bool {
 }
 
 pub(super) fn load(path: &Path, ctx: &mut Context) -> Option<(Value, Documents)> {
-    let mut budget = ReadBudget::default();
+    let mut budget = ReadBudget::new(MAX_TOTAL_BYTES, MAX_FILE_BYTES);
     let source = read(path, "law.yaml", ctx, &mut budget)?;
     let manifest = match yaml(&source) {
         Ok(v) => v,
@@ -339,13 +295,10 @@ mod tests {
         for bytes in [b"\xffabc".as_slice(), b"\xef\xbb\xbfa", b"a\0bc", b"a\rbc"] {
             let path = dir.join("input.md");
             fs::write(&path, bytes).unwrap();
-            let mut budget = ReadBudget {
-                remaining: 7,
-                per_file: 100,
-            };
+            let mut budget = ReadBudget::new(7, 100);
             let mut ctx = Context::default();
             assert!(read(&path, "first.md", &mut ctx, &mut budget).is_none());
-            assert_eq!(budget.remaining, 3);
+            assert_eq!(budget.remaining(), 3);
             assert_eq!(ctx.sources.len(), 1);
             assert!(!ctx.incomplete);
             assert!(read(&path, "second.md", &mut ctx, &mut budget).is_none());
@@ -355,28 +308,8 @@ mod tests {
                 1,
                 "over-budget bytes must not be retained"
             );
-            assert_eq!(budget.remaining, 3, "metadata rejects before reading");
+            assert_eq!(budget.remaining(), 3, "metadata rejects before reading");
         }
-    }
-
-    #[test]
-    fn streaming_read_is_bounded_even_when_length_is_unknown_or_changes() {
-        for (remaining, per_file, expected_read) in [(7, 100, 8), (100, 7, 8)] {
-            let mut budget = ReadBudget {
-                remaining,
-                per_file,
-            };
-            let (bytes, exceeded) = budget.read(std::io::repeat(b'x')).unwrap();
-            assert!(exceeded);
-            assert_eq!(bytes.len(), expected_read);
-            assert_eq!(budget.remaining, remaining.saturating_sub(expected_read));
-        }
-        let mut budget = ReadBudget {
-            remaining: 4,
-            per_file: 4,
-        };
-        assert!(!budget.read(b"abcd".as_slice()).unwrap().1);
-        assert_eq!(budget.remaining, 0);
     }
 
     #[test]
@@ -385,10 +318,7 @@ mod tests {
         fs::create_dir_all(&dir).unwrap();
         let path = dir.join("input.md");
         let mut ctx = Context::default();
-        let mut budget = ReadBudget {
-            remaining: 8,
-            per_file: 4,
-        };
+        let mut budget = ReadBudget::new(8, 4);
         fs::write(&path, b"abcd").unwrap();
         assert_eq!(
             read(&path, "valid.md", &mut ctx, &mut budget).as_deref(),
@@ -400,27 +330,11 @@ mod tests {
             !ctx.incomplete,
             "exact budget is allowed even for invalid input"
         );
-        assert_eq!(budget.remaining, 0);
+        assert_eq!(budget.remaining(), 0);
         assert_eq!(ctx.sources.len(), 2);
         fs::write(&path, b"x").unwrap();
         assert!(read(&path, "overflow.md", &mut ctx, &mut budget).is_none());
         assert!(ctx.incomplete);
         assert_eq!(ctx.sources.len(), 2);
-    }
-
-    #[test]
-    fn partial_io_failure_still_consumes_budget() {
-        let mut budget = ReadBudget {
-            remaining: 8,
-            per_file: 8,
-        };
-        struct Fails;
-        impl Read for Fails {
-            fn read(&mut self, _: &mut [u8]) -> std::io::Result<usize> {
-                Err(std::io::Error::other("simulated failure"))
-            }
-        }
-        assert!(budget.read(b"abcd".as_slice().chain(Fails)).is_err());
-        assert_eq!(budget.remaining, 4);
     }
 }

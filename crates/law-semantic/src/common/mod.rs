@@ -2,7 +2,13 @@
 //! `loj-history`, `loj-glyphs`, `loj-registry`, `loj-rebuild` kinds):
 //! strict byte and YAML loading (CORE-03), and the check report
 //! (`schemas/common/v1alpha1/report.schema.json`).
+//!
+//! `budget`, `markdown`, `number` and the YAML reader are also used by
+//! the loj/v1alpha1 pipeline, which has the same rules for them.
+pub(crate) mod budget;
 pub mod findings;
+pub(crate) mod markdown;
+pub(crate) mod number;
 pub mod report;
 pub mod time;
 pub mod yaml;

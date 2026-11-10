@@ -1,8 +1,8 @@
 //! Semantic construction for loj/v1alpha2 (HEAD, DIR, DISP, AST, SRC, ID,
 //! PARA, TABLE, PRE). Derived from the v1alpha1 builder.
+use super::directives::marker;
 use super::Context;
-use super::{
-    directives::marker,
+use crate::common::{
     markdown::{
         bare, blocks, incomplete_split_blocks, line_end, line_start, plain_heading, reserved,
         BlockKind,
