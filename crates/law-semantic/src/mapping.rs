@@ -832,6 +832,14 @@ fn heading_anchors(
     }
 }
 
+/// Map one Markdown source into a semantic AST using `profile`. Problems in
+/// the Markdown are returned inside the AST as `diagnostics`.
+///
+/// # Errors
+///
+/// The profile is not usable: a field is missing or has the wrong type, a
+/// pattern does not compile or lacks a required capture, or it asks for an
+/// unsupported mode.
 pub fn map(source: &str, path: &str, law_id: &str, profile: &Value) -> Result<Value, String> {
     let Profile {
         mode,
@@ -909,6 +917,10 @@ pub fn map(source: &str, path: &str, law_id: &str, profile: &Value) -> Result<Va
 /// `map-corpus`). Files sharing a law `id` are merged in order; differing
 /// titles for one identity are reported as `LAW_TITLE_MISMATCH`. Callers set
 /// each source's `provenance` before merging.
+///
+/// # Errors
+///
+/// A part is not an AST built by [`map`] (a required array is missing).
 pub fn merge(parts: &[Value]) -> Result<Value, String> {
     let mut combined = json!({"version":"0.1","scope":"excerpt","sources":[],"laws":[],"diagnostics":[],"anchors":[]});
     fn list<'v>(v: &'v Value, field: &str) -> Result<&'v Vec<Value>, String> {

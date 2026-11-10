@@ -48,10 +48,12 @@ impl Findings {
                 .at_pointer(path, pointer),
         );
     }
+    #[must_use]
     pub fn failed(&self, check: Check) -> bool {
         self.items.iter().any(|(c, d)| *c == check && d.is_error())
     }
     /// fail > incomplete > pass; notApplicable when nothing was examined.
+    #[must_use]
     pub fn result(&self, check: Check) -> ResultValue {
         if self.failed(check) {
             ResultValue::Fail
@@ -63,6 +65,7 @@ impl Findings {
             ResultValue::NotApplicable
         }
     }
+    #[must_use]
     pub fn into_report(self, checks: &[Check]) -> Report {
         let mut r = Report::default();
         for c in checks {
@@ -89,6 +92,7 @@ impl Findings {
 }
 
 /// Rules of the common types (`types.schema.json#/$defs/...`), if the error lies in one.
+#[must_use]
 pub fn common_type_rule(schema_path: &str) -> Option<(Check, &'static str)> {
     let def = schema_path
         .rsplit_once("/$defs/")

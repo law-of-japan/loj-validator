@@ -47,6 +47,11 @@ impl std::fmt::Display for BytesError {
 }
 
 /// Decode strict UTF-8 without BOM, NUL or bare CR. The text is never normalized.
+///
+/// # Errors
+///
+/// The bytes are empty, are not UTF-8, start with a byte order mark, or
+/// contain a NUL or a CR that is not followed by LF.
 pub fn strict_text(bytes: Vec<u8>) -> Result<String, BytesError> {
     if bytes.is_empty() {
         return Err(BytesError::Empty);
@@ -105,6 +110,7 @@ pub enum Loaded {
 }
 
 /// Read a YAML file under CORE-03.
+#[must_use]
 pub fn load_yaml(path: &std::path::Path) -> Loaded {
     let bytes = match read_limited(path) {
         Ok(b) => b,
@@ -122,6 +128,12 @@ pub fn load_yaml(path: &std::path::Path) -> Loaded {
 }
 
 /// Read a regular file, refusing anything over [`MAX_FILE_BYTES`].
+///
+/// # Errors
+///
+/// The path cannot be read, is not a regular file, or the file is larger
+/// than the limit. None of these says anything about the content: the
+/// check that needed the file is incomplete.
 pub fn read_limited(path: &std::path::Path) -> Result<Vec<u8>, ReadError> {
     use std::io::Read;
     let io = |e: std::io::Error| ReadError::Io(e.to_string());
@@ -144,6 +156,7 @@ pub fn read_limited(path: &std::path::Path) -> Result<Vec<u8>, ReadError> {
 
 /// Compile one of the vendored JSON Schemas with `format` assertions enabled.
 /// `resources` maps `$id` URIs of referenced schemas to their text.
+#[must_use]
 pub fn validator(schema: &str, resources: &[&str]) -> jsonschema::Validator {
     struct Embedded(std::collections::HashMap<String, serde_json::Value>);
     impl jsonschema::Retrieve for Embedded {

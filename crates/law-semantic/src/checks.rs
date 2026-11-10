@@ -32,6 +32,7 @@ pub enum Input {
 
 impl Input {
     /// Guess the kind of a path: `law.yaml`, a repository, or a registry.
+    #[must_use]
     pub fn detect(path: &Path) -> Input {
         if path.is_dir() {
             if path.join("history.yaml").exists() {
@@ -44,6 +45,7 @@ impl Input {
         Input::Package(path.into())
     }
     /// Checks run when none are selected.
+    #[must_use]
     pub fn default_checks(&self) -> Vec<Check> {
         match self {
             Input::Package(_) => vec![Check::L0, Check::L1],
@@ -68,6 +70,7 @@ impl Input {
 
 /// Run the selected checks. Checks that do not apply to the input are
 /// reported as `notApplicable`.
+#[must_use]
 pub fn run(input: &Input, checks: &[Check]) -> Report {
     let mut report = match input {
         Input::Package(p) => crate::v1alpha2::check(p, checks).report,

@@ -13,21 +13,38 @@
 //!
 //! Functions that walk an AST require it to satisfy [`SEMANTIC_SCHEMA`]; the
 //! public entry points check this and return `Err` instead of panicking.
-pub mod change;
+//!
+//! # Public API
+//!
+//! Three pipelines share this crate, and what is public differs for each.
+//!
+//! - **Legacy** (the functions of this module, and [`mapping`], [`number`],
+//!   [`validation`], [`references`]): names, signatures and JSON are kept
+//!   compatible.
+//! - **loj/v1alpha1** ([`v1alpha1::check`] and [`v1alpha1::Level`]): kept
+//!   compatible, including the JSON it returns.
+//! - **Next specification** ([`checks`] and the report types of [`common`];
+//!   [`v1alpha2::check`] for one package; [`fixref::parse`] for the syntax of
+//!   a reference): follows the specification and may change with it.
+//!
+//! The modules behind [`checks::run`] (the registry, repositories, the change
+//! and reference checks, the git wrapper) are private: a check is reached
+//! through its input kind, not through its module.
+pub(crate) mod change;
 pub mod checks;
 pub mod common;
 pub mod fixref;
-pub mod git;
+pub(crate) mod git;
 pub mod mapping;
 pub mod number;
-pub mod rebuild;
+pub(crate) mod rebuild;
 pub mod references;
-pub mod registry;
-pub mod repository;
+pub(crate) mod registry;
+pub(crate) mod repository;
 pub mod v1alpha1;
 pub mod v1alpha2;
 pub mod validation;
-pub mod xref;
+pub(crate) mod xref;
 
 use serde_json::Value;
 use std::sync::OnceLock;
@@ -50,11 +67,16 @@ pub fn semantic_schema() -> &'static Value {
 }
 
 /// Parsed [`LAW_OF_JAPAN_PROFILE`].
+#[must_use]
 pub fn law_of_japan_profile() -> Value {
     serde_json::from_str(LAW_OF_JAPAN_PROFILE).expect("embedded profile is JSON")
 }
 
 /// Whether `data` satisfies [`SEMANTIC_SCHEMA`].
+///
+/// # Errors
+///
+/// The embedded schema does not compile (a defect of this crate).
 pub fn conforms(data: &Value) -> Result<bool, String> {
     let validator = jsonschema::options()
         .build(semantic_schema())
@@ -74,6 +96,10 @@ fn require_conforming(data: &Value) -> Result<(), String> {
 ///
 /// `Err` is a profile/configuration error. Mapping problems in the Markdown
 /// itself are returned inside the AST's `diagnostics`.
+///
+/// # Errors
+///
+/// The profile is not usable; see [`mapping::map`].
 pub fn map_markdown(
     source: &str,
     path: &str,
@@ -84,6 +110,11 @@ pub fn map_markdown(
 }
 
 /// [`validate`] against the embedded [`SEMANTIC_SCHEMA`].
+///
+/// # Errors
+///
+/// The validator could not run; see [`validate`]. Problems of the document
+/// itself are in the returned diagnostics.
 pub fn validate_document(data: &Value) -> Result<Vec<Value>, String> {
     validate(semantic_schema(), data)
 }
@@ -93,6 +124,10 @@ pub fn validate_document(data: &Value) -> Result<Vec<Value>, String> {
 /// Recomputes every reference's `resolution`/`target_id` (supplied flags are
 /// never trusted), replaces the AST's previous `semantic/local-reference`
 /// diagnostics with the new ones, and returns them (errors and warnings).
+///
+/// # Errors
+///
+/// `data` does not satisfy [`SEMANTIC_SCHEMA`]. It is then left unchanged.
 pub fn resolve_references(data: &mut Value) -> Result<Vec<Value>, String> {
     require_conforming(data)?;
     let diagnostics = references::resolve(data);
@@ -108,12 +143,20 @@ pub fn resolve_references(data: &mut Value) -> Result<Vec<Value>, String> {
 ///
 /// `complete` is true only when every reference resolved; out-of-scope
 /// references (external, cross-file) are counted and listed as warnings.
+///
+/// # Errors
+///
+/// `data` does not satisfy [`SEMANTIC_SCHEMA`].
 pub fn reference_coverage(data: &Value) -> Result<Value, String> {
     require_conforming(data)?;
     Ok(references::coverage(data))
 }
 
 /// Normalize a displayed law number (`二の二`, `１２ノ３`) into positive parts.
+///
+/// # Errors
+///
+/// The text is not a law number; see [`number::normalize`].
 pub fn normalize_number(input: &str) -> Result<Vec<u64>, String> {
     number::normalize(input)
 }

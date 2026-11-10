@@ -123,6 +123,7 @@ pub struct PackageCheck {
 }
 
 /// Validate a `law.yaml` path or its directory at L0 and/or L1.
+#[must_use]
 pub fn check(input: &Path, levels: &[Check]) -> PackageCheck {
     let mut ctx = Context::default();
     let path = if input.is_dir() {

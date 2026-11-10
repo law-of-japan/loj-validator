@@ -31,6 +31,7 @@ pub enum Status {
 }
 
 impl Status {
+    #[must_use]
     pub fn as_str(self) -> &'static str {
         match self {
             Status::Passed => "passed",
@@ -40,6 +41,7 @@ impl Status {
         }
     }
     /// Process exit code: 0 passed, 1 validation failure, 2 tool/config error.
+    #[must_use]
     pub fn exit_code(self) -> i32 {
         match self {
             Status::Passed => 0,
@@ -86,6 +88,7 @@ impl Layer {
 }
 
 /// Structure layer: validate `markdown` against a schematter schema source.
+#[must_use]
 pub fn check_structure(markdown: &str, schema_source: &str) -> Layer {
     match schematter_lib::validate(markdown, schema_source) {
         Err(errors) => {
@@ -219,6 +222,7 @@ pub struct Report {
 }
 
 impl Report {
+    #[must_use]
     pub fn exit_code(&self) -> i32 {
         self.status.exit_code()
     }
@@ -234,6 +238,7 @@ fn read_text(path: &Path) -> Result<String, String> {
 }
 
 /// Report for a failure before any layer ran (usage, unreadable input, panic).
+#[must_use]
 pub fn error_report(kind: &str, message: &str, input: Option<&str>) -> Report {
     let json = json!({"tool":"loj-validator","version":env!("CARGO_PKG_VERSION"),
         "status":"error","exit_code":2,"input":input,
@@ -369,6 +374,7 @@ fn render_diagnostic(d: &Value, source: Option<&str>, out: &mut String) {
 }
 
 /// Human-readable rendering of a report.
+#[must_use]
 pub fn render_text(report: &Report) -> String {
     let j = &report.json;
     let mut out = format!(

@@ -32,3 +32,7 @@ unwrap_used = "warn"
 cast_possible_truncation = "warn"
 cast_possible_wrap = "warn"
 cast_sign_loss = "warn"
+# A result that is dropped is a check that was not looked at, and an `Err`
+# needs to say whether it is about the input or about the environment.
+must_use_candidate = "warn"
+missing_errors_doc = "warn"

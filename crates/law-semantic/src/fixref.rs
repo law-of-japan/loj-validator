@@ -19,6 +19,14 @@ pub struct Parsed {
     pub node: Option<String>,
 }
 
+/// Split a fixed or Revision reference
+/// (`loj:<space>/<record>/<revision>[@<commit>][#<node>]`, FIXREF-02) into its
+/// parts, without resolving it.
+///
+/// # Errors
+///
+/// The text does not have that form, or a part of it is empty. The message
+/// is the text of the finding.
 pub fn parse(s: &str) -> Result<Parsed, String> {
     let rest = s
         .strip_prefix("loj:")
@@ -58,6 +66,7 @@ fn full_hash(c: &str) -> bool {
             .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
 }
 
+#[must_use]
 pub fn check(bundle: &Path, registry_dir: &Path, reference: &str) -> Report {
     let mut f = Findings::default();
     f.applicable.insert(RF);

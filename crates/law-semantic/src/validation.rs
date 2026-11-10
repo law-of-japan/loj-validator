@@ -211,6 +211,11 @@ impl Checks {
 /// as in the prototype. `Err` means the validator could not run: `schema` does
 /// not compile, or `schema` accepted a document that does not satisfy the
 /// built-in contract ([`crate::SEMANTIC_SCHEMA`]) the relational checks rely on.
+///
+/// # Errors
+///
+/// The validator could not run, as described above. Problems of the
+/// document itself are in the returned diagnostics, never an `Err`.
 pub fn validate(schema: &Value, data: &Value) -> Result<Vec<Value>, String> {
     let validator = jsonschema::options()
         .build(schema)
