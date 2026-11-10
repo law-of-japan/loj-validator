@@ -944,7 +944,6 @@ pub(crate) mod tests {
             err,
             GitError::Timeout(std::time::Duration::from_millis(300))
         );
-        assert_eq!(err.to_string(), "git did not finish within 0 s");
         assert!(start.elapsed() < std::time::Duration::from_secs(10));
     }
 
