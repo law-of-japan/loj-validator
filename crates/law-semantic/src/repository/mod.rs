@@ -4,7 +4,7 @@ pub(crate) mod glyphs;
 pub(crate) mod history;
 
 use crate::common::findings::Findings;
-use crate::common::{load_yaml, Check, Loaded, Report, ResultValue};
+use crate::common::{load_yaml, Check, Class, Loaded, Report, ResultValue};
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
@@ -202,7 +202,7 @@ fn scope_nodes(h: &Value, asts: &HashMap<String, Option<Value>>, f: &mut Finding
                     _ => {
                         f.note(
                             EVIDENCE,
-                            "undetermined",
+                            Class::Undetermined,
                             "TYPE-07",
                             crate::common::COMMON,
                             format!("scope nodes of revision {id} not checked: no valid AST"),

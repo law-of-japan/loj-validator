@@ -5,6 +5,7 @@
 //! tables (TABLE-01..03), the preamble and enact statement (PRE-01..02),
 //! the 條/ノ heading forms and the spaced supplement heading.
 mod directives;
+mod kind;
 mod manifest;
 mod syntax;
 
@@ -20,11 +21,28 @@ pub const AST_SCHEMA: &str =
 pub const MAX_FILE_BYTES: u64 = 16 * 1024 * 1024;
 pub const MAX_TOTAL_BYTES: usize = 128 * 1024 * 1024;
 
+/// One input file as it was read (SRC-01).
+pub(super) struct Source {
+    path: String,
+    /// The text, or the raw bytes when they are not UTF-8.
+    content: Result<String, Vec<u8>>,
+}
+
+impl Source {
+    fn to_json(&self) -> Value {
+        match &self.content {
+            Ok(text) => json!({"path":self.path,"text":text}),
+            Err(bytes) => json!({"path":self.path,"bytes":bytes}),
+        }
+    }
+}
+
 /// Diagnostics are tagged with the level of the stage that found them
 /// (spec/v1alpha2/10-validation.md: manifest reading is L0, structure is L1).
 pub(super) struct Context {
     diagnostics: Vec<(Check, Diagnostic)>,
-    sources: Vec<Value>,
+    sources: Vec<Source>,
+    /// Output records of [`PackageCheck::positions`].
     positions: Vec<Value>,
     source_map: Map<String, Value>,
     level: Check,
@@ -104,7 +122,11 @@ pub fn check(input: &Path, levels: &[Check]) -> PackageCheck {
                 .as_array()
                 .is_some_and(|a| !a.is_empty())
             {
-                let end = ctx.sources[0]["text"].as_str().map_or(0, str::len);
+                let end = ctx
+                    .sources
+                    .first()
+                    .and_then(|s| s.content.as_ref().ok())
+                    .map_or(0, String::len);
                 ctx.diag(
                     "BASIC-03",
                     "Declared unsupported legal structure",
@@ -164,7 +186,7 @@ pub fn check(input: &Path, levels: &[Check]) -> PackageCheck {
         ast: if l1_pass { ast } else { None },
         positions: ctx.positions,
         source_map: ctx.source_map,
-        sources: ctx.sources,
+        sources: ctx.sources.iter().map(Source::to_json).collect(),
     }
 }
 

@@ -1,13 +1,14 @@
 //! Semantic construction for loj/v1alpha2 (HEAD, DIR, DISP, AST, SRC, ID,
 //! PARA, TABLE, PRE). Derived from the v1alpha1 builder.
 use super::directives::marker;
+use super::kind::Kind;
 use super::Context;
 use crate::common::{
     markdown::{
         bare, blocks, incomplete_split_blocks, line_end, line_start, plain_heading, reserved,
         BlockKind,
     },
-    number::number,
+    number::{number, Digits},
 };
 use regex::Regex;
 use serde_json::{json, Value};
@@ -23,13 +24,26 @@ static HEADING: LazyLock<Regex> = LazyLock::new(|| {
 /// A plain ATX heading line; group 1 is the label.
 static ATX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^#{1,6} ([^\r\n]+)$").expect("constant regex"));
+/// A byte range of one source file.
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct Position {
+    path: String,
+    start: usize,
+    end: usize,
+}
+impl Position {
+    fn to_json(&self) -> Value {
+        json!({"path":self.path,"start":self.start,"end":self.end})
+    }
+}
 #[derive(Clone)]
 enum Content {
-    Text(String, Vec<Value>),
+    /// Own text and the source fragments it was read from, in order (never empty).
+    Text(String, Vec<Position>),
     Node(usize),
 }
 struct Node {
-    kind: String,
+    kind: Kind,
     id: String,
     number: Option<String>,
     display: String,
@@ -46,7 +60,7 @@ struct Node {
 }
 impl Node {
     fn new(
-        kind: &str,
+        kind: Kind,
         id: String,
         number: Option<String>,
         display: String,
@@ -54,7 +68,7 @@ impl Node {
         span: Range<usize>,
     ) -> Self {
         Self {
-            kind: kind.into(),
+            kind,
             id,
             number,
             display,
@@ -70,11 +84,7 @@ impl Node {
             span,
         }
     }
-    fn children<'a>(
-        &'a self,
-        nodes: &'a [Node],
-        kind: &'a str,
-    ) -> impl Iterator<Item = usize> + 'a {
+    fn children<'a>(&'a self, nodes: &'a [Node], kind: Kind) -> impl Iterator<Item = usize> + 'a {
         self.content.iter().filter_map(move |c| match c {
             Content::Node(i) if nodes[*i].kind == kind => Some(*i),
             _ => None,
@@ -91,14 +101,13 @@ fn export(nodes: &[Node], index: usize) -> Value {
             Content::Node(i) => export(nodes, *i),
         })
         .collect();
-    let mut v =
-        json!({"kind":n.kind,"id":n.id,"number":n.number,"display":n.display,"content":content});
-    match n.kind.as_str() {
-        "Article" => v["status"] = json!(if n.deleted { "deleted" } else { "active" }),
-        "Subitem" => v["level"] = json!(n.level),
-        "Paragraph" => v["numbering"] = json!(if n.implicit { "implicit" } else { "explicit" }),
-        "Row" => v["key"] = json!(n.key),
-        "Cell" => {
+    let mut v = json!({"kind":n.kind.as_str(),"id":n.id,"number":n.number,"display":n.display,"content":content});
+    match n.kind {
+        Kind::Article => v["status"] = json!(if n.deleted { "deleted" } else { "active" }),
+        Kind::Subitem => v["level"] = json!(n.level),
+        Kind::Paragraph => v["numbering"] = json!(if n.implicit { "implicit" } else { "explicit" }),
+        Kind::Row => v["key"] = json!(n.key),
+        Kind::Cell => {
             if let Some(r) = n.rowspan {
                 v["rowspan"] = json!(r);
             }
@@ -120,10 +129,10 @@ fn add(
     if !ids.insert(node.id.clone()) {
         let rule = if node.rank > 0 {
             "HEAD-02"
-        } else if node.kind == "Row" {
+        } else if node.kind == Kind::Row {
             "TABLE-02"
-        } else if matches!(node.kind.as_str(), "Preamble" | "EnactStatement") {
-            if node.kind == "Preamble" {
+        } else if matches!(node.kind, Kind::Preamble | Kind::EnactStatement) {
+            if node.kind == Kind::Preamble {
                 "PRE-01"
             } else {
                 "PRE-02"
@@ -147,14 +156,14 @@ fn add(
         );
     }
     let i = nodes.len();
-    let front = matches!(node.kind.as_str(), "Preamble" | "EnactStatement");
+    let front = matches!(node.kind, Kind::Preamble | Kind::EnactStatement);
     nodes.push(node);
     if front {
         // AST-01: EnactStatement, Preamble, then MainProvision.
         let at = nodes[parent]
             .content
             .iter()
-            .take_while(|c| matches!(c, Content::Node(j) if matches!(nodes[*j].kind.as_str(), "EnactStatement" | "Preamble")))
+            .take_while(|c| matches!(c, Content::Node(j) if matches!(nodes[*j].kind, Kind::EnactStatement | Kind::Preamble)))
             .count();
         nodes[parent].content.insert(at, Content::Node(i));
     } else {
@@ -173,7 +182,7 @@ fn text(
     if span.is_empty() {
         return;
     }
-    if matches!(nodes[index].kind.as_str(), "Table" | "Row") {
+    if matches!(nodes[index].kind, Kind::Table | Kind::Row) {
         // DIR-02: only blank lines directly inside Table and Row; never stored.
         if !source[span.clone()].trim().is_empty() {
             ctx.diag(
@@ -186,7 +195,11 @@ fn text(
         }
         return;
     }
-    let position = json!({"path":path,"start":span.start,"end":span.end});
+    let position = Position {
+        path: path.into(),
+        start: span.start,
+        end: span.end,
+    };
     if let Some(Content::Text(t, p)) = nodes[index].content.last_mut() {
         t.push_str(&source[span]);
         p.push(position);
@@ -199,14 +212,18 @@ fn text(
 
 /// Close a container: own-text (DIR-02), children counts and display (DISP-01).
 fn close(nodes: &mut [Node], index: usize, ctx: &mut Context) {
-    let kind = nodes[index].kind.clone();
-    if matches!(kind.as_str(), "Table" | "Row") {
-        let child = if kind == "Table" { "Row" } else { "Cell" };
+    let kind = nodes[index].kind;
+    if matches!(kind, Kind::Table | Kind::Row) {
+        let child = if kind == Kind::Table {
+            Kind::Row
+        } else {
+            Kind::Cell
+        };
         if nodes[index].children(nodes, child).next().is_none() {
             let n = &nodes[index];
             ctx.diag(
                 "DIR-02",
-                if kind == "Table" {
+                if kind == Kind::Table {
                     "Table requires a row"
                 } else {
                     "Row requires a cell"
@@ -237,7 +254,7 @@ fn close(nodes: &mut [Node], index: usize, ctx: &mut Context) {
         return;
     };
     // DISP-01 applies to explicit paragraphs, items and subitems only.
-    if !matches!(kind.as_str(), "Paragraph" | "Item" | "Subitem") || n.implicit {
+    if !matches!(kind, Kind::Paragraph | Kind::Item | Kind::Subitem) || n.implicit {
         return;
     }
     let mut offset = 0;
@@ -252,13 +269,13 @@ fn close(nodes: &mut [Node], index: usize, ctx: &mut Context) {
         offset += line.len();
     }
     let token = first_line.split([' ', '　']).next().unwrap_or("");
-    let mode = match kind.as_str() {
-        "Paragraph" => 1,
-        "Subitem" => 2,
-        _ => 0,
+    let digits = match kind {
+        Kind::Paragraph => Digits::Arabic,
+        Kind::Subitem => Digits::Ascii,
+        _ => Digits::Any,
     };
-    let parsed = number(token, SEPARATORS, mode);
-    let omitted = kind == "Paragraph" && n.number.as_deref() == Some("1") && parsed.is_none();
+    let parsed = number(token, SEPARATORS, digits);
+    let omitted = kind == Kind::Paragraph && n.number.as_deref() == Some("1") && parsed.is_none();
     if !omitted {
         n.display = token.into();
     }
@@ -272,19 +289,19 @@ fn close(nodes: &mut [Node], index: usize, ctx: &mut Context) {
         let mut relative = offset;
         let mut pos = &positions[0];
         for p in positions {
-            let len = (p["end"].as_u64().unwrap() - p["start"].as_u64().unwrap()) as usize;
+            let len = p.end - p.start;
             pos = p;
             if relative < len {
                 break;
             }
             relative -= len;
         }
-        let start = pos["start"].as_u64().unwrap() as usize + relative;
-        let end = (start + first_line_bytes).min(pos["end"].as_u64().unwrap() as usize);
+        let start = pos.start + relative;
+        let end = (start + first_line_bytes).min(pos.end);
         ctx.diag(
             "DISP-01",
             "Display number missing or inconsistent",
-            pos["path"].as_str().unwrap(),
+            &pos.path,
             start,
             end,
         );
@@ -317,7 +334,7 @@ pub(super) fn build(
 ) -> Value {
     let law = manifest["law"]["id"].as_str().unwrap();
     let mut nodes = vec![Node::new(
-        "Law",
+        Kind::Law,
         law.into(),
         None,
         manifest["law"]["title"].as_str().unwrap().into(),
@@ -330,7 +347,7 @@ pub(super) fn build(
         &mut nodes,
         0,
         Node::new(
-            "MainProvision",
+            Kind::MainProvision,
             format!("{law}/main"),
             None,
             String::new(),
@@ -342,8 +359,8 @@ pub(super) fn build(
     );
     scopes.insert("main".to_owned(), main);
     for (field, prefix, kind) in [
-        ("supplements", "supplement", "SupplementaryProvision"),
-        ("appendices", "appendix", "AppendedMaterial"),
+        ("supplements", "supplement", Kind::SupplementaryProvision),
+        ("appendices", "appendix", Kind::AppendedMaterial),
     ] {
         if let Some(a) = manifest[field].as_array() {
             for s in a {
@@ -389,8 +406,8 @@ pub(super) fn build(
         let mut article = None;
         let mut stack: Vec<usize> = Vec::new();
         let mut cursor = 0;
-        let appendix = nodes[scope].kind == "AppendedMaterial";
-        let supplementary = nodes[scope].kind == "SupplementaryProvision";
+        let appendix = nodes[scope].kind == Kind::AppendedMaterial;
+        let supplementary = nodes[scope].kind == Kind::SupplementaryProvision;
         let mut special_heading = appendix && !first;
         let parsed = blocks(source);
         let mut events = Vec::new();
@@ -572,7 +589,7 @@ pub(super) fn build(
                     cursor = span.end;
                     continue;
                 };
-                let num = number(&format!("{}{}", &c[1], &c[3]), SEPARATORS, 0);
+                let num = number(&format!("{}{}", &c[1], &c[3]), SEPARATORS, Digits::Any);
                 let Some(num) = num else {
                     ctx.diag(
                         "NUM-01",
@@ -585,12 +602,12 @@ pub(super) fn build(
                     continue;
                 };
                 let (kind, rank) = match &c[2] {
-                    "編" => ("Part", 1),
-                    "章" => ("Chapter", 2),
-                    "節" => ("Section", 3),
-                    "款" => ("Subsection", 4),
-                    "目" => ("Division", 5),
-                    _ => ("Article", 6),
+                    "編" => (Kind::Part, 1),
+                    "章" => (Kind::Chapter, 2),
+                    "節" => (Kind::Section, 3),
+                    "款" => (Kind::Subsection, 4),
+                    "目" => (Kind::Division, 5),
+                    _ => (Kind::Article, 6),
                 };
                 let tail = &c[4];
                 let tail_ok = if rank == 6 {
@@ -624,7 +641,7 @@ pub(super) fn build(
                 let id_parent = if rank == 6 { scope } else { parent };
                 let mut node = Node::new(
                     kind,
-                    format!("{}/{}/{}", nodes[id_parent].id, kind.to_lowercase(), num),
+                    format!("{}/{}/{}", nodes[id_parent].id, kind.id_segment(), num),
                     Some(num),
                     label.into(),
                     path,
@@ -694,10 +711,10 @@ pub(super) fn build(
                     cursor = span.end;
                     continue;
                 }
-                if matches!(m.kind, "Preamble" | "EnactStatement") {
+                if matches!(m.kind, Kind::Preamble | Kind::EnactStatement) {
                     // PRE-01/PRE-02: document level, first main file, before any
                     // structural heading; the enact statement precedes the preamble.
-                    let rule = if m.kind == "Preamble" {
+                    let rule = if m.kind == Kind::Preamble {
                         "PRE-01"
                     } else {
                         "PRE-02"
@@ -708,7 +725,7 @@ pub(super) fn build(
                         && scope == main
                         && first
                         && !main_heading_seen
-                        && (m.kind == "Preamble" || !preamble_seen);
+                        && (m.kind == Kind::Preamble || !preamble_seen);
                     if !placed {
                         ctx.diag(
                             rule,
@@ -721,10 +738,10 @@ pub(super) fn build(
                             ctx.diag("DIR-02", "Invalid legal parent", path, span.start, span.end);
                         }
                     }
-                    if m.kind == "Preamble" {
+                    if m.kind == Kind::Preamble {
                         preamble_seen = true;
                     }
-                    let id = if m.kind == "Preamble" {
+                    let id = if m.kind == Kind::Preamble {
                         format!("{law}/preamble")
                     } else {
                         format!("{law}/enact-statement")
@@ -738,18 +755,20 @@ pub(super) fn build(
                 let parent = stack.last().copied().or(article).unwrap_or(scope);
                 let p = &nodes[parent];
                 let valid = match m.kind {
-                    "Paragraph" => p.kind == "Article" || p.kind == "SupplementaryProvision",
-                    "Item" => p.kind == "Paragraph",
-                    "Subitem" => {
+                    Kind::Paragraph => {
+                        p.kind == Kind::Article || p.kind == Kind::SupplementaryProvision
+                    }
+                    Kind::Item => p.kind == Kind::Paragraph,
+                    Kind::Subitem => {
                         if m.level == 1 {
-                            p.kind == "Item"
+                            p.kind == Kind::Item
                         } else {
-                            p.kind == "Subitem" && p.level + 1 == m.level
+                            p.kind == Kind::Subitem && p.level + 1 == m.level
                         }
                     }
-                    "Table" => matches!(p.kind.as_str(), "Paragraph" | "Item" | "Subitem"),
-                    "Row" => p.kind == "Table",
-                    _ => p.kind == "Row",
+                    Kind::Table => matches!(p.kind, Kind::Paragraph | Kind::Item | Kind::Subitem),
+                    Kind::Row => p.kind == Kind::Table,
+                    _ => p.kind == Kind::Row,
                 };
                 if !valid {
                     ctx.diag(
@@ -759,7 +778,7 @@ pub(super) fn build(
                         span.start,
                         span.end,
                     );
-                    if p.kind == "Cell" {
+                    if p.kind == Kind::Cell {
                         ctx.diag(
                             "TABLE-03",
                             "A cell contains text only",
@@ -781,17 +800,17 @@ pub(super) fn build(
                     );
                 }
                 let (suffix, num) = match m.kind {
-                    "Subitem" => (
+                    Kind::Subitem => (
                         format!("subitem/{}/{}", m.level, m.number.as_deref().unwrap()),
                         m.number.clone(),
                     ),
-                    "Row" => (format!("row/{}", m.key.as_deref().unwrap()), None),
-                    "Cell" => {
-                        let c = (p.children(&nodes, "Cell").count() + 1).to_string();
+                    Kind::Row => (format!("row/{}", m.key.as_deref().unwrap()), None),
+                    Kind::Cell => {
+                        let c = (p.children(&nodes, Kind::Cell).count() + 1).to_string();
                         (format!("cell/{c}"), Some(c))
                     }
                     _ => (
-                        format!("{}/{}", m.kind.to_lowercase(), m.number.as_deref().unwrap()),
+                        format!("{}/{}", m.kind.id_segment(), m.number.as_deref().unwrap()),
                         m.number.clone(),
                     ),
                 };
@@ -852,8 +871,9 @@ pub(super) fn build(
         }
         for (j, c) in n.content.iter().enumerate() {
             if let Content::Text(t, positions) = c {
+                let spans: Vec<Value> = positions.iter().map(Position::to_json).collect();
                 ctx.positions
-                    .push(json!({"nodeId":n.id,"contentIndex":j,"text":t,"spans":positions}));
+                    .push(json!({"nodeId":n.id,"contentIndex":j,"text":t,"spans":spans}));
             }
         }
     }
@@ -869,7 +889,7 @@ fn structure(
     ctx: &mut Context,
 ) {
     let n = &nodes[i];
-    if n.kind == "Article" && !n.deleted && n.content.is_empty() {
+    if n.kind == Kind::Article && !n.deleted && n.content.is_empty() {
         ctx.diag(
             "HEAD-04",
             "Active article requires a paragraph",
@@ -880,8 +900,8 @@ fn structure(
     }
     if (n.rank > 0 && n.rank < 6
         || matches!(
-            n.kind.as_str(),
-            "MainProvision" | "SupplementaryProvision" | "AppendedMaterial"
+            n.kind,
+            Kind::MainProvision | Kind::SupplementaryProvision | Kind::AppendedMaterial
         ))
         && n.content.is_empty()
     {
@@ -893,12 +913,12 @@ fn structure(
             n.span.end,
         );
     }
-    if n.kind == "SupplementaryProvision" {
-        let direct = n.children(nodes, "Paragraph").next().is_some();
+    if n.kind == Kind::SupplementaryProvision {
+        let direct = n.children(nodes, Kind::Paragraph).next().is_some();
         let structural = n
             .content
             .iter()
-            .any(|c| matches!(c,Content::Node(j) if nodes[*j].kind!="Paragraph"));
+            .any(|c| matches!(c,Content::Node(j) if nodes[*j].kind!=Kind::Paragraph));
         let files = documents
             .iter()
             .filter(|d| format!("{law}/{}", d.2) == n.id)
@@ -915,7 +935,7 @@ fn structure(
     }
     // PARA-01: one numbering form per parent, implicit numbers are 1..n,
     // and a sole paragraph is explicit.
-    let paragraphs: Vec<usize> = n.children(nodes, "Paragraph").collect();
+    let paragraphs: Vec<usize> = n.children(nodes, Kind::Paragraph).collect();
     if !paragraphs.is_empty() {
         let implicit = paragraphs.iter().filter(|j| nodes[**j].implicit).count();
         let first = &nodes[paragraphs[0]];
@@ -952,7 +972,7 @@ fn structure(
         }
     }
     // TABLE-01: table numbers are the order 1..n within the parent.
-    for (k, j) in n.children(nodes, "Table").enumerate() {
+    for (k, j) in n.children(nodes, Kind::Table).enumerate() {
         let t = &nodes[j];
         if t.number.as_deref() != Some(&(k + 1).to_string()) {
             ctx.diag(
@@ -965,17 +985,18 @@ fn structure(
         }
     }
     // TABLE-01 / MD-02: a GFM table in paragraph, item or subitem text.
-    if matches!(n.kind.as_str(), "Paragraph" | "Item" | "Subitem") {
+    if matches!(n.kind, Kind::Paragraph | Kind::Item | Kind::Subitem) {
         for c in &n.content {
             if let Content::Text(t, positions) = c {
-                if has_gfm_table(t) {
-                    let p = &positions[0];
+                if let (true, Some(first), Some(last)) =
+                    (has_gfm_table(t), positions.first(), positions.last())
+                {
                     ctx.diag(
                         "TABLE-01",
                         "Write legal tables with table markers, not GFM tables",
-                        p["path"].as_str().unwrap(),
-                        p["start"].as_u64().unwrap() as usize,
-                        positions.last().unwrap()["end"].as_u64().unwrap() as usize,
+                        &first.path,
+                        first.start,
+                        last.end,
                     );
                 }
             }

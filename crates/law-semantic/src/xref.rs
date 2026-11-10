@@ -2,7 +2,7 @@
 //! and timeConsistency over the registry and several law repositories.
 use crate::common::findings::Findings;
 use crate::common::time::fixed_day;
-use crate::common::{Check, Report, COMMON};
+use crate::common::{Check, Class, Report, COMMON};
 use crate::registry::{self, Resolution};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
@@ -55,7 +55,7 @@ pub fn check(registry_dir: &Path, repositories: &[std::path::PathBuf], checks: &
             f.incomplete.insert(RES);
             f.note(
                 RES,
-                "undetermined",
+                Class::Undetermined,
                 "XREF-01",
                 COMMON,
                 format!("{} is not resolved in the registry", reg.target(me)),
@@ -96,7 +96,7 @@ pub fn check(registry_dir: &Path, repositories: &[std::path::PathBuf], checks: &
                     f.incomplete.insert(RES);
                     f.note(
                         RES,
-                        "undetermined",
+                        Class::Undetermined,
                         "XREF-01",
                         COMMON,
                         format!("{} not fetched: {why}", reg.target(&rref)),
@@ -140,7 +140,7 @@ pub fn check(registry_dir: &Path, repositories: &[std::path::PathBuf], checks: &
                 f.incomplete.insert(CON);
                 f.note(
                     CON,
-                    "undetermined",
+                    Class::Undetermined,
                     "XREF-02",
                     COMMON,
                     format!("history of {from} not given"),
@@ -191,7 +191,7 @@ pub fn check(registry_dir: &Path, repositories: &[std::path::PathBuf], checks: &
                 f.incomplete.insert(CON);
                 f.note(
                     CON,
-                    "undetermined",
+                    Class::Undetermined,
                     "XREF-02",
                     COMMON,
                     format!("history of {old} not given"),
@@ -242,7 +242,7 @@ pub fn check(registry_dir: &Path, repositories: &[std::path::PathBuf], checks: &
                 f.incomplete.insert(TIME);
                 f.note(
                     TIME,
-                    "undetermined",
+                    Class::Undetermined,
                     "XREF-03",
                     COMMON,
                     format!("{target} not fetched"),
@@ -285,7 +285,7 @@ pub fn check(registry_dir: &Path, repositories: &[std::path::PathBuf], checks: &
                 (Some(_), Some(_)) => {}
                 _ => f.note(
                     TIME,
-                    "undetermined",
+                    Class::Undetermined,
                     "XREF-03",
                     COMMON,
                     format!("{target}: not both fixed dates"),
