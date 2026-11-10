@@ -198,3 +198,51 @@ fn manifest_validator() -> &'static jsonschema::Validator {
     static V: std::sync::OnceLock<jsonschema::Validator> = std::sync::OnceLock::new();
     V.get_or_init(|| validator(MANIFEST_SCHEMA, &[]))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sources_are_returned_as_text_or_as_the_bytes_that_were_read() {
+        let text = Source {
+            path: "main.md".into(),
+            content: Ok("第一条\r\n".into()),
+        };
+        assert_eq!(
+            text.to_json(),
+            json!({"path": "main.md", "text": "第一条\r\n"})
+        );
+        // Not UTF-8: the bytes are kept as they are, not replaced or dropped.
+        let bytes = Source {
+            path: "main.md".into(),
+            content: Err(vec![0xff, b'a', 0x80]),
+        };
+        assert_eq!(
+            bytes.to_json(),
+            json!({"path": "main.md", "bytes": [255, 97, 128]})
+        );
+    }
+
+    #[test]
+    fn a_file_that_is_not_utf8_is_reported_at_its_start_and_kept_as_bytes() {
+        let dir = std::env::temp_dir().join(format!("loj2-source-bytes-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("law.yaml"), b"schemaVersion: \xff\n").unwrap();
+        let checked = check(&dir, &[Check::L0]);
+        std::fs::remove_dir_all(&dir).unwrap();
+        let d = &checked.report.diagnostics[0];
+        assert_eq!(d.rule, "BASIC-02");
+        assert_eq!(
+            d.location,
+            Some(json!({"path": "law.yaml", "start": 0, "end": 0}))
+        );
+        assert_eq!(checked.sources.len(), 1);
+        assert_eq!(checked.sources[0]["path"], "law.yaml");
+        assert_eq!(
+            checked.sources[0]["bytes"],
+            json!(b"schemaVersion: \xff\n".to_vec())
+        );
+        assert!(checked.ast.is_none());
+    }
+}
