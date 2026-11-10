@@ -1,6 +1,6 @@
 //! Semantic construction for loj/v1alpha2 (HEAD, DIR, DISP, AST, SRC, ID,
 //! PARA, TABLE, PRE). Derived from the v1alpha1 builder.
-use super::directives::{marker, Marker};
+use super::directives::{marker, Container, Marker};
 use super::kind::Kind;
 use super::Context;
 use crate::common::{
@@ -406,21 +406,18 @@ fn tail_ok(rank: usize, tail: &str) -> bool {
     }
 }
 
-/// DIR-02: whether the container that `m` opens may be a child of `p`.
-fn valid_parent(m: &Marker, p: &Node) -> bool {
-    match m.kind {
-        Kind::Paragraph => p.kind == Kind::Article || p.kind == Kind::SupplementaryProvision,
-        Kind::Item => p.kind == Kind::Paragraph,
-        Kind::Subitem => {
-            if m.level == 1 {
-                p.kind == Kind::Item
-            } else {
-                p.kind == Kind::Subitem && p.level + 1 == m.level
-            }
+/// DIR-02: whether the container that `open` starts may be a child of `p`.
+fn valid_parent(open: &Container, p: &Node) -> bool {
+    match open {
+        Container::Paragraph { .. } => {
+            p.kind == Kind::Article || p.kind == Kind::SupplementaryProvision
         }
-        Kind::Table => matches!(p.kind, Kind::Paragraph | Kind::Item | Kind::Subitem),
-        Kind::Row => p.kind == Kind::Table,
-        _ => p.kind == Kind::Row,
+        Container::Item { .. } => p.kind == Kind::Paragraph,
+        Container::Subitem { level: 1, .. } => p.kind == Kind::Item,
+        Container::Subitem { level, .. } => p.kind == Kind::Subitem && p.level + 1 == *level,
+        Container::Table { .. } => matches!(p.kind, Kind::Paragraph | Kind::Item | Kind::Subitem),
+        Container::Row { .. } => p.kind == Kind::Table,
+        Container::Cell { .. } => p.kind == Kind::Row,
     }
 }
 
@@ -886,12 +883,11 @@ impl<'a> Builder<'a> {
                 return;
             }
         };
-        if m.close {
-            self.closing_marker(doc, &m, span, ctx);
-        } else if matches!(m.kind, Kind::Preamble | Kind::EnactStatement) {
-            self.front_matter(doc, &m, span, ctx);
-        } else {
-            self.container(doc, m, span, ctx);
+        match m {
+            Marker::Close(kind) => self.closing_marker(doc, kind, span, ctx),
+            Marker::Preamble => self.front_matter(doc, Kind::Preamble, span, ctx),
+            Marker::EnactStatement => self.front_matter(doc, Kind::EnactStatement, span, ctx),
+            Marker::Open(open) => self.container(doc, open, span, ctx),
         }
     }
 
@@ -899,7 +895,7 @@ impl<'a> Builder<'a> {
     fn closing_marker(
         &mut self,
         doc: &mut Document,
-        m: &Marker,
+        kind: Kind,
         span: &Range<usize>,
         ctx: &mut Context,
     ) {
@@ -913,7 +909,7 @@ impl<'a> Builder<'a> {
             );
             return;
         };
-        if self.nodes[i].kind == m.kind {
+        if self.nodes[i].kind == kind {
             self.nodes[i].span.end = span.end;
             close(&mut self.nodes, i, ctx);
             doc.stack.pop();
@@ -934,12 +930,12 @@ impl<'a> Builder<'a> {
     fn front_matter(
         &mut self,
         doc: &mut Document,
-        m: &Marker,
+        kind: Kind,
         span: &Range<usize>,
         ctx: &mut Context,
     ) {
         let path = doc.path;
-        let preamble = m.kind == Kind::Preamble;
+        let preamble = kind == Kind::Preamble;
         let placed = doc.stack.is_empty()
             && doc.article.is_none()
             && self.groups.is_empty()
@@ -967,13 +963,19 @@ impl<'a> Builder<'a> {
         } else {
             format!("{}/enact-statement", self.law)
         };
-        let node = Node::new(m.kind, id, None, String::new(), path, span.clone());
+        let node = Node::new(kind, id, None, String::new(), path, span.clone());
         let i = add(&mut self.nodes, 0, node, ctx, &mut self.ids);
         doc.stack.push(i);
     }
 
     /// An opening marker of a paragraph, item, subitem, table, row or cell.
-    fn container(&mut self, doc: &mut Document, m: Marker, span: &Range<usize>, ctx: &mut Context) {
+    fn container(
+        &mut self,
+        doc: &mut Document,
+        open: Container,
+        span: &Range<usize>,
+        ctx: &mut Context,
+    ) {
         let path = doc.path;
         let parent = doc
             .stack
@@ -982,7 +984,7 @@ impl<'a> Builder<'a> {
             .or(doc.article)
             .unwrap_or(doc.scope);
         let p = &self.nodes[parent];
-        if !valid_parent(&m, p) {
+        if !valid_parent(&open, p) {
             ctx.diag(
                 "DIR-02",
                 "Invalid legal parent or subitem level",
@@ -1010,34 +1012,42 @@ impl<'a> Builder<'a> {
                 span.end,
             );
         }
-        let (suffix, num) = match m.kind {
-            Kind::Subitem => (
-                format!("subitem/{}/{}", m.level, m.number.as_deref().unwrap()),
-                m.number.clone(),
-            ),
-            Kind::Row => (format!("row/{}", m.key.as_deref().unwrap()), None),
-            Kind::Cell => {
+        let kind = open.kind();
+        // ID-01: the segment that this node adds to the ID of its parent.
+        let (suffix, num) = match &open {
+            Container::Subitem { number, level } => {
+                (format!("subitem/{level}/{number}"), Some(number.clone()))
+            }
+            Container::Row { key } => (format!("row/{key}"), None),
+            Container::Cell { .. } => {
                 let c = (p.children(&self.nodes, Kind::Cell).count() + 1).to_string();
                 (format!("cell/{c}"), Some(c))
             }
-            _ => (
-                format!("{}/{}", m.kind.id_segment(), m.number.as_deref().unwrap()),
-                m.number.clone(),
+            Container::Paragraph { number, .. }
+            | Container::Item { number }
+            | Container::Table { number } => (
+                format!("{}/{number}", kind.id_segment()),
+                Some(number.clone()),
             ),
         };
         let mut node = Node::new(
-            m.kind,
+            kind,
             format!("{}/{suffix}", p.id),
             num,
             String::new(),
             path,
             span.clone(),
         );
-        node.level = m.level;
-        node.implicit = m.implicit;
-        node.key = m.key;
-        node.rowspan = m.rowspan;
-        node.colspan = m.colspan;
+        match open {
+            Container::Paragraph { implicit, .. } => node.implicit = implicit,
+            Container::Subitem { level, .. } => node.level = level,
+            Container::Row { key } => node.key = Some(key),
+            Container::Cell { rowspan, colspan } => {
+                node.rowspan = rowspan;
+                node.colspan = colspan;
+            }
+            Container::Item { .. } | Container::Table { .. } => {}
+        }
         let i = add(&mut self.nodes, parent, node, ctx, &mut self.ids);
         doc.stack.push(i);
     }
@@ -1339,7 +1349,10 @@ mod tests {
             n.level = level;
             n
         };
-        let open = |s: &str| marker(s).ok().unwrap();
+        let open = |s: &str| match marker(s) {
+            Ok(Marker::Open(container)) => container,
+            _ => panic!("not an opening marker: {s}"),
+        };
         let paragraph = open("<!-- loj:paragraph number=1 -->");
         assert!(valid_parent(&paragraph, &node(Kind::Article, 0)));
         assert!(valid_parent(
