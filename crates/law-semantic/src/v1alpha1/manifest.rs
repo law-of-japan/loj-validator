@@ -301,13 +301,10 @@ mod tests {
         for bytes in [b"\xffabc".as_slice(), b"\xef\xbb\xbfa", b"a\0bc", b"a\rbc"] {
             let path = dir.join("input.md");
             fs::write(&path, bytes).unwrap();
-            let mut budget = ReadBudget {
-                remaining: 7,
-                per_file: 100,
-            };
+            let mut budget = ReadBudget::new(7, 100);
             let mut ctx = Context::default();
             assert!(read(&path, "first.md", &mut ctx, &mut budget).is_none());
-            assert_eq!(budget.remaining, 3);
+            assert_eq!(budget.remaining(), 3);
             assert_eq!(ctx.sources.len(), 1);
             assert!(!ctx.incomplete);
             assert!(read(&path, "second.md", &mut ctx, &mut budget).is_none());
@@ -317,7 +314,7 @@ mod tests {
                 1,
                 "over-budget bytes must not be retained"
             );
-            assert_eq!(budget.remaining, 3, "metadata rejects before reading");
+            assert_eq!(budget.remaining(), 3, "metadata rejects before reading");
         }
     }
 
@@ -327,10 +324,7 @@ mod tests {
         fs::create_dir_all(&dir).unwrap();
         let path = dir.join("input.md");
         let mut ctx = Context::default();
-        let mut budget = ReadBudget {
-            remaining: 8,
-            per_file: 4,
-        };
+        let mut budget = ReadBudget::new(8, 4);
         fs::write(&path, b"abcd").unwrap();
         assert_eq!(
             read(&path, "valid.md", &mut ctx, &mut budget).as_deref(),
@@ -342,7 +336,7 @@ mod tests {
             !ctx.incomplete,
             "exact budget is allowed even for invalid input"
         );
-        assert_eq!(budget.remaining, 0);
+        assert_eq!(budget.remaining(), 0);
         assert_eq!(ctx.sources.len(), 2);
         fs::write(&path, b"x").unwrap();
         assert!(read(&path, "overflow.md", &mut ctx, &mut budget).is_none());

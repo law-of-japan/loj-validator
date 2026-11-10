@@ -12,6 +12,7 @@ pub(crate) struct Options {
     /// Deepest allowed nesting of sequences and mappings.
     pub(crate) max_depth: usize,
     /// Whether the error for a duplicate or merge key names the key.
+    /// It exists only to keep the loj/v1alpha1 message text unchanged.
     pub(crate) name_duplicate_key: bool,
 }
 

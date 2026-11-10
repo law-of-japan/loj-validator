@@ -3,8 +3,8 @@ use std::{fs, io::Read, path::Path};
 
 /// Bytes that may still be read: a total over all files and a per-file limit.
 pub(crate) struct ReadBudget {
-    pub(crate) remaining: usize,
-    pub(crate) per_file: u64,
+    remaining: usize,
+    per_file: u64,
 }
 
 impl ReadBudget {
@@ -13,6 +13,12 @@ impl ReadBudget {
             remaining: total,
             per_file,
         }
+    }
+
+    /// Bytes of the total that are still unread.
+    #[cfg(test)]
+    pub(crate) fn remaining(&self) -> usize {
+        self.remaining
     }
 
     fn limit(&self) -> u64 {
@@ -57,29 +63,20 @@ mod tests {
     #[test]
     fn streaming_read_is_bounded_even_when_length_is_unknown_or_changes() {
         for (remaining, per_file, expected_read) in [(7, 100, 8), (100, 7, 8)] {
-            let mut budget = ReadBudget {
-                remaining,
-                per_file,
-            };
+            let mut budget = ReadBudget::new(remaining, per_file);
             let (bytes, exceeded) = budget.read(std::io::repeat(b'x')).unwrap();
             assert!(exceeded);
             assert_eq!(bytes.len(), expected_read);
-            assert_eq!(budget.remaining, remaining.saturating_sub(expected_read));
+            assert_eq!(budget.remaining(), remaining.saturating_sub(expected_read));
         }
-        let mut budget = ReadBudget {
-            remaining: 4,
-            per_file: 4,
-        };
+        let mut budget = ReadBudget::new(4, 4);
         assert!(!budget.read(b"abcd".as_slice()).unwrap().1);
-        assert_eq!(budget.remaining, 0);
+        assert_eq!(budget.remaining(), 0);
     }
 
     #[test]
     fn partial_io_failure_still_consumes_budget() {
-        let mut budget = ReadBudget {
-            remaining: 8,
-            per_file: 8,
-        };
+        let mut budget = ReadBudget::new(8, 8);
         struct Fails;
         impl Read for Fails {
             fn read(&mut self, _: &mut [u8]) -> std::io::Result<usize> {
@@ -87,6 +84,6 @@ mod tests {
             }
         }
         assert!(budget.read(b"abcd".as_slice().chain(Fails)).is_err());
-        assert_eq!(budget.remaining, 4);
+        assert_eq!(budget.remaining(), 4);
     }
 }
