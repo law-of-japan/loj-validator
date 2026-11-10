@@ -6,10 +6,12 @@
 //! `budget`, `markdown`, `number` and the YAML reader are also used by
 //! the loj/v1alpha1 pipeline, which has the same rules for them.
 pub(crate) mod budget;
+pub(crate) mod documents;
 pub mod findings;
 pub(crate) mod markdown;
 pub(crate) mod number;
 pub mod report;
+pub(crate) mod structure;
 pub mod time;
 pub mod yaml;
 

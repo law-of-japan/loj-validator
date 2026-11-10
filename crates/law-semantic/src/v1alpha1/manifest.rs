@@ -1,8 +1,9 @@
 use super::{Context, MANIFEST_SCHEMA, MAX_FILE_BYTES, MAX_TOTAL_BYTES};
 use crate::common::budget::ReadBudget;
+use crate::common::documents::DocumentPaths;
 use crate::common::yaml::{parse_with, Options};
 use serde_json::{json, Value};
-use std::{collections::HashSet, fs, path::Path};
+use std::{collections::HashSet, path::Path};
 
 type Documents = Vec<(String, String, String)>;
 
@@ -71,52 +72,26 @@ fn read(path: &Path, name: &str, ctx: &mut Context, budget: &mut ReadBudget) -> 
     Some(source)
 }
 
-fn safe_path(path: &str) -> bool {
-    path.ends_with(".md")
-        && path.split('/').all(|s| {
-            let stem = s.split('.').next().unwrap_or("").to_ascii_uppercase();
-            !s.is_empty()
-                && s != "."
-                && s != ".."
-                && !s.ends_with('.')
-                && s.bytes()
-                    .all(|b| b.is_ascii_alphanumeric() || b"_.-".contains(&b))
-                && !matches!(stem.as_str(), "CON" | "PRN" | "AUX" | "NUL")
-                && !(stem.len() == 4
-                    && (stem.starts_with("COM") || stem.starts_with("LPT"))
-                    && matches!(stem.as_bytes()[3], b'1'..=b'9'))
-        })
-}
-fn linked(meta: &fs::Metadata) -> bool {
-    #[cfg(windows)]
-    {
-        use std::os::windows::fs::MetadataExt;
-        meta.file_attributes() & 0x400 != 0
-    }
-    #[cfg(not(windows))]
-    {
-        meta.file_type().is_symlink()
+/// Whether a manifest string or key is longer than the implementation reads.
+fn oversized(v: &Value) -> bool {
+    match v {
+        Value::String(s) => s.len() > 4096,
+        Value::Array(a) => a.iter().any(oversized),
+        Value::Object(m) => m.iter().any(|(k, v)| k.len() > 4096 || oversized(v)),
+        _ => false,
     }
 }
 
-pub(super) fn load(path: &Path, ctx: &mut Context) -> Option<(Value, Documents)> {
-    let mut budget = ReadBudget::new(MAX_TOTAL_BYTES, MAX_FILE_BYTES);
-    let source = read(path, "law.yaml", ctx, &mut budget)?;
-    let manifest = match yaml(&source) {
+/// MAN-01 / BASIC-01: the manifest as YAML of this version that satisfies
+/// its schema. `None` when the documents cannot be read from it.
+fn parse(source: &str, ctx: &mut Context) -> Option<Value> {
+    let manifest = match yaml(source) {
         Ok(v) => v,
         Err(e) => {
             ctx.diag("MAN-01", &e, "law.yaml", 0, source.len());
             return None;
         }
     };
-    fn oversized(v: &Value) -> bool {
-        match v {
-            Value::String(s) => s.len() > 4096,
-            Value::Array(a) => a.iter().any(oversized),
-            Value::Object(m) => m.iter().any(|(k, v)| k.len() > 4096 || oversized(v)),
-            _ => false,
-        }
-    }
     if oversized(&manifest)
         || manifest["documents"]
             .as_array()
@@ -171,24 +146,33 @@ pub(super) fn load(path: &Path, ctx: &mut Context) -> Option<(Value, Documents)>
             source.len(),
         );
     }
+    Some(manifest)
+}
+
+/// The scopes of the manifest in order: `main`, then `supplement/<key>` and
+/// `appendix/<key>`. MAN-01: a key names one scope.
+fn scopes(manifest: &Value, end: usize, ctx: &mut Context) -> Vec<String> {
     let mut scopes = vec!["main".to_owned()];
     for (field, prefix) in [("supplements", "supplement"), ("appendices", "appendix")] {
         if let Some(a) = manifest[field].as_array() {
             for s in a {
                 let key = format!("{prefix}/{}", s["key"].as_str().unwrap());
                 if scopes.contains(&key) {
-                    ctx.diag("MAN-01", "Duplicate scope key", "law.yaml", 0, source.len());
+                    ctx.diag("MAN-01", "Duplicate scope key", "law.yaml", 0, end);
                 }
                 scopes.push(key);
             }
         }
     }
-    let root = match path
-        .parent()
-        .filter(|p| !p.as_os_str().is_empty())
-        .unwrap_or(Path::new("."))
-        .canonicalize()
-    {
+    scopes
+}
+
+pub(super) fn load(path: &Path, ctx: &mut Context) -> Option<(Value, Documents)> {
+    let mut budget = ReadBudget::new(MAX_TOTAL_BYTES, MAX_FILE_BYTES);
+    let source = read(path, "law.yaml", ctx, &mut budget)?;
+    let manifest = parse(&source, ctx)?;
+    let scopes = scopes(&manifest, source.len(), ctx);
+    let mut paths = match DocumentPaths::new(path) {
         Ok(p) => p,
         Err(e) => {
             ctx.error = true;
@@ -196,14 +180,13 @@ pub(super) fn load(path: &Path, ctx: &mut Context) -> Option<(Value, Documents)>
             return None;
         }
     };
-    let mut seen = HashSet::new();
-    let mut identities = HashSet::new();
     let mut used = HashSet::new();
     let mut last = 0;
     let mut documents = Vec::new();
     for document in manifest["documents"].as_array().unwrap() {
         let name = document["path"].as_str().unwrap();
         let parent = document["parent"].as_str().unwrap();
+        // MAN-03: the documents of a scope are contiguous and in scope order.
         if let Some(index) = scopes.iter().position(|s| s == parent) {
             if index < last {
                 ctx.diag(
@@ -219,58 +202,16 @@ pub(super) fn load(path: &Path, ctx: &mut Context) -> Option<(Value, Documents)>
         } else {
             ctx.diag("MAN-03", "Undefined scope", "law.yaml", 0, source.len());
         }
-        if !safe_path(name) || !seen.insert(name.to_ascii_lowercase()) {
-            ctx.diag(
-                "MAN-02",
-                "Forbidden or duplicate path",
-                "law.yaml",
-                0,
-                source.len(),
-            );
-            continue;
-        }
-        let mut physical = root.clone();
-        let mut invalid = false;
-        for part in name.split('/') {
-            physical.push(part);
-            if fs::symlink_metadata(&physical).is_ok_and(|m| linked(&m)) {
-                invalid = true;
-                break;
-            }
-        }
-        if invalid || physical.canonicalize().is_ok_and(|p| !p.starts_with(&root)) {
-            ctx.diag(
-                "MAN-02",
-                "Symlink, junction or escaping path",
-                "law.yaml",
-                0,
-                source.len(),
-            );
-            continue;
-        }
-        if fs::metadata(&physical).is_ok_and(|m| !m.is_file()) {
-            ctx.diag("MAN-02", "Not a regular file", "law.yaml", 0, source.len());
-            continue;
-        }
-        match same_file::Handle::from_path(&physical) {
-            Ok(h) => {
-                if !identities.insert(h) {
-                    ctx.diag(
-                        "MAN-02",
-                        "Duplicate physical file",
-                        "law.yaml",
-                        0,
-                        source.len(),
-                    );
-                    continue;
+        let physical = match paths.resolve(name) {
+            Ok(p) => p,
+            Err(refused) => {
+                if refused.io {
+                    ctx.error = true;
                 }
-            }
-            Err(e) => {
-                ctx.error = true;
-                ctx.diag("MAN-02", &e.to_string(), "law.yaml", 0, source.len());
+                ctx.diag("MAN-02", &refused.message, "law.yaml", 0, source.len());
                 continue;
             }
-        }
+        };
         if let Some(text) = read(&physical, name, ctx, &mut budget) {
             documents.push((name.into(), text, parent.into()));
         }
@@ -293,6 +234,7 @@ pub(super) fn load(path: &Path, ctx: &mut Context) -> Option<(Value, Documents)>
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
 
     #[test]
     fn invalid_sources_consume_total_budget_before_retention() {

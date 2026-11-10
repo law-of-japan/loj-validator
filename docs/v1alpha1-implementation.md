@@ -52,6 +52,10 @@ specific code `loj/v1alpha1/unsupported-version` with Error.
 - `manifest.rs`: strict UTF-8 loading, YAML 1.2 events (duplicate keys checked before insertion;
   the parser is `common/yaml.rs` with the v1alpha1 nesting limit, the byte budget is
   `common/budget.rs`), closed JSON Schema with format assertions, scope resolution and ordered file loading.
+- `common/documents.rs` (shared with loj/v1alpha2): MAN-02 resolution of a document path to a regular
+  file below the manifest (portable names, no links, no file named twice).
+- `common/structure.rs` (shared with loj/v1alpha2): the structural lines of a document (headings and
+  reserved markers) and the HEAD-01 rule for what follows a heading number.
 - `common/markdown.rs` (shared with loj/v1alpha2): CommonMark top-level block ranges, exact raw line boundaries, plain ATX checks.
 - `directives.rs`: marker grammar, required/unknown/duplicate attributes, canonical numbers.
 - `common/number.rs` (shared with loj/v1alpha2): strict canonical Japanese 1–9999 and independent decimal-width normalization.

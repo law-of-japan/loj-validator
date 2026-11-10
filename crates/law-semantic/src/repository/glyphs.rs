@@ -1,4 +1,5 @@
 //! L3 evidence of `glyphs.yaml` (loj-glyphs/v1alpha1).
+use super::history::list;
 use super::{EVIDENCE as EV, GLYPHS};
 use crate::common::findings::{common_type_rule, Findings};
 use crate::common::{load_yaml, Check, Loaded, COMMON};
@@ -100,94 +101,11 @@ pub(crate) fn check(
     f: &mut Findings,
 ) {
     f.applicable.insert(EV);
-    let mut doc = None;
     let file = notes.unwrap_or("");
-    if let Some(n) = notes {
-        match load_yaml(&repo.join(n)) {
-            Loaded::Unreadable(_) => {
-                // HIST-08 reports the missing file; the evidence cannot be judged.
-                f.incomplete.insert(EV);
-            }
-            Loaded::Invalid(e) => f.error(EV, "GLYPH-01", GLYPHS, e, n, ""),
-            Loaded::Ok(v, _) => {
-                if v["schemaVersion"] != GLYPHS {
-                    f.error(
-                        EV,
-                        "GLYPH-01",
-                        GLYPHS,
-                        "unsupported schemaVersion",
-                        n,
-                        "/schemaVersion",
-                    );
-                    f.incomplete.insert(EV);
-                } else {
-                    f.schema(validator(), &v, n, classify);
-                    doc = Some(v);
-                }
-            }
-        }
-    }
-    let empty = Vec::new();
-    let list = doc
-        .as_ref()
-        .and_then(|d| d["notes"].as_array())
-        .unwrap_or(&empty);
+    let doc = notes.and_then(|n| load(repo, n, f));
+    let entries = doc.as_ref().map_or(&[][..], |d| list(&d["notes"]));
     if let Some(d) = &doc {
-        if d["revision"].as_str().is_some_and(|r| r != revision) {
-            f.error(
-                EV,
-                "GLYPH-01",
-                GLYPHS,
-                format!("notes are for revision {}, not {revision}", d["revision"]),
-                file,
-                "/revision",
-            );
-        }
-        let mut ids = HashSet::new();
-        for (i, n) in list.iter().enumerate() {
-            let p = format!("/notes/{i}");
-            if let Some(id) = n["id"].as_str() {
-                if !ids.insert(id) {
-                    f.error(
-                        EV,
-                        "GLYPH-05",
-                        GLYPHS,
-                        format!("duplicate note id {id}"),
-                        file,
-                        &p,
-                    );
-                }
-            }
-            for (j, e) in n["evidence"].as_array().into_iter().flatten().enumerate() {
-                if let Some(s) = e["source"].as_str() {
-                    if !sources.contains(s) {
-                        f.error(
-                            EV,
-                            "TYPE-03",
-                            COMMON,
-                            format!("Evidence source {s} is not a Source of the history manifest"),
-                            file,
-                            &format!("{p}/evidence/{j}"),
-                        );
-                    }
-                }
-            }
-            if n["kind"] == "ambiguous" && n["recorded"] != "〓" {
-                let has = n["candidates"]
-                    .as_array()
-                    .is_some_and(|c| c.contains(&n["recorded"]));
-                if !has {
-                    f.error(
-                        EV,
-                        "GLYPH-05",
-                        GLYPHS,
-                        "candidates must include the recorded text",
-                        file,
-                        &format!("{p}/candidates"),
-                    );
-                }
-            }
-        }
+        document(d, entries, revision, file, sources, f);
     }
     // GLYPH-11 / VAL-02: notes address L1 node IDs; without a valid AST they are not judged.
     let Some(ast) = ast else {
@@ -195,8 +113,129 @@ pub(crate) fn check(
         return;
     };
     let texts = Texts::from_ast(ast);
-    // Covered code point ranges per (node, field).
-    let mut covered: HashMap<(String, bool), Vec<(usize, usize)>> = HashMap::new();
+    let covered = located(entries, &texts, file, f);
+    unnoted(&texts, &covered, file, f);
+}
+
+/// GLYPH-01: read the notes file `n`. `None` when it cannot be used.
+fn load(repo: &Path, n: &str, f: &mut Findings) -> Option<Value> {
+    match load_yaml(&repo.join(n)) {
+        Loaded::Unreadable(_) => {
+            // HIST-08 reports the missing file; the evidence cannot be judged.
+            f.incomplete.insert(EV);
+            None
+        }
+        Loaded::Invalid(e) => {
+            f.error(EV, "GLYPH-01", GLYPHS, e, n, "");
+            None
+        }
+        Loaded::Ok(v, _) => {
+            if v["schemaVersion"] != GLYPHS {
+                f.error(
+                    EV,
+                    "GLYPH-01",
+                    GLYPHS,
+                    "unsupported schemaVersion",
+                    n,
+                    "/schemaVersion",
+                );
+                f.incomplete.insert(EV);
+                None
+            } else {
+                f.schema(validator(), &v, n, classify);
+                Some(v)
+            }
+        }
+    }
+}
+
+/// GLYPH-01 (the revision), GLYPH-05 (note ids, candidates) and TYPE-03
+/// (Evidence sources): what the notes file says without the AST.
+fn document(
+    d: &Value,
+    list: &[Value],
+    revision: &str,
+    file: &str,
+    sources: &HashSet<String>,
+    f: &mut Findings,
+) {
+    if d["revision"].as_str().is_some_and(|r| r != revision) {
+        f.error(
+            EV,
+            "GLYPH-01",
+            GLYPHS,
+            format!("notes are for revision {}, not {revision}", d["revision"]),
+            file,
+            "/revision",
+        );
+    }
+    let mut ids = HashSet::new();
+    for (i, n) in list.iter().enumerate() {
+        let p = format!("/notes/{i}");
+        if let Some(id) = n["id"].as_str() {
+            if !ids.insert(id) {
+                f.error(
+                    EV,
+                    "GLYPH-05",
+                    GLYPHS,
+                    format!("duplicate note id {id}"),
+                    file,
+                    &p,
+                );
+            }
+        }
+        for (j, e) in n["evidence"].as_array().into_iter().flatten().enumerate() {
+            if let Some(s) = e["source"].as_str() {
+                if !sources.contains(s) {
+                    f.error(
+                        EV,
+                        "TYPE-03",
+                        COMMON,
+                        format!("Evidence source {s} is not a Source of the history manifest"),
+                        file,
+                        &format!("{p}/evidence/{j}"),
+                    );
+                }
+            }
+        }
+        if n["kind"] == "ambiguous" && n["recorded"] != "〓" {
+            let has = n["candidates"]
+                .as_array()
+                .is_some_and(|c| c.contains(&n["recorded"]));
+            if !has {
+                f.error(
+                    EV,
+                    "GLYPH-05",
+                    GLYPHS,
+                    "candidates must include the recorded text",
+                    file,
+                    &format!("{p}/candidates"),
+                );
+            }
+        }
+    }
+}
+
+/// GLYPH-04: where `recorded` is in `text`, if it is at code point `offset`.
+/// The offset comes from the input: it may exceed any text, or `usize`.
+pub(crate) fn recorded_at(
+    text: &[char],
+    offset: u64,
+    recorded: &[char],
+) -> Option<std::ops::Range<usize>> {
+    let start = usize::try_from(offset).ok()?;
+    let range = start..start.checked_add(recorded.len())?;
+    (text.get(range.clone()) == Some(recorded)).then_some(range)
+}
+
+/// Code point ranges that notes cover, per node ID and field (`true` is the
+/// display field).
+type Covered = HashMap<(String, bool), Vec<(usize, usize)>>;
+
+/// GLYPH-04: each note names a node of this version and the recorded text is
+/// at its offset. Returns what the notes cover.
+fn located(list: &[Value], texts: &Texts, file: &str, f: &mut Findings) -> Covered {
+    let mut covered = Covered::new();
     for (i, n) in list.iter().enumerate() {
         let p = format!("/notes/{i}");
         let (Some(node), Some(offset), Some(recorded)) = (
@@ -220,23 +259,30 @@ pub(crate) fn check(
         };
         let target: Vec<char> = if display { disp } else { own }.chars().collect();
         let recorded: Vec<char> = recorded.chars().collect();
-        let (o, len) = (offset as usize, recorded.len());
-        if o + len > target.len() || target[o..o + len] != recorded[..] {
+        let Some(range) = recorded_at(&target, offset, &recorded) else {
             f.error(
                 EV,
                 "GLYPH-04",
                 GLYPHS,
-                format!("recorded text is not at offset {o} of {node}"),
+                format!("recorded text is not at offset {offset} of {node}"),
                 file,
                 &format!("{p}/offset"),
             );
             continue;
-        }
+        };
+        // An empty recorded text still marks the code point at its offset.
+        let end = range.end.max(range.start.saturating_add(1));
         covered
             .entry((node.to_owned(), display))
             .or_default()
-            .push((o, o + len.max(1)));
+            .push((range.start, end));
     }
+    covered
+}
+
+/// GLYPH-02 / GLYPH-11: every `〓`, compatibility ideograph and variation
+/// sequence of the text has a note. GLYPH-03: no forbidden code point.
+fn unnoted(texts: &Texts, covered: &Covered, file: &str, f: &mut Findings) {
     let mut ids: Vec<&String> = texts.nodes.keys().collect();
     ids.sort();
     for id in ids {
@@ -288,5 +334,101 @@ pub(crate) fn check(
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn texts() -> Texts {
+        Texts::from_ast(&json!({"root": {
+            "kind": "Law", "id": "law", "display": "試験法",
+            "content": [{"kind": "Paragraph", "id": "law/p", "display": "",
+                "content": [{"text": "〓と亞\u{fa11}の字"}]}],
+        }}))
+    }
+
+    fn found(f: &Findings) -> Vec<(&str, String)> {
+        f.items
+            .iter()
+            .map(|(_, d)| {
+                let pointer = d.location.as_ref().unwrap()["pointer"].as_str().unwrap();
+                (d.rule.as_str(), pointer.to_owned())
+            })
+            .collect()
+    }
+
+    #[test]
+    fn notes_are_located_by_code_point_offset() {
+        let notes = json!([
+            {"node": "law/p", "offset": 0, "recorded": "〓"},
+            {"node": "law/p", "offset": 3, "recorded": "\u{fa11}"},
+            {"node": "law", "field": "display", "offset": 0, "recorded": "試験"},
+            // Wrong text, past the end, and an unknown node.
+            {"node": "law/p", "offset": 1, "recorded": "亞"},
+            {"node": "law/p", "offset": 6, "recorded": "字"},
+            {"node": "law/q", "offset": 0, "recorded": "字"},
+            // Incomplete notes are left to the schema check.
+            {"node": "law/p", "recorded": "字"},
+        ]);
+        let mut f = Findings::default();
+        let covered = located(list(&notes), &texts(), "glyphs.yaml", &mut f);
+        assert_eq!(covered[&("law/p".to_owned(), false)], [(0, 1), (3, 4)]);
+        assert_eq!(covered[&("law".to_owned(), true)], [(0, 2)]);
+        assert_eq!(
+            found(&f),
+            [
+                ("GLYPH-04", "/notes/3/offset".to_owned()),
+                ("GLYPH-04", "/notes/4/offset".to_owned()),
+                ("GLYPH-04", "/notes/5/node".to_owned()),
+            ]
+        );
+    }
+
+    #[test]
+    fn an_offset_beyond_any_text_is_a_finding_not_a_panic() {
+        for offset in [u64::MAX, u64::MAX - 1, u64::from(u32::MAX) + 1, 7] {
+            let notes = json!([{"node": "law/p", "offset": offset, "recorded": "字の"}]);
+            let mut f = Findings::default();
+            let covered = located(list(&notes), &texts(), "glyphs.yaml", &mut f);
+            assert!(covered.is_empty(), "{offset}");
+            assert_eq!(found(&f), [("GLYPH-04", "/notes/0/offset".to_owned())]);
+            assert_eq!(
+                f.items[0].1.message,
+                format!("recorded text is not at offset {offset} of law/p")
+            );
+        }
+    }
+
+    #[test]
+    fn recorded_text_is_found_only_at_its_offset() {
+        let text: Vec<char> = "第一条の二".chars().collect();
+        let chars = |s: &str| s.chars().collect::<Vec<char>>();
+        assert_eq!(recorded_at(&text, 1, &chars("一条")), Some(1..3));
+        assert_eq!(recorded_at(&text, 4, &chars("二")), Some(4..5));
+        assert_eq!(recorded_at(&text, 5, &[]), Some(5..5));
+        assert_eq!(recorded_at(&text, 0, &chars("一条")), None);
+        assert_eq!(recorded_at(&text, 4, &chars("二の")), None);
+        assert_eq!(recorded_at(&text, 6, &[]), None);
+        for offset in [u64::MAX, u64::MAX - 1, u64::from(u32::MAX) + 1] {
+            assert_eq!(recorded_at(&text, offset, &chars("二")), None, "{offset}");
+            assert_eq!(recorded_at(&text, offset, &[]), None, "{offset}");
+        }
+    }
+
+    #[test]
+    fn characters_that_need_a_note_are_reported_once_each() {
+        let mut f = Findings::default();
+        let covered = Covered::from([(("law/p".to_owned(), false), vec![(0, 1)])]);
+        unnoted(&texts(), &covered, "glyphs.yaml", &mut f);
+        // `〓` at 0 is covered; the compatibility ideograph at 3 is not.
+        let messages: Vec<_> = f.items.iter().map(|(_, d)| d.message.as_str()).collect();
+        assert_eq!(
+            messages,
+            ["U+FA11 at text offset 3 of law/p has no glyph note"]
+        );
+        assert_eq!(f.items[0].1.rule, "GLYPH-11");
     }
 }
