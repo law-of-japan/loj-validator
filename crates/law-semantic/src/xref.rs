@@ -4,6 +4,7 @@ use crate::common::findings::Findings;
 use crate::common::time::fixed_day;
 use crate::common::{Check, Class, Report, COMMON};
 use crate::registry::{self, Resolution};
+use crate::repository::history::list;
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -45,12 +46,45 @@ pub fn check(registry_dir: &Path, repositories: &[std::path::PathBuf], checks: &
     for c in [RES, CON, TIME] {
         f.applicable.insert(c);
     }
-    let empty = Vec::new();
     for (this, (path, h)) in &manifests {
-        let file = format!("{path}/history.yaml");
-        let me = &h["record"];
-        // XREF-01: endpoints of every relation.
+        let subject = Subject {
+            reg: &reg,
+            manifests: &manifests,
+            this,
+            file: format!("{path}/history.yaml"),
+            h,
+        };
+        subject.endpoints(&mut f, &mut references);
+        subject.total_revision_relations(&mut f);
+        subject.total_revision_origins(&mut f);
+        subject.same_as(&mut f, &mut references);
+    }
+    finish(f, references, checks)
+}
+
+/// One history manifest under the L4 checks, and what it is checked against.
+struct Subject<'a> {
+    reg: &'a registry::Registry,
+    /// Histories by Record ID: repository path and manifest.
+    manifests: &'a BTreeMap<String, (String, Value)>,
+    /// Record ID of this manifest.
+    this: &'a str,
+    /// Path of this manifest, for diagnostics.
+    file: String,
+    h: &'a Value,
+}
+
+impl Subject<'_> {
+    /// A `references` entry of the report for a reference from this Record.
+    fn reference(&self, target: &str, result: &str) -> Value {
+        json!({"from": format!("{}/{}", self.reg.space, self.this), "target": target, "result": result})
+    }
+
+    /// XREF-01: this Record and the endpoints of its relations are registered.
+    fn endpoints(&self, f: &mut Findings, references: &mut Vec<(Check, Value)>) {
+        let (reg, file, h) = (self.reg, &self.file, self.h);
         // The end point is this Record itself; it must be registered.
+        let me = &h["record"];
         if !matches!(reg.resolve(me), Resolution::Resolved(_)) {
             f.incomplete.insert(RES);
             f.note(
@@ -59,37 +93,27 @@ pub fn check(registry_dir: &Path, repositories: &[std::path::PathBuf], checks: &
                 "XREF-01",
                 COMMON,
                 format!("{} is not resolved in the registry", reg.target(me)),
-                &file,
+                file,
                 "/record",
             );
         }
         let mut endpoints = Vec::new();
-        for (i, r) in h["relations"]
-            .as_array()
-            .unwrap_or(&empty)
-            .iter()
-            .enumerate()
-        {
+        for (i, r) in list(&h["relations"]).iter().enumerate() {
             let confirmed = r["status"] == "active" && r["verification"]["state"] == "confirmed";
-            endpoints.push((format!("/relations/{i}/from"), r["from"].clone(), confirmed));
+            endpoints.push((format!("/relations/{i}/from"), &r["from"], confirmed));
         }
-        for (i, r) in h["revisions"]
-            .as_array()
-            .unwrap_or(&empty)
-            .iter()
-            .enumerate()
-        {
+        for (i, r) in list(&h["revisions"]).iter().enumerate() {
             if r["totallyRevises"].is_object() {
                 endpoints.push((
                     format!("/revisions/{i}/totallyRevises/record"),
-                    r["totallyRevises"]["record"].clone(),
+                    &r["totallyRevises"]["record"],
                     true,
                 ));
             }
         }
         for (ptr, rref, confirmed) in endpoints {
-            let res = reg.resolve(&rref);
-            references.push((RES, json!({"from": format!("{}/{this}", reg.space), "target": reg.target(&rref), "result": res.as_str()})));
+            let res = reg.resolve(rref);
+            references.push((RES, self.reference(&reg.target(rref), res.as_str())));
             match res {
                 Resolution::Resolved(_) => {}
                 Resolution::NotFetched(why) => {
@@ -99,8 +123,8 @@ pub fn check(registry_dir: &Path, repositories: &[std::path::PathBuf], checks: &
                         Class::Undetermined,
                         "XREF-01",
                         COMMON,
-                        format!("{} not fetched: {why}", reg.target(&rref)),
-                        &file,
+                        format!("{} not fetched: {why}", reg.target(rref)),
+                        file,
                         &ptr,
                     );
                 }
@@ -112,53 +136,58 @@ pub fn check(registry_dir: &Path, repositories: &[std::path::PathBuf], checks: &
                             COMMON,
                             format!(
                                 "confirmed relation refers to {} confirmed nonexistent",
-                                reg.target(&rref)
+                                reg.target(rref)
                             ),
-                            &file,
+                            file,
                             &ptr,
                         );
                     }
                 }
             }
         }
-        // XREF-02: totallyRevises relations and totalRevision origins agree.
-        for (i, r) in h["relations"]
-            .as_array()
-            .unwrap_or(&empty)
-            .iter()
-            .enumerate()
-        {
+    }
+
+    /// The history of the Record that `record` refers to. When it cannot be
+    /// examined, relationConsistency is incomplete; a history that was not
+    /// given is noted at `ptr`.
+    fn counterpart(&self, record: &Value, ptr: &str, f: &mut Findings) -> Option<(String, &Value)> {
+        let Some(id) = resolved_id(self.reg, record) else {
+            f.incomplete.insert(CON);
+            return None;
+        };
+        let Some((_, other)) = self.manifests.get(&id) else {
+            f.incomplete.insert(CON);
+            f.note(
+                CON,
+                Class::Undetermined,
+                "XREF-02",
+                COMMON,
+                format!("history of {id} not given"),
+                &self.file,
+                ptr,
+            );
+            return None;
+        };
+        Some((id, other))
+    }
+
+    /// XREF-02: an active totallyRevises relation has a totalRevision origin
+    /// in the history of the Record it comes from.
+    fn total_revision_relations(&self, f: &mut Findings) {
+        for (i, r) in list(&self.h["relations"]).iter().enumerate() {
             if r["type"] != "totallyRevises" || r["status"] != "active" {
                 continue;
             }
             let ptr = format!("/relations/{i}");
-            let Some(from) = resolved_id(&reg, &r["from"]) else {
-                f.incomplete.insert(CON);
+            let Some((from, other)) = self.counterpart(&r["from"], &ptr, f) else {
                 continue;
             };
-            let Some((_, other)) = manifests.get(&from) else {
-                f.incomplete.insert(CON);
-                f.note(
-                    CON,
-                    Class::Undetermined,
-                    "XREF-02",
-                    COMMON,
-                    format!("history of {from} not given"),
-                    &file,
-                    &ptr,
-                );
-                continue;
-            };
-            let agrees = other["revisions"]
-                .as_array()
-                .unwrap_or(&empty)
-                .iter()
-                .any(|v| {
-                    v["origin"] == "totalRevision"
-                        && resolved_id(&reg, &v["totallyRevises"]["record"]).as_deref()
-                            == Some(this)
-                        && v["totallyRevises"]["relation"] == r["id"]
-                });
+            let agrees = list(&other["revisions"]).iter().any(|v| {
+                v["origin"] == "totalRevision"
+                    && resolved_id(self.reg, &v["totallyRevises"]["record"]).as_deref()
+                        == Some(self.this)
+                    && v["totallyRevises"]["relation"] == r["id"]
+            });
             if !agrees {
                 f.error(
                     CON,
@@ -168,46 +197,31 @@ pub fn check(registry_dir: &Path, repositories: &[std::path::PathBuf], checks: &
                         "{from} has no totalRevision origin for relation {}",
                         r["id"]
                     ),
-                    &file,
+                    &self.file,
                     &ptr,
                 );
             }
         }
-        for (i, v) in h["revisions"]
-            .as_array()
-            .unwrap_or(&empty)
-            .iter()
-            .enumerate()
-        {
+    }
+
+    /// XREF-02: a totalRevision origin names a totallyRevises relation, from
+    /// this Record, in the history of the Record it revises.
+    fn total_revision_origins(&self, f: &mut Findings) {
+        for (i, v) in list(&self.h["revisions"]).iter().enumerate() {
             if v["origin"] != "totalRevision" {
                 continue;
             }
             let ptr = format!("/revisions/{i}/totallyRevises");
-            let Some(old) = resolved_id(&reg, &v["totallyRevises"]["record"]) else {
-                f.incomplete.insert(CON);
+            let Some((old, other)) = self.counterpart(&v["totallyRevises"]["record"], &ptr, f)
+            else {
                 continue;
             };
-            let Some((_, other)) = manifests.get(&old) else {
-                f.incomplete.insert(CON);
-                f.note(
-                    CON,
-                    Class::Undetermined,
-                    "XREF-02",
-                    COMMON,
-                    format!("history of {old} not given"),
-                    &file,
-                    &ptr,
-                );
-                continue;
-            };
-            let rel = other["relations"]
-                .as_array()
-                .unwrap_or(&empty)
+            let rel = list(&other["relations"])
                 .iter()
                 .find(|r| r["id"] == v["totallyRevises"]["relation"]);
             let ok = rel.is_some_and(|r| {
                 r["type"] == "totallyRevises"
-                    && resolved_id(&reg, &r["from"]).as_deref() == Some(this)
+                    && resolved_id(self.reg, &r["from"]).as_deref() == Some(self.this)
             });
             if !ok {
                 f.error(
@@ -215,17 +229,21 @@ pub fn check(registry_dir: &Path, repositories: &[std::path::PathBuf], checks: &
                     "XREF-02",
                     COMMON,
                     format!(
-                        "{old} has no totallyRevises relation {} from {this}",
-                        v["totallyRevises"]["relation"]
+                        "{old} has no totallyRevises relation {} from {}",
+                        v["totallyRevises"]["relation"], self.this
                     ),
-                    &file,
+                    &self.file,
                     &ptr,
                 );
             }
         }
-        // XREF-03: sameAs points to a Revision with the same time.
+    }
+
+    /// XREF-03: sameAs points to a Revision with the same time.
+    fn same_as(&self, f: &mut Findings, references: &mut Vec<(Check, Value)>) {
+        let (reg, file) = (self.reg, &self.file);
         let mut tps = Vec::new();
-        crate::repository::history::time_points(h, String::new(), &mut tps);
+        crate::repository::history::time_points(self.h, String::new(), &mut tps);
         for (ptr, tp) in tps {
             let s = &tp["sameAs"];
             if !s.is_object() {
@@ -234,11 +252,11 @@ pub fn check(registry_dir: &Path, repositories: &[std::path::PathBuf], checks: &
             let rev = s["revision"].as_str().unwrap_or("");
             let target = format!("{}/{rev}", reg.target(&s["record"]));
             let other = match reg.resolve(&s["record"]) {
-                Resolution::Resolved(id) => manifests.get(&id),
+                Resolution::Resolved(id) => self.manifests.get(&id),
                 _ => None,
             };
             let Some((_, other)) = other else {
-                references.push((TIME, json!({"from": format!("{}/{this}", reg.space), "target": target, "result": "notFetched"})));
+                references.push((TIME, self.reference(&target, "notFetched")));
                 f.incomplete.insert(TIME);
                 f.note(
                     TIME,
@@ -246,29 +264,24 @@ pub fn check(registry_dir: &Path, repositories: &[std::path::PathBuf], checks: &
                     "XREF-03",
                     COMMON,
                     format!("{target} not fetched"),
-                    &file,
+                    file,
                     &ptr,
                 );
                 continue;
             };
-            let Some(r) = other["revisions"]
-                .as_array()
-                .unwrap_or(&empty)
-                .iter()
-                .find(|r| r["id"] == rev)
-            else {
-                references.push((TIME, json!({"from": format!("{}/{this}", reg.space), "target": target, "result": "nonexistentConfirmed"})));
+            let Some(r) = list(&other["revisions"]).iter().find(|r| r["id"] == rev) else {
+                references.push((TIME, self.reference(&target, "nonexistentConfirmed")));
                 f.error(
                     TIME,
                     "XREF-03",
                     COMMON,
                     format!("{target}: no such revision"),
-                    &file,
+                    file,
                     &ptr,
                 );
                 continue;
             };
-            references.push((TIME, json!({"from": format!("{}/{this}", reg.space), "target": target, "result": "resolved"})));
+            references.push((TIME, self.reference(&target, "resolved")));
             match (fixed_day(tp), fixed_day(&r["effective"])) {
                 (Some(a), Some(b)) if a != b => f.error(
                     TIME,
@@ -279,7 +292,7 @@ pub fn check(registry_dir: &Path, repositories: &[std::path::PathBuf], checks: &
                         a.to_iso(),
                         b.to_iso()
                     ),
-                    &file,
+                    file,
                     &ptr,
                 ),
                 (Some(_), Some(_)) => {}
@@ -289,13 +302,12 @@ pub fn check(registry_dir: &Path, repositories: &[std::path::PathBuf], checks: &
                     "XREF-03",
                     COMMON,
                     format!("{target}: not both fixed dates"),
-                    &file,
+                    file,
                     &ptr,
                 ),
             }
         }
     }
-    finish(f, references, checks)
 }
 
 fn resolved_id(reg: &registry::Registry, r: &Value) -> Option<String> {

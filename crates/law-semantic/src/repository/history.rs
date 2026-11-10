@@ -168,7 +168,7 @@ pub(crate) fn check_time(tp: &Value, pointer: &str, file: &str, f: &mut Findings
 
 /// The elements of an array, or nothing when `v` is not an array (the schema
 /// check has already reported that).
-fn list(v: &Value) -> &[Value] {
+pub(crate) fn list(v: &Value) -> &[Value] {
     v.as_array().map_or(&[], Vec::as_slice)
 }
 
