@@ -243,12 +243,12 @@ fn main() {
         let report = std::panic::catch_unwind(|| law_semantic::v1alpha1::check(&args.input, args.level))
             .unwrap_or_else(|_| serde_json::json!({"status":"Error","exit_code":2,"complete":false,"diagnostics":[{"code":"internal","message":"validator panicked; this is a bug"}]}));
         let output = if args.format == Format::Json {
-            serde_json::to_string_pretty(&report).unwrap()
+            serde_json::to_string_pretty(&report).expect("a JSON value serializes")
         } else {
             let mut s = format!(
                 "loj/v1alpha1 {:?}: {}\n",
                 args.level,
-                report["status"].as_str().unwrap()
+                report["status"].as_str().unwrap_or("Error")
             );
             if let Some(ds) = report["diagnostics"].as_array() {
                 for d in ds {
@@ -263,7 +263,10 @@ fn main() {
         let code = if writeln!(std::io::stdout().lock(), "{}", output.trim_end()).is_err() {
             2
         } else {
-            report["exit_code"].as_i64().unwrap_or(2) as i32
+            report["exit_code"]
+                .as_i64()
+                .and_then(|c| i32::try_from(c).ok())
+                .unwrap_or(2)
         };
         process::exit(code);
     }

@@ -22,6 +22,11 @@ fn month_len(y: i64, m: u32) -> u32 {
     }
 }
 
+/// A day of the month or a month number, which the arithmetic keeps in 0..=31.
+fn small(n: i64) -> u32 {
+    u32::try_from(n).unwrap_or(0)
+}
+
 impl Date {
     /// Parse an existing `YYYY-MM-DD` date (year 0 is not a civil year).
     pub fn parse(s: &str) -> Option<Date> {
@@ -29,13 +34,13 @@ impl Date {
         if b.len() != 10 || b[4] != b'-' || b[7] != b'-' {
             return None;
         }
-        let num = |r: std::ops::Range<usize>| -> Option<i64> {
+        let num = |r: std::ops::Range<usize>| -> Option<u32> {
             let t = &s[r];
             t.bytes()
                 .all(|c| c.is_ascii_digit())
                 .then(|| t.parse().ok())?
         };
-        let (y, m, d) = (num(0..4)?, num(5..7)? as u32, num(8..10)? as u32);
+        let (y, m, d) = (i64::from(num(0..4)?), num(5..7)?, num(8..10)?);
         (y >= 1 && (1..=12).contains(&m) && d >= 1 && d <= month_len(y, m)).then_some(Date {
             y,
             m,
@@ -47,8 +52,8 @@ impl Date {
         let y = if self.m <= 2 { self.y - 1 } else { self.y };
         let era = y.div_euclid(400);
         let yoe = y - era * 400;
-        let m = self.m as i64;
-        let doy = (153 * (if m > 2 { m - 3 } else { m + 9 }) + 2) / 5 + self.d as i64 - 1;
+        let m = i64::from(self.m);
+        let doy = (153 * (if m > 2 { m - 3 } else { m + 9 }) + 2) / 5 + i64::from(self.d) - 1;
         let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
         era * 146097 + doe
     }
@@ -58,10 +63,16 @@ impl Date {
         let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
         let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
         let mp = (5 * doy + 2) / 153;
-        let d = (doy - (153 * mp + 2) / 5 + 1) as u32;
-        let m = if mp < 10 { mp + 3 } else { mp - 9 } as u32;
+        // `doy` is in 0..=365 and `mp` in 0..=11, so the day is in 1..=31 and
+        // the month in 1..=12.
+        let d = doy - (153 * mp + 2) / 5 + 1;
+        let m = if mp < 10 { mp + 3 } else { mp - 9 };
         let y = yoe + era * 400 + if m <= 2 { 1 } else { 0 };
-        Date { y, m, d }
+        Date {
+            y,
+            m: small(m),
+            d: small(d),
+        }
     }
     pub fn add_days(self, n: i64) -> Date {
         Date::from_days(self.days() + n)
@@ -70,12 +81,12 @@ impl Date {
     /// the period of `n` months ends is the corresponding day `n` months later,
     /// or the first day of the following month when that day does not exist.
     pub fn after_months(self, n: i64) -> Date {
-        let total = self.y * 12 + (self.m as i64 - 1) + n;
-        let (y, m) = (total.div_euclid(12), total.rem_euclid(12) as u32 + 1);
+        let total = self.y * 12 + (i64::from(self.m) - 1) + n;
+        let (y, m) = (total.div_euclid(12), small(total.rem_euclid(12)) + 1);
         if self.d <= month_len(y, m) {
             Date { y, m, d: self.d }
         } else {
-            Date { y, m, d: 1 }.add_days(month_len(y, m) as i64)
+            Date { y, m, d: 1 }.add_days(i64::from(month_len(y, m)))
         }
     }
     pub fn to_iso(self) -> String {

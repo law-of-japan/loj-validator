@@ -169,22 +169,29 @@ fn display(nodes: &mut [Node], index: usize, ctx: &mut Context) {
                 .is_none_or(|r| r.trim().is_empty()))
     {
         // Locate this line even when own text has multiple source fragments.
+        // The positions are the `{path, start, end}` objects that `text` built.
+        let at = |p: &Value, key: &str| {
+            p[key]
+                .as_u64()
+                .and_then(|n| usize::try_from(n).ok())
+                .expect("a byte offset written by `text`")
+        };
         let mut relative = offset;
         let mut pos = &positions[0];
         for p in positions {
-            let len = (p["end"].as_u64().unwrap() - p["start"].as_u64().unwrap()) as usize;
+            let len = at(p, "end") - at(p, "start");
             pos = p;
             if relative < len {
                 break;
             }
             relative -= len;
         }
-        let start = pos["start"].as_u64().unwrap() as usize + relative;
-        let end = (start + first_line_bytes).min(pos["end"].as_u64().unwrap() as usize);
+        let start = at(pos, "start") + relative;
+        let end = (start + first_line_bytes).min(at(pos, "end"));
         ctx.diag(
             "DISP-01",
             "Display number missing or inconsistent",
-            pos["path"].as_str().unwrap(),
+            pos["path"].as_str().expect("a path written by `text`"),
             start,
             end,
         );
@@ -289,12 +296,17 @@ struct Builder<'a> {
 impl<'a> Builder<'a> {
     /// The law node and one node per scope of the manifest.
     fn new(manifest: &'a Value, ctx: &mut Context) -> Self {
-        let law = manifest["law"]["id"].as_str().unwrap();
+        let law = manifest["law"]["id"]
+            .as_str()
+            .expect("a string by the manifest schema");
         let mut nodes = vec![Node::new(
             "Law",
             law.into(),
             None,
-            manifest["law"]["title"].as_str().unwrap().into(),
+            manifest["law"]["title"]
+                .as_str()
+                .expect("a string by the manifest schema")
+                .into(),
             "",
             0..0,
         )];
@@ -321,7 +333,10 @@ impl<'a> Builder<'a> {
         ] {
             if let Some(a) = manifest[field].as_array() {
                 for s in a {
-                    let scope = format!("{prefix}/{}", s["key"].as_str().unwrap());
+                    let scope = format!(
+                        "{prefix}/{}",
+                        s["key"].as_str().expect("a string by the manifest schema")
+                    );
                     let i = add(
                         &mut nodes,
                         0,
@@ -332,7 +347,10 @@ impl<'a> Builder<'a> {
                             if prefix == "supplement" {
                                 "附則".into()
                             } else {
-                                s["title"].as_str().unwrap().into()
+                                s["title"]
+                                    .as_str()
+                                    .expect("a string by the manifest schema")
+                                    .into()
                             },
                             "",
                             0..0,

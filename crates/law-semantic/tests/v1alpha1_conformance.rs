@@ -1,3 +1,6 @@
+// Test helpers outside `#[test]` functions may unwrap, and offsets read
+// back from JSON are cast for slicing: a failure here fails the test.
+#![allow(clippy::unwrap_used, clippy::cast_possible_truncation)]
 use law_semantic::v1alpha1::{check, Level};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};

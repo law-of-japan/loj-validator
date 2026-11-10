@@ -1,6 +1,9 @@
 //! Mapping boundaries: fixed expectations, profile ambiguity and loss
 //! boundaries. Port of `check_mapping_boundaries.py`; every mapped AST is also
 //! validated, because completeness is a semantic constraint.
+// Test helpers outside `#[test]` functions may unwrap, and offsets read
+// back from JSON are cast for slicing: a failure here fails the test.
+#![allow(clippy::unwrap_used, clippy::cast_possible_truncation)]
 use law_semantic::{
     law_of_japan_profile, map_markdown, validate_document, PARAGRAPH_HEADINGS_PROFILE,
 };

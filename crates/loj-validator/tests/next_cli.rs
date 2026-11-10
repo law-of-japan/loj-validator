@@ -1,3 +1,6 @@
+// Test helpers outside `#[test]` functions may unwrap, and offsets read
+// back from JSON are cast for slicing: a failure here fails the test.
+#![allow(clippy::unwrap_used, clippy::cast_possible_truncation)]
 use serde_json::Value;
 use std::{path::Path, process::Command};
 

@@ -1,4 +1,7 @@
 //! Public API behaviour and robustness against bad input and configuration.
+// Test helpers outside `#[test]` functions may unwrap, and offsets read
+// back from JSON are cast for slicing: a failure here fails the test.
+#![allow(clippy::unwrap_used, clippy::cast_possible_truncation)]
 use law_semantic::{
     conforms, law_of_japan_profile, map_markdown, mapping, normalize_number, reference_coverage,
     resolve_references, validate, validate_document, EGOV_DERIVED_BARE_PROFILE,

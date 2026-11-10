@@ -159,7 +159,10 @@ pub fn execute(args: &Args) -> (String, i32) {
     let report: Report = if let (Some(out), Input::Package(p)) = (&args.ast, &args.input) {
         let r = law_semantic::v1alpha2::check(p, &args.checks);
         if let Some(ast) = &r.ast {
-            if let Err(e) = std::fs::write(out, serde_json::to_vec_pretty(ast).unwrap()) {
+            if let Err(e) = std::fs::write(
+                out,
+                serde_json::to_vec_pretty(ast).expect("a JSON value serializes"),
+            ) {
                 return (format!("error: cannot write AST: {e}"), 2);
             }
         }
@@ -172,7 +175,7 @@ pub fn execute(args: &Args) -> (String, i32) {
     let code = report.exit_code();
     if args.json {
         return (
-            serde_json::to_string_pretty(&report.to_json()).unwrap(),
+            serde_json::to_string_pretty(&report.to_json()).expect("a JSON value serializes"),
             code,
         );
     }

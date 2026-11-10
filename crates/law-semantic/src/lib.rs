@@ -96,9 +96,11 @@ pub fn validate_document(data: &Value) -> Result<Vec<Value>, String> {
 pub fn resolve_references(data: &mut Value) -> Result<Vec<Value>, String> {
     require_conforming(data)?;
     let diagnostics = references::resolve(data);
-    let list = data["diagnostics"].as_array_mut().unwrap();
-    list.retain(|d| d["rule_id"] != "semantic/local-reference");
-    list.extend(diagnostics.iter().cloned());
+    // The schema makes `diagnostics` an array.
+    if let Some(list) = data["diagnostics"].as_array_mut() {
+        list.retain(|d| d["rule_id"] != "semantic/local-reference");
+        list.extend(diagnostics.iter().cloned());
+    }
     Ok(diagnostics)
 }
 

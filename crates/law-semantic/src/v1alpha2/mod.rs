@@ -74,12 +74,15 @@ impl Context {
         ));
     }
     fn position(&mut self, id: &str, path: &str, start: usize, end: usize) {
-        self.source_map
+        // Every entry of the source map is an array: nothing else is inserted.
+        if let Some(spans) = self
+            .source_map
             .entry(id.to_owned())
             .or_insert_with(|| json!([]))
             .as_array_mut()
-            .unwrap()
-            .push(json!({"path":path,"start":start,"end":end}));
+        {
+            spans.push(json!({"path":path,"start":start,"end":end}));
+        }
         self.positions
             .push(json!({"nodeId":id,"path":path,"start":start,"end":end}));
     }

@@ -40,7 +40,7 @@ fn component(s: &str, digits: Digits) -> Option<String> {
             .chars()
             .map(|c| {
                 if wide {
-                    char::from_u32(c as u32 - '０' as u32 + '0' as u32).unwrap()
+                    char::from_digit(u32::from(c) - u32::from('０'), 10).unwrap_or(c)
                 } else {
                     c
                 }

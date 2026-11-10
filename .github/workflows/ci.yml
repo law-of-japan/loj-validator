@@ -69,6 +69,7 @@ jobs:
           name: conformance-reports-${{ matrix.os }}-${{ matrix.toolchain }}
           path: conformance-reports/
           if-no-files-found: warn
+      # Also on Windows: git.rs has code that only compiles there.
       - name: Clippy
-        if: matrix.os == 'ubuntu-latest' && matrix.toolchain == 'stable'
+        if: matrix.toolchain == 'stable' && matrix.os != 'macos-latest'
         run: cargo clippy --workspace --all-targets --locked -- -D warnings

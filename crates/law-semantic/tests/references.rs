@@ -1,5 +1,8 @@
 //! Paired Markdown forms test actual links, not separately entered reference
 //! metadata. Port of `check_references.py`.
+// Test helpers outside `#[test]` functions may unwrap, and offsets read
+// back from JSON are cast for slicing: a failure here fails the test.
+#![allow(clippy::unwrap_used, clippy::cast_possible_truncation)]
 use law_semantic::{
     law_of_japan_profile, map_markdown, reference_coverage, resolve_references, validate_document,
     PARAGRAPH_HEADINGS_PROFILE,

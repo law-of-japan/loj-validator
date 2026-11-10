@@ -116,7 +116,9 @@ fn parse(source: &str, ctx: &mut Context) -> Option<Value> {
             "Unsupported schemaVersion"
         };
         ctx.diag("BASIC-01", message, "law.yaml", 0, source.len());
-        ctx.diagnostics.last_mut().unwrap().1.code = "loj/v1alpha2/unsupported-version".into();
+        if let Some((_, d)) = ctx.diagnostics.last_mut() {
+            d.code = "loj/v1alpha2/unsupported-version".into();
+        }
         return None;
     }
     let errors: Vec<_> = manifest_validator()
@@ -151,7 +153,10 @@ fn scopes(manifest: &Value, end: usize, ctx: &mut Context) -> Vec<String> {
     for (field, prefix) in [("supplements", "supplement"), ("appendices", "appendix")] {
         if let Some(a) = manifest[field].as_array() {
             for s in a {
-                let key = format!("{prefix}/{}", s["key"].as_str().unwrap());
+                let key = format!(
+                    "{prefix}/{}",
+                    s["key"].as_str().expect("a string by the manifest schema")
+                );
                 if scopes.contains(&key) {
                     ctx.diag("MAN-01", "Duplicate scope key", "law.yaml", 0, end);
                 }
@@ -178,9 +183,16 @@ pub(super) fn load(path: &Path, ctx: &mut Context) -> Option<(Value, Documents)>
     let mut used = HashSet::new();
     let mut last = 0;
     let mut documents = Vec::new();
-    for document in manifest["documents"].as_array().unwrap() {
-        let name = document["path"].as_str().unwrap();
-        let parent = document["parent"].as_str().unwrap();
+    for document in manifest["documents"]
+        .as_array()
+        .expect("an array by the manifest schema")
+    {
+        let name = document["path"]
+            .as_str()
+            .expect("a string by the manifest schema");
+        let parent = document["parent"]
+            .as_str()
+            .expect("a string by the manifest schema");
         // MAN-03: the documents of a scope are contiguous and in scope order.
         if let Some(index) = scopes.iter().position(|s| s == parent) {
             if index < last {

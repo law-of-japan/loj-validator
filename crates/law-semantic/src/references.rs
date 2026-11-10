@@ -1,3 +1,6 @@
+// Legacy pipeline: its unwraps read an AST that the entry points have
+// checked against the schema. law-of-japan/loj-validator#7 tracks them.
+#![allow(clippy::unwrap_used)]
 use regex::Regex;
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
@@ -57,7 +60,7 @@ fn decode(fragment: &str) -> Result<String, String> {
             let l = (bytes[i + 2] as char)
                 .to_digit(16)
                 .ok_or("invalid percent escape")?;
-            out.push((h * 16 + l) as u8);
+            out.push(u8::try_from(h * 16 + l).map_err(|_| "invalid percent escape")?);
             i += 3;
         } else {
             out.push(bytes[i]);

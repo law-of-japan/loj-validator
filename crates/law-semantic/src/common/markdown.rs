@@ -75,7 +75,9 @@ pub(crate) fn incomplete_split_blocks(source: &str) -> Vec<Range<usize>> {
                 fence = Some((span.start, line_end(source, span.start)));
             }
             Event::Text(_) if fence.is_some() => {
-                fence.as_mut().unwrap().1 = span.end;
+                if let Some(open) = fence.as_mut() {
+                    open.1 = span.end;
+                }
             }
             Event::End(TagEnd::CodeBlock) => {
                 if let Some((start, body_end)) = fence.take() {
@@ -87,7 +89,11 @@ pub(crate) fn incomplete_split_blocks(source: &str) -> Vec<Range<usize>> {
                 }
             }
             Event::Start(Tag::HtmlBlock) => html = Some((span.start, String::new())),
-            Event::Html(text) if html.is_some() => html.as_mut().unwrap().1.push_str(&text),
+            Event::Html(text) if html.is_some() => {
+                if let Some(open) = html.as_mut() {
+                    open.1.push_str(&text);
+                }
+            }
             Event::End(TagEnd::HtmlBlock) => {
                 if let Some((start, text)) = html.take() {
                     let text = text.trim_start();
