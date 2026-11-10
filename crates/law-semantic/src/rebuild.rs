@@ -2,8 +2,9 @@
 //! the conformance levels (REBR-01).
 use crate::common::findings::{common_type_rule, Findings};
 use crate::common::{load_yaml, Check, Class, Loaded, COMMON};
+use crate::repository::history::list;
 use serde_json::Value;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::Path;
 
 pub const REBUILD: &str = "loj-rebuild/v1alpha1";
@@ -52,17 +53,44 @@ pub(crate) fn check(
     asts: &HashMap<String, Option<Value>>,
     f: &mut Findings,
 ) {
+    let Some(doc) = load(repo, f) else {
+        return;
+    };
+    let Some(h) = history else {
+        // Sources, revisions and nodes resolve against the history manifest.
+        f.incomplete.insert(RB);
+        return;
+    };
+    let glyphs_of = sources(&doc, h, f);
+    // Sorted by id, so that the diagnostics come in a fixed order.
+    let revisions: BTreeMap<&str, &Value> = list(&h["revisions"])
+        .iter()
+        .filter_map(|r| Some((r["id"].as_str()?, r)))
+        .collect();
+    mapped_revisions(&doc, &revisions, f);
+    differences(&doc, &revisions, asts, f);
+    verified_glyphs(&revisions, &glyphs_of, f);
+}
+
+/// REBR-01: read `rebuild.yaml`. `None` when there is none (the check is then
+/// not applicable: a Record not moved from a legacy repository) or when it
+/// cannot be used.
+fn load(repo: &Path, f: &mut Findings) -> Option<Value> {
     let path = repo.join(FILE);
     if !path.exists() {
-        return; // notApplicable: a Record not moved from a legacy repository
+        return None;
     }
     f.applicable.insert(RB);
     let doc = match load_yaml(&path) {
         Loaded::Ok(v, _) => v,
-        Loaded::Invalid(e) => return f.error(RB, "REBR-01", REBUILD, e, FILE, ""),
+        Loaded::Invalid(e) => {
+            f.error(RB, "REBR-01", REBUILD, e, FILE, "");
+            return None;
+        }
         Loaded::Unreadable(e) => {
             f.incomplete.insert(RB);
-            return f.error(RB, "REBR-01", REBUILD, e, FILE, "");
+            f.error(RB, "REBR-01", REBUILD, e, FILE, "");
+            return None;
         }
     };
     if doc["schemaVersion"] != REBUILD {
@@ -73,16 +101,16 @@ pub(crate) fn check(
                 .at_pointer(FILE, "/schemaVersion"),
         );
         f.incomplete.insert(RB);
-        return;
+        return None;
     }
     f.schema(validator(), &doc, FILE, classify);
-    let Some(h) = history else {
-        // Sources, revisions and nodes resolve against the history manifest.
-        f.incomplete.insert(RB);
-        return;
-    };
-    let empty = Vec::new();
-    let list = |v: &Value| v.as_array().unwrap_or(&empty).clone();
+    Some(doc)
+}
+
+/// REBR-02: the Record and the checked sources are those of `history.yaml`.
+/// TYPE-03: Evidence points to a Source of `history.yaml`.
+/// Returns how each checked source treats glyphs (`sourceChecks[].glyphs`).
+fn sources<'a>(doc: &'a Value, h: &Value, f: &mut Findings) -> HashMap<&'a str, &'a str> {
     if doc["record"]["id"] != h["record"]["id"] {
         f.error(
             RB,
@@ -96,11 +124,11 @@ pub(crate) fn check(
             "/record",
         );
     }
-    let sources: HashSet<String> = list(&h["sources"])
+    let sources: HashSet<&str> = list(&h["sources"])
         .iter()
-        .filter_map(|s| s["id"].as_str().map(str::to_owned))
+        .filter_map(|s| s["id"].as_str())
         .collect();
-    let mut glyphs_of: HashMap<String, String> = HashMap::new();
+    let mut glyphs_of = HashMap::new();
     for (i, s) in list(&doc["sourceChecks"]).iter().enumerate() {
         if let Some(id) = s["source"].as_str() {
             if !sources.contains(id) {
@@ -113,11 +141,11 @@ pub(crate) fn check(
                     &format!("/sourceChecks/{i}/source"),
                 );
             }
-            glyphs_of.insert(id.to_owned(), s["glyphs"].as_str().unwrap_or("").to_owned());
+            glyphs_of.insert(id, s["glyphs"].as_str().unwrap_or(""));
         }
     }
     let mut refs = Vec::new();
-    crate::repository::history::evidence_refs(&doc, String::new(), &mut refs);
+    crate::repository::history::evidence_refs(doc, String::new(), &mut refs);
     for (p, s) in refs {
         if !sources.contains(s) {
             f.error(
@@ -130,10 +158,11 @@ pub(crate) fn check(
             );
         }
     }
-    let revisions: HashMap<String, Value> = list(&h["revisions"])
-        .into_iter()
-        .filter_map(|r| r["id"].as_str().map(|i| (i.to_owned(), r.clone())))
-        .collect();
+    glyphs_of
+}
+
+/// REBR-04: the revisions of every mapping are in `history.yaml`.
+fn mapped_revisions(doc: &Value, revisions: &BTreeMap<&str, &Value>, f: &mut Findings) {
     for (i, m) in list(&doc["mappings"]).iter().enumerate() {
         for (j, r) in list(&m["revisions"]).iter().enumerate() {
             if let Some(r) = r.as_str() {
@@ -150,6 +179,16 @@ pub(crate) fn check(
             }
         }
     }
+}
+
+/// REBR-05: a difference names a revision of `history.yaml` and, when it
+/// names a node, a node of that revision.
+fn differences(
+    doc: &Value,
+    revisions: &BTreeMap<&str, &Value>,
+    asts: &HashMap<String, Option<Value>>,
+    f: &mut Findings,
+) {
     for (i, d) in list(&doc["differences"]).iter().enumerate() {
         let p = format!("/differences/{i}");
         let Some(r) = d["revision"].as_str() else {
@@ -166,34 +205,42 @@ pub(crate) fn check(
             );
             continue;
         }
-        if let Some(node) = d["node"].as_str() {
-            match asts.get(r) {
-                Some(Some(ast)) => {
-                    if !crate::repository::glyphs::Texts::from_ast(ast).contains(node) {
-                        f.error(
-                            RB,
-                            "REBR-05",
-                            REBUILD,
-                            format!("node {node} is not in revision {r}"),
-                            FILE,
-                            &format!("{p}/node"),
-                        );
-                    }
+        let Some(node) = d["node"].as_str() else {
+            continue;
+        };
+        match asts.get(r) {
+            Some(Some(ast)) => {
+                if !crate::repository::glyphs::Texts::from_ast(ast).contains(node) {
+                    f.error(
+                        RB,
+                        "REBR-05",
+                        REBUILD,
+                        format!("node {node} is not in revision {r}"),
+                        FILE,
+                        &format!("{p}/node"),
+                    );
                 }
-                _ => f.note(
-                    RB,
-                    Class::Undetermined,
-                    "REBR-05",
-                    REBUILD,
-                    format!("node {node} of revision {r} not checked: no valid AST"),
-                    FILE,
-                    &format!("{p}/node"),
-                ),
             }
+            _ => f.note(
+                RB,
+                Class::Undetermined,
+                "REBR-05",
+                REBUILD,
+                format!("node {node} of revision {r} not checked: no valid AST"),
+                FILE,
+                &format!("{p}/node"),
+            ),
         }
     }
-    // REBR-03 / GLYPH-10: verified glyphs need a source that preserves glyphs.
-    for (id, r) in &revisions {
+}
+
+/// REBR-03 / GLYPH-10: verified glyphs need a source that preserves glyphs.
+fn verified_glyphs(
+    revisions: &BTreeMap<&str, &Value>,
+    glyphs_of: &HashMap<&str, &str>,
+    f: &mut Findings,
+) {
+    for (id, r) in revisions {
         if r["text"]["glyphs"] != "verified" {
             continue;
         }
@@ -201,7 +248,7 @@ pub(crate) fn check(
             e["source"]
                 .as_str()
                 .and_then(|s| glyphs_of.get(s))
-                .is_some_and(|g| g == "preserved")
+                .is_some_and(|g| *g == "preserved")
         });
         if !preserved {
             f.error(
@@ -213,5 +260,120 @@ pub(crate) fn check(
                 "/sourceChecks",
             );
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn found(f: &Findings) -> Vec<(&str, &str)> {
+        f.items
+            .iter()
+            .map(|(_, d)| (d.rule.as_str(), d.message.as_str()))
+            .collect()
+    }
+
+    #[test]
+    fn sources_and_the_record_are_those_of_the_history() {
+        let h = json!({"record": {"id": "r1"}, "sources": [{"id": "s1"}, {"id": "s2"}]});
+        let doc = json!({
+            "record": {"id": "r2"},
+            "sourceChecks": [
+                {"source": "s1", "glyphs": "preserved"},
+                {"source": "s9", "glyphs": "normalized"},
+                {"glyphs": "preserved"},
+            ],
+            "mappings": [{"evidence": [{"source": "s2"}, {"source": "s8"}]}],
+        });
+        let mut f = Findings::default();
+        let glyphs_of = sources(&doc, &h, &mut f);
+        assert_eq!(glyphs_of.len(), 2);
+        assert_eq!(glyphs_of["s1"], "preserved");
+        assert_eq!(glyphs_of["s9"], "normalized");
+        assert_eq!(
+            found(&f),
+            [
+                (
+                    "REBR-02",
+                    "record \"r2\" is not the Record \"r1\" of history.yaml"
+                ),
+                ("REBR-02", "source s9 is not a Source of history.yaml"),
+                (
+                    "TYPE-03",
+                    "Evidence source s8 is not a Source of history.yaml"
+                ),
+            ]
+        );
+    }
+
+    #[test]
+    fn verified_glyphs_are_reported_in_the_order_of_the_revision_ids() {
+        let h = json!({"revisions": [
+            {"id": "c", "text": {"glyphs": "verified", "sources": [{"source": "s2"}]}},
+            {"id": "a", "text": {"glyphs": "verified", "sources": []}},
+            {"id": "b", "text": {"glyphs": "verified", "sources": [{"source": "s1"}]}},
+            {"id": "d", "text": {"glyphs": "unverified"}},
+            {"text": {"glyphs": "verified"}},
+        ]});
+        let revisions: BTreeMap<&str, &Value> = list(&h["revisions"])
+            .iter()
+            .filter_map(|r| Some((r["id"].as_str()?, r)))
+            .collect();
+        let glyphs_of = HashMap::from([("s1", "preserved"), ("s2", "normalized")]);
+        let mut f = Findings::default();
+        verified_glyphs(&revisions, &glyphs_of, &mut f);
+        assert_eq!(
+            found(&f),
+            [
+                (
+                    "REBR-03",
+                    "revision a has text.glyphs verified without a preserved source"
+                ),
+                (
+                    "REBR-03",
+                    "revision c has text.glyphs verified without a preserved source"
+                ),
+            ]
+        );
+    }
+
+    #[test]
+    fn mappings_and_differences_name_revisions_and_nodes_that_exist() {
+        let h = json!({"revisions": [{"id": "v1"}, {"id": "v2"}]});
+        let revisions: BTreeMap<&str, &Value> = list(&h["revisions"])
+            .iter()
+            .filter_map(|r| Some((r["id"].as_str()?, r)))
+            .collect();
+        let doc = json!({
+            "mappings": [{"revisions": ["v1", "v3"]}],
+            "differences": [
+                {"revision": "v1", "node": "law/a"},
+                {"revision": "v1", "node": "law/b"},
+                {"revision": "v2", "node": "law/a"},
+                {"revision": "v4", "node": "law/a"},
+                {"revision": "v1"},
+            ],
+        });
+        let ast = json!({"root": {"kind": "Law", "id": "law",
+            "content": [{"kind": "Article", "id": "law/a", "content": []}]}});
+        let asts = HashMap::from([("v1".to_owned(), Some(ast)), ("v2".to_owned(), None)]);
+        let mut f = Findings::default();
+        mapped_revisions(&doc, &revisions, &mut f);
+        differences(&doc, &revisions, &asts, &mut f);
+        assert_eq!(
+            found(&f),
+            [
+                ("REBR-04", "revision v3 is not in history.yaml"),
+                ("REBR-05", "node law/b is not in revision v1"),
+                (
+                    "REBR-05",
+                    "node law/a of revision v2 not checked: no valid AST"
+                ),
+                ("REBR-05", "revision v4 is not in history.yaml"),
+            ]
+        );
+        assert_eq!(f.items[2].1.class, Class::Undetermined);
     }
 }
