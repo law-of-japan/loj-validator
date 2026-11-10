@@ -387,3 +387,39 @@ pub fn check(dir: &Path) -> Report {
         .insert("repository".into(), json!(dir.to_string_lossy()));
     r
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn glyph_findings(offset: u64) -> Vec<(String, String)> {
+        let rec = json!({"numbers": [{
+            "id": "n1",
+            "decision": "adopted",
+            "raw": "第一号",
+            "glyphs": [{"offset": offset, "recorded": "号"}],
+        }]});
+        let mut f = Findings::default();
+        check_record(&rec, "records/x.yaml", &mut f);
+        f.items
+            .iter()
+            .map(|(_, d)| (d.rule.clone(), d.message.clone()))
+            .collect()
+    }
+
+    #[test]
+    fn a_glyph_offset_beyond_the_raw_number_is_a_finding_not_a_panic() {
+        assert!(glyph_findings(2).is_empty());
+        for offset in [0, 3, 9, u64::from(u32::MAX) + 1, u64::MAX - 1, u64::MAX] {
+            assert_eq!(
+                glyph_findings(offset),
+                [(
+                    "GLYPH-04".to_owned(),
+                    format!("recorded text is not at offset {offset} of raw")
+                )],
+                "{offset}"
+            );
+        }
+    }
+}
