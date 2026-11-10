@@ -247,22 +247,28 @@ fn located(list: &[Value], texts: &Texts, file: &str, f: &mut Findings) -> Cover
         };
         let target: Vec<char> = if display { disp } else { own }.chars().collect();
         let recorded: Vec<char> = recorded.chars().collect();
-        let (o, len) = (offset as usize, recorded.len());
-        if o + len > target.len() || target[o..o + len] != recorded[..] {
+        // The offset comes from the input: it may exceed any text or `usize`.
+        let range = usize::try_from(offset)
+            .ok()
+            .and_then(|o| Some(o..o.checked_add(recorded.len())?))
+            .filter(|r| target.get(r.clone()) == Some(&recorded[..]));
+        let Some(range) = range else {
             f.error(
                 EV,
                 "GLYPH-04",
                 GLYPHS,
-                format!("recorded text is not at offset {o} of {node}"),
+                format!("recorded text is not at offset {offset} of {node}"),
                 file,
                 &format!("{p}/offset"),
             );
             continue;
-        }
+        };
+        // An empty recorded text still marks the code point at its offset.
+        let end = range.end.max(range.start.saturating_add(1));
         covered
             .entry((node.to_owned(), display))
             .or_default()
-            .push((o, o + len.max(1)));
+            .push((range.start, end));
     }
     covered
 }
@@ -321,5 +327,85 @@ fn unnoted(texts: &Texts, covered: &Covered, file: &str, f: &mut Findings) {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn texts() -> Texts {
+        Texts::from_ast(&json!({"root": {
+            "kind": "Law", "id": "law", "display": "試験法",
+            "content": [{"kind": "Paragraph", "id": "law/p", "display": "",
+                "content": [{"text": "〓と亞\u{fa11}の字"}]}],
+        }}))
+    }
+
+    fn found(f: &Findings) -> Vec<(&str, String)> {
+        f.items
+            .iter()
+            .map(|(_, d)| {
+                let pointer = d.location.as_ref().unwrap()["pointer"].as_str().unwrap();
+                (d.rule.as_str(), pointer.to_owned())
+            })
+            .collect()
+    }
+
+    #[test]
+    fn notes_are_located_by_code_point_offset() {
+        let notes = json!([
+            {"node": "law/p", "offset": 0, "recorded": "〓"},
+            {"node": "law/p", "offset": 3, "recorded": "\u{fa11}"},
+            {"node": "law", "field": "display", "offset": 0, "recorded": "試験"},
+            // Wrong text, past the end, and an unknown node.
+            {"node": "law/p", "offset": 1, "recorded": "亞"},
+            {"node": "law/p", "offset": 6, "recorded": "字"},
+            {"node": "law/q", "offset": 0, "recorded": "字"},
+            // Incomplete notes are left to the schema check.
+            {"node": "law/p", "recorded": "字"},
+        ]);
+        let mut f = Findings::default();
+        let covered = located(list(&notes), &texts(), "glyphs.yaml", &mut f);
+        assert_eq!(covered[&("law/p".to_owned(), false)], [(0, 1), (3, 4)]);
+        assert_eq!(covered[&("law".to_owned(), true)], [(0, 2)]);
+        assert_eq!(
+            found(&f),
+            [
+                ("GLYPH-04", "/notes/3/offset".to_owned()),
+                ("GLYPH-04", "/notes/4/offset".to_owned()),
+                ("GLYPH-04", "/notes/5/node".to_owned()),
+            ]
+        );
+    }
+
+    #[test]
+    fn an_offset_beyond_any_text_is_a_finding_not_a_panic() {
+        for offset in [u64::MAX, u64::MAX - 1, u64::from(u32::MAX) + 1, 7] {
+            let notes = json!([{"node": "law/p", "offset": offset, "recorded": "字の"}]);
+            let mut f = Findings::default();
+            let covered = located(list(&notes), &texts(), "glyphs.yaml", &mut f);
+            assert!(covered.is_empty(), "{offset}");
+            assert_eq!(found(&f), [("GLYPH-04", "/notes/0/offset".to_owned())]);
+            assert_eq!(
+                f.items[0].1.message,
+                format!("recorded text is not at offset {offset} of law/p")
+            );
+        }
+    }
+
+    #[test]
+    fn characters_that_need_a_note_are_reported_once_each() {
+        let mut f = Findings::default();
+        let covered = Covered::from([(("law/p".to_owned(), false), vec![(0, 1)])]);
+        unnoted(&texts(), &covered, "glyphs.yaml", &mut f);
+        // `〓` at 0 is covered; the compatibility ideograph at 3 is not.
+        let messages: Vec<_> = f.items.iter().map(|(_, d)| d.message.as_str()).collect();
+        assert_eq!(
+            messages,
+            ["U+FA11 at text offset 3 of law/p has no glyph note"]
+        );
+        assert_eq!(f.items[0].1.rule, "GLYPH-11");
     }
 }
