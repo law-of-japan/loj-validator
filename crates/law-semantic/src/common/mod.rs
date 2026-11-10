@@ -11,6 +11,7 @@ pub mod findings;
 pub(crate) mod markdown;
 pub(crate) mod number;
 pub mod report;
+pub(crate) mod structure;
 pub mod time;
 pub mod yaml;
 
