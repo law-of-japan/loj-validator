@@ -16,5 +16,10 @@ regex = { workspace = true }
 yaml-rust2 = { version = "=0.10.4", default-features = false }
 same-file = "=1.0.6"
 
+[dev-dependencies]
+# Property tests only. Pinned like the other inputs of a test run; without the
+# fork and timeout features, which need extra crates and child processes.
+proptest = { version = "=1.12.0", default-features = false, features = ["std"] }
+
 [lints]
 workspace = true
