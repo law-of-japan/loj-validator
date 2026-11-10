@@ -1,6 +1,17 @@
 //! CommonMark regions and byte-preserving line boundaries (loj/v1alpha1 and loj/v1alpha2).
 use pulldown_cmark::{CodeBlockKind, Event, Parser, Tag, TagEnd};
+use regex::Regex;
 use std::ops::Range;
+use std::sync::LazyLock;
+
+// CommonMark HTML tag matching is ASCII case-insensitive, not Unicode folding.
+/// Start of a CommonMark HTML block of type 1.
+static TYPE_ONE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i-u)^<(script|pre|style|textarea)(?:[\t\r\n >]|$)").expect("constant regex")
+});
+/// End condition of a CommonMark HTML block of type 1.
+static TYPE_ONE_END: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i-u)</(script|pre|style|textarea)>").expect("constant regex"));
 #[derive(Clone, Copy)]
 pub(crate) enum BlockKind {
     Heading(bool),
@@ -53,10 +64,6 @@ pub(crate) fn blocks(source: &str) -> Vec<(BlockKind, Range<usize>)> {
 /// Use CommonMark events for block recognition, including nested containers.
 pub(crate) fn incomplete_split_blocks(source: &str) -> Vec<Range<usize>> {
     let mut result = Vec::new();
-    // CommonMark HTML tag matching is ASCII case-insensitive, not Unicode folding.
-    let type_one =
-        regex::Regex::new(r"(?i-u)^<(script|pre|style|textarea)(?:[\t\r\n >]|$)").unwrap();
-    let type_one_end = regex::Regex::new(r"(?i-u)</(script|pre|style|textarea)>").unwrap();
     let mut fence = None;
     let mut html = None;
     let mut quotes = 0usize;
@@ -84,8 +91,8 @@ pub(crate) fn incomplete_split_blocks(source: &str) -> Vec<Range<usize>> {
             Event::End(TagEnd::HtmlBlock) => {
                 if let Some((start, text)) = html.take() {
                     let text = text.trim_start();
-                    let closed = if type_one.is_match(text) {
-                        type_one_end.is_match(text)
+                    let closed = if TYPE_ONE.is_match(text) {
+                        TYPE_ONE_END.is_match(text)
                     } else if text.starts_with("<!--") {
                         text.contains("-->")
                     } else if text.starts_with("<?") {

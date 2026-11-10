@@ -1,10 +1,23 @@
 use regex::Regex;
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
+use std::sync::LazyLock;
+
+/// One character that a heading slug keeps.
+static SLUG_CHAR: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^[\p{L}\p{M}\p{N}_-]$").expect("constant regex"));
+
+const NUMERAL: &str = "[一二三四五六七八九十百千万億兆〇零0-9０-９]+";
+/// An article label such as `第十二条の二`: number `n`, branch numbers `b`.
+static ARTICLE_LABEL: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(&format!(
+        "^第(?P<n>{NUMERAL})条(?P<b>(?:[のノ]{NUMERAL})*)$"
+    ))
+    .expect("constant regex")
+});
 
 /// GitHub's documented basic heading rule; corpus rendering is tested separately.
 pub fn slug(text: &str, used: &mut HashSet<String>) -> String {
-    let keep = Regex::new(r"^[\p{L}\p{M}\p{N}_-]$").unwrap();
     let base: String = text
         .trim()
         .to_lowercase()
@@ -12,7 +25,7 @@ pub fn slug(text: &str, used: &mut HashSet<String>) -> String {
         .filter_map(|c| {
             if c == ' ' {
                 Some('-')
-            } else if keep.is_match(&c.to_string()) {
+            } else if SLUG_CHAR.is_match(c.encode_utf8(&mut [0; 4])) {
                 Some(c)
             } else {
                 None
@@ -84,7 +97,6 @@ fn visit(
     issues: &mut Vec<Value>,
 ) {
     let node_id = n["id"].as_str().unwrap().to_owned();
-    let number_label=Regex::new(r"^第(?P<n>[一二三四五六七八九十百千万億兆〇零0-9０-９]+)条(?P<b>(?:[のノ][一二三四五六七八九十百千万億兆〇零0-9０-９]+)*)$").unwrap();
     for r in n["references"].as_array_mut().unwrap() {
         let uri = r["target_uri"].as_str().unwrap().to_owned();
         r["target_id"] = Value::Null;
@@ -203,7 +215,7 @@ fn visit(
             continue;
         }
         let label = r["label"].as_str().unwrap();
-        if let Some(c) = number_label.captures(label) {
+        if let Some(c) = ARTICLE_LABEL.captures(label) {
             let display = format!("{}{}", &c["n"], &c["b"]);
             match crate::number::normalize(&display) {
                 Ok(parts) if json!(parts) == target["number"]["parts"] => {}
@@ -302,6 +314,37 @@ mod tests {
             ("a--b-1", "a--b-1-1"),
         ] {
             assert_eq!(slug(heading, &mut used), expected);
+        }
+    }
+    #[test]
+    fn slugs_keep_marks_and_drop_other_symbols() {
+        // U+3099 is a combining mark (Mn): kept. U+FE00 is a variation
+        // selector (also Mn): kept. Punctuation, symbols and U+3000 are dropped.
+        for (heading, expected) in [
+            ("か\u{3099}き", "か\u{3099}き"),
+            ("葛\u{fe00}飾", "葛\u{fe00}飾"),
+            ("第１条_a-b", "第１条_a-b"),
+            ("a\u{3000}b・c〔d〕", "abcd"),
+            ("😀x", "x"),
+        ] {
+            assert_eq!(slug(heading, &mut HashSet::new()), expected, "{heading}");
+        }
+    }
+    #[test]
+    fn article_labels() {
+        let c = ARTICLE_LABEL.captures("第十二条の二ノ３").unwrap();
+        assert_eq!((&c["n"], &c["b"]), ("十二", "の二ノ３"));
+        let c = ARTICLE_LABEL.captures("第１０条").unwrap();
+        assert_eq!((&c["n"], &c["b"]), ("１０", ""));
+        for bad in [
+            "第条",
+            "第一条の",
+            "第一条 ",
+            "第一項",
+            "一条",
+            "第一条の二\n",
+        ] {
+            assert!(!ARTICLE_LABEL.is_match(bad), "{bad:?}");
         }
     }
     #[test]
