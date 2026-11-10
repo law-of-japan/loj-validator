@@ -1,7 +1,7 @@
 //! Resolution of fixed and Revision references (common/v1alpha1 FIXREF-02..07),
 //! reported apart from the conformance levels.
 use crate::common::findings::Findings;
-use crate::common::{Check, Report, COMMON};
+use crate::common::{Check, Class, Report, COMMON};
 use crate::git::{Bundle, ExportError};
 use crate::registry::{self, Resolution};
 use serde_json::{json, Map, Value};
@@ -145,7 +145,15 @@ fn resolve(bundle: &Path, registry_dir: &Path, reference: &str, f: &mut Findings
 /// note carries FIXREF-06, the rule that defines the result values, notFetched
 /// among them.
 fn not_fetched(f: &mut Findings, out: &mut Value, reference: &str, why: String) {
-    f.note(RF, "undetermined", "FIXREF-06", COMMON, why, reference, "");
+    f.note(
+        RF,
+        Class::Undetermined,
+        "FIXREF-06",
+        COMMON,
+        why,
+        reference,
+        "",
+    );
     *out = json!({"result": "notFetched"});
 }
 
@@ -223,7 +231,7 @@ fn resolve_in(
         // FIXREF-05: report retraction, merge or split; never forward silently.
         f.note(
             RF,
-            "warning",
+            Class::Warning,
             "FIXREF-05",
             COMMON,
             format!(
@@ -323,7 +331,7 @@ mod tests {
         assert!(
             f.items
                 .iter()
-                .any(|(_, d)| d.class == "undetermined" && d.message.starts_with("git failed")),
+                .any(|(_, d)| d.class == Class::Undetermined && d.message.starts_with("git failed")),
             "{:?}",
             f.items
         );

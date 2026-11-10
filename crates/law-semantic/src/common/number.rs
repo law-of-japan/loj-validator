@@ -17,13 +17,25 @@ fn japanese(n: u32) -> String {
     }
     s
 }
-fn component(s: &str, mode: u8) -> Option<String> {
+/// Which digit forms one part of a number may use.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum Digits {
+    /// Kanji numerals, ASCII digits or full-width digits: heading labels
+    /// and the display token of an item.
+    Any,
+    /// ASCII or full-width digits: the display token of a paragraph.
+    Arabic,
+    /// ASCII digits only: marker attributes and the display token of a subitem.
+    Ascii,
+}
+
+fn component(s: &str, digits: Digits) -> Option<String> {
     if s.is_empty() {
         return None;
     }
     let ascii = s.chars().all(|c| c.is_ascii_digit());
     let wide = s.chars().all(|c| ('０'..='９').contains(&c));
-    let value = if ascii || (wide && mode != 2) {
+    let value = if ascii || (wide && digits != Digits::Ascii) {
         let t: String = s
             .chars()
             .map(|c| {
@@ -38,7 +50,7 @@ fn component(s: &str, mode: u8) -> Option<String> {
             return None;
         }
         t.parse::<u32>().ok()?
-    } else if mode == 0 {
+    } else if digits == Digits::Any {
         static NUMBERS: OnceLock<std::collections::HashMap<String, u32>> = OnceLock::new();
         *NUMBERS
             .get_or_init(|| (1..=9999).map(|n| (japanese(n), n)).collect())
@@ -50,9 +62,9 @@ fn component(s: &str, mode: u8) -> Option<String> {
 }
 /// `separators`: `-` for attributes; for labels and display tokens, `の` alone
 /// (loj/v1alpha1) or `の`/`ノ` (loj/v1alpha2, NUM-01).
-pub(crate) fn number(s: &str, separators: &[char], mode: u8) -> Option<String> {
+pub(crate) fn number(s: &str, separators: &[char], digits: Digits) -> Option<String> {
     s.split(separators)
-        .map(|s| component(s, mode))
+        .map(|s| component(s, digits))
         .collect::<Option<Vec<_>>>()
         .map(|v| v.join("-"))
 }
@@ -63,26 +75,36 @@ mod tests {
     #[test]
     fn canonical_numbers_and_width_boundaries() {
         for n in 1..=9999 {
-            assert_eq!(component(&japanese(n), 0), Some(n.to_string()));
+            assert_eq!(component(&japanese(n), Digits::Any), Some(n.to_string()));
         }
         for bad in [
             "0", "01", "０１", "１2", "一千", "一百", "一十", "一二", "〇", "零", "10000",
         ] {
-            assert_eq!(component(bad, 0), None, "{bad}");
+            assert_eq!(component(bad, Digits::Any), None, "{bad}");
         }
         assert_eq!(
-            number("十二の二の３", &['の', 'ノ'], 0),
+            number("十二の二の３", &['の', 'ノ'], Digits::Any),
             Some("12-2-3".into())
         );
         assert_eq!(
-            number("十二ノ二の三", &['の', 'ノ'], 0),
+            number("十二ノ二の三", &['の', 'ノ'], Digits::Any),
             Some("12-2-3".into())
         );
         // loj/v1alpha1 passes `の` alone, so `ノ` is not a separator there.
-        assert_eq!(number("十二の二の３", &['の'], 0), Some("12-2-3".into()));
-        assert_eq!(number("十二ノ二", &['の'], 0), None);
-        assert_eq!(number("千十", &['の'], 0), Some("1010".into()));
-        assert_eq!(number("1-01", &['-'], 2), None);
-        assert_eq!(number("１", &['-'], 2), None);
+        assert_eq!(
+            number("十二の二の３", &['の'], Digits::Any),
+            Some("12-2-3".into())
+        );
+        assert_eq!(number("十二ノ二", &['の'], Digits::Any), None);
+        assert_eq!(number("千十", &['の'], Digits::Any), Some("1010".into()));
+        assert_eq!(number("1-01", &['-'], Digits::Ascii), None);
+        assert_eq!(number("１", &['-'], Digits::Ascii), None);
+        // Full-width digits: allowed for `Any` and `Arabic`, never for `Ascii`.
+        assert_eq!(number("１２", &['-'], Digits::Arabic), Some("12".into()));
+        assert_eq!(number("12", &['-'], Digits::Arabic), Some("12".into()));
+        assert_eq!(number("12", &['-'], Digits::Ascii), Some("12".into()));
+        // Kanji numerals: only for `Any`.
+        assert_eq!(number("十二", &['-'], Digits::Arabic), None);
+        assert_eq!(number("十二", &['-'], Digits::Ascii), None);
     }
 }

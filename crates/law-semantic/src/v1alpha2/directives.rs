@@ -1,9 +1,10 @@
 //! DIR-01 lexical grammar (grammar/v1alpha2/directives.ebnf), applied only to
 //! eligible CommonMark regions.
-use crate::common::number::number;
+use super::kind::Kind;
+use crate::common::number::{number, Digits};
 
 pub(super) struct Marker {
-    pub(super) kind: &'static str,
+    pub(super) kind: Kind,
     pub(super) close: bool,
     pub(super) number: Option<String>,
     pub(super) level: usize,
@@ -11,20 +12,6 @@ pub(super) struct Marker {
     pub(super) key: Option<String>,
     pub(super) rowspan: Option<u64>,
     pub(super) colspan: Option<u64>,
-}
-
-fn kind(name: &str) -> Option<&'static str> {
-    Some(match name {
-        "paragraph" => "Paragraph",
-        "item" => "Item",
-        "subitem" => "Subitem",
-        "table" => "Table",
-        "row" => "Row",
-        "cell" => "Cell",
-        "preamble" => "Preamble",
-        "enact-statement" => "EnactStatement",
-        _ => return None,
-    })
 }
 
 /// A lexical error: DIR-01 plus any rule that constrains the offending value.
@@ -56,9 +43,9 @@ pub(super) fn marker(s: &str) -> Result<Marker, Invalid> {
         .strip_prefix("<!-- loj:")
         .and_then(|s| s.strip_suffix(" -->"))
         .ok_or_else(invalid)?;
-    let mut m = Marker {
-        kind: "",
-        close: false,
+    let new = |kind, close| Marker {
+        kind,
+        close,
         number: None,
         level: 0,
         implicit: false,
@@ -67,15 +54,14 @@ pub(super) fn marker(s: &str) -> Result<Marker, Invalid> {
         colspan: None,
     };
     if let Some(k) = inner.strip_prefix("end-") {
-        m.kind = kind(k).ok_or_else(invalid)?;
-        m.close = true;
-        return Ok(m);
+        return Ok(new(Kind::from_marker(k).ok_or_else(invalid)?, true));
     }
     if inner.contains(['\t', '\r', '\n']) || inner.starts_with(' ') || inner.ends_with(' ') {
         return Err(invalid());
     }
     let mut words = inner.split(' ').filter(|s| !s.is_empty());
-    m.kind = kind(words.next().ok_or_else(invalid)?).ok_or_else(invalid)?;
+    let kind = Kind::from_marker(words.next().ok_or_else(invalid)?).ok_or_else(invalid)?;
+    let mut m = new(kind, false);
     let mut numbering = None;
     let mut error: Option<Invalid> = None;
     let mut seen = std::collections::HashSet::new();
@@ -85,18 +71,18 @@ pub(super) fn marker(s: &str) -> Result<Marker, Invalid> {
             return Err(invalid());
         }
         let allowed: &[&str] = match m.kind {
-            "Paragraph" => &["number", "numbering"],
-            "Item" | "Table" => &["number"],
-            "Subitem" => &["number", "level"],
-            "Row" => &["key"],
-            "Cell" => &["rowspan", "colspan"],
+            Kind::Paragraph => &["number", "numbering"],
+            Kind::Item | Kind::Table => &["number"],
+            Kind::Subitem => &["number", "level"],
+            Kind::Row => &["key"],
+            Kind::Cell => &["rowspan", "colspan"],
             _ => &[],
         };
         if !allowed.contains(&k) {
             return Err(invalid());
         }
         match k {
-            "number" => m.number = Some(number(v, &['-'], 2).ok_or_else(invalid)?),
+            "number" => m.number = Some(number(v, &['-'], Digits::Ascii).ok_or_else(invalid)?),
             "level" => {
                 let n = v.parse::<usize>().ok().ok_or_else(invalid)?;
                 if n == 0 || n > 10 || n.to_string() != v {
@@ -137,14 +123,14 @@ pub(super) fn marker(s: &str) -> Result<Marker, Invalid> {
     }
     m.implicit = numbering.unwrap_or(false);
     let required: &[&str] = match m.kind {
-        "Paragraph" | "Item" | "Table" => &["number"],
-        "Subitem" => &["number", "level"],
-        "Row" => &["key"],
+        Kind::Paragraph | Kind::Item | Kind::Table => &["number"],
+        Kind::Subitem => &["number", "level"],
+        Kind::Row => &["key"],
         _ => &[],
     };
     if required.iter().any(|r| !seen.contains(r)) {
         return Err(Invalid {
-            also: (m.kind == "Row").then_some("TABLE-02"),
+            also: (m.kind == Kind::Row).then_some("TABLE-02"),
         });
     }
     Ok(m)

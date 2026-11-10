@@ -5,7 +5,7 @@ use crate::common::{
         bare, blocks, incomplete_split_blocks, line_end, line_start, plain_heading, reserved,
         BlockKind,
     },
-    number::number,
+    number::{number, Digits},
 };
 use regex::Regex;
 use serde_json::{json, Value};
@@ -157,12 +157,12 @@ fn display(nodes: &mut [Node], index: usize, ctx: &mut Context) {
         offset += line.len();
     }
     let token = first_line.split([' ', '　']).next().unwrap_or("");
-    let mode = match n.kind.as_str() {
-        "Paragraph" => 1,
-        "Subitem" => 2,
-        _ => 0,
+    let digits = match n.kind.as_str() {
+        "Paragraph" => Digits::Arabic,
+        "Subitem" => Digits::Ascii,
+        _ => Digits::Any,
     };
-    let parsed = number(token, SEPARATORS, mode);
+    let parsed = number(token, SEPARATORS, digits);
     let omitted = n.kind == "Paragraph" && n.number.as_deref() == Some("1") && parsed.is_none();
     if !omitted {
         n.display = token.into();
@@ -436,7 +436,7 @@ pub(super) fn build(
                     cursor = span.end;
                     continue;
                 };
-                let num = number(&format!("{}{}", &c[1], &c[3]), SEPARATORS, 0);
+                let num = number(&format!("{}{}", &c[1], &c[3]), SEPARATORS, Digits::Any);
                 let Some(num) = num else {
                     ctx.diag(
                         "NUM-01",

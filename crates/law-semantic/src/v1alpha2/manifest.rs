@@ -1,7 +1,7 @@
-use super::{manifest_validator, Context, MAX_FILE_BYTES, MAX_TOTAL_BYTES, SCHEMA_VERSION};
+use super::{manifest_validator, Context, Source, MAX_FILE_BYTES, MAX_TOTAL_BYTES, SCHEMA_VERSION};
 use crate::common::budget::ReadBudget;
 use crate::common::yaml::parse as yaml;
-use serde_json::{json, Value};
+use serde_json::Value;
 use std::{collections::HashSet, fs, path::Path};
 
 type Documents = Vec<(String, String, String)>;
@@ -36,14 +36,19 @@ fn read(path: &Path, name: &str, ctx: &mut Context, budget: &mut ReadBudget) -> 
     let source = match String::from_utf8(bytes) {
         Ok(s) => s,
         Err(e) => {
-            ctx.sources
-                .push(json!({"path":name,"bytes":e.into_bytes()}));
+            ctx.sources.push(Source {
+                path: name.into(),
+                content: Err(e.into_bytes()),
+            });
             ctx.diag("BASIC-02", "Invalid UTF-8", name, 0, 0);
             ctx.missing = true;
             return None;
         }
     };
-    ctx.sources.push(json!({"path":name,"text":source}));
+    ctx.sources.push(Source {
+        path: name.into(),
+        content: Ok(source.clone()),
+    });
     if source.is_empty()
         || source.starts_with('\u{feff}')
         || source.contains('\0')

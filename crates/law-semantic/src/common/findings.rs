@@ -1,5 +1,5 @@
 //! Diagnostics collected per check, and the mapping of JSON Schema errors to rules.
-use super::{Check, Diagnostic, Report, ResultValue};
+use super::{Check, Class, Diagnostic, Report, ResultValue};
 use std::collections::HashSet;
 
 /// Diagnostics tagged with the check (L3/L4: category) they count against.
@@ -34,7 +34,7 @@ impl Findings {
     pub fn note(
         &mut self,
         check: Check,
-        class: &'static str,
+        class: Class,
         rule: &str,
         sv: &str,
         message: impl Into<String>,

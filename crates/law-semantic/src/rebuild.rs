@@ -1,7 +1,7 @@
 //! Rebuild report checks (loj-rebuild/v1alpha1: REBR), reported apart from
 //! the conformance levels (REBR-01).
 use crate::common::findings::{common_type_rule, Findings};
-use crate::common::{load_yaml, Check, Loaded, COMMON};
+use crate::common::{load_yaml, Check, Class, Loaded, COMMON};
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
@@ -182,7 +182,7 @@ pub(crate) fn check(
                 }
                 _ => f.note(
                     RB,
-                    "undetermined",
+                    Class::Undetermined,
                     "REBR-05",
                     REBUILD,
                     format!("node {node} of revision {r} not checked: no valid AST"),

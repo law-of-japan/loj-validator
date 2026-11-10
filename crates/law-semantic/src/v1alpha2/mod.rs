@@ -5,6 +5,7 @@
 //! tables (TABLE-01..03), the preamble and enact statement (PRE-01..02),
 //! the 條/ノ heading forms and the spaced supplement heading.
 mod directives;
+mod kind;
 mod manifest;
 mod syntax;
 
@@ -20,11 +21,28 @@ pub const AST_SCHEMA: &str =
 pub const MAX_FILE_BYTES: u64 = 16 * 1024 * 1024;
 pub const MAX_TOTAL_BYTES: usize = 128 * 1024 * 1024;
 
+/// One input file as it was read (SRC-01).
+pub(super) struct Source {
+    path: String,
+    /// The text, or the raw bytes when they are not UTF-8.
+    content: Result<String, Vec<u8>>,
+}
+
+impl Source {
+    fn to_json(&self) -> Value {
+        match &self.content {
+            Ok(text) => json!({"path":self.path,"text":text}),
+            Err(bytes) => json!({"path":self.path,"bytes":bytes}),
+        }
+    }
+}
+
 /// Diagnostics are tagged with the level of the stage that found them
 /// (spec/v1alpha2/10-validation.md: manifest reading is L0, structure is L1).
 pub(super) struct Context {
     diagnostics: Vec<(Check, Diagnostic)>,
-    sources: Vec<Value>,
+    sources: Vec<Source>,
+    /// Output records of [`PackageCheck::positions`].
     positions: Vec<Value>,
     source_map: Map<String, Value>,
     level: Check,
@@ -104,7 +122,11 @@ pub fn check(input: &Path, levels: &[Check]) -> PackageCheck {
                 .as_array()
                 .is_some_and(|a| !a.is_empty())
             {
-                let end = ctx.sources[0]["text"].as_str().map_or(0, str::len);
+                let end = ctx
+                    .sources
+                    .first()
+                    .and_then(|s| s.content.as_ref().ok())
+                    .map_or(0, String::len);
                 ctx.diag(
                     "BASIC-03",
                     "Declared unsupported legal structure",
@@ -164,7 +186,7 @@ pub fn check(input: &Path, levels: &[Check]) -> PackageCheck {
         ast: if l1_pass { ast } else { None },
         positions: ctx.positions,
         source_map: ctx.source_map,
-        sources: ctx.sources,
+        sources: ctx.sources.iter().map(Source::to_json).collect(),
     }
 }
 
@@ -175,4 +197,52 @@ fn ast_validator() -> &'static jsonschema::Validator {
 fn manifest_validator() -> &'static jsonschema::Validator {
     static V: std::sync::OnceLock<jsonschema::Validator> = std::sync::OnceLock::new();
     V.get_or_init(|| validator(MANIFEST_SCHEMA, &[]))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sources_are_returned_as_text_or_as_the_bytes_that_were_read() {
+        let text = Source {
+            path: "main.md".into(),
+            content: Ok("第一条\r\n".into()),
+        };
+        assert_eq!(
+            text.to_json(),
+            json!({"path": "main.md", "text": "第一条\r\n"})
+        );
+        // Not UTF-8: the bytes are kept as they are, not replaced or dropped.
+        let bytes = Source {
+            path: "main.md".into(),
+            content: Err(vec![0xff, b'a', 0x80]),
+        };
+        assert_eq!(
+            bytes.to_json(),
+            json!({"path": "main.md", "bytes": [255, 97, 128]})
+        );
+    }
+
+    #[test]
+    fn a_file_that_is_not_utf8_is_reported_at_its_start_and_kept_as_bytes() {
+        let dir = std::env::temp_dir().join(format!("loj2-source-bytes-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("law.yaml"), b"schemaVersion: \xff\n").unwrap();
+        let checked = check(&dir, &[Check::L0]);
+        std::fs::remove_dir_all(&dir).unwrap();
+        let d = &checked.report.diagnostics[0];
+        assert_eq!(d.rule, "BASIC-02");
+        assert_eq!(
+            d.location,
+            Some(json!({"path": "law.yaml", "start": 0, "end": 0}))
+        );
+        assert_eq!(checked.sources.len(), 1);
+        assert_eq!(checked.sources[0]["path"], "law.yaml");
+        assert_eq!(
+            checked.sources[0]["bytes"],
+            json!(b"schemaVersion: \xff\n".to_vec())
+        );
+        assert!(checked.ast.is_none());
+    }
 }

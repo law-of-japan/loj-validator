@@ -1,7 +1,7 @@
 //! Change check between two commits of a law repository (common/v1alpha1
 //! CHG-02, CHG-03, CHG-04), reported apart from the conformance levels.
 use crate::common::findings::Findings;
-use crate::common::{load_yaml, Check, Loaded, Report, COMMON};
+use crate::common::{load_yaml, Check, Class, Loaded, Report, COMMON};
 use crate::git::{Bundle, ExportError};
 use serde_json::{json, Map, Value};
 use std::collections::BTreeMap;
@@ -105,7 +105,7 @@ fn trailers(message: &str) -> (Vec<String>, Option<Vec<String>>) {
 /// its own for an undetermined change check.
 fn undetermined(mut f: Findings, target: Map<String, Value>, why: String) -> Report {
     f.incomplete.insert(CH);
-    f.note(CH, "undetermined", "CHG-02", COMMON, why, "", "");
+    f.note(CH, Class::Undetermined, "CHG-02", COMMON, why, "", "");
     let mut r = f.into_report(&[CH]);
     r.target = target;
     r
@@ -120,7 +120,7 @@ pub fn check(bundle: &Path, base: &str, head: &str) -> Report {
             f.incomplete.insert(CH);
             f.note(
                 CH,
-                "undetermined",
+                Class::Undetermined,
                 "CHG-02",
                 COMMON,
                 e,
@@ -222,7 +222,7 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
         let Some(parent) = parent else {
             f.note(
                 CH,
-                "undetermined",
+                Class::Undetermined,
                 "CHG-02",
                 COMMON,
                 format!("{commit} has no parent to compare"),
@@ -245,7 +245,7 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
                         f.incomplete.insert(CH);
                         f.note(
                             CH,
-                            "undetermined",
+                            Class::Undetermined,
                             "CHG-02",
                             COMMON,
                             format!("{c}: tree refused: {e}"),
@@ -279,7 +279,7 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
             f.incomplete.insert(CH);
             f.note(
                 CH,
-                "undetermined",
+                Class::Undetermined,
                 "CHG-02",
                 COMMON,
                 "migration needs the normative AST mapping of the new version",
@@ -327,7 +327,7 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
                     f.incomplete.insert(CH);
                     f.note(
                         CH,
-                        "undetermined",
+                        Class::Undetermined,
                         "CHG-04",
                         COMMON,
                         format!("{commit}: revision {id} not compared: {e}"),
@@ -449,7 +449,7 @@ mod tests {
         assert!(
             r.diagnostics
                 .iter()
-                .any(|d| d.class == "undetermined" && d.message.starts_with("git failed")),
+                .any(|d| d.class == Class::Undetermined && d.message.starts_with("git failed")),
             "{:?}",
             r.diagnostics
         );

@@ -3,7 +3,7 @@
 use super::{EVIDENCE as EV, HISTORY, HS};
 use crate::common::findings::{common_type_rule, Findings};
 use crate::common::time::{calc, fixed_day, Date};
-use crate::common::{Check, COMMON};
+use crate::common::{Check, Class, COMMON};
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
@@ -140,7 +140,7 @@ pub(crate) fn check_time(tp: &Value, pointer: &str, file: &str, f: &mut Findings
                         } else {
                             f.note(
                                 check,
-                                "undetermined",
+                                Class::Undetermined,
                                 "TIME-03",
                                 COMMON,
                                 "derived without calc: computed value not checked",
@@ -300,7 +300,7 @@ pub(crate) fn check(h: &Value, repo: &Path, f: &mut Findings) {
                     match (day(&base["effective"]), day(&r["effective"])) {
                         (Some(a), Some(c)) if a > c => f.note(
                             HS,
-                            "warning",
+                            Class::Warning,
                             "HIST-06",
                             HISTORY,
                             "base state takes effect after this revision",
@@ -310,7 +310,7 @@ pub(crate) fn check(h: &Value, repo: &Path, f: &mut Findings) {
                         (Some(_), Some(_)) => {}
                         _ => f.note(
                             HS,
-                            "undetermined",
+                            Class::Undetermined,
                             "HIST-06",
                             HISTORY,
                             "effective times are not both dates; order not determined",
@@ -322,7 +322,7 @@ pub(crate) fn check(h: &Value, repo: &Path, f: &mut Findings) {
             }
             Value::Object(_) => f.note(
                 HS,
-                "pending",
+                Class::Pending,
                 "HIST-06",
                 HISTORY,
                 "basedOn is unknown; order pending",
@@ -558,7 +558,7 @@ pub(crate) fn check(h: &Value, repo: &Path, f: &mut Findings) {
                         if fixed_day(&rv["effective"]).is_some_and(|d| d > end) {
                             f.note(
                                 HS,
-                                "warning",
+                                Class::Warning,
                                 "HIST-12",
                                 HISTORY,
                                 "revision takes effect after the termination",

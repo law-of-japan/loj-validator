@@ -13,7 +13,7 @@ pub mod report;
 pub mod time;
 pub mod yaml;
 
-pub use report::{Check, Diagnostic, Report, ResultValue};
+pub use report::{Check, Class, Diagnostic, Report, ResultValue};
 
 /// loj-spec commit of the vendored next specification.
 pub const SPEC_COMMIT: &str = "4ac8f2b47c98e76fa5ccda35d7a3ee60f0816ad4";

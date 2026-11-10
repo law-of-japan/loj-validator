@@ -116,13 +116,43 @@ impl ResultValue {
     }
 }
 
+/// Diagnostic class (`class` of `report.schema.json`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum Class {
+    /// A violation of the rule: the check fails.
+    Error,
+    /// Reported, but the check does not fail.
+    Warning,
+    /// The rule could not be decided.
+    Undetermined,
+    /// The rule waits for something outside this input.
+    Pending,
+}
+
+impl Class {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Class::Error => "error",
+            Class::Warning => "warning",
+            Class::Undetermined => "undetermined",
+            Class::Pending => "pending",
+        }
+    }
+}
+
+impl std::fmt::Display for Class {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
 /// One diagnostic. `rule` + `schemaVersion` identify the normative rule (VAL-07);
 /// `code`, `message` and `location` are implementation specific.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Diagnostic {
     pub rule: String,
     pub schema_version: String,
-    pub class: &'static str,
+    pub class: Class,
     pub code: String,
     pub message: String,
     pub location: Option<Value>,
@@ -133,13 +163,13 @@ impl Diagnostic {
         Diagnostic {
             rule: rule.into(),
             schema_version: schema_version.into(),
-            class: "error",
+            class: Class::Error,
             code: format!("{schema_version}/{}", rule.to_ascii_lowercase()),
             message: message.into(),
             location: None,
         }
     }
-    pub fn with_class(mut self, class: &'static str) -> Self {
+    pub fn with_class(mut self, class: Class) -> Self {
         self.class = class;
         self
     }
@@ -163,13 +193,13 @@ impl Diagnostic {
         self
     }
     pub fn is_error(&self) -> bool {
-        self.class == "error"
+        self.class == Class::Error
     }
     pub fn to_json(&self) -> Value {
         let mut v = json!({
             "rule": self.rule,
             "schemaVersion": self.schema_version,
-            "class": self.class,
+            "class": self.class.as_str(),
             "code": self.code,
             "message": self.message,
         });
@@ -278,5 +308,43 @@ mod tests {
         assert!(Check::parse("L2").is_err());
         assert!(Check::parse("L3/sourceMatch").is_err());
         assert_eq!(Check::parse("L3").unwrap().len(), 2);
+    }
+
+    #[test]
+    fn class_names_are_those_of_the_report_schema() {
+        let schema: Value = serde_json::from_str(include_str!(
+            "../../../../vendor/loj-spec/schemas/common/v1alpha1/report.schema.json"
+        ))
+        .unwrap();
+        fn find<'a>(v: &'a Value, out: &mut Vec<&'a Value>) {
+            match v {
+                Value::Object(m) => {
+                    for (k, x) in m {
+                        if k == "class" && x.get("enum").is_some() {
+                            out.push(&x["enum"]);
+                        }
+                        find(x, out);
+                    }
+                }
+                Value::Array(a) => a.iter().for_each(|x| find(x, out)),
+                _ => {}
+            }
+        }
+        let mut found = Vec::new();
+        find(&schema, &mut found);
+        let all = [
+            Class::Error,
+            Class::Warning,
+            Class::Undetermined,
+            Class::Pending,
+        ];
+        assert!(!found.is_empty());
+        for names in found {
+            assert_eq!(*names, json!(all.map(Class::as_str)));
+        }
+        let d = Diagnostic::error("X-01", "common/v1alpha1", "m").with_class(Class::Warning);
+        assert!(!d.is_error());
+        assert_eq!(d.to_json()["class"], "warning");
+        assert_eq!(Class::Undetermined.to_string(), "undetermined");
     }
 }
