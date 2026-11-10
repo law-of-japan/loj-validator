@@ -11,13 +11,18 @@ use crate::common::{
 };
 use regex::Regex;
 use serde_json::{json, Value};
-use std::{collections::HashSet, ops::Range};
+use std::{collections::HashSet, ops::Range, sync::LazyLock};
 
 const SEPARATORS: &[char] = &['の', 'ノ'];
 
-fn re(pattern: &str) -> Regex {
-    Regex::new(pattern).expect("constant regex")
-}
+/// A structural heading label: number, kind, branch numbers, rest.
+static HEADING: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"^第([^編章節款目条條]+)([編章節款目条條])((?:[のノ][^のノ 　（）]+)*)(.*)$")
+        .expect("constant regex")
+});
+/// A plain ATX heading line; group 1 is the label.
+static ATX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^#{1,6} ([^\r\n]+)$").expect("constant regex"));
 #[derive(Clone)]
 enum Content {
     Text(String, Vec<Value>),
@@ -365,9 +370,7 @@ pub(super) fn build(
             }
         }
     }
-    let heading_re =
-        re(r"^第([^編章節款目条條]+)([編章節款目条條])((?:[のノ][^のノ 　（）]+)*)(.*)$");
-    let atx = re(r"^#{1,6} ([^\r\n]+)$");
+    let (heading_re, atx): (&Regex, &Regex) = (&HEADING, &ATX);
     let mut previous = String::new();
     let mut groups: Vec<usize> = Vec::new();
     let mut visited = HashSet::new();
