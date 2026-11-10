@@ -1,4 +1,5 @@
 //! L3 evidence of `glyphs.yaml` (loj-glyphs/v1alpha1).
+use super::history::list;
 use super::{EVIDENCE as EV, GLYPHS};
 use crate::common::findings::{common_type_rule, Findings};
 use crate::common::{load_yaml, Check, Loaded, COMMON};
@@ -100,94 +101,11 @@ pub(crate) fn check(
     f: &mut Findings,
 ) {
     f.applicable.insert(EV);
-    let mut doc = None;
     let file = notes.unwrap_or("");
-    if let Some(n) = notes {
-        match load_yaml(&repo.join(n)) {
-            Loaded::Unreadable(_) => {
-                // HIST-08 reports the missing file; the evidence cannot be judged.
-                f.incomplete.insert(EV);
-            }
-            Loaded::Invalid(e) => f.error(EV, "GLYPH-01", GLYPHS, e, n, ""),
-            Loaded::Ok(v, _) => {
-                if v["schemaVersion"] != GLYPHS {
-                    f.error(
-                        EV,
-                        "GLYPH-01",
-                        GLYPHS,
-                        "unsupported schemaVersion",
-                        n,
-                        "/schemaVersion",
-                    );
-                    f.incomplete.insert(EV);
-                } else {
-                    f.schema(validator(), &v, n, classify);
-                    doc = Some(v);
-                }
-            }
-        }
-    }
-    let empty = Vec::new();
-    let list = doc
-        .as_ref()
-        .and_then(|d| d["notes"].as_array())
-        .unwrap_or(&empty);
+    let doc = notes.and_then(|n| load(repo, n, f));
+    let entries = doc.as_ref().map_or(&[][..], |d| list(&d["notes"]));
     if let Some(d) = &doc {
-        if d["revision"].as_str().is_some_and(|r| r != revision) {
-            f.error(
-                EV,
-                "GLYPH-01",
-                GLYPHS,
-                format!("notes are for revision {}, not {revision}", d["revision"]),
-                file,
-                "/revision",
-            );
-        }
-        let mut ids = HashSet::new();
-        for (i, n) in list.iter().enumerate() {
-            let p = format!("/notes/{i}");
-            if let Some(id) = n["id"].as_str() {
-                if !ids.insert(id) {
-                    f.error(
-                        EV,
-                        "GLYPH-05",
-                        GLYPHS,
-                        format!("duplicate note id {id}"),
-                        file,
-                        &p,
-                    );
-                }
-            }
-            for (j, e) in n["evidence"].as_array().into_iter().flatten().enumerate() {
-                if let Some(s) = e["source"].as_str() {
-                    if !sources.contains(s) {
-                        f.error(
-                            EV,
-                            "TYPE-03",
-                            COMMON,
-                            format!("Evidence source {s} is not a Source of the history manifest"),
-                            file,
-                            &format!("{p}/evidence/{j}"),
-                        );
-                    }
-                }
-            }
-            if n["kind"] == "ambiguous" && n["recorded"] != "〓" {
-                let has = n["candidates"]
-                    .as_array()
-                    .is_some_and(|c| c.contains(&n["recorded"]));
-                if !has {
-                    f.error(
-                        EV,
-                        "GLYPH-05",
-                        GLYPHS,
-                        "candidates must include the recorded text",
-                        file,
-                        &format!("{p}/candidates"),
-                    );
-                }
-            }
-        }
+        document(d, entries, revision, file, sources, f);
     }
     // GLYPH-11 / VAL-02: notes address L1 node IDs; without a valid AST they are not judged.
     let Some(ast) = ast else {
@@ -195,8 +113,117 @@ pub(crate) fn check(
         return;
     };
     let texts = Texts::from_ast(ast);
-    // Covered code point ranges per (node, field).
-    let mut covered: HashMap<(String, bool), Vec<(usize, usize)>> = HashMap::new();
+    let covered = located(entries, &texts, file, f);
+    unnoted(&texts, &covered, file, f);
+}
+
+/// GLYPH-01: read the notes file `n`. `None` when it cannot be used.
+fn load(repo: &Path, n: &str, f: &mut Findings) -> Option<Value> {
+    match load_yaml(&repo.join(n)) {
+        Loaded::Unreadable(_) => {
+            // HIST-08 reports the missing file; the evidence cannot be judged.
+            f.incomplete.insert(EV);
+            None
+        }
+        Loaded::Invalid(e) => {
+            f.error(EV, "GLYPH-01", GLYPHS, e, n, "");
+            None
+        }
+        Loaded::Ok(v, _) => {
+            if v["schemaVersion"] != GLYPHS {
+                f.error(
+                    EV,
+                    "GLYPH-01",
+                    GLYPHS,
+                    "unsupported schemaVersion",
+                    n,
+                    "/schemaVersion",
+                );
+                f.incomplete.insert(EV);
+                None
+            } else {
+                f.schema(validator(), &v, n, classify);
+                Some(v)
+            }
+        }
+    }
+}
+
+/// GLYPH-01 (the revision), GLYPH-05 (note ids, candidates) and TYPE-03
+/// (Evidence sources): what the notes file says without the AST.
+fn document(
+    d: &Value,
+    list: &[Value],
+    revision: &str,
+    file: &str,
+    sources: &HashSet<String>,
+    f: &mut Findings,
+) {
+    if d["revision"].as_str().is_some_and(|r| r != revision) {
+        f.error(
+            EV,
+            "GLYPH-01",
+            GLYPHS,
+            format!("notes are for revision {}, not {revision}", d["revision"]),
+            file,
+            "/revision",
+        );
+    }
+    let mut ids = HashSet::new();
+    for (i, n) in list.iter().enumerate() {
+        let p = format!("/notes/{i}");
+        if let Some(id) = n["id"].as_str() {
+            if !ids.insert(id) {
+                f.error(
+                    EV,
+                    "GLYPH-05",
+                    GLYPHS,
+                    format!("duplicate note id {id}"),
+                    file,
+                    &p,
+                );
+            }
+        }
+        for (j, e) in n["evidence"].as_array().into_iter().flatten().enumerate() {
+            if let Some(s) = e["source"].as_str() {
+                if !sources.contains(s) {
+                    f.error(
+                        EV,
+                        "TYPE-03",
+                        COMMON,
+                        format!("Evidence source {s} is not a Source of the history manifest"),
+                        file,
+                        &format!("{p}/evidence/{j}"),
+                    );
+                }
+            }
+        }
+        if n["kind"] == "ambiguous" && n["recorded"] != "〓" {
+            let has = n["candidates"]
+                .as_array()
+                .is_some_and(|c| c.contains(&n["recorded"]));
+            if !has {
+                f.error(
+                    EV,
+                    "GLYPH-05",
+                    GLYPHS,
+                    "candidates must include the recorded text",
+                    file,
+                    &format!("{p}/candidates"),
+                );
+            }
+        }
+    }
+}
+
+/// Code point ranges that notes cover, per node ID and field (`true` is the
+/// display field).
+type Covered = HashMap<(String, bool), Vec<(usize, usize)>>;
+
+/// GLYPH-04: each note names a node of this version and the recorded text is
+/// at its offset. Returns what the notes cover.
+fn located(list: &[Value], texts: &Texts, file: &str, f: &mut Findings) -> Covered {
+    let mut covered = Covered::new();
     for (i, n) in list.iter().enumerate() {
         let p = format!("/notes/{i}");
         let (Some(node), Some(offset), Some(recorded)) = (
@@ -237,6 +264,12 @@ pub(crate) fn check(
             .or_default()
             .push((o, o + len.max(1)));
     }
+    covered
+}
+
+/// GLYPH-02 / GLYPH-11: every `〓`, compatibility ideograph and variation
+/// sequence of the text has a note. GLYPH-03: no forbidden code point.
+fn unnoted(texts: &Texts, covered: &Covered, file: &str, f: &mut Findings) {
     let mut ids: Vec<&String> = texts.nodes.keys().collect();
     ids.sort();
     for id in ids {
