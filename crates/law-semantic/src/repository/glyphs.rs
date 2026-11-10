@@ -216,6 +216,18 @@ fn document(
     }
 }
 
+/// GLYPH-04: where `recorded` is in `text`, if it is at code point `offset`.
+/// The offset comes from the input: it may exceed any text, or `usize`.
+pub(crate) fn recorded_at(
+    text: &[char],
+    offset: u64,
+    recorded: &[char],
+) -> Option<std::ops::Range<usize>> {
+    let start = usize::try_from(offset).ok()?;
+    let range = start..start.checked_add(recorded.len())?;
+    (text.get(range.clone()) == Some(recorded)).then_some(range)
+}
+
 /// Code point ranges that notes cover, per node ID and field (`true` is the
 /// display field).
 type Covered = HashMap<(String, bool), Vec<(usize, usize)>>;
@@ -247,12 +259,7 @@ fn located(list: &[Value], texts: &Texts, file: &str, f: &mut Findings) -> Cover
         };
         let target: Vec<char> = if display { disp } else { own }.chars().collect();
         let recorded: Vec<char> = recorded.chars().collect();
-        // The offset comes from the input: it may exceed any text or `usize`.
-        let range = usize::try_from(offset)
-            .ok()
-            .and_then(|o| Some(o..o.checked_add(recorded.len())?))
-            .filter(|r| target.get(r.clone()) == Some(&recorded[..]));
-        let Some(range) = range else {
+        let Some(range) = recorded_at(&target, offset, &recorded) else {
             f.error(
                 EV,
                 "GLYPH-04",
@@ -392,6 +399,22 @@ mod tests {
                 f.items[0].1.message,
                 format!("recorded text is not at offset {offset} of law/p")
             );
+        }
+    }
+
+    #[test]
+    fn recorded_text_is_found_only_at_its_offset() {
+        let text: Vec<char> = "第一条の二".chars().collect();
+        let chars = |s: &str| s.chars().collect::<Vec<char>>();
+        assert_eq!(recorded_at(&text, 1, &chars("一条")), Some(1..3));
+        assert_eq!(recorded_at(&text, 4, &chars("二")), Some(4..5));
+        assert_eq!(recorded_at(&text, 5, &[]), Some(5..5));
+        assert_eq!(recorded_at(&text, 0, &chars("一条")), None);
+        assert_eq!(recorded_at(&text, 4, &chars("二の")), None);
+        assert_eq!(recorded_at(&text, 6, &[]), None);
+        for offset in [u64::MAX, u64::MAX - 1, u64::from(u32::MAX) + 1] {
+            assert_eq!(recorded_at(&text, offset, &chars("二")), None, "{offset}");
+            assert_eq!(recorded_at(&text, offset, &[]), None, "{offset}");
         }
     }
 

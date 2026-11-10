@@ -363,8 +363,7 @@ fn check_record(rec: &Value, rel: &str, f: &mut Findings) {
                     continue;
                 };
                 let r: Vec<char> = rec_.chars().collect();
-                let o = o as usize;
-                if o + r.len() > raw.len() || raw[o..o + r.len()] != r[..] {
+                if crate::repository::glyphs::recorded_at(&raw, o, &r).is_none() {
                     f.error(
                         R,
                         "GLYPH-04",
