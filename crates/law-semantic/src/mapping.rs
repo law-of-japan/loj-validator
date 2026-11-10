@@ -696,7 +696,19 @@ fn key(n: &Value) -> String {
         .unwrap_or_default()
 }
 
-pub fn map(source: &str, path: &str, law_id: &str, profile: &Value) -> Result<Value, String> {
+/// A mapping profile that has been checked.
+struct Profile {
+    mode: String,
+    rules: Vec<Rule>,
+    item: Regex,
+    reference_kinds: Value,
+    bare_paragraph: Option<Regex>,
+    plain_items: bool,
+}
+
+/// Read a mapping profile. `Err` says what is wrong with it; nothing in a
+/// profile is taken on trust, since its patterns drive the mapping.
+fn read_profile(profile: &Value) -> Result<Profile, String> {
     if profile
         .get("anchor_mode")
         .and_then(Value::as_str)
@@ -788,6 +800,44 @@ pub fn map(source: &str, path: &str, law_id: &str, profile: &Value) -> Result<Va
             return Err(format!("item capture missing: {name}"));
         }
     }
+    Ok(Profile {
+        mode,
+        rules,
+        item,
+        reference_kinds,
+        bare_paragraph,
+        plain_items: profile
+            .get("plain_items")
+            .and_then(Value::as_bool)
+            .unwrap_or(false),
+    })
+}
+
+/// Every heading of the source as an anchor, in document order.
+fn heading_anchors(
+    blocks: &[Block],
+    path: &str,
+    used: &mut std::collections::HashSet<String>,
+    out: &mut Vec<Value>,
+) {
+    for b in blocks {
+        if b.kind == "heading" {
+            out.push(json!({"name":crate::references::slug(&b.plain(),used),"text":b.plain(),"node_id":null,
+                "origins":[{"source":path,"start_byte":b.start,"end_byte":b.end}]}));
+        }
+        heading_anchors(&b.children, path, used, out);
+    }
+}
+
+pub fn map(source: &str, path: &str, law_id: &str, profile: &Value) -> Result<Value, String> {
+    let Profile {
+        mode,
+        rules,
+        item,
+        reference_kinds,
+        bare_paragraph,
+        plain_items,
+    } = read_profile(profile)?;
     let mut m = Mapper {
         source,
         path,
@@ -800,27 +850,10 @@ pub fn map(source: &str, path: &str, law_id: &str, profile: &Value) -> Result<Va
         anchors: vec![],
         reference_kinds,
         bare_paragraph,
-        plain_items: profile
-            .get("plain_items")
-            .and_then(Value::as_bool)
-            .unwrap_or(false),
+        plain_items,
     };
     let blocks = parse(source);
-    fn scan(
-        blocks: &[Block],
-        path: &str,
-        used: &mut std::collections::HashSet<String>,
-        out: &mut Vec<Value>,
-    ) {
-        for b in blocks {
-            if b.kind == "heading" {
-                out.push(json!({"name":crate::references::slug(&b.plain(),used),"text":b.plain(),"node_id":null,
-                "origins":[{"source":path,"start_byte":b.start,"end_byte":b.end}]}));
-            }
-            scan(&b.children, path, used, out);
-        }
-    }
-    scan(
+    heading_anchors(
         &blocks,
         path,
         &mut std::collections::HashSet::new(),
