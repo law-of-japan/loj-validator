@@ -181,44 +181,9 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
             }
             Err(e) => return undetermined(f, report.target, format!("{commit}: {e}")),
         };
-        let (kinds, revisions) = trailers(&message);
-        let kind = match kinds.as_slice() {
-            [k] if KINDS.contains(&k.as_str()) => k.clone(),
-            [] => {
-                f.error(
-                    CH,
-                    "CHG-03",
-                    COMMON,
-                    format!("{commit} declares no LoJ-Change"),
-                    &at,
-                    "",
-                );
-                continue;
-            }
-            [k] => {
-                f.error(
-                    CH,
-                    "CHG-03",
-                    COMMON,
-                    format!("{commit}: unknown change kind {k}"),
-                    &at,
-                    "",
-                );
-                continue;
-            }
-            _ => {
-                f.error(
-                    CH,
-                    "CHG-03",
-                    COMMON,
-                    format!("{commit} declares more than one LoJ-Change"),
-                    &at,
-                    "",
-                );
-                continue;
-            }
+        let Some((kind, declared)) = declared_change(&commit, &at, &message, &mut f) else {
+            continue;
         };
-        let declared = revisions.unwrap_or_default();
         let Some(parent) = parent else {
             f.note(
                 CH,
@@ -233,46 +198,112 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
             continue;
         };
         for c in [&parent, &commit] {
-            if !cache.contains_key(c.as_str()) {
-                match snapshot(b, c) {
-                    Ok(s) => {
-                        cache.insert(c.clone(), Some(s));
-                    }
-                    Err(ExportError::Environment(e)) => {
-                        return undetermined(f, report.target, format!("{c}: {e}"));
-                    }
-                    Err(ExportError::Tree(e)) => {
-                        f.incomplete.insert(CH);
-                        f.note(
-                            CH,
-                            Class::Undetermined,
-                            "CHG-02",
-                            COMMON,
-                            format!("{c}: tree refused: {e}"),
-                            &at,
-                            "",
-                        );
-                        cache.insert(c.clone(), None);
-                    }
-                }
+            if let Err(why) = load_snapshot(b, c, &at, &mut cache, &mut f) {
+                return undetermined(f, report.target, why);
             }
         }
         let (Some(Some(before)), Some(Some(after))) = (cache.get(&parent), cache.get(&commit))
         else {
             continue;
         };
-        if matches!(
-            kind.as_str(),
-            "correction" | "officialCorrection" | "restoration" | "revisionFix"
-        ) && declared.is_empty()
-        {
-            f.error(
+        let change = Change {
+            commit: &commit,
+            at: &at,
+            kind: &kind,
+            declared: &declared,
+        };
+        change.compare(before, after, &mut f);
+    }
+    let mut r = f.into_report(&[CH]);
+    r.target = report.target;
+    r
+}
+
+/// CHG-03: the commit declares exactly one known `LoJ-Change`. Returns the
+/// kind and the `LoJ-Revisions`, or `None` when the trees are not to be
+/// compared because the kind is unknown.
+fn declared_change(
+    commit: &str,
+    at: &str,
+    message: &str,
+    f: &mut Findings,
+) -> Option<(String, Vec<String>)> {
+    let (kinds, revisions) = trailers(message);
+    let problem = match kinds.as_slice() {
+        [k] if KINDS.contains(&k.as_str()) => {
+            return Some((k.clone(), revisions.unwrap_or_default()))
+        }
+        [] => format!("{commit} declares no LoJ-Change"),
+        [k] => format!("{commit}: unknown change kind {k}"),
+        _ => format!("{commit} declares more than one LoJ-Change"),
+    };
+    f.error(CH, "CHG-03", COMMON, problem, at, "");
+    None
+}
+
+/// Export `commit` unless the cache has it. A tree refused for its content is
+/// noted and cached as `None`. `Err` is a failure of the environment, which
+/// ends the whole check.
+fn load_snapshot(
+    b: &Bundle,
+    commit: &str,
+    at: &str,
+    cache: &mut BTreeMap<String, Option<Snapshot>>,
+    f: &mut Findings,
+) -> Result<(), String> {
+    if cache.contains_key(commit) {
+        return Ok(());
+    }
+    match snapshot(b, commit) {
+        Ok(s) => {
+            cache.insert(commit.to_owned(), Some(s));
+        }
+        Err(ExportError::Environment(e)) => return Err(format!("{commit}: {e}")),
+        Err(ExportError::Tree(e)) => {
+            f.incomplete.insert(CH);
+            f.note(
                 CH,
-                "CHG-03",
+                Class::Undetermined,
+                "CHG-02",
                 COMMON,
-                format!("{commit}: {kind} must declare LoJ-Revisions"),
-                &at,
+                format!("{commit}: tree refused: {e}"),
+                at,
                 "",
+            );
+            cache.insert(commit.to_owned(), None);
+        }
+    }
+    Ok(())
+}
+
+/// One commit of the range and the change it declares.
+struct Change<'a> {
+    commit: &'a str,
+    /// Location of its diagnostics.
+    at: &'a str,
+    /// `LoJ-Change`, one of [`KINDS`].
+    kind: &'a str,
+    /// `LoJ-Revisions`.
+    declared: &'a [String],
+}
+
+impl Change<'_> {
+    fn error(&self, f: &mut Findings, rule: &str, message: String) {
+        f.error(CH, rule, COMMON, message, self.at, "");
+    }
+
+    /// CHG-02 / CHG-03 / CHG-04: compare the states before and after the commit.
+    fn compare(&self, before: &Snapshot, after: &Snapshot, f: &mut Findings) {
+        let (commit, kind) = (self.commit, self.kind);
+        if matches!(
+            kind,
+            "correction" | "officialCorrection" | "restoration" | "revisionFix"
+        ) && self.declared.is_empty()
+        {
+            self.error(
+                f,
+                "CHG-03",
+                format!("{commit}: {kind} must declare LoJ-Revisions"),
             );
         }
         if kind == "migration" {
@@ -283,47 +314,69 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
                 "CHG-02",
                 COMMON,
                 "migration needs the normative AST mapping of the new version",
-                &at,
+                self.at,
                 "",
             );
-            continue;
+            return;
         }
-        // Versions whose AST must stay identical.
-        let must_keep = |id: &str| match kind.as_str() {
+        self.kept_asts(before, after, f);
+        match kind {
+            "format" if before.history_bytes != after.history_bytes => self.error(
+                f,
+                "CHG-02",
+                format!("{commit}: format changes history.yaml"),
+            ),
+            "metadata" if before.packages != after.packages => self.error(
+                f,
+                "CHG-02",
+                format!("{commit}: metadata changes the version packages"),
+            ),
+            "revisionAdd" if after.asts.keys().all(|k| before.asts.contains_key(k)) => self.error(
+                f,
+                "CHG-02",
+                format!("{commit}: revisionAdd adds no version"),
+            ),
+            "revisionFix" => self.reused_ids(before, after, f),
+            _ => {}
+        }
+    }
+
+    /// Whether the AST of revision `id` must stay identical under this change.
+    fn must_keep(&self, id: &str) -> bool {
+        match self.kind {
             "format" | "metadata" | "revisionAdd" => true,
-            _ => !declared.iter().any(|d| d == id),
-        };
+            _ => !self.declared.iter().any(|d| d == id),
+        }
+    }
+
+    /// CHG-02: the ASTs that the change must keep are identical. CHG-04: an AST
+    /// that cannot be built is never compared as equal.
+    fn kept_asts(&self, before: &Snapshot, after: &Snapshot, f: &mut Findings) {
+        let (commit, kind) = (self.commit, self.kind);
         for (id, old) in &before.asts {
-            if !must_keep(id) {
+            if !self.must_keep(id) {
                 continue;
             }
             match (old, after.asts.get(id)) {
                 (Ok(a), Some(Ok(b))) => {
                     if a != b {
-                        f.error(
-                            CH,
+                        self.error(
+                            f,
                             "CHG-02",
-                            COMMON,
                             format!("{commit}: {kind} changes the AST of revision {id}"),
-                            &at,
-                            "",
                         );
                     }
                 }
                 (_, None) => {
-                    if kind != "revisionFix" || !declared.contains(id) {
-                        f.error(
-                            CH,
+                    if kind != "revisionFix" || !self.declared.contains(id) {
+                        self.error(
+                            f,
                             "CHG-02",
-                            COMMON,
                             format!("{commit}: {kind} removes revision {id}"),
-                            &at,
-                            "",
                         );
                     }
                 }
                 (Err(e), _) | (_, Some(Err(e))) => {
-                    // CHG-04: an AST that cannot be built is never compared as equal.
                     f.incomplete.insert(CH);
                     f.note(
                         CH,
@@ -331,79 +384,37 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
                         "CHG-04",
                         COMMON,
                         format!("{commit}: revision {id} not compared: {e}"),
-                        &at,
-                        "",
-                    );
-                }
-            }
-        }
-        if kind == "format" && before.history_bytes != after.history_bytes {
-            f.error(
-                CH,
-                "CHG-02",
-                COMMON,
-                format!("{commit}: format changes history.yaml"),
-                &at,
-                "",
-            );
-        }
-        if matches!(kind.as_str(), "metadata") && before.packages != after.packages {
-            f.error(
-                CH,
-                "CHG-02",
-                COMMON,
-                format!("{commit}: metadata changes the version packages"),
-                &at,
-                "",
-            );
-        }
-        if kind == "revisionAdd" {
-            let added: Vec<_> = after
-                .asts
-                .keys()
-                .filter(|k| !before.asts.contains_key(*k))
-                .collect();
-            if added.is_empty() {
-                f.error(
-                    CH,
-                    "CHG-02",
-                    COMMON,
-                    format!("{commit}: revisionAdd adds no version"),
-                    &at,
-                    "",
-                );
-            }
-        }
-        if kind == "revisionFix" {
-            // Retracted, merged or split IDs are not reused.
-            let status = |s: &Snapshot, id: &str| {
-                s.history.as_ref().and_then(|h| {
-                    h["revisions"]
-                        .as_array()?
-                        .iter()
-                        .find(|r| r["id"] == id)
-                        .map(|r| r["status"].clone())
-                })
-            };
-            for id in before.asts.keys() {
-                if status(before, id).is_some_and(|s| s != "active")
-                    && status(after, id).is_some_and(|s| s == "active")
-                {
-                    f.error(
-                        CH,
-                        "CHG-02",
-                        COMMON,
-                        format!("{commit}: revision ID {id} is reused"),
-                        &at,
+                        self.at,
                         "",
                     );
                 }
             }
         }
     }
-    let mut r = f.into_report(&[CH]);
-    r.target = report.target;
-    r
+
+    /// CHG-02 (revisionFix): retracted, merged or split IDs are not reused.
+    fn reused_ids(&self, before: &Snapshot, after: &Snapshot, f: &mut Findings) {
+        let status = |s: &Snapshot, id: &str| {
+            s.history.as_ref().and_then(|h| {
+                h["revisions"]
+                    .as_array()?
+                    .iter()
+                    .find(|r| r["id"] == id)
+                    .map(|r| r["status"].clone())
+            })
+        };
+        for id in before.asts.keys() {
+            if status(before, id).is_some_and(|s| s != "active")
+                && status(after, id).is_some_and(|s| s == "active")
+            {
+                self.error(
+                    f,
+                    "CHG-02",
+                    format!("{}: revision ID {id} is reused", self.commit),
+                );
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -414,6 +425,76 @@ mod tests {
 
     fn result(r: &Report) -> ResultValue {
         r.results.iter().find(|(c, _)| *c == CH).unwrap().1
+    }
+
+    #[test]
+    fn a_commit_declares_exactly_one_known_change() {
+        let mut f = Findings::default();
+        let declared =
+            |message: &str, f: &mut Findings| declared_change("c1", "commit c1", message, f);
+        assert_eq!(
+            declared(
+                "Fix\n\nLoJ-Change: correction\nLoJ-Revisions: r1, r2\n",
+                &mut f
+            ),
+            Some((
+                "correction".to_owned(),
+                vec!["r1".to_owned(), "r2".to_owned()]
+            ))
+        );
+        assert_eq!(
+            declared("Tidy\n\nLoJ-Change: format", &mut f),
+            Some(("format".to_owned(), Vec::new()))
+        );
+        assert!(f.items.is_empty());
+        for (message, problem) in [
+            ("No trailer\n", "c1 declares no LoJ-Change"),
+            // Only the last paragraph holds trailers.
+            ("LoJ-Change: format\n\nBody\n", "c1 declares no LoJ-Change"),
+            (
+                "X\n\nLoJ-Change: rewrite\n",
+                "c1: unknown change kind rewrite",
+            ),
+            (
+                "X\n\nLoJ-Change: format\nLoJ-Change: metadata\n",
+                "c1 declares more than one LoJ-Change",
+            ),
+        ] {
+            let mut f = Findings::default();
+            assert_eq!(declared(message, &mut f), None, "{message:?}");
+            let found: Vec<_> = f
+                .items
+                .iter()
+                .map(|(_, d)| (d.rule.as_str(), d.message.as_str()))
+                .collect();
+            assert_eq!(found, [("CHG-03", problem)]);
+        }
+    }
+
+    #[test]
+    fn which_asts_a_change_must_keep() {
+        let declared = ["r2".to_owned()];
+        let change = |kind| Change {
+            commit: "c1",
+            at: "commit c1",
+            kind,
+            declared: &declared,
+        };
+        // These kinds never change an AST, whatever they declare.
+        for kind in ["format", "metadata", "revisionAdd"] {
+            assert!(change(kind).must_keep("r1"), "{kind}");
+            assert!(change(kind).must_keep("r2"), "{kind}");
+        }
+        // The others may change the declared revisions only.
+        for kind in [
+            "correction",
+            "officialCorrection",
+            "restoration",
+            "revisionFix",
+        ] {
+            assert!(change(kind).must_keep("r1"), "{kind}");
+            assert!(!change(kind).must_keep("r2"), "{kind}");
+        }
     }
 
     #[test]
