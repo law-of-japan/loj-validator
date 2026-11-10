@@ -2,7 +2,7 @@
 //! CHG-02, CHG-03, CHG-04), reported apart from the conformance levels.
 use crate::common::findings::Findings;
 use crate::common::{load_yaml, Check, Class, Loaded, Report, COMMON};
-use crate::git::{Bundle, ExportError};
+use crate::git::{Bundle, ExportError, GitError};
 use serde_json::{json, Map, Value};
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -37,7 +37,9 @@ pub(crate) fn snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError
     // read the file leaves the check undetermined.
     let manifest = dir.join("history.yaml");
     let unreadable = |e: std::io::Error| {
-        ExportError::Environment(format!("cannot read history.yaml at {commit}: {e}"))
+        ExportError::Environment(GitError::Io(format!(
+            "cannot read history.yaml at {commit}: {e}"
+        )))
     };
     let history_bytes = match std::fs::metadata(&manifest) {
         Ok(m) if m.is_file() => Some(std::fs::read(&manifest).map_err(unreadable)?),
@@ -123,7 +125,7 @@ pub fn check(bundle: &Path, base: &str, head: &str) -> Report {
                 Class::Undetermined,
                 "CHG-02",
                 COMMON,
-                e,
+                e.to_string(),
                 &bundle.to_string_lossy(),
                 "",
             );
@@ -147,7 +149,7 @@ pub fn check(bundle: &Path, base: &str, head: &str) -> Report {
 fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, head: &str) -> Report {
     let (base, head) = match (b.commit(base), b.commit(head)) {
         (Ok(Some(base)), Ok(Some(head))) => (base, head),
-        (Err(e), _) | (_, Err(e)) => return undetermined(f, report.target, e),
+        (Err(e), _) | (_, Err(e)) => return undetermined(f, report.target, e.to_string()),
         _ => {
             let why = "base or head commit is not in the bundle".into();
             return undetermined(f, report.target, why);
@@ -157,7 +159,7 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
     f.applicable.insert(CH);
     let commits = match b.range(&base, &head) {
         Ok(c) => c,
-        Err(e) => return undetermined(f, report.target, e),
+        Err(e) => return undetermined(f, report.target, e.to_string()),
     };
     // A refused tree is cached as `None`, so it is exported and noted only once
     // even when the commit is both a parent and a child in the range.
