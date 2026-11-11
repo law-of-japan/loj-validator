@@ -73,13 +73,35 @@ impl Context {
             Diagnostic::error(rule, SCHEMA_VERSION, message).at(path, Some((start, end))),
         ));
     }
+    /// A diagnostic with an implementation code of its own instead of the
+    /// one derived from the rule.
+    fn diag_with_code(
+        &mut self,
+        rule: &str,
+        code: &str,
+        message: &str,
+        path: &str,
+        span: std::ops::Range<usize>,
+    ) {
+        self.diagnostics.push((
+            self.level,
+            Diagnostic::error(rule, SCHEMA_VERSION, message)
+                .with_code(code)
+                .at(path, Some((span.start, span.end))),
+        ));
+    }
     fn position(&mut self, id: &str, path: &str, start: usize, end: usize) {
-        self.source_map
+        // Every entry of the source map is an array: nothing else is inserted.
+        if let Some(spans) = self
+            .source_map
             .entry(id.to_owned())
             .or_insert_with(|| json!([]))
             .as_array_mut()
-            .unwrap()
-            .push(json!({"path":path,"start":start,"end":end}));
+        {
+            spans.push(json!({"path":path,"start":start,"end":end}));
+        } else {
+            debug_assert!(false, "a source map entry that is not an array: {id}");
+        }
         self.positions
             .push(json!({"nodeId":id,"path":path,"start":start,"end":end}));
     }
@@ -244,5 +266,91 @@ mod tests {
             json!(b"schemaVersion: \xff\n".to_vec())
         );
         assert!(checked.ast.is_none());
+    }
+
+    /// The builder reads manifest fields with `expect`; the loader returns
+    /// before it for any manifest that its schema refuses.
+    #[test]
+    fn a_manifest_that_fails_its_schema_is_reported_and_never_built() {
+        let law = r#""law": {"id": "20990101-act-1", "title": "架空試験法", "type": "act",
+            "number": "架空法律第一号", "promulgatedAt": "2099-01-01", "language": "ja"}"#;
+        let cases = [
+            // No title, no id, a title that is not a string.
+            r#"{"schemaVersion": "loj/v1alpha2", "law": {"id": "20990101-act-1"},
+                "documents": [{"path": "main.md", "parent": "main"}]}"#
+                .to_owned(),
+            r#"{"schemaVersion": "loj/v1alpha2", "law": {"title": "架空試験法"},
+                "documents": [{"path": "main.md", "parent": "main"}]}"#
+                .to_owned(),
+            // No documents, documents that are not an array, entries without fields.
+            format!(r#"{{"schemaVersion": "loj/v1alpha2", {law}}}"#),
+            format!(r#"{{"schemaVersion": "loj/v1alpha2", {law}, "documents": "main.md"}}"#),
+            format!(
+                r#"{{"schemaVersion": "loj/v1alpha2", {law}, "documents": [{{"parent": "main"}}]}}"#
+            ),
+            format!(
+                r#"{{"schemaVersion": "loj/v1alpha2", {law}, "documents": [{{"path": "main.md"}}]}}"#
+            ),
+            format!(
+                r#"{{"schemaVersion": "loj/v1alpha2", {law}, "documents": [{{"path": 1, "parent": 2}}]}}"#
+            ),
+            // A supplement without a key, an appendix without a title.
+            format!(
+                r#"{{"schemaVersion": "loj/v1alpha2", {law},
+                "documents": [{{"path": "main.md", "parent": "main"}}],
+                "supplements": [{{"title": "附則"}}]}}"#
+            ),
+            format!(
+                r#"{{"schemaVersion": "loj/v1alpha2", {law},
+                "documents": [{{"path": "main.md", "parent": "main"}}],
+                "appendices": [{{"key": "table-1"}}]}}"#
+            ),
+        ];
+        for (i, manifest) in cases.iter().enumerate() {
+            let dir = std::env::temp_dir()
+                .join(format!("loj2-schema-refused-{}-{i}", std::process::id()));
+            std::fs::create_dir_all(&dir).unwrap();
+            std::fs::write(dir.join("law.yaml"), manifest).unwrap();
+            std::fs::write(dir.join("main.md"), "# 第一条\n").unwrap();
+            let checked = check(&dir, &[Check::L0, Check::L1]);
+            std::fs::remove_dir_all(&dir).unwrap();
+            assert!(checked.ast.is_none(), "{manifest}");
+            assert_eq!(
+                checked.report.result(Check::L0),
+                Some(ResultValue::Fail),
+                "{manifest}"
+            );
+            assert!(
+                checked
+                    .report
+                    .diagnostics
+                    .iter()
+                    .all(|d| d.rule == "MAN-01"),
+                "{manifest}"
+            );
+        }
+    }
+
+    #[test]
+    fn an_unsupported_version_has_its_own_code() {
+        let dir = std::env::temp_dir().join(format!("loj2-version-code-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let manifest = r#"{"schemaVersion": "loj/v9"}"#;
+        std::fs::write(dir.join("law.yaml"), manifest).unwrap();
+        let checked = check(&dir, &[Check::L0]);
+        std::fs::remove_dir_all(&dir).unwrap();
+        let d = &checked.report.diagnostics[0];
+        assert_eq!(
+            (d.rule.as_str(), d.code.as_str()),
+            ("BASIC-01", "loj/v1alpha2/unsupported-version")
+        );
+        assert_eq!(
+            d.location,
+            Some(json!({"path": "law.yaml", "start": 0, "end": manifest.len()}))
+        );
+        assert_eq!(
+            checked.report.result(Check::L0),
+            Some(ResultValue::Incomplete)
+        );
     }
 }

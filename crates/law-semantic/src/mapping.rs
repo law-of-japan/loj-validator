@@ -1,3 +1,6 @@
+// Legacy pipeline: its unwraps read an AST that the entry points have
+// checked against the schema. law-of-japan/loj-validator#7 tracks them.
+#![allow(clippy::unwrap_used)]
 use pulldown_cmark::{Event, Options, Parser, Tag};
 use regex::Regex;
 use serde_json::{json, Value};
@@ -778,7 +781,7 @@ fn read_profile(profile: &Value) -> Result<Profile, String> {
             .map(|x| {
                 x.as_u64()
                     .filter(|v| (1..=6).contains(v))
-                    .map(|v| v as u8)
+                    .and_then(|v| u8::try_from(v).ok())
                     .ok_or("invalid heading level".to_string())
             })
             .collect::<Result<Vec<_>, _>>()?;

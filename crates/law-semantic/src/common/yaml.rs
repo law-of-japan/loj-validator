@@ -129,7 +129,7 @@ pub(crate) fn parse_with(source: &str, options: Options) -> Result<Value, String
 
 fn non_json_scalar(s: &str) -> bool {
     static PATTERN: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
-    PATTERN.get_or_init(|| regex::Regex::new(r"^(?:[0-9]{4}-[0-9]{2}-[0-9]{2}(?:[Tt ].*)?|[-+]?(?:[0-9][0-9_.eE+-]*|\.[0-9][0-9eE+-]*|0[xXoObB][0-9a-fA-F_]+)|(?i:[-+]?\.(?:inf|nan)))$").unwrap()).is_match(s)
+    PATTERN.get_or_init(|| regex::Regex::new(r"^(?:[0-9]{4}-[0-9]{2}-[0-9]{2}(?:[Tt ].*)?|[-+]?(?:[0-9][0-9_.eE+-]*|\.[0-9][0-9eE+-]*|0[xXoObB][0-9a-fA-F_]+)|(?i:[-+]?\.(?:inf|nan)))$").expect("constant regex")).is_match(s)
 }
 
 #[cfg(test)]

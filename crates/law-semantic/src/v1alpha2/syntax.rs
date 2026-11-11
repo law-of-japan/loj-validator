@@ -452,12 +452,17 @@ struct Builder<'a> {
 impl<'a> Builder<'a> {
     /// The law node and one node per scope of the manifest.
     fn new(manifest: &'a Value, ctx: &mut Context) -> Self {
-        let law = manifest["law"]["id"].as_str().unwrap();
+        let law = manifest["law"]["id"]
+            .as_str()
+            .expect("a string by the manifest schema");
         let mut nodes = vec![Node::new(
             Kind::Law,
             law.into(),
             None,
-            manifest["law"]["title"].as_str().unwrap().into(),
+            manifest["law"]["title"]
+                .as_str()
+                .expect("a string by the manifest schema")
+                .into(),
             "",
             0..0,
         )];
@@ -484,7 +489,10 @@ impl<'a> Builder<'a> {
         ] {
             if let Some(a) = manifest[field].as_array() {
                 for s in a {
-                    let scope = format!("{prefix}/{}", s["key"].as_str().unwrap());
+                    let scope = format!(
+                        "{prefix}/{}",
+                        s["key"].as_str().expect("a string by the manifest schema")
+                    );
                     let i = add(
                         &mut nodes,
                         0,
@@ -495,7 +503,10 @@ impl<'a> Builder<'a> {
                             if prefix == "supplement" {
                                 String::new()
                             } else {
-                                s["title"].as_str().unwrap().into()
+                                s["title"]
+                                    .as_str()
+                                    .expect("a string by the manifest schema")
+                                    .into()
                             },
                             "",
                             0..0,

@@ -185,7 +185,7 @@ fn run_with_timeout(mut cmd: Command, limit: std::time::Duration) -> Result<Outp
             if let Some(mut p) = pipe {
                 let _ = (&mut p).take(MAX_OUTPUT + 1).read_to_end(&mut buf);
                 if buf.len() as u64 > MAX_OUTPUT {
-                    buf.truncate(MAX_OUTPUT as usize);
+                    buf.truncate(usize::try_from(MAX_OUTPUT).unwrap_or(usize::MAX));
                     overflow = true;
                     let _ = std::io::copy(&mut p, &mut std::io::sink());
                 }
@@ -817,7 +817,7 @@ pub(crate) mod tests {
     #[test]
     fn oversized_files_are_refused() {
         let s = Scratch::new();
-        let big = vec![b'x'; MAX_FILE as usize + 1];
+        let big = vec![b'x'; usize::try_from(MAX_FILE).unwrap() + 1];
         let b = Bundle::open(&s.bundle_with(&big, &[("100644", "blob", "law.yaml")])).unwrap();
         let err = b
             .export(&b.branch("main").unwrap().unwrap())
@@ -827,7 +827,7 @@ pub(crate) mod tests {
         assert!(b.exports.borrow().is_empty(), "nothing was written");
         // Nine 16 MiB files exceed the 128 MiB total.
         let s = Scratch::new();
-        let full = vec![b'x'; MAX_FILE as usize];
+        let full = vec![b'x'; usize::try_from(MAX_FILE).unwrap()];
         let names: Vec<String> = (0..9).map(|i| format!("f{i}.md")).collect();
         let entries: Vec<_> = names
             .iter()

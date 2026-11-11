@@ -58,7 +58,7 @@ fn component(input: &str) -> Result<u64, String> {
         .iter()
         .map(|&c| {
             if ('０'..='９').contains(&c) {
-                char::from_u32(c as u32 - '０' as u32 + '0' as u32).unwrap()
+                char::from_digit(u32::from(c) - u32::from('０'), 10).unwrap_or(c)
             } else {
                 c
             }
@@ -68,10 +68,14 @@ fn component(input: &str) -> Result<u64, String> {
         ascii
             .parse::<u64>()
             .map_err(|_| "number overflow".to_string())?
-    } else if chars.iter().all(|&c| digit(c).is_some()) {
-        chars.iter().try_fold(0u64, |n, &c| {
+    } else if let Some(digits) = chars
+        .iter()
+        .map(|&c| digit(c))
+        .collect::<Option<Vec<u64>>>()
+    {
+        digits.iter().try_fold(0u64, |n, &d| {
             n.checked_mul(10)
-                .and_then(|x| x.checked_add(digit(c).unwrap()))
+                .and_then(|x| x.checked_add(d))
                 .ok_or_else(|| "number overflow".to_string())
         })?
     } else {

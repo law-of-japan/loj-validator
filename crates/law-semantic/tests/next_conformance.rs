@@ -1,6 +1,9 @@
 //! Formal conformance of the next specification (vendored loj-spec, see
 //! vendor/loj-spec/COMMIT): one test per suite. Expected results are never
 //! adjusted to the implementation (CONF-01).
+// Test helpers outside `#[test]` functions may unwrap, and offsets read
+// back from JSON are cast for slicing: a failure here fails the test.
+#![allow(clippy::unwrap_used, clippy::cast_possible_truncation)]
 use law_semantic::common::{Check, Report, ResultValue, SPEC_COMMIT};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};

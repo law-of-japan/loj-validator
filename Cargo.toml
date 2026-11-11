@@ -18,3 +18,17 @@ jsonschema = { version = "0.47", default-features = false }
 sha2 = "0.10"
 pulldown-cmark = "=0.13.4"
 regex = "1"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+# Named one by one, so that a new toolchain does not add lints by itself.
+# CI turns warnings into errors.
+[workspace.lints.clippy]
+# The public API must not panic on invalid input: no unwrap outside tests.
+# What remains is an `expect` that states the invariant.
+unwrap_used = "warn"
+# Positions are byte offsets; a cast must not shorten or re-sign one silently.
+cast_possible_truncation = "warn"
+cast_possible_wrap = "warn"
+cast_sign_loss = "warn"

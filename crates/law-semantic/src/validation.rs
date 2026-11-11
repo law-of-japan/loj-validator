@@ -2,6 +2,9 @@
 //! ID and scoped-number uniqueness, source hash and UTF-8 ranges, origin
 //! containment, empty bodies, mixed supplements, deletion declarations, anchor
 //! bindings and same-file reference resolution.
+// Legacy pipeline: its unwraps read an AST that the entry points have
+// checked against the schema. law-of-japan/loj-validator#7 tracks them.
+#![allow(clippy::unwrap_used)]
 use crate::references;
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
@@ -18,8 +21,14 @@ fn span_check(span: &Value, source: &HashMap<String, String>) -> Result<(), Stri
     let text = source
         .get(path)
         .ok_or_else(|| format!("unknown source: {path}"))?;
-    let start = span["start_byte"].as_u64().unwrap() as usize;
-    let end = span["end_byte"].as_u64().unwrap() as usize;
+    // An offset that does not fit `usize` is past the end of any text.
+    let offset = |key: &str| {
+        span[key]
+            .as_u64()
+            .map(|n| usize::try_from(n).unwrap_or(usize::MAX))
+            .unwrap()
+    };
+    let (start, end) = (offset("start_byte"), offset("end_byte"));
     if start >= end
         || end > text.len()
         || !text.is_char_boundary(start)

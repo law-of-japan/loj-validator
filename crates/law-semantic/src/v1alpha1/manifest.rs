@@ -109,14 +109,13 @@ fn parse(source: &str, ctx: &mut Context) -> Option<Value> {
     }
     if manifest["schemaVersion"] != "loj/v1alpha1" {
         ctx.error = true;
-        ctx.diag(
+        ctx.diag_with_code(
             "BASIC-01",
+            "loj/v1alpha1/unsupported-version",
             "Unsupported schemaVersion",
             "law.yaml",
-            0,
-            source.len(),
+            0..source.len(),
         );
-        ctx.diagnostics.last_mut().unwrap()["code"] = json!("loj/v1alpha1/unsupported-version");
         return None;
     }
     let schema: Value = serde_json::from_str(MANIFEST_SCHEMA).expect("embedded schema");
@@ -156,7 +155,10 @@ fn scopes(manifest: &Value, end: usize, ctx: &mut Context) -> Vec<String> {
     for (field, prefix) in [("supplements", "supplement"), ("appendices", "appendix")] {
         if let Some(a) = manifest[field].as_array() {
             for s in a {
-                let key = format!("{prefix}/{}", s["key"].as_str().unwrap());
+                let key = format!(
+                    "{prefix}/{}",
+                    s["key"].as_str().expect("a string by the manifest schema")
+                );
                 if scopes.contains(&key) {
                     ctx.diag("MAN-01", "Duplicate scope key", "law.yaml", 0, end);
                 }
@@ -183,9 +185,16 @@ pub(super) fn load(path: &Path, ctx: &mut Context) -> Option<(Value, Documents)>
     let mut used = HashSet::new();
     let mut last = 0;
     let mut documents = Vec::new();
-    for document in manifest["documents"].as_array().unwrap() {
-        let name = document["path"].as_str().unwrap();
-        let parent = document["parent"].as_str().unwrap();
+    for document in manifest["documents"]
+        .as_array()
+        .expect("an array by the manifest schema")
+    {
+        let name = document["path"]
+            .as_str()
+            .expect("a string by the manifest schema");
+        let parent = document["parent"]
+            .as_str()
+            .expect("a string by the manifest schema");
         // MAN-03: the documents of a scope are contiguous and in scope order.
         if let Some(index) = scopes.iter().position(|s| s == parent) {
             if index < last {

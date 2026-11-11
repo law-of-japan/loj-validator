@@ -15,3 +15,6 @@ pulldown-cmark = { workspace = true }
 regex = { workspace = true }
 yaml-rust2 = { version = "=0.10.4", default-features = false }
 same-file = "=1.0.6"
+
+[lints]
+workspace = true

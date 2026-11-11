@@ -351,7 +351,7 @@ fn render_diagnostic(d: &Value, source: Option<&str>, out: &mut String) {
     let at = match (span["source"].as_str(), span["start_byte"].as_u64()) {
         (Some(file), Some(start)) => {
             let pos = source
-                .and_then(|s| line_col(s, start as usize))
+                .and_then(|s| line_col(s, usize::try_from(start).ok()?))
                 .map(|(l, c)| format!(":{l}:{c}"))
                 .unwrap_or_default();
             format!("{file}{pos} ")

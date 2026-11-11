@@ -1,5 +1,8 @@
 //! The prototype's 28 semantic-AST cases (written without Markdown), with
 //! exact diagnostic-code sets. Port of `check_cases.py`.
+// Test helpers outside `#[test]` functions may unwrap, and offsets read
+// back from JSON are cast for slicing: a failure here fails the test.
+#![allow(clippy::unwrap_used, clippy::cast_possible_truncation)]
 use serde_json::Value;
 use std::collections::BTreeSet;
 use std::fs;

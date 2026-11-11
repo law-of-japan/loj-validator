@@ -30,15 +30,30 @@ pub(super) struct Context {
 }
 impl Context {
     fn diag(&mut self, rule: &str, message: &str, path: &str, start: usize, end: usize) {
-        self.diagnostics.push(json!({"rule":rule,"code":"loj/v1alpha1/violation","severity":"error","message":message,"file":path,"span":{"start":start,"end":end}}));
+        self.diag_with_code(rule, "loj/v1alpha1/violation", message, path, start..end);
+    }
+    fn diag_with_code(
+        &mut self,
+        rule: &str,
+        code: &str,
+        message: &str,
+        path: &str,
+        span: std::ops::Range<usize>,
+    ) {
+        self.diagnostics.push(json!({"rule":rule,"code":code,"severity":"error","message":message,"file":path,"span":{"start":span.start,"end":span.end}}));
     }
     fn position(&mut self, id: &str, path: &str, start: usize, end: usize) {
-        self.source_map
+        // Every entry of the source map is an array: nothing else is inserted.
+        if let Some(spans) = self
+            .source_map
             .entry(id.to_owned())
             .or_insert_with(|| json!([]))
             .as_array_mut()
-            .unwrap()
-            .push(json!({"path":path,"start":start,"end":end}));
+        {
+            spans.push(json!({"path":path,"start":start,"end":end}));
+        } else {
+            debug_assert!(false, "a source map entry that is not an array: {id}");
+        }
         self.positions
             .push(json!({"nodeId":id,"path":path,"start":start,"end":end}));
     }
