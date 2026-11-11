@@ -24,8 +24,7 @@ fn month_len(y: i64, m: u32) -> u32 {
 
 /// A day of the month or a month number, which the arithmetic keeps in 0..=31.
 fn small(n: i64) -> u32 {
-    debug_assert!((0..=31).contains(&n), "not a day or month: {n}");
-    u32::try_from(n).unwrap_or(0)
+    u32::try_from(n).expect("a day or month computed from a day count")
 }
 
 impl Date {
