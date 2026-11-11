@@ -24,6 +24,7 @@ fn month_len(y: i64, m: u32) -> u32 {
 
 /// A day of the month or a month number, which the arithmetic keeps in 0..=31.
 fn small(n: i64) -> u32 {
+    debug_assert!((0..=31).contains(&n), "not a day or month: {n}");
     u32::try_from(n).unwrap_or(0)
 }
 
@@ -144,5 +145,63 @@ mod tests {
         for s in ["1873-01-01", "1600-02-29", "2400-12-31"] {
             assert_eq!(d(s).add_days(0).to_iso(), s);
         }
+    }
+
+    #[test]
+    fn parse_takes_ten_ascii_characters() {
+        for bad in [
+            "2020-1-01",
+            "2020-01-1",
+            "2020/01/01",
+            "20200101",
+            "2020-13-01",
+            "2020-00-10",
+            "2020-04-31",
+            "2020-01-00",
+            "+020-01-01",
+            "2020-+1-01",
+            "２０２０-01-01",
+            "2020-01-01 ",
+            "",
+        ] {
+            assert!(Date::parse(bad).is_none(), "{bad:?}");
+        }
+        assert_eq!(d("0001-01-01"), Date { y: 1, m: 1, d: 1 });
+        assert_eq!(
+            d("9999-12-31"),
+            Date {
+                y: 9999,
+                m: 12,
+                d: 31
+            }
+        );
+    }
+
+    #[test]
+    fn days_and_months_cross_every_boundary() {
+        // Every day of a leap year and of the years around a century.
+        for start in ["2023-12-31", "1899-12-31", "1999-12-31"] {
+            let mut day = d(start);
+            for _ in 0..800 {
+                let next = day.add_days(1);
+                assert!(next > day);
+                assert_eq!(next.add_days(-1), day);
+                assert_eq!(Date::parse(&next.to_iso()), Some(next));
+                day = next;
+            }
+        }
+        assert_eq!(d("2024-02-28").add_days(1), d("2024-02-29"));
+        assert_eq!(d("2100-02-28").add_days(1), d("2100-03-01"));
+        assert_eq!(d("2000-03-01").add_days(-1), d("2000-02-29"));
+        assert_eq!(d("0001-01-01").add_days(-1).to_iso(), "0000-12-31");
+        // Months: across a year end, backwards, and onto a shorter month.
+        assert_eq!(d("2020-11-30").after_months(3), d("2021-03-01"));
+        assert_eq!(d("2020-11-30").after_months(15), d("2022-03-01"));
+        assert_eq!(d("2020-03-31").after_months(-1), d("2020-03-01"));
+        assert_eq!(d("2020-03-15").after_months(-3), d("2019-12-15"));
+        assert_eq!(d("2020-01-15").after_months(-1), d("2019-12-15"));
+        assert_eq!(d("2020-01-15").after_months(0), d("2020-01-15"));
+        assert_eq!(d("2023-01-31").after_months(13), d("2024-03-01"));
+        assert_eq!(d("2023-01-29").after_months(13), d("2024-02-29"));
     }
 }

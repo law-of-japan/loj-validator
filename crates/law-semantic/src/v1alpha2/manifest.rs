@@ -115,10 +115,13 @@ fn parse(source: &str, ctx: &mut Context) -> Option<Value> {
         } else {
             "Unsupported schemaVersion"
         };
-        ctx.diag("BASIC-01", message, "law.yaml", 0, source.len());
-        if let Some((_, d)) = ctx.diagnostics.last_mut() {
-            d.code = "loj/v1alpha2/unsupported-version".into();
-        }
+        ctx.diag_with_code(
+            "BASIC-01",
+            "loj/v1alpha2/unsupported-version",
+            message,
+            "law.yaml",
+            0..source.len(),
+        );
         return None;
     }
     let errors: Vec<_> = manifest_validator()

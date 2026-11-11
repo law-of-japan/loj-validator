@@ -109,16 +109,13 @@ fn parse(source: &str, ctx: &mut Context) -> Option<Value> {
     }
     if manifest["schemaVersion"] != "loj/v1alpha1" {
         ctx.error = true;
-        ctx.diag(
+        ctx.diag_with_code(
             "BASIC-01",
+            "loj/v1alpha1/unsupported-version",
             "Unsupported schemaVersion",
             "law.yaml",
-            0,
-            source.len(),
+            0..source.len(),
         );
-        if let Some(d) = ctx.diagnostics.last_mut() {
-            d["code"] = json!("loj/v1alpha1/unsupported-version");
-        }
         return None;
     }
     let schema: Value = serde_json::from_str(MANIFEST_SCHEMA).expect("embedded schema");
