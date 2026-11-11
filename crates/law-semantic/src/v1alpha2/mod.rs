@@ -335,7 +335,8 @@ mod tests {
     fn an_unsupported_version_has_its_own_code() {
         let dir = std::env::temp_dir().join(format!("loj2-version-code-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
-        std::fs::write(dir.join("law.yaml"), r#"{"schemaVersion": "loj/v9"}"#).unwrap();
+        let manifest = r#"{"schemaVersion": "loj/v9"}"#;
+        std::fs::write(dir.join("law.yaml"), manifest).unwrap();
         let checked = check(&dir, &[Check::L0]);
         std::fs::remove_dir_all(&dir).unwrap();
         let d = &checked.report.diagnostics[0];
@@ -345,7 +346,7 @@ mod tests {
         );
         assert_eq!(
             d.location,
-            Some(json!({"path": "law.yaml", "start": 0, "end": 27}))
+            Some(json!({"path": "law.yaml", "start": 0, "end": manifest.len()}))
         );
         assert_eq!(
             checked.report.result(Check::L0),

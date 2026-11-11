@@ -546,3 +546,57 @@ fn windows_hardlinks_and_junctions_are_rejected() {
     );
     assert!(rule(&check(&path, Level::L0), "MAN-02"));
 }
+
+/// The builder reads manifest fields with `expect`; the loader returns
+/// before it for any manifest that its schema refuses.
+#[test]
+fn a_manifest_that_fails_its_schema_is_reported_and_never_built() {
+    let law = r#""law": {"id": "20990101-act-1", "title": "架空試験法", "type": "act",
+        "number": "架空法律第一号", "promulgatedAt": "2099-01-01", "language": "ja"}"#;
+    let cases = [
+        r#"{"schemaVersion": "loj/v1alpha1", "law": {"id": "20990101-act-1"},
+            "documents": [{"path": "main.md", "parent": "main"}]}"#
+            .to_owned(),
+        r#"{"schemaVersion": "loj/v1alpha1", "law": {"title": "架空試験法"},
+            "documents": [{"path": "main.md", "parent": "main"}]}"#
+            .to_owned(),
+        format!(r#"{{"schemaVersion": "loj/v1alpha1", {law}}}"#),
+        format!(r#"{{"schemaVersion": "loj/v1alpha1", {law}, "documents": "main.md"}}"#),
+        format!(
+            r#"{{"schemaVersion": "loj/v1alpha1", {law}, "documents": [{{"parent": "main"}}]}}"#
+        ),
+        format!(
+            r#"{{"schemaVersion": "loj/v1alpha1", {law}, "documents": [{{"path": "main.md"}}]}}"#
+        ),
+        format!(
+            r#"{{"schemaVersion": "loj/v1alpha1", {law}, "documents": [{{"path": 1, "parent": 2}}]}}"#
+        ),
+        format!(
+            r#"{{"schemaVersion": "loj/v1alpha1", {law},
+            "documents": [{{"path": "main.md", "parent": "main"}}],
+            "supplements": [{{"title": "附則"}}]}}"#
+        ),
+        format!(
+            r#"{{"schemaVersion": "loj/v1alpha1", {law},
+            "documents": [{{"path": "main.md", "parent": "main"}}],
+            "appendices": [{{"key": "table-1"}}]}}"#
+        ),
+    ];
+    for (i, manifest) in cases.iter().enumerate() {
+        let dir =
+            std::env::temp_dir().join(format!("loj-v1-schema-refused-{}-{i}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("law.yaml"), manifest).unwrap();
+        std::fs::write(dir.join("main.md"), "# 第一条\n").unwrap();
+        let report = check(&dir, Level::L1);
+        std::fs::remove_dir_all(&dir).unwrap();
+        let diagnostics = report["diagnostics"].as_array().unwrap();
+        assert!(!diagnostics.is_empty(), "{manifest}");
+        assert!(
+            diagnostics.iter().all(|d| d["rule"] == "MAN-01"),
+            "{manifest}: {report}"
+        );
+        assert!(report.get("ast").is_none_or(|a| a.is_null()), "{manifest}");
+        assert_ne!(report["exit_code"], 0, "{manifest}");
+    }
+}
