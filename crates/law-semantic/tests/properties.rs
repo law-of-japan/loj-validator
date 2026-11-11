@@ -4,19 +4,39 @@
 //! (a panic fails the test), and every position it reports is a range of the
 //! file it names, on character boundaries. The inputs are synthetic.
 //!
-//! The seed differs on every run, on purpose: each run looks at new inputs.
-//! A failure prints the minimal input; add it as an ordinary test with the
-//! fix, since nothing is written to a regression file. `PROPTEST_CASES=3000`
-//! raises the number of cases of every property for a longer local run.
+//! The seed is fixed, so a run gives the same result every time and an
+//! unrelated change does not fail by chance. To look at other inputs, run
+//! with `PROPTEST_RNG_SEED=<number>` and, for more of them,
+//! `PROPTEST_CASES=3000`. A failure prints the minimal input; add it as an
+//! ordinary test with the fix, since nothing is written to a regression file.
 // Test helpers outside `#[test]` functions may unwrap, and offsets read
 // back from JSON are cast for slicing: a failure here fails the test.
 #![allow(clippy::unwrap_used, clippy::cast_possible_truncation)]
 
 use law_semantic::common::{strict_text, yaml, Check};
 use proptest::prelude::*;
+use proptest::test_runner::RngSeed;
 use serde_json::Value;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
+
+/// The seed of every property unless `PROPTEST_RNG_SEED` is set.
+const SEED: u64 = 0x10a_2026;
+
+/// `cases` runs from the fixed seed. The environment variables of proptest
+/// take precedence, and no regression file is written.
+fn config(cases: u32) -> ProptestConfig {
+    // The default already holds what the environment asks for.
+    let mut config = ProptestConfig::default();
+    if std::env::var_os("PROPTEST_CASES").is_none() {
+        config.cases = cases;
+    }
+    if std::env::var_os("PROPTEST_RNG_SEED").is_none() {
+        config.rng_seed = RngSeed::Fixed(SEED);
+    }
+    config.failure_persistence = None;
+    config
+}
 
 /// Lines that the builders give a meaning to, valid and nearly valid.
 const LINES: &[&str] = &[
@@ -184,11 +204,8 @@ fn assert_span(text: &str, start: u64, end: u64, what: &str) {
 }
 
 proptest! {
-    #![proptest_config(ProptestConfig {
-        cases: 256,
-        failure_persistence: None,
-        ..ProptestConfig::default()
-    })]
+    // In memory: a few hundred cases take well under a second.
+    #![proptest_config(config(256))]
 
     #[test]
     fn strict_text_keeps_the_bytes_or_refuses(bytes in prop::collection::vec(any::<u8>(), 0..200)) {
@@ -279,11 +296,8 @@ proptest! {
 }
 
 proptest! {
-    #![proptest_config(ProptestConfig {
-        cases: 96,
-        failure_persistence: None,
-        ..ProptestConfig::default()
-    })]
+    // Each case writes a package to disk: fewer, to keep the suite at seconds.
+    #![proptest_config(config(96))]
 
     #[test]
     fn v1alpha2_reports_positions_inside_the_files(
