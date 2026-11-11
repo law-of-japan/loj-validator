@@ -3,6 +3,11 @@
 //! Two properties are checked on generated input: the entry point returns
 //! (a panic fails the test), and every position it reports is a range of the
 //! file it names, on character boundaries. The inputs are synthetic.
+//!
+//! The seed differs on every run, on purpose: each run looks at new inputs.
+//! A failure prints the minimal input; add it as an ordinary test with the
+//! fix, since nothing is written to a regression file. `PROPTEST_CASES=3000`
+//! raises the number of cases of every property for a longer local run.
 // Test helpers outside `#[test]` functions may unwrap, and offsets read
 // back from JSON are cast for slicing: a failure here fails the test.
 #![allow(clippy::unwrap_used, clippy::cast_possible_truncation)]
@@ -285,12 +290,16 @@ proptest! {
         files in prop::collection::vec(markdown(), 5),
     ) {
         let dir = Scratch::new();
-        dir.write("law.yaml", manifest("loj/v1alpha2").as_bytes());
+        let manifest = manifest("loj/v1alpha2");
+        dir.write("law.yaml", manifest.as_bytes());
         for (name, text) in FILES.iter().zip(&files) {
             dir.write(name, text.as_bytes());
         }
         let checked = law_semantic::v1alpha2::check(&dir.0, &[Check::L0, Check::L1]);
-        let text = |path: &str| FILES.iter().position(|f| *f == path).map(|i| files[i].as_str());
+        let text = |path: &str| match FILES.iter().position(|f| *f == path) {
+            Some(i) => Some(files[i].as_str()),
+            None => (path == "law.yaml").then_some(manifest.as_str()),
+        };
         for d in &checked.report.diagnostics {
             let Some(location) = &d.location else { continue };
             let path = location["path"].as_str().unwrap();
@@ -325,12 +334,16 @@ proptest! {
         files in prop::collection::vec(markdown(), 5),
     ) {
         let dir = Scratch::new();
-        dir.write("law.yaml", manifest("loj/v1alpha1").as_bytes());
+        let manifest = manifest("loj/v1alpha1");
+        dir.write("law.yaml", manifest.as_bytes());
         for (name, text) in FILES.iter().zip(&files) {
             dir.write(name, text.as_bytes());
         }
         let report = law_semantic::v1alpha1::check(&dir.0, law_semantic::v1alpha1::Level::L1);
-        let text = |path: &str| FILES.iter().position(|f| *f == path).map(|i| files[i].as_str());
+        let text = |path: &str| match FILES.iter().position(|f| *f == path) {
+            Some(i) => Some(files[i].as_str()),
+            None => (path == "law.yaml").then_some(manifest.as_str()),
+        };
         for d in report["diagnostics"].as_array().into_iter().flatten() {
             let path = d["file"].as_str().unwrap();
             if let (Some(source), Some(start), Some(end)) =
