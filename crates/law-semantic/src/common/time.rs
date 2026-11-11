@@ -29,6 +29,7 @@ fn small(n: i64) -> u32 {
 
 impl Date {
     /// Parse an existing `YYYY-MM-DD` date (year 0 is not a civil year).
+    #[must_use]
     pub fn parse(s: &str) -> Option<Date> {
         let b = s.as_bytes();
         if b.len() != 10 || b[4] != b'-' || b[7] != b'-' {
@@ -74,12 +75,14 @@ impl Date {
             d: small(d),
         }
     }
+    #[must_use]
     pub fn add_days(self, n: i64) -> Date {
         Date::from_days(self.days() + n)
     }
     /// Civil Code art. 143 counting from `self` as the first day: the day after
     /// the period of `n` months ends is the corresponding day `n` months later,
     /// or the first day of the following month when that day does not exist.
+    #[must_use]
     pub fn after_months(self, n: i64) -> Date {
         let total = self.y * 12 + (i64::from(self.m) - 1) + n;
         let (y, m) = (total.div_euclid(12), small(total.rem_euclid(12)) + 1);
@@ -89,6 +92,7 @@ impl Date {
             Date { y, m, d: 1 }.add_days(i64::from(month_len(y, m)))
         }
     }
+    #[must_use]
     pub fn to_iso(self) -> String {
         format!("{:04}-{:02}-{:02}", self.y, self.m, self.d)
     }
@@ -96,6 +100,7 @@ impl Date {
 
 /// The fixed day of a TimePoint, if it has one: a day-precision `date`, or a
 /// `derived` whose value is fixed by its base (TIME-03).
+#[must_use]
 pub fn fixed_day(tp: &Value) -> Option<Date> {
     match tp["state"].as_str()? {
         "date" if tp["precision"] == "day" => Date::parse(tp["value"].as_str()?),
@@ -105,6 +110,7 @@ pub fn fixed_day(tp: &Value) -> Option<Date> {
 }
 
 /// Evaluate `calc` on a fixed base day.
+#[must_use]
 pub fn calc(calc: &Value, base: Date) -> Option<Date> {
     match calc["op"].as_str()? {
         "sameDay" => Some(base),

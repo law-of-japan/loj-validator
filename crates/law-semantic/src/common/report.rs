@@ -21,18 +21,21 @@ impl Check {
     pub const RELATION_CONSISTENCY: Check = Check::l4("relationConsistency");
     pub const TIME_CONSISTENCY: Check = Check::l4("timeConsistency");
 
+    #[must_use]
     pub const fn plain(check: &'static str) -> Check {
         Check {
             check,
             category: None,
         }
     }
+    #[must_use]
     pub const fn l3(category: &'static str) -> Check {
         Check {
             check: "L3",
             category: Some(category),
         }
     }
+    #[must_use]
     pub const fn l4(category: &'static str) -> Check {
         Check {
             check: "L4",
@@ -40,6 +43,11 @@ impl Check {
         }
     }
     /// Parse `L1`, `L3`, `L3/evidence`, `registry`, … Reserved checks are refused.
+    ///
+    /// # Errors
+    ///
+    /// The name is not a check, or names a check that is reserved and not
+    /// implemented (`L2`, `L3/sourceMatch`, `L4/clauseReference`).
     pub fn parse(s: &str) -> Result<Vec<Check>, String> {
         let (check, category) = match s.split_once('/') {
             Some((c, k)) => (c, Some(k)),
@@ -73,6 +81,7 @@ impl Check {
         }
         Ok(found)
     }
+    #[must_use]
     pub fn label(&self) -> String {
         match self.category {
             Some(c) => format!("{}/{}", self.check, c),
@@ -91,6 +100,7 @@ pub enum ResultValue {
 }
 
 impl ResultValue {
+    #[must_use]
     pub fn as_str(self) -> &'static str {
         match self {
             ResultValue::Pass => "pass",
@@ -100,6 +110,7 @@ impl ResultValue {
         }
     }
     /// Combine two results of the same check: fail > incomplete > pass > notApplicable.
+    #[must_use]
     pub fn worst(self, other: ResultValue) -> ResultValue {
         use ResultValue::*;
         let rank = |r| match r {
@@ -130,6 +141,7 @@ pub enum Class {
 }
 
 impl Class {
+    #[must_use]
     pub fn as_str(self) -> &'static str {
         match self {
             Class::Error => "error",
@@ -169,15 +181,18 @@ impl Diagnostic {
             location: None,
         }
     }
+    #[must_use]
     pub fn with_class(mut self, class: Class) -> Self {
         self.class = class;
         self
     }
+    #[must_use]
     pub fn with_code(mut self, code: &str) -> Self {
         self.code = code.into();
         self
     }
     /// A file location; `start`/`end` are UTF-8 byte offsets when known.
+    #[must_use]
     pub fn at(mut self, path: &str, span: Option<(usize, usize)>) -> Self {
         let mut l = json!({ "path": path });
         if let Some((s, e)) = span {
@@ -188,13 +203,16 @@ impl Diagnostic {
         self
     }
     /// A location inside a YAML document, by JSON pointer.
+    #[must_use]
     pub fn at_pointer(mut self, path: &str, pointer: &str) -> Self {
         self.location = Some(json!({ "path": path, "pointer": pointer }));
         self
     }
+    #[must_use]
     pub fn is_error(&self) -> bool {
         self.class == Class::Error
     }
+    #[must_use]
     pub fn to_json(&self) -> Value {
         let mut v = json!({
             "rule": self.rule,
@@ -228,6 +246,7 @@ impl Report {
             self.results.push((check, result));
         }
     }
+    #[must_use]
     pub fn result(&self, check: Check) -> Option<ResultValue> {
         self.results
             .iter()
@@ -274,6 +293,7 @@ impl Report {
     }
     /// Process exit code: 1 any fail; 3 any incomplete or nothing passed
     /// (notApplicable alone is not a pass, VAL-04); otherwise 0.
+    #[must_use]
     pub fn exit_code(&self) -> i32 {
         if self.results.iter().any(|(_, r)| *r == ResultValue::Fail) {
             1

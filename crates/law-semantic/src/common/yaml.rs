@@ -17,6 +17,13 @@ pub(crate) struct Options {
 }
 
 /// Parse one YAML document into JSON values.
+///
+/// # Errors
+///
+/// The text is not one YAML 1.2 document, or it uses something outside the
+/// JSON data model: a duplicate or merge key, a tag, an anchor or alias, a
+/// plain scalar that is not JSON (a date, `yes`, `~`), or nesting deeper
+/// than 64. The message is the text of the finding.
 pub fn parse(source: &str) -> Result<Value, String> {
     parse_with(
         source,

@@ -1,4 +1,10 @@
 //! Law-number normalization only; not a natural-language reference parser.
+/// Normalize a displayed law number (`二の二`, `１２ノ３`) into positive parts.
+///
+/// # Errors
+///
+/// A part is empty, is not a number in kanji, ASCII or full-width digits,
+/// is zero, or is larger than 2^53 - 1.
 pub fn normalize(input: &str) -> Result<Vec<u64>, String> {
     input.split(['の', 'ノ']).map(component).collect()
 }

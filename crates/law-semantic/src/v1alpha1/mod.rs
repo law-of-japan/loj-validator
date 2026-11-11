@@ -60,6 +60,7 @@ impl Context {
 }
 
 /// Validate a manifest path or a repository directory. Never returns a complete AST on failure.
+#[must_use]
 pub fn check(input: &Path, level: Level) -> Value {
     let mut ctx = Context::default();
     let path = if input.is_dir() {

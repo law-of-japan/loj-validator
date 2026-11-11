@@ -26,6 +26,13 @@ pub struct Args {
     pub ast: Option<PathBuf>,
 }
 
+/// Read the arguments of a next-specification check.
+///
+/// # Errors
+///
+/// An option is unknown, repeated, lacks its value or contradicts another
+/// one, or no input is given. The message is shown with the usage (exit
+/// code 2).
 pub fn parse(args: &[String]) -> Result<Args, String> {
     let mut path = None;
     let mut levels = Vec::new();
@@ -155,6 +162,7 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
 }
 
 /// Run and render. Returns the output text and the exit code.
+#[must_use]
 pub fn execute(args: &Args) -> (String, i32) {
     let report: Report = if let (Some(out), Input::Package(p)) = (&args.ast, &args.input) {
         let r = law_semantic::v1alpha2::check(p, &args.checks);
