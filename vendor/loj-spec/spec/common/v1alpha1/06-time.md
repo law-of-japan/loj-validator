@@ -7,25 +7,26 @@
 | `state` | 意味 | 必須のフィールド | 例 |
 |---|---|---|---|
 | `date` | 日が確定している | `value`、`raw`、`precision`、`evidence`、`verification` | 平成十九年一月一日 |
-| `derived` | 規則により確定日を計算できる | `rule`、`base`、`raw`、`evidence`、`verification` | 公布の日から起算して三十日を経過した日 |
+| `derived` | 基準の時点から規則により計算する | `rule`、`base`、`raw`、`evidence`、`verification` | 公布の日から起算して三十日を経過した日 |
 | `pending` | 法令上まだ定まっていない | `raw`、`delegation`、`evidence`、`verification` | 政令で定める日、条約が効力を生ずる日 |
 | `unknown` | 調査上不明 | `reason` | 原典未取得 |
 | `notApplicable` | 該当しない | `reason` | 公布行為を伴わない状態 |
 
 - 時点値は、状態ごとの必須のフィールドを持たなければならない（MUST）。
-- `pending`・`unknown`・`notApplicable`に`value`を、`derived`以外の状態に`rule`・`calc`・`base`を置いてはならない（MUST NOT）。`unknown`・`notApplicable`に`raw`を置いてはならない。
+- `pending`・`unknown`・`notApplicable`に`value`を、`derived`以外の状態に`rule`・`calc`・`base`を、`unknown`・`notApplicable`に`raw`を、`pending`に`determinedBy`を置いてはならない（MUST NOT）。確定させた根拠（`determinedBy`）は、確定して`date`とした時点値が持つ（TIME-04）。
 
 ## TIME-02 date
 
-- `value`はグレゴリオ暦の日付で、`precision`（`day`／`month`／`year`）に合わせた書式（`YYYY-MM-DD`／`YYYY-MM`／`YYYY`）で書く。
+- `value`はグレゴリオ暦の日付で、`precision`（`day`／`month`／`year`）に合わせた書式（`YYYY-MM-DD`／`YYYY-MM`／`YYYY`）で書かなければならない（MUST）。
 - `raw`に原表記（和暦・漢数字等）を保存し、グレゴリオ暦の値で置き換えてはならない（MUST NOT）。
-- 精度が日に満たない値を、確定日として順序の比較に使ってはならない（MUST NOT）。暦や精度が不明な値を、推定で`date`にしてはならない（MUST NOT）。
+- 精度が日に満たない値は確定日ではなく（[TIME-03](#time-03-derivedとcalc)）、確定日として順序の比較に使ってはならない（MUST NOT）。暦や精度が不明な値を、推定で`date`にしてはならない（MUST NOT）。
 - グレゴリオ暦への換算は、明治6年1月1日以後の日付に限って必須とする。それより前の日付の換算規則は本版では定めない。換算の根拠を示せない日付を推定で`date`にせず、`unknown`とし、原表記を`reason`に書く。
 
 ## TIME-03 derivedとcalc
 
 - `rule`は計算規則の原文、`base`は基準となる時点値である。
-- `base`が確定日（精度が日の`date`、または確定日を計算できる`derived`）なら、計算結果の日付を`value`に書かなければならない（MUST）。
+- 確定日とは、精度が日の`date`、または`base`が確定日である`derived`をいう。これ以外の時点値（精度が月・年の`date`、`pending`、`unknown`、`notApplicable`、`base`が確定日でない`derived`）は、確定日ではない。
+- `base`が確定日なら、計算結果の日付を`YYYY-MM-DD`の書式で`value`に書かなければならない（MUST）。`base`が確定日でないなら、`value`を書いてはならない（MUST NOT）。
 - `derived`は、任意の`calc`で計算を機械が読める形で示せる（MAY）。
 
   | `calc` | 意味 | 原文の例 | 計算 |
@@ -36,7 +37,7 @@
   | `{op: afterElapsed, unit: month, count: N}`、`unit: year` | 基準の日から起算してNか月（N年）を経過した日 | 公布の日から起算して六月を経過した日から施行する | 暦に従って計算し（民法第143条）、期間の末日の翌日 |
 
 - `calc`があり、`base`が確定日なら、`value`は`calc`による計算結果と一致しなければならない（MUST）。`calc`がない`derived`の計算結果は、未検査として報告する。
-- `base`が`date`でない場合、計算結果を確定日として扱ってはならない（MUST NOT）。
+- `base`が確定日でない`derived`を、確定日として順序の比較に使ってはならない（MUST NOT）。
 - `calc`は`rule`の代わりにしない。`calc`と`rule`の対応は入力者の判断であり、L3の原典照合で確かめる。
 - 期日が別に定まる規則（「…から起算して一年を超えない範囲内において政令で定める日」等）は、`derived`ではなく`pending`である。
 

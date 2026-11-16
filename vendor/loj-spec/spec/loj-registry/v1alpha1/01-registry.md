@@ -14,10 +14,10 @@
   ```
 
 - Recordごとに一つのファイルとし、ファイル名はRecord IDとしなければならない（MUST）。ファイルの`id`は、ファイル名と一致しなければならない。
-- `schemaVersion`は厳密に`loj-registry/v1alpha1`でなければならない（MUST）。YAMLのデータモデルは[CORE-03](../../common/v1alpha1/01-overview.md)に従う。schemaは閉じており、未知のフィールドを拒否する。
+- `schemaVersion`は厳密に`loj-registry/v1alpha1`でなければならない（MUST）。ほかの値（知らない版を含む）のファイルは、処理不能として未完了とし、不合格にしない（[VAL-04](../../common/v1alpha1/03-validation.md)）。YAMLのデータモデルは[CORE-03](../../common/v1alpha1/01-overview.md)に従う。ファイルは、その`schemaVersion`のschemaに合わなければならない（MUST）。schemaは閉じており、未知のフィールドを拒否する。schemaに合わない箇所の診断の規則は、[VAL-07](../../common/v1alpha1/03-validation.md)による。
 - 正本ブランチのGit履歴を、登録台帳の記録版の履歴とする（[CORE-01](../../common/v1alpha1/01-overview.md)）。
 - 撤回・統合・分割したRecordのファイルを削除してはならない（MUST NOT）。
-- `space.yaml`の形は本版では定めない。
+- `space.yaml`の形は本版では定めない。検査器は`space.yaml`を読まず、登録空間の識別子を入力として受け取る（[VAL-03](../../common/v1alpha1/03-validation.md)）。
 - 登録台帳の検査（schema、ファイル名とID、`supersedes`・`replacedBy`の解決、採用中の番号主張の数、IDの衝突）は、L4の入力の前提として行い、適合レベルとは別に報告する。その結果を、法令データのL0〜L3の適合として主張してはならない（MUST NOT）。
 
 ## REG-02 Recordのファイル
@@ -30,7 +30,7 @@
 | `aliases` | 任意 | 旧リポジトリの以前の名前の一覧。各項目は`id`、`evidence`、`verification` |
 | `status` | 必須 | `provisional`（仮登録）／`active`／`merged`／`split`／`withdrawn` |
 | `identity` | 必須 | 同一性の確認。対象を指す資料・調査の記録（`evidence`）と`verification` |
-| `text` | 必須 | 本文の取得状況`state`。`collected`（法令リポジトリに本文がある）／`notCollected`（取得していない）／`nonexistentConfirmed`（本文が存在しないことを確認した） |
+| `collection` | 必須 | 本文の取得状況`state`。`collected`（法令リポジトリに本文がある）／`notCollected`（取得していない）／`nonexistentConfirmed`（本文が存在しないことを確認した） |
 | `repository` | 条件付き | 法令リポジトリの`location`（例: `github.com/law-of-japan/19480720-law-178`）と`canonicalBranch`（正本ブランチ。例: `main`） |
 | `sources` | 必須（空可） | Sourceの一覧 |
 | `numbers` | 必須（空可） | 番号主張の一覧（REG-03） |
@@ -38,12 +38,15 @@
 | `replacedBy` | `merged`・`split`で必須 | 統合先、または分割先の候補の一覧。各項目は`record`（RecordRef）、`evidence`、`verification` |
 
 - 本文のパッケージのないRecordも登録できる。
-- `repository`は、`text.state`が`collected`のとき、または法令リポジトリに関係・Revisionを記録するとき、持たなければならない（MUST）。法令リポジトリを持たないRecordは`repository`を持たない。リポジトリが移転したら更新する。
+- `repository`は、`collection.state`が`collected`のとき、または法令リポジトリに関係・Revisionを記録するとき、持たなければならない（MUST）。法令リポジトリを持たないRecordは`repository`を持たない。リポジトリが移転したら更新する。
 - `provisional`のRecordの`identity.verification.state`を、`confirmed`にしてはならない（MUST NOT）。
 - `notCollected`から、本文の不存在を推論してはならない（MUST NOT）。
 - 題名と法令の種別は、登録台帳に持たない。版ごとに版パッケージ（`law.yaml`の`title`・`type`）にあり、改正で変わり得るためである。表示には`label`を使う。
+- `merged`・`split`でないRecordは、`replacedBy`を持ってはならない（MUST NOT）。
 - 分割先が確定していない候補は、`verification.state: unverified`で残す。
-- 効力の終了（廃止・失効）を`status`で表してはならない（MUST NOT。履歴マニフェストのHIST-12）。
+- `replacedBy`の各項目の`record`は、同じ登録台帳のRecordに解決できなければならない（MUST）。`space`が登録空間の入力と異なる`record`は、他の登録空間のRecordを指すので、この要求に反する。統合・分割の先は、同じ登録空間のRecordである。
+- 効力の終了（廃止・失効）は、`status`で表さない（[HIST-12](../../loj-history/v1alpha1/01-history.md)）。
+- `withdrawn`は、登録した対象が法令として存在しないこと（誤登録等）を確認して、登録を撤回したことを表す。L4では、不存在確認済みのRecordとする（[XREF-01](../../common/v1alpha1/10-cross-record.md)）。本文の不存在（`collection.state: nonexistentConfirmed`）とは別である。
 
 ## REG-03 番号主張
 
@@ -61,6 +64,7 @@
 
 - 一つの欄の上書きで、番号を訂正してはならない（MUST NOT）。訂正はREG-04による。
 - `raw`を正規化した値で置き換えてはならない（MUST NOT）。
+- 採用中の番号主張は、法令番号の正である。版パッケージの`law.number`は表示用の写しであり、食い違いはL4の表示の整合で警告とする（[XREF-05](../../common/v1alpha1/10-cross-record.md)）。
 - 採番の期間を、西暦年だけに縮めてはならない（MUST NOT）。一つの暦年が二つの元号の期間に分かれる場合（昭和64年と平成元年等）も、`gregorian`の範囲で表す。
 - 発令機関は、公布・発令の時のものとする。現在の所管から逆算してはならない（MUST NOT）。
 - `decision: adopted`の主張は、同時に二つ以上あってはならない（MUST NOT）。資料の間の食い違いで決められないときは、`conflicting`の主張を一つ採用するか、すべてを`pending`にする。

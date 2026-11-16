@@ -66,6 +66,25 @@
             "type": "string",
             "minLength": 1
           },
+          "ivd": {
+            "$comment": "GLYPH-05, GLYPH-06: required when recorded contains a variation selector, forbidden otherwise; sequence must match the code points of recorded. Both are checked by the validator.",
+            "type": "object",
+            "properties": {
+              "collection": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sequence": {
+                "type": "string",
+                "pattern": "^[0-9A-F]{4,6}( [0-9A-F]{4,6})+$"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "collection",
+              "sequence"
+            ]
+          },
           "evidence": {
             "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/evidenceList"
           },
@@ -110,6 +129,20 @@
               "required": [
                 "candidates",
                 "basis"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "variance"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "candidates"
               ]
             }
           },

@@ -61,6 +61,7 @@ impl Input {
                 Check::RELATION_RESOLUTION,
                 Check::RELATION_CONSISTENCY,
                 Check::TIME_CONSISTENCY,
+                Check::DISPLAY_CONSISTENCY,
             ],
             Input::Change { .. } => vec![Check::CHANGE],
             Input::Reference { .. } => vec![Check::REFERENCE],
@@ -72,20 +73,26 @@ impl Input {
 /// reported as `notApplicable`.
 #[must_use]
 pub fn run(input: &Input, checks: &[Check]) -> Report {
+    run_with_space(input, checks, None)
+}
+
+/// Run checks with the explicit registration-space identifier (VAL-03).
+#[must_use]
+pub fn run_with_space(input: &Input, checks: &[Check], space: Option<&str>) -> Report {
     let mut report = match input {
         Input::Package(p) => crate::v1alpha2::check(p, checks).report,
         Input::Repository(p) => crate::repository::check(p, checks),
-        Input::Registry(p) => crate::registry::check(p),
+        Input::Registry(p) => crate::registry::check_with_space(p, space),
         Input::Records {
             registry,
             repositories,
-        } => crate::xref::check(registry, repositories, checks),
+        } => crate::xref::check_with_space(registry, repositories, checks, space),
         Input::Change { bundle, base, head } => crate::change::check(bundle, base, head),
         Input::Reference {
             bundle,
             registry,
             reference,
-        } => crate::fixref::check(bundle, registry, reference),
+        } => crate::fixref::check_with_space(bundle, registry, reference, space),
     };
     for c in checks {
         if report.result(*c).is_none() {

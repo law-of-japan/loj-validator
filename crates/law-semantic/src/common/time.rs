@@ -23,7 +23,7 @@ fn month_len(y: i64, m: u32) -> u32 {
 }
 
 /// A day of the month or a month number, which the arithmetic keeps in 0..=31.
-fn small(n: i64) -> u32 {
+fn small(n: i128) -> u32 {
     u32::try_from(n).expect("a day or month computed from a day count")
 }
 
@@ -48,17 +48,17 @@ impl Date {
             d,
         })
     }
-    fn days(self) -> i64 {
+    fn days(self) -> i128 {
         // Days from civil (H. Hinnant).
-        let y = if self.m <= 2 { self.y - 1 } else { self.y };
+        let y = i128::from(self.y) - i128::from(self.m <= 2);
         let era = y.div_euclid(400);
         let yoe = y - era * 400;
-        let m = i64::from(self.m);
-        let doy = (153 * (if m > 2 { m - 3 } else { m + 9 }) + 2) / 5 + i64::from(self.d) - 1;
+        let m = i128::from(self.m);
+        let doy = (153 * (if m > 2 { m - 3 } else { m + 9 }) + 2) / 5 + i128::from(self.d) - 1;
         let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
         era * 146097 + doe
     }
-    fn from_days(z: i64) -> Date {
+    fn from_days(z: i128) -> Option<Date> {
         let era = z.div_euclid(146097);
         let doe = z - era * 146097;
         let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
@@ -69,25 +69,38 @@ impl Date {
         let d = doy - (153 * mp + 2) / 5 + 1;
         let m = if mp < 10 { mp + 3 } else { mp - 9 };
         let y = yoe + era * 400 + if m <= 2 { 1 } else { 0 };
-        Date {
-            y,
+        Some(Date {
+            y: i64::try_from(y).ok()?,
             m: small(m),
             d: small(d),
-        }
+        })
     }
+    fn valid(self) -> bool {
+        (1..=12).contains(&self.m) && self.d >= 1 && self.d <= month_len(self.y, self.m)
+    }
+    /// Add days, returning None for invalid dates or an unrepresentable year.
     #[must_use]
-    pub fn add_days(self, n: i64) -> Date {
-        Date::from_days(self.days() + n)
+    pub fn add_days(self, n: i64) -> Option<Date> {
+        if !self.valid() {
+            return None;
+        }
+        Date::from_days(self.days() + i128::from(n))
     }
     /// Civil Code art. 143 counting from `self` as the first day: the day after
     /// the period of `n` months ends is the corresponding day `n` months later,
     /// or the first day of the following month when that day does not exist.
     #[must_use]
-    pub fn after_months(self, n: i64) -> Date {
-        let total = self.y * 12 + (i64::from(self.m) - 1) + n;
-        let (y, m) = (total.div_euclid(12), small(total.rem_euclid(12)) + 1);
+    pub fn after_months(self, n: i64) -> Option<Date> {
+        if !self.valid() {
+            return None;
+        }
+        let total = i128::from(self.y) * 12 + (i128::from(self.m) - 1) + i128::from(n);
+        let (y, m) = (
+            i64::try_from(total.div_euclid(12)).ok()?,
+            small(total.rem_euclid(12)) + 1,
+        );
         if self.d <= month_len(y, m) {
-            Date { y, m, d: self.d }
+            Some(Date { y, m, d: self.d })
         } else {
             Date { y, m, d: 1 }.add_days(i64::from(month_len(y, m)))
         }
@@ -112,20 +125,23 @@ pub fn fixed_day(tp: &Value) -> Option<Date> {
 /// Evaluate `calc` on a fixed base day.
 #[must_use]
 pub fn calc(calc: &Value, base: Date) -> Option<Date> {
-    match calc["op"].as_str()? {
-        "sameDay" => Some(base),
-        "nextDay" => Some(base.add_days(1)),
+    let result = match calc["op"].as_str()? {
+        "sameDay" => base.add_days(0),
+        "nextDay" => base.add_days(1),
         "afterElapsed" => {
-            let n = calc["count"].as_i64()?;
+            let n = calc["count"].as_i64().filter(|n| *n >= 1)?;
             match calc["unit"].as_str()? {
-                "day" => Some(base.add_days(n)),
-                "month" => Some(base.after_months(n)),
-                "year" => Some(base.after_months(n.checked_mul(12)?)),
+                "day" => base.add_days(n),
+                "month" => base.after_months(n),
+                "year" => base.after_months(n.checked_mul(12)?),
                 _ => None,
             }
         }
         _ => None,
-    }
+    }?;
+    // TimePoint values have four-digit Gregorian years. Arithmetic outside the
+    // supported representation is unprocessable, never an equality judgment.
+    (1..=9999).contains(&result.y).then_some(result)
 }
 
 #[cfg(test)]
@@ -135,20 +151,101 @@ mod tests {
         Date::parse(s).unwrap()
     }
     #[test]
+    fn enormous_counts_and_invalid_dates_do_not_overflow() {
+        use serde_json::json;
+        for unit in ["day", "month", "year"] {
+            for count in [json!(i64::MAX), json!(u64::MAX)] {
+                assert_eq!(
+                    calc(
+                        &json!({"op":"afterElapsed","unit":unit,"count":count}),
+                        d("2024-01-01")
+                    ),
+                    None
+                );
+            }
+        }
+        for year in [i64::MIN, i64::MAX] {
+            let date = Date {
+                y: year,
+                m: 12,
+                d: 31,
+            };
+            for count in [i64::MIN, i64::MAX] {
+                let _ = date.add_days(count);
+                let _ = date.after_months(count);
+            }
+        }
+        assert_eq!(
+            Date {
+                y: i64::MAX,
+                m: 12,
+                d: 31
+            }
+            .add_days(1),
+            None
+        );
+        assert_eq!(
+            Date {
+                y: i64::MIN,
+                m: 1,
+                d: 1
+            }
+            .add_days(-1),
+            None
+        );
+        assert_eq!(
+            Date {
+                y: 2024,
+                m: 0,
+                d: 1
+            }
+            .add_days(1),
+            None
+        );
+        assert_eq!(
+            Date {
+                y: 2024,
+                m: 2,
+                d: 30
+            }
+            .after_months(1),
+            None
+        );
+    }
+
+    #[test]
+    fn derived_is_fixed_only_when_every_base_is_fixed() {
+        use serde_json::json;
+        let day = json!({"state":"date","precision":"day","value":"2024-01-01"});
+        let nested = json!({"state":"derived","base":{"state":"derived","base":day,"value":"2024-01-02"},"value":"2024-01-03"});
+        assert_eq!(fixed_day(&nested), Some(d("2024-01-03")));
+        for base in [
+            json!({"state":"unknown"}),
+            json!({"state":"date","precision":"month","value":"2024-01"}),
+            json!({"state":"derived","base":day}),
+        ] {
+            assert_eq!(
+                fixed_day(&json!({"state":"derived","base":base,"value":"2024-01-03"})),
+                None
+            );
+        }
+    }
+
+    #[test]
     fn calendar() {
         assert!(Date::parse("2023-02-29").is_none());
         assert!(Date::parse("2024-02-29").is_some());
         assert!(Date::parse("0000-01-01").is_none());
-        assert_eq!(d("2019-04-30").add_days(1), d("2019-05-01"));
-        assert_eq!(d("1999-12-31").add_days(1), d("2000-01-01"));
-        assert_eq!(d("2020-01-01").add_days(30), d("2020-01-31"));
-        assert_eq!(d("2020-01-15").after_months(6), d("2020-07-15"));
-        assert_eq!(d("2020-01-31").after_months(1), d("2020-03-01"));
-        assert_eq!(d("2019-01-31").after_months(1), d("2019-03-01"));
-        assert_eq!(d("2020-02-29").after_months(12), d("2021-03-01"));
-        assert_eq!(d("2020-12-10").after_months(2), d("2021-02-10"));
+        assert_eq!(d("2019-04-30").add_days(1).unwrap(), d("2019-05-01"));
+        assert_eq!(d("1999-12-31").add_days(1).unwrap(), d("2000-01-01"));
+        assert_eq!(d("2020-01-01").add_days(30).unwrap(), d("2020-01-31"));
+        assert_eq!(d("2020-01-15").after_months(6).unwrap(), d("2020-07-15"));
+        assert_eq!(d("2020-01-31").after_months(1).unwrap(), d("2020-03-01"));
+        assert_eq!(d("2019-01-31").after_months(1).unwrap(), d("2019-03-01"));
+        assert_eq!(d("2020-02-29").after_months(12).unwrap(), d("2021-03-01"));
+        assert_eq!(d("2020-12-10").after_months(2).unwrap(), d("2021-02-10"));
         for s in ["1873-01-01", "1600-02-29", "2400-12-31"] {
-            assert_eq!(d(s).add_days(0).to_iso(), s);
+            assert_eq!(d(s).add_days(0).unwrap().to_iso(), s);
         }
     }
 
@@ -188,25 +285,25 @@ mod tests {
         for start in ["2023-12-31", "1899-12-31", "1999-12-31"] {
             let mut day = d(start);
             for _ in 0..800 {
-                let next = day.add_days(1);
+                let next = day.add_days(1).unwrap();
                 assert!(next > day);
-                assert_eq!(next.add_days(-1), day);
+                assert_eq!(next.add_days(-1).unwrap(), day);
                 assert_eq!(Date::parse(&next.to_iso()), Some(next));
                 day = next;
             }
         }
-        assert_eq!(d("2024-02-28").add_days(1), d("2024-02-29"));
-        assert_eq!(d("2100-02-28").add_days(1), d("2100-03-01"));
-        assert_eq!(d("2000-03-01").add_days(-1), d("2000-02-29"));
-        assert_eq!(d("0001-01-01").add_days(-1).to_iso(), "0000-12-31");
+        assert_eq!(d("2024-02-28").add_days(1).unwrap(), d("2024-02-29"));
+        assert_eq!(d("2100-02-28").add_days(1).unwrap(), d("2100-03-01"));
+        assert_eq!(d("2000-03-01").add_days(-1).unwrap(), d("2000-02-29"));
+        assert_eq!(d("0001-01-01").add_days(-1).unwrap().to_iso(), "0000-12-31");
         // Months: across a year end, backwards, and onto a shorter month.
-        assert_eq!(d("2020-11-30").after_months(3), d("2021-03-01"));
-        assert_eq!(d("2020-11-30").after_months(15), d("2022-03-01"));
-        assert_eq!(d("2020-03-31").after_months(-1), d("2020-03-01"));
-        assert_eq!(d("2020-03-15").after_months(-3), d("2019-12-15"));
-        assert_eq!(d("2020-01-15").after_months(-1), d("2019-12-15"));
-        assert_eq!(d("2020-01-15").after_months(0), d("2020-01-15"));
-        assert_eq!(d("2023-01-31").after_months(13), d("2024-03-01"));
-        assert_eq!(d("2023-01-29").after_months(13), d("2024-02-29"));
+        assert_eq!(d("2020-11-30").after_months(3).unwrap(), d("2021-03-01"));
+        assert_eq!(d("2020-11-30").after_months(15).unwrap(), d("2022-03-01"));
+        assert_eq!(d("2020-03-31").after_months(-1).unwrap(), d("2020-03-01"));
+        assert_eq!(d("2020-03-15").after_months(-3).unwrap(), d("2019-12-15"));
+        assert_eq!(d("2020-01-15").after_months(-1).unwrap(), d("2019-12-15"));
+        assert_eq!(d("2020-01-15").after_months(0).unwrap(), d("2020-01-15"));
+        assert_eq!(d("2023-01-31").after_months(13).unwrap(), d("2024-03-01"));
+        assert_eq!(d("2023-01-29").after_months(13).unwrap(), d("2024-02-29"));
     }
 }

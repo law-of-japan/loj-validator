@@ -93,9 +93,28 @@
           "type": "string",
           "format": "uri"
         },
+        "glyphPreservation": {
+          "$comment": "TYPE-02, GLYPH-10: whether the material preserves glyph forms; omitted means unknown.",
+          "enum": [
+            "preserved",
+            "normalized",
+            "unknown"
+          ]
+        },
         "fixed": {
-          "type": "string",
-          "minLength": 1
+          "$comment": "TYPE-02: a FixedRef for material in LoJ; otherwise a description that fixes the content (hash, archive and commit, ...).",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/FixedRef"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "not": {
+                "pattern": "^loj:"
+              }
+            }
+          ]
         }
       },
       "additionalProperties": false,
@@ -262,7 +281,8 @@
         "evidence"
       ]
     },
-    "SameAs": {
+    "RevisionRef": {
+      "$comment": "FIXREF-01: a Revision named by revision_id, never by label or date.",
       "type": "object",
       "properties": {
         "record": {
@@ -277,6 +297,48 @@
         "record",
         "revision"
       ]
+    },
+    "commitHash": {
+      "$comment": "FIXREF-04: a full commit hash (SHA-1: 40, SHA-256: 64 hex digits).",
+      "type": "string",
+      "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+    },
+    "FixedRef": {
+      "$comment": "FIXREF-01: a RevisionRef fixed to a commit of the canonical branch. path and repository are hints, not part of the identity.",
+      "type": "object",
+      "properties": {
+        "record": {
+          "$ref": "#/$defs/RecordRef"
+        },
+        "revision": {
+          "$ref": "#/$defs/revisionId"
+        },
+        "commit": {
+          "$ref": "#/$defs/commitHash"
+        },
+        "node": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repository": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "record",
+        "revision",
+        "commit"
+      ]
+    },
+    "SameAs": {
+      "$comment": "TIME-07: a RevisionRef.",
+      "$ref": "#/$defs/RevisionRef"
     },
     "TimePoint": {
       "type": "object",
@@ -455,7 +517,13 @@
               "raw",
               "evidence",
               "verification"
-            ]
+            ],
+            "properties": {
+              "value": {
+                "$comment": "TIME-03: the computed date of a derived TimePoint is always a whole day.",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+              }
+            }
           },
           "else": {
             "not": {

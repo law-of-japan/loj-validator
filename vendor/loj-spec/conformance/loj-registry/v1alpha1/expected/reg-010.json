@@ -1,0 +1,15 @@
+{
+  "results": [
+    {
+      "check": "registry",
+      "result": "fail"
+    }
+  ],
+  "diagnostics": [
+    {
+      "rule": "RID-04",
+      "schemaVersion": "loj-registry/v1alpha1",
+      "class": "error"
+    }
+  ]
+}

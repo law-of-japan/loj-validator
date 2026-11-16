@@ -1,0 +1,16 @@
+{
+  "results": [
+    {
+      "check": "L3",
+      "category": "historyStructure",
+      "result": "fail"
+    }
+  ],
+  "diagnostics": [
+    {
+      "rule": "TIME-02",
+      "schemaVersion": "common/v1alpha1",
+      "class": "error"
+    }
+  ]
+}

@@ -33,7 +33,20 @@
         "path": "conformance/loj-registry/v1alpha1/invalid/reg-002/registry"
       },
       "expected": "conformance/loj-registry/v1alpha1/expected/reg-002.json",
-      "success": false
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-registry/v1alpha1/invalid/reg-002/registry",
+          "from": "conformance/loj-registry/v1alpha1/valid/reg-001/registry",
+          "edits": [
+            {
+              "file": "records/19660625-act-86.yaml",
+              "old": "id: 19660625-act-86\n",
+              "new": "id: 19660625-act-87\n"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "reg-003",
@@ -48,7 +61,20 @@
         "path": "conformance/loj-registry/v1alpha1/invalid/reg-003/registry"
       },
       "expected": "conformance/loj-registry/v1alpha1/expected/reg-003.json",
-      "success": false
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-registry/v1alpha1/invalid/reg-003/registry",
+          "from": "conformance/loj-registry/v1alpha1/valid/reg-001/registry",
+          "edits": [
+            {
+              "file": "records/19480720-law-178.yaml",
+              "old": "    decision: adopted\n",
+              "new": "    decision: adopted\n  - id: n2\n    state: exists\n    raw: 法律第百七十九号\n    evidence: [{source: src-egov, locator: 法令番号}]\n    verification: {state: unverified, reason: 索引の転記}\n    decision: adopted\n"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "reg-004",
@@ -63,7 +89,20 @@
         "path": "conformance/loj-registry/v1alpha1/invalid/reg-004/registry"
       },
       "expected": "conformance/loj-registry/v1alpha1/expected/reg-004.json",
-      "success": false
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-registry/v1alpha1/invalid/reg-004/registry",
+          "from": "conformance/loj-registry/v1alpha1/valid/reg-001/registry",
+          "edits": [
+            {
+              "file": "records/19480720-law-178.yaml",
+              "old": "    decision: adopted\n",
+              "new": "    decision: adopted\n    supersedes: n9\n"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "reg-005",
@@ -78,7 +117,21 @@
         "path": "conformance/loj-registry/v1alpha1/invalid/reg-005/registry"
       },
       "expected": "conformance/loj-registry/v1alpha1/expected/reg-005.json",
-      "success": false
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-registry/v1alpha1/invalid/reg-005/registry",
+          "from": "conformance/loj-registry/v1alpha1/valid/reg-001/registry",
+          "edits": [
+            {
+              "file": "records/19480720-law-178.yaml",
+              "old": "gregorian: {from: \"1948-01-01\", to: \"1948-12-31\"}",
+              "new": "gregorian: 1948"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "reg-006",
@@ -93,7 +146,21 @@
         "path": "conformance/loj-registry/v1alpha1/invalid/reg-006/registry"
       },
       "expected": "conformance/loj-registry/v1alpha1/expected/reg-006.json",
-      "success": false
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-registry/v1alpha1/invalid/reg-006/registry",
+          "from": "conformance/loj-registry/v1alpha1/valid/reg-001/registry",
+          "edits": [
+            {
+              "file": "records/19660625-act-86.yaml",
+              "old": "status: active\n",
+              "new": "status: provisional\n"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "reg-007",
@@ -108,7 +175,21 @@
         "path": "conformance/loj-registry/v1alpha1/invalid/reg-007/registry"
       },
       "expected": "conformance/loj-registry/v1alpha1/expected/reg-007.json",
-      "success": false
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-registry/v1alpha1/invalid/reg-007/registry",
+          "from": "conformance/loj-registry/v1alpha1/valid/reg-001/registry",
+          "edits": [
+            {
+              "file": "records/19480720-law-178.yaml",
+              "old": "repository:\n  location: github.com/law-of-japan/19480720-law-178\n  canonicalBranch: main\n",
+              "new": ""
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "reg-008",
@@ -124,7 +205,163 @@
         "path": "conformance/loj-registry/v1alpha1/invalid/reg-008/registry"
       },
       "expected": "conformance/loj-registry/v1alpha1/expected/reg-008.json",
-      "success": false
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-registry/v1alpha1/invalid/reg-008/registry",
+          "from": "conformance/loj-registry/v1alpha1/valid/reg-001/registry",
+          "edits": [
+            {
+              "file": "records/19480720-law-178.yaml",
+              "old": "status: active\n",
+              "new": "status: active\naliases:\n  - id: 19660625-ACT-86\n    evidence: [{source: src-egov, locator: 法令ID}]\n    verification: {state: unverified}\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reg-009",
+      "title": "統合したRecordを残した登録台帳",
+      "requirements": [
+        "REG-02",
+        "RID-04",
+        "RID-05"
+      ],
+      "check": "registry",
+      "normative": true,
+      "input": {
+        "kind": "registry",
+        "path": "conformance/loj-registry/v1alpha1/valid/reg-009/registry"
+      },
+      "expected": "conformance/loj-registry/v1alpha1/expected/reg-009.json",
+      "success": true,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-registry/v1alpha1/valid/reg-009/registry",
+          "from": "conformance/loj-registry/v1alpha1/valid/reg-001/registry",
+          "edits": [
+            {
+              "file": "records/k7m2p9qd3x.yaml",
+              "content": "schemaVersion: loj-registry/v1alpha1\nid: k7m2p9qd3x\nlabel: 祝日法の重複した登録（架空）\nstatus: merged\nidentity:\n  evidence: [{source: src-fiction, locator: 登録の記録}]\n  verification: {state: confirmed}\ncollection: {state: notCollected}\nsources:\n  - {id: src-fiction, kind: other, title: 架空の登録の記録（適合ケース）}\nnumbers: []\nexternalIds: []\nreplacedBy:\n  - record: {id: 19480720-law-178, space: loj, label: 昭和二十三年法律第百七十八号}\n    evidence: [{source: src-fiction, locator: 統合の記録}]\n    verification: {state: confirmed}\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reg-010",
+      "title": "大文字を含む登録空間の識別子",
+      "requirements": [
+        "RID-04"
+      ],
+      "check": "registry",
+      "normative": true,
+      "input": {
+        "kind": "registry",
+        "path": "conformance/loj-registry/v1alpha1/invalid/reg-010/registry"
+      },
+      "expected": "conformance/loj-registry/v1alpha1/expected/reg-010.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-registry/v1alpha1/invalid/reg-010/registry",
+          "from": "conformance/loj-registry/v1alpha1/valid/reg-001/registry",
+          "edits": [
+            {
+              "file": "records/k7m2p9qd3x.yaml",
+              "content": "schemaVersion: loj-registry/v1alpha1\nid: k7m2p9qd3x\nlabel: 祝日法の重複した登録（架空）\nstatus: merged\nidentity:\n  evidence: [{source: src-fiction, locator: 登録の記録}]\n  verification: {state: confirmed}\ncollection: {state: notCollected}\nsources:\n  - {id: src-fiction, kind: other, title: 架空の登録の記録（適合ケース）}\nnumbers: []\nexternalIds: []\nreplacedBy:\n  - record: {id: 19480720-law-178, space: LoJ, label: 昭和二十三年法律第百七十八号}\n    evidence: [{source: src-fiction, locator: 統合の記録}]\n    verification: {state: confirmed}\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reg-011",
+      "title": "統合したRecordのIDを別のRecordの別名に再利用する（RID-01で重ねて報告しない）",
+      "requirements": [
+        "RID-05",
+        "RID-01"
+      ],
+      "check": "registry",
+      "normative": true,
+      "input": {
+        "kind": "registry",
+        "path": "conformance/loj-registry/v1alpha1/invalid/reg-011/registry"
+      },
+      "expected": "conformance/loj-registry/v1alpha1/expected/reg-011.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-registry/v1alpha1/invalid/reg-011/registry",
+          "from": "conformance/loj-registry/v1alpha1/valid/reg-009/registry",
+          "edits": [
+            {
+              "file": "records/20170616-law-63.yaml",
+              "old": "status: active\n",
+              "new": "status: active\naliases:\n  - id: k7m2p9qd3x\n    evidence: [{source: src-egov-h29-63, locator: 法令名}]\n    verification: {state: unverified}\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reg-012",
+      "title": "他の登録空間を指す統合先",
+      "requirements": [
+        "REG-02",
+        "VAL-03"
+      ],
+      "check": "registry",
+      "normative": true,
+      "input": {
+        "kind": "registry",
+        "path": "conformance/loj-registry/v1alpha1/invalid/reg-012/registry"
+      },
+      "expected": "conformance/loj-registry/v1alpha1/expected/reg-012.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-registry/v1alpha1/invalid/reg-012/registry",
+          "from": "conformance/loj-registry/v1alpha1/valid/reg-001/registry",
+          "edits": [
+            {
+              "file": "records/k7m2p9qd3x.yaml",
+              "content": "schemaVersion: loj-registry/v1alpha1\nid: k7m2p9qd3x\nlabel: 祝日法の重複した登録（架空）\nstatus: merged\nidentity:\n  evidence: [{source: src-fiction, locator: 登録の記録}]\n  verification: {state: confirmed}\ncollection: {state: notCollected}\nsources:\n  - {id: src-fiction, kind: other, title: 架空の登録の記録（適合ケース）}\nnumbers: []\nexternalIds: []\nreplacedBy:\n  - record: {id: 19480720-law-178, space: other-space, label: 昭和二十三年法律第百七十八号}\n    evidence: [{source: src-fiction, locator: 統合の記録}]\n    verification: {state: confirmed}\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reg-013",
+      "title": "有効なRecordの統合先",
+      "requirements": [
+        "REG-02"
+      ],
+      "check": "registry",
+      "normative": true,
+      "input": {
+        "kind": "registry",
+        "path": "conformance/loj-registry/v1alpha1/invalid/reg-013/registry"
+      },
+      "expected": "conformance/loj-registry/v1alpha1/expected/reg-013.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-registry/v1alpha1/invalid/reg-013/registry",
+          "from": "conformance/loj-registry/v1alpha1/valid/reg-001/registry",
+          "edits": [
+            {
+              "file": "records/19660625-act-86.yaml",
+              "old": "status: active\n",
+              "new": "status: active\nreplacedBy:\n  - record: {id: 19480720-law-178, label: 昭和二十三年法律第百七十八号}\n    evidence: [{source: src-goshomei-s41-86, locator: 1・2画像}]\n    verification: {state: unverified, reason: 適合ケースのための架空の変更}\n"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -180,6 +180,10 @@ pub fn check(input: &Path, levels: &[Check]) -> PackageCheck {
     report
         .target
         .insert("path".into(), json!(path.to_string_lossy()));
+    report.target.insert(
+        "repository".into(),
+        json!(path.parent().unwrap_or(&path).to_string_lossy()),
+    );
     for &level in levels {
         let result = if level == Check::L0 {
             if ctx.incomplete {

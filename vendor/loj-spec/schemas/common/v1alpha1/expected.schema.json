@@ -34,6 +34,7 @@
               "relationResolution",
               "relationConsistency",
               "timeConsistency",
+              "displayConsistency",
               "clauseReference"
             ]
           },
@@ -100,6 +101,31 @@
               "undetermined",
               "pending"
             ]
+          },
+          "location": {
+            "description": "UTF-8 byte offsets in the file named by path, half-open [start, end), 0-based (SRC-01). A line includes its line break (CRLF is 2 bytes).",
+            "$comment": "CONF-01: listed only where a requirement fixes the diagnostic location (SRC-01 of loj/v1alpha2). UTF-8 byte offsets, half-open [start, end).",
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "start": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "end": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "path",
+              "start",
+              "end"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [
@@ -152,8 +178,9 @@
             "minLength": 1
           },
           "target": {
+            "$comment": "FIXREF-02: the string notation of a Record, Revision or fixed reference (space, Record ID and revision_id as in types.schema.json).",
             "type": "string",
-            "minLength": 1
+            "pattern": "^loj:[a-z][a-z0-9-]*/[A-Za-z0-9][A-Za-z0-9-]*(/[0-9a-hjkmnp-tv-z]{8}(@([0-9a-f]{40}|[0-9a-f]{64})(#.+)?)?)?$"
           },
           "result": {
             "enum": [

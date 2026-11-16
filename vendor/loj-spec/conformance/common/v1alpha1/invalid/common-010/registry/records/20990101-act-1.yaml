@@ -5,7 +5,7 @@ status: active
 identity:
   evidence: [{source: src-fiction, locator: 題名}]
   verification: {state: confirmed}
-text: {state: collected}
+collection: {state: collected}
 repository: {location: example.invalid/20990101-act-1, canonicalBranch: main}
 sources:
   - {id: src-fiction, kind: other, title: 架空の原典}

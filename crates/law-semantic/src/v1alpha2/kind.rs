@@ -21,12 +21,13 @@ pub(super) enum Kind {
     Cell,
     Preamble,
     EnactStatement,
+    Toc,
 }
 
 impl Kind {
     /// Every kind. A test compares the names with the AST schema.
     #[cfg(test)]
-    pub(super) const ALL: [Kind; 18] = [
+    pub(super) const ALL: [Kind; 19] = [
         Kind::Law,
         Kind::MainProvision,
         Kind::SupplementaryProvision,
@@ -45,6 +46,7 @@ impl Kind {
         Kind::Cell,
         Kind::Preamble,
         Kind::EnactStatement,
+        Kind::Toc,
     ];
 
     /// The `kind` value in the AST.
@@ -68,6 +70,7 @@ impl Kind {
             Kind::Cell => "Cell",
             Kind::Preamble => "Preamble",
             Kind::EnactStatement => "EnactStatement",
+            Kind::Toc => "Toc",
         }
     }
 
@@ -82,6 +85,7 @@ impl Kind {
             "cell" => Kind::Cell,
             "preamble" => Kind::Preamble,
             "enact-statement" => Kind::EnactStatement,
+            "toc" => Kind::Toc,
             _ => return None,
         })
     }

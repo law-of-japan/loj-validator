@@ -18,8 +18,12 @@
           "type": "string"
         }
       },
-      "required": [],
-      "additionalProperties": false
+      "required": [
+        "repository",
+        "commit"
+      ],
+      "additionalProperties": false,
+      "$comment": "VAL-03: a result must identify the record version it was judged on."
     },
     "results": {
       "type": "array",
@@ -47,6 +51,7 @@
               "relationResolution",
               "relationConsistency",
               "timeConsistency",
+              "displayConsistency",
               "clauseReference"
             ]
           },
@@ -121,7 +126,37 @@
             "type": "string"
           },
           "location": {
-            "type": "object"
+            "description": "UTF-8 byte offsets in the file named by path, half-open [start, end), 0-based (SRC-01). A line includes its line break (CRLF is 2 bytes).",
+            "$comment": "SRC-01 of loj/v1alpha2: {path, start, end} in UTF-8 bytes, half-open [start, end). Line and column are optional extras and do not replace the byte offsets. CONF-01 compares path, start and end.",
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "start": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "end": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "dependentRequired": {
+              "path": [
+                "start",
+                "end"
+              ],
+              "start": [
+                "path",
+                "end"
+              ],
+              "end": [
+                "path",
+                "start"
+              ]
+            }
           }
         },
         "required": [
@@ -197,6 +232,7 @@
     }
   },
   "required": [
+    "target",
     "results",
     "diagnostics"
   ],

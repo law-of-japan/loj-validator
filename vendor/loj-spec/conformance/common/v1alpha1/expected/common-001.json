@@ -13,7 +13,7 @@
   ],
   "references": [
     {
-      "target": "loj/20170616-law-63",
+      "target": "loj:loj/20170616-law-63",
       "result": "resolved"
     }
   ]

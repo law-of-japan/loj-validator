@@ -20,6 +20,7 @@ impl Check {
     pub const RELATION_RESOLUTION: Check = Check::l4("relationResolution");
     pub const RELATION_CONSISTENCY: Check = Check::l4("relationConsistency");
     pub const TIME_CONSISTENCY: Check = Check::l4("timeConsistency");
+    pub const DISPLAY_CONSISTENCY: Check = Check::l4("displayConsistency");
 
     #[must_use]
     pub const fn plain(check: &'static str) -> Check {
@@ -61,6 +62,7 @@ impl Check {
             Check::RELATION_RESOLUTION,
             Check::RELATION_CONSISTENCY,
             Check::TIME_CONSISTENCY,
+            Check::DISPLAY_CONSISTENCY,
             Check::REGISTRY,
             Check::REBUILD,
             Check::CHANGE,
@@ -194,18 +196,20 @@ impl Diagnostic {
     /// A file location; `start`/`end` are UTF-8 byte offsets when known.
     #[must_use]
     pub fn at(mut self, path: &str, span: Option<(usize, usize)>) -> Self {
-        let mut l = json!({ "path": path });
-        if let Some((s, e)) = span {
-            l["start"] = json!(s);
-            l["end"] = json!(e);
+        if path.is_empty() {
+            return self;
         }
+        let l = match span {
+            Some((s, e)) => json!({"path": path, "start": s, "end": e}),
+            None => json!({"file": path}),
+        };
         self.location = Some(l);
         self
     }
     /// A location inside a YAML document, by JSON pointer.
     #[must_use]
     pub fn at_pointer(mut self, path: &str, pointer: &str) -> Self {
-        self.location = Some(json!({ "path": path, "pointer": pointer }));
+        self.location = Some(json!({ "file": path, "pointer": pointer }));
         self
     }
     #[must_use]
@@ -235,6 +239,8 @@ pub struct Report {
     pub results: Vec<(Check, ResultValue)>,
     pub diagnostics: Vec<Diagnostic>,
     pub references: Vec<Value>,
+    /// L3/L4 results grouped by input Record (VAL-05/06).
+    pub records: Vec<(String, Report)>,
     pub resolution: Option<Value>,
 }
 
@@ -264,6 +270,7 @@ impl Report {
         }
         self.diagnostics.extend(other.diagnostics);
         self.references.extend(other.references);
+        self.records.extend(other.records);
         if other.resolution.is_some() {
             self.resolution = other.resolution;
         }
@@ -272,7 +279,13 @@ impl Report {
         }
     }
     pub fn to_json(&self) -> Value {
+        let mut target = self.target.clone();
+        // An empty commit explicitly denotes an unbound working-tree input;
+        // it must never be mistaken for an immutable commit identity.
+        target.entry("repository").or_insert_with(|| json!(""));
+        target.entry("commit").or_insert_with(|| json!(""));
         let mut v = json!({
+            "target": target,
             "results": self.results.iter().map(|(c, r)| {
                 let mut o = json!({"check": c.check, "result": r.as_str()});
                 if let Some(k) = c.category { o["category"] = json!(k); }
@@ -280,9 +293,6 @@ impl Report {
             }).collect::<Vec<_>>(),
             "diagnostics": self.diagnostics.iter().map(Diagnostic::to_json).collect::<Vec<_>>(),
         });
-        if !self.target.is_empty() {
-            v["target"] = Value::Object(self.target.clone());
-        }
         if !self.references.is_empty() {
             v["references"] = json!(self.references);
         }

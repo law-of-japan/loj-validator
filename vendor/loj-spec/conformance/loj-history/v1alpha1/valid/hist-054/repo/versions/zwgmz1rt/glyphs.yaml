@@ -1,0 +1,129 @@
+schemaVersion: loj-glyphs/v1alpha1
+revision: 98mj5vgx
+notes:
+  - id: g2
+    node: 19480720-law-178/main/article/1/paragraph/1
+    offset: 63
+    recorded: "祝"
+    kind: ambiguous
+    candidates: ["祝", "祝"]   # U+795D / U+FA51
+    basis: unifiedDefault
+    evidence: [{source: src-kanpo-19480720, locator: "1コマ"}]
+    verification: {state: confirmed, reason: "画像の最大解像度で字体を決められない"}
+  - id: g3
+    node: 19480720-law-178/main/article/1/paragraph/1
+    offset: 88
+    recorded: "祝"
+    kind: ambiguous
+    candidates: ["祝", "祝"]   # U+795D / U+FA51
+    basis: unifiedDefault
+    evidence: [{source: src-kanpo-19480720, locator: "1コマ"}]
+    verification: {state: confirmed, reason: "画像の最大解像度で字体を決められない"}
+  - id: g4
+    node: 19480720-law-178/main/article/2/paragraph/1
+    offset: 4
+    recorded: "祝"
+    kind: ambiguous
+    candidates: ["祝", "祝"]   # U+795D / U+FA51
+    basis: unifiedDefault
+    evidence: [{source: src-kanpo-19480720, locator: "1コマ"}]
+    verification: {state: confirmed, reason: "画像の最大解像度で字体を決められない"}
+  - id: g5
+    node: 19480720-law-178/main/article/3/paragraph/1
+    offset: 4
+    recorded: "祝"
+    kind: ambiguous
+    candidates: ["祝", "祝"]   # U+795D / U+FA51
+    basis: unifiedDefault
+    evidence: [{source: src-kanpo-19480720, locator: "1コマ"}]
+    verification: {state: confirmed, reason: "画像の最大解像度で字体を決められない"}
+  - id: g7
+    node: 19480720-law-178/main/article/2/paragraph/1/table/1/row/b6gr/cell/3
+    offset: 6
+    recorded: "祝"
+    kind: ambiguous
+    candidates: ["祝", "祝"]   # U+795D / U+FA51
+    basis: unifiedDefault
+    evidence: [{source: src-kanpo-19480720, locator: "1コマ"}]
+    verification: {state: confirmed, reason: "画像の最大解像度で字体を決められない"}
+  - id: g8
+    node: 19480720-law-178/main/article/2/paragraph/1/table/1/row/ks0j/cell/3
+    offset: 29
+    recorded: "祝"
+    kind: ambiguous
+    candidates: ["祝", "祝"]   # U+795D / U+FA51
+    basis: unifiedDefault
+    evidence: [{source: src-kanpo-19480720, locator: "1コマ"}]
+    verification: {state: confirmed, reason: "画像の最大解像度で字体を決められない"}
+  - id: g9
+    node: 19480720-law-178/main/article/2/paragraph/1/table/1/row/n9ky/cell/3
+    offset: 7
+    recorded: "祝"
+    kind: ambiguous
+    candidates: ["祝", "祝"]   # U+795D / U+FA51
+    basis: unifiedDefault
+    evidence: [{source: src-kanpo-19480720, locator: "1コマ"}]
+    verification: {state: confirmed, reason: "画像の最大解像度で字体を決められない"}
+  - id: g10
+    node: 19480720-law-178/main/article/2/paragraph/1/table/1/row/zvvp/cell/3
+    offset: 11
+    recorded: "祝"
+    kind: ambiguous
+    candidates: ["祝", "祝"]   # U+795D / U+FA51
+    basis: unifiedDefault
+    evidence: [{source: src-kanpo-19480720, locator: "1コマ"}]
+    verification: {state: confirmed, reason: "画像の最大解像度で字体を決められない"}
+  - id: g11
+    node: 19480720-law-178/supplement/original/paragraph/1
+    offset: 0
+    recorded: "１"
+    kind: ambiguous
+    candidates: ["1", "１"]   # U+0031 / U+FF11
+    basis: provisional
+    evidence: [{source: src-kanpo-19480720, locator: "1コマ 附則"}, {source: src-egov, locator: "附則 ParagraphNum"}]
+    verification: {state: confirmed, reason: "縦書きの数字の幅は印刷から決められない"}
+  - id: g12
+    node: 19480720-law-178/supplement/original/paragraph/2
+    offset: 0
+    recorded: "２"
+    kind: ambiguous
+    candidates: ["2", "２"]   # U+0032 / U+FF12
+    basis: provisional
+    evidence: [{source: src-kanpo-19480720, locator: "1コマ 附則"}, {source: src-egov, locator: "附則 ParagraphNum"}]
+    verification: {state: confirmed, reason: "縦書きの数字の幅は印刷から決められない"}
+  - id: g13
+    node: 19480720-law-178
+    field: display
+    offset: 3
+    recorded: "祝"
+    kind: ambiguous
+    candidates: ["祝", "祝"]   # U+795D / U+FA51
+    basis: unifiedDefault
+    evidence: [{source: src-kanpo-19480720, locator: "1コマ 題名"}]
+    verification: {state: confirmed, reason: "画像の最大解像度で字体を決められない"}
+  - id: g14
+    node: 19480720-law-178/main/article/1/paragraph/1
+    offset: 39
+    recorded: "豊"
+    kind: ambiguous
+    candidates: ["豊", "豐"]   # U+8C4A / U+8C50
+    basis: otherSource
+    evidence: [{source: src-kanpo-19480720, locator: "1コマ 第一條"}, {source: src-goshomei, locator: "第一條"}]
+    verification: {state: confirmed, reason: "官報の画像では決められず、御署名原本で確かめた"}
+  - id: g15
+    node: 19480720-law-178/supplement/original/paragraph/2
+    offset: 12
+    recorded: "号"
+    kind: ambiguous
+    candidates: ["号", "號"]   # U+53F7 / U+865F
+    basis: otherSource
+    evidence: [{source: src-kanpo-19480720, locator: "1コマ 附則第二項"}, {source: src-goshomei, locator: "附則第二項"}]
+    verification: {state: confirmed, reason: "官報の画像では決められず、御署名原本で確かめた"}
+  - id: g16
+    node: 19480720-law-178/main/article/2/paragraph/1/table/1/row/a1w3/cell/2
+    offset: 0
+    recorded: "政令で定める日"
+    kind: sourceEdit
+    description: "印刷の「二月十一日」を線で消し、手書きで「政令で定める日」と訂正。手書きの字の字体は下書きの資料（e-Gov）に従う"
+    evidence: [{source: src-goshomei-s41-86, locator: "2画像 建国記念の日の項"}, {source: src-egov, locator: "第二条"}]
+    verification: {state: confirmed}

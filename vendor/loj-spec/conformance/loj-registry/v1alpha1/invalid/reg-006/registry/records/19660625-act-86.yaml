@@ -9,7 +9,7 @@ aliases:
 identity:
   evidence: [{source: src-goshomei-s41-86, locator: 1・2画像}]
   verification: {state: confirmed}
-text: {state: notCollected}
+collection: {state: notCollected}
 sources:
   - id: src-legacy-19480720-law-178
     kind: other

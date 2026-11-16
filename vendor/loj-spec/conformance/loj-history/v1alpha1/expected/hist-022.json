@@ -1,0 +1,16 @@
+{
+  "results": [
+    {
+      "check": "L3",
+      "category": "evidence",
+      "result": "fail"
+    }
+  ],
+  "diagnostics": [
+    {
+      "rule": "TYPE-02",
+      "schemaVersion": "common/v1alpha1",
+      "class": "error"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "diagnostics": [
+    {
+      "rule": "PARA-02",
+      "schemaVersion": "loj/v1alpha2",
+      "class": "error",
+      "location": {
+        "path": "supp.md",
+        "start": 60,
+        "end": 118
+      }
+    }
+  ]
+}

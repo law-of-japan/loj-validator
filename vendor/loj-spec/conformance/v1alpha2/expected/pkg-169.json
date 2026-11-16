@@ -1,0 +1,14 @@
+{
+  "diagnostics": [
+    {
+      "rule": "TABLE-02",
+      "schemaVersion": "loj/v1alpha2",
+      "class": "error",
+      "location": {
+        "path": "tables.md",
+        "start": 280,
+        "end": 306
+      }
+    }
+  ]
+}

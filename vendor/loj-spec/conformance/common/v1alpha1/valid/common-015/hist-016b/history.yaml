@@ -1,0 +1,83 @@
+schemaVersion: loj-history/v1alpha1
+record: {id: 20990402-law-3, label: 架空の法律（公布の時点の比較の例）}
+sources:
+  - {id: src-fictional, kind: other, title: 適合ケースのための架空の資料}
+relations:
+  - id: rel-amend
+    type: amends
+    from: {id: 20990601-law-2, label: 架空の改正法}
+    promulgated:
+      state: date
+      value: "2099-06-01"
+      raw: 令和八十一年六月一日
+      precision: day
+      evidence: [{source: src-fictional, locator: 公布の日}]
+      verification: {state: unverified, reason: 架空の資料}
+    evidence: [{source: src-fictional, locator: 附則第一条}]
+    verification: {state: unverified, reason: 架空の資料}
+    status: active
+    items:
+      - id: i1
+        scope: {text: 第一条}
+        effective:
+          state: derived
+          rule: この法律の施行の日の翌日
+          calc: {op: nextDay}
+          base:
+            state: derived
+            rule: 公布の日から起算して三十日を経過した日
+            calc: {op: afterElapsed, unit: day, count: 30}
+            base:
+              state: date
+              value: "2099-06-01"
+              raw: 令和八十一年六月一日
+              precision: day
+              evidence: [{source: src-fictional, locator: 公布の日}]
+              verification: {state: unverified, reason: 架空の資料}
+            value: "2099-07-01"
+            raw: この法律は、公布の日から起算して三十日を経過した日から施行する
+            evidence: [{source: src-fictional, locator: 附則第一条本文}]
+            verification: {state: unverified, reason: 架空の資料}
+          value: "2099-07-02"
+          raw: 第一条の改正規定は、この法律の施行の日の翌日から施行する
+          evidence: [{source: src-fictional, locator: 附則第一条ただし書}]
+          verification: {state: unverified, reason: 架空の資料}
+        evidence: [{source: src-fictional, locator: 附則第一条}]
+        verification: {state: unverified, reason: 架空の資料}
+revisions:
+  - id: 4h8c2n6s
+    origin: coverageStart
+    effective: {state: unknown, reason: 適合ケースで省略}
+    applicability: {state: unsurveyed}
+    text: {status: absent}
+    status: active
+  - id: 9t3w5k1d
+    basedOn: 4h8c2n6s
+    basis: [{relation: rel-amend, items: [i1]}]
+    effective:
+      state: derived
+      rule: この法律の施行の日の翌日
+      calc: {op: nextDay}
+      base:
+        state: derived
+        rule: 公布の日から起算して三十日を経過した日
+        calc: {op: afterElapsed, unit: day, count: 30}
+        base:
+          state: date
+          value: "2099-06-01"
+          raw: 令和八十一年六月一日
+          precision: day
+          evidence: [{source: src-fictional, locator: 公布の日}]
+          verification: {state: unverified, reason: 架空の資料}
+        value: "2099-07-01"
+        raw: この法律は、公布の日から起算して三十日を経過した日から施行する
+        evidence: [{source: src-fictional, locator: 附則第一条本文}]
+        verification: {state: unverified, reason: 架空の資料}
+      value: "2099-07-02"
+      raw: 第一条の改正規定は、この法律の施行の日の翌日から施行する
+      evidence: [{source: src-fictional, locator: 附則第一条ただし書}]
+      verification: {state: unverified, reason: 架空の資料}
+    applicability: {state: unsurveyed}
+    text: {status: absent}
+    status: active
+coverage: {state: unconfirmed}

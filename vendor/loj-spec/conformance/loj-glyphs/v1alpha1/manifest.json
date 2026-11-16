@@ -38,7 +38,20 @@
         "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-002/repo"
       },
       "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-002.json",
-      "success": false
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-002/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "versions/zwgmz1rt/glyphs.yaml",
+              "old": "offset: 63",
+              "new": "offset: 62"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "glyph-003",
@@ -54,7 +67,20 @@
         "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-003/repo"
       },
       "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-003.json",
-      "success": false
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-003/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "versions/zwgmz1rt/glyphs.yaml",
+              "old": "article/3/paragraph/1\n",
+              "new": "article/4/paragraph/1\n"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "glyph-004",
@@ -70,7 +96,20 @@
         "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-004/repo"
       },
       "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-004.json",
-      "success": false
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-004/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "versions/zwgmz1rt/main.md",
+              "old": "row key=b6gr",
+              "new": "row key=b6gs"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "glyph-005",
@@ -86,7 +125,21 @@
         "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-005/repo"
       },
       "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-005.json",
-      "success": false
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-005/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "versions/zwgmz1rt/glyphs.yaml",
+              "old": "candidates: [\"祝\", \"祝\"]",
+              "new": "candidates: [\"祝\"]"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "glyph-006",
@@ -102,7 +155,20 @@
         "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-006/repo"
       },
       "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-006.json",
-      "success": false
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-006/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "versions/zwgmz1rt/main.md",
+              "old": "元日\n",
+              "new": "元〓\n"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "glyph-007",
@@ -118,7 +184,20 @@
         "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-007/repo"
       },
       "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-007.json",
-      "success": false
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-007/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "versions/zwgmz1rt/glyphs.yaml",
+              "old": "revision: zwgmz1rt",
+              "new": "revision: 98mj5vgx"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "glyph-008",
@@ -134,7 +213,20 @@
         "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-008/repo"
       },
       "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-008.json",
-      "success": false
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-008/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "versions/zwgmz1rt/main.md",
+              "old": "元日\n",
+              "new": "元日神\n"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "glyph-009",
@@ -152,7 +244,85 @@
         "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-009/repo"
       },
       "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-009.json",
-      "success": false
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-009/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "versions/zwgmz1rt/main.md",
+              "old": "## 第三條",
+              "new": "## 三"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "glyph-010",
+      "title": "正規分解を持たない互換漢字のブロックの字（U+FA11）に注記がない",
+      "requirements": [
+        "GLYPH-11",
+        "VAL-08"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/valid/glyph-010/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-010.json",
+      "success": true,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/valid/glyph-010/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "versions/zwgmz1rt/main.md",
+              "old": "元日\n",
+              "new": "元日﨑\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "glyph-011",
+      "title": "字体を保持する資料を指さずに字体を照合済みにする",
+      "requirements": [
+        "GLYPH-10",
+        "TYPE-02"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-011/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-011.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-011/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "    glyphPreservation: preserved\nrelations:\n",
+              "new": "relations:\n"
+            },
+            {
+              "file": "history.yaml",
+              "old": "      glyphCheck: unverified\n      glyphNotes: versions/zwgmz1rt/",
+              "new": "      glyphCheck: verified\n      glyphNotes: versions/zwgmz1rt/"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

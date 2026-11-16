@@ -13,7 +13,7 @@
 | L3 | 原典との内容一致、改正履歴、施行時点 |
 | L4 | 他法令との参照整合性 |
 
-## 現行仕様・実装との照合
+## v1alpha1との照合
 
 validatorは仕様commit `b704631b6501a0a01c1eb6faf99cfe16a4bccfa9`を固定参照し、
 正式ランナーはcase.levelごとに検証する。
@@ -29,3 +29,17 @@ Markdown一般構文、法令用追加構文、意味制約のレベル配分は
 ファイルを統合して意味ASTを作る処理と、ファイル間参照の解決・整合性検査も区別する。
 
 固定適合テストの成功は、全検証対象の網羅性の証明ではない。
+
+## 既定の次期仕様との照合
+
+次期仕様は `a9c5be83da58170082594e6de989cd7ee4af8bf4` に固定しています。
+L0はファイル・Manifest、L1はMarkdown固有構造・番号・表示・ASTです。MD系列の違反はL1で扱います。
+L3はRecordごとの `historyStructure` と `evidence`、L4はRecordごとの
+`relationResolution`・`relationConsistency`・`timeConsistency`・`displayConsistency`を独立して報告します。
+L2・L3/sourceMatch・L4/clauseReferenceは予約済みで、実装済みとは主張しません。
+登録台帳・再構築報告・変更・固定参照解決はレベル外の独立した検査です。
+
+違反はfail、違反がなく処理不能または判定不能ならincomplete、対象がなければnotApplicableです。
+警告・保留だけならpassになります。HIST-06/12の警告専用検査の判定不能は集計から除きます。
+結果の対象をcommitに固定できないディレクトリ入力は、特定の記録版への適合の主張には使えません。
+規範適合ケース311件の成功は必要条件であり、未知の入力に対する完全性や法的正確性を保証しません。

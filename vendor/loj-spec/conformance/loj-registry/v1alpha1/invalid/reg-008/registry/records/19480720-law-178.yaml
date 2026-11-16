@@ -9,7 +9,7 @@ aliases:
 identity:
   evidence: [{source: src-kanpo-19480720, locator: 1コマ}]
   verification: {state: confirmed}
-text: {state: collected}
+collection: {state: collected}
 repository:
   location: github.com/law-of-japan/19480720-law-178
   canonicalBranch: main

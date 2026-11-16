@@ -1,0 +1,42 @@
+schemaVersion: loj-registry/v1alpha1
+id: 19480720-law-178
+label: 国民の祝日に関する法律（昭和二十三年法律第百七十八号）
+status: active
+identity:
+  evidence: [{source: src-kanpo-19480720, locator: 1コマ}]
+  verification: {state: confirmed}
+collection: {state: collected}
+repository:
+  location: github.com/law-of-japan/19480720-law-178
+  canonicalBranch: main
+sources:
+  - id: src-kanpo-19480720
+    kind: promulgation
+    title: 官報 第6453号 昭和23年7月20日（国立国会図書館デジタルコレクション pid/2962986）
+    uri: https://dl.ndl.go.jp/pid/2962986
+  - id: src-egov
+    kind: egov
+    title: e-Gov法令検索 法令API v2
+    uri: https://laws.e-gov.go.jp/law/323AC1000000178
+numbers:
+  - id: n1
+    state: exists
+    raw: 法律第百七十八号
+    structured:
+      system: 法律
+      period: {raw: 昭和二十三年, gregorian: {from: "1948-01-01", to: "1948-12-31"}}
+      series: {state: regular}
+      number: "178"
+    evidence: [{source: src-kanpo-19480720, locator: 1コマ 法律の冒頭}]
+    verification: {state: confirmed}
+    decision: adopted
+    glyphs:
+      - {id: g1, offset: 7, recorded: "号", kind: ambiguous, candidates: ["号", "號"],
+         basis: provisional, evidence: [{source: src-egov, locator: 法令番号}],
+         verification: {state: confirmed, reason: 画像の最大解像度で字体を決められない}}
+externalIds:
+  - issuer: egov
+    kind: law
+    value: 323AC1000000178
+    evidence: [{source: src-egov, locator: 法令ID}]
+    verification: {state: confirmed}

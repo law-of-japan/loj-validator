@@ -5,7 +5,7 @@ status: active
 identity:
   evidence: [{source: src-egov-h29-63, locator: 法令名}]
   verification: {state: unverified, reason: 官報と未照合}
-text: {state: notCollected}
+collection: {state: notCollected}
 repository:
   location: github.com/law-of-japan/20170616-law-63
   canonicalBranch: main

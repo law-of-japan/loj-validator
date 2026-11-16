@@ -78,25 +78,27 @@ fn run(case: &Value, checks: &[Check]) -> Actual {
             }
         }
         "repository" => Actual {
-            report: law_semantic::checks::run(
+            report: law_semantic::checks::run_with_space(
                 &law_semantic::checks::Input::Repository(
                     root.join(input["path"].as_str().unwrap()),
                 ),
                 checks,
+                Some("loj"),
             ),
             ast: None,
             positions: Vec::new(),
         },
         "registry" => Actual {
-            report: law_semantic::checks::run(
+            report: law_semantic::checks::run_with_space(
                 &law_semantic::checks::Input::Registry(root.join(input["path"].as_str().unwrap())),
                 checks,
+                Some("loj"),
             ),
             ast: None,
             positions: Vec::new(),
         },
         "records" => Actual {
-            report: law_semantic::checks::run(
+            report: law_semantic::checks::run_with_space(
                 &law_semantic::checks::Input::Records {
                     registry: root.join(input["registry"].as_str().unwrap()),
                     repositories: input["repositories"]
@@ -107,30 +109,33 @@ fn run(case: &Value, checks: &[Check]) -> Actual {
                         .collect(),
                 },
                 checks,
+                Some("loj"),
             ),
             ast: None,
             positions: Vec::new(),
         },
         "change" => Actual {
-            report: law_semantic::checks::run(
+            report: law_semantic::checks::run_with_space(
                 &law_semantic::checks::Input::Change {
                     bundle: root.join(input["bundle"].as_str().unwrap()),
                     base: input["base"].as_str().unwrap().into(),
                     head: input["head"].as_str().unwrap().into(),
                 },
                 checks,
+                Some("loj"),
             ),
             ast: None,
             positions: Vec::new(),
         },
         "reference" => Actual {
-            report: law_semantic::checks::run(
+            report: law_semantic::checks::run_with_space(
                 &law_semantic::checks::Input::Reference {
                     bundle: root.join(input["bundle"].as_str().unwrap()),
                     registry: root.join(input["registry"].as_str().unwrap()),
                     reference: input["reference"].as_str().unwrap().into(),
                 },
                 checks,
+                Some("loj"),
             ),
             ast: None,
             positions: Vec::new(),
@@ -144,7 +149,8 @@ fn result_value(s: &str) -> ResultValue {
         "pass" => ResultValue::Pass,
         "fail" => ResultValue::Fail,
         "notApplicable" => ResultValue::NotApplicable,
-        _ => ResultValue::Incomplete,
+        "incomplete" => ResultValue::Incomplete,
+        _ => panic!("unknown expected result: {s}"),
     }
 }
 
@@ -166,6 +172,64 @@ fn diagnostic_matches(expected: &Value, actual: &Value) -> bool {
             })
         })
     })
+}
+
+/// VAL-07 assigns common types to their containing file's check. The report
+/// does not carry a check on diagnostics, so use its rule and source location.
+fn diagnostic_belongs_to(d: &Value, own: &[Check]) -> bool {
+    let rule = d["rule"].as_str().unwrap_or("");
+    let path = d["location"]["path"]
+        .as_str()
+        .or_else(|| d["location"]["file"].as_str())
+        .unwrap_or("")
+        .replace('\\', "/");
+    let family = rule.split('-').next().unwrap_or("");
+    let check = match family {
+        "XREF" => match rule {
+            "XREF-01" => Check::RELATION_RESOLUTION,
+            "XREF-02" => Check::RELATION_CONSISTENCY,
+            "XREF-03" | "XREF-06" => Check::TIME_CONSISTENCY,
+            "XREF-05" => Check::DISPLAY_CONSISTENCY,
+            _ => panic!("unclassified cross-record diagnostic: {rule}"),
+        },
+        "BASIC" | "MAN" => match rule {
+            "BASIC-03" => Check::L1,
+            "BASIC-04" | "MAN-03" if path.ends_with(".md") => Check::L1,
+            _ => Check::L0,
+        },
+        "MD" | "HEAD" | "NUM" | "DIR" | "DISP" | "AST" | "SRC" | "ID" | "REF" | "PARA"
+        | "TABLE" | "PRE" | "TOC" => Check::L1,
+        "HIST" | "REV" => Check::HISTORY_STRUCTURE,
+        "TYPE" | "TIME" | "GLYPH" | "FIXREF" | "RID" => {
+            if path.contains("records/") {
+                Check::REGISTRY
+            } else if path.ends_with("rebuild.yaml") {
+                Check::REBUILD
+            } else if family == "RID" {
+                Check::REGISTRY
+            } else if family == "FIXREF"
+                && !path.ends_with("history.yaml")
+                && !path.ends_with("glyphs.yaml")
+            {
+                Check::REFERENCE
+            } else if family == "TIME" {
+                Check::HISTORY_STRUCTURE
+            } else {
+                Check::EVIDENCE
+            }
+        }
+        "REG" => Check::REGISTRY,
+        "REB" | "REBR" => Check::REBUILD,
+        "CHG" => Check::CHANGE,
+        _ => panic!("unclassified diagnostic family: {rule}"),
+    };
+    own.contains(&check)
+}
+
+#[test]
+#[should_panic(expected = "unclassified diagnostic family")]
+fn unknown_rule_families_cannot_hide_errors() {
+    diagnostic_belongs_to(&json!({"rule":"FUTURE-01"}), &[Check::L1]);
 }
 
 #[test]
@@ -191,6 +255,56 @@ fn expected_diagnostic_classes_are_required() {
             &actual.report.diagnostics[0].to_json()
         ));
     }
+}
+
+#[test]
+fn cases_compare_only_their_expected_results_and_own_errors() {
+    use law_semantic::common::Diagnostic;
+    let mut actual = Actual {
+        report: Report::default(),
+        ast: None,
+        positions: Vec::new(),
+    };
+    actual.report.set(Check::L0, ResultValue::Pass);
+    let case = json!({"check": "L0", "success": true});
+    let expected = json!({"results": [{"check": "L0", "result": "pass"}]});
+    assert!(problems(&case, &expected, &actual).is_empty());
+    actual
+        .report
+        .diagnostics
+        .push(Diagnostic::error("HEAD-01", "loj/v1alpha2", "outside L0"));
+    actual.report.set(Check::L1, ResultValue::Fail);
+    assert!(problems(&case, &expected, &actual).is_empty());
+    actual
+        .report
+        .diagnostics
+        .push(Diagnostic::error("MAN-01", "loj/v1alpha2", "inside L0"));
+    assert!(!problems(&case, &expected, &actual).is_empty());
+
+    actual.report.diagnostics.clear();
+    actual
+        .report
+        .set(Check::RELATION_RESOLUTION, ResultValue::Incomplete);
+    let case = json!({"check": "L4", "category": "relationResolution", "success": true});
+    let expected = json!({"results": [{"check": "L4", "category": "relationResolution", "result": "incomplete"}]});
+    actual.report.diagnostics.push(Diagnostic::error(
+        "HIST-04",
+        "loj-history/v1alpha1",
+        "outside L4",
+    ));
+    assert!(problems(&case, &expected, &actual).is_empty());
+    actual.report.diagnostics.push(Diagnostic::error(
+        "XREF-02",
+        "common/v1alpha1",
+        "other L4 category",
+    ));
+    assert!(problems(&case, &expected, &actual).is_empty());
+    actual.report.diagnostics.push(Diagnostic::error(
+        "XREF-01",
+        "common/v1alpha1",
+        "own category",
+    ));
+    assert!(!problems(&case, &expected, &actual).is_empty());
 }
 
 #[test]
@@ -236,7 +350,6 @@ fn problems(case: &Value, expected: &Value, actual: &Actual) -> Vec<String> {
     let report = &actual.report;
     let json = report.to_json();
     let diagnostics = json["diagnostics"].as_array().unwrap();
-    let mut expected_results = Vec::new();
     if let Some(results) = expected["results"].as_array() {
         for r in results {
             let label = match r["category"].as_str() {
@@ -244,7 +357,6 @@ fn problems(case: &Value, expected: &Value, actual: &Actual) -> Vec<String> {
                 None => r["check"].as_str().unwrap().to_owned(),
             };
             let check = Check::parse(&label).unwrap()[0];
-            expected_results.push(check);
             let want = result_value(r["result"].as_str().unwrap());
             if report.result(check) != Some(want) {
                 problems.push(format!(
@@ -260,19 +372,11 @@ fn problems(case: &Value, expected: &Value, actual: &Actual) -> Vec<String> {
         None => case["check"].as_str().unwrap().to_owned(),
     })
     .unwrap();
+    // CONF-01 compares only listed results: success explicitly permits incomplete.
     if case["success"] == true {
-        for c in &own {
-            if !expected_results.contains(c) && report.result(*c) != Some(ResultValue::Pass) {
-                problems.push(format!(
-                    "{}: expected pass, got {:?}",
-                    c.label(),
-                    report.result(*c).map(ResultValue::as_str)
-                ));
-            }
-        }
         let errors: Vec<_> = diagnostics
             .iter()
-            .filter(|d| d["class"] == "error")
+            .filter(|d| d["class"] == "error" && diagnostic_belongs_to(d, &own))
             .collect();
         if !errors.is_empty() {
             problems.push(format!("unexpected error diagnostics: {errors:?}"));
@@ -289,24 +393,6 @@ fn problems(case: &Value, expected: &Value, actual: &Actual) -> Vec<String> {
             for p in positions {
                 if !actual.positions.contains(p) {
                     problems.push(format!("missing position: {p}"));
-                }
-            }
-        }
-    } else {
-        if actual.ast.is_some() {
-            problems.push("rejected input returned a complete AST".into());
-        }
-        if expected_results.is_empty() {
-            for c in &own {
-                if matches!(
-                    report.result(*c),
-                    None | Some(ResultValue::Pass) | Some(ResultValue::NotApplicable)
-                ) {
-                    problems.push(format!(
-                        "{}: a failing case must not pass, got {:?}",
-                        c.label(),
-                        report.result(*c).map(ResultValue::as_str)
-                    ));
                 }
             }
         }

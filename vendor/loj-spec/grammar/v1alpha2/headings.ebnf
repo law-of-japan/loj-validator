@@ -1,4 +1,5 @@
-(* Applies to HEAD-01 document-level ATX lines of loj/v1alpha2 only. No trailing EOL here. *)
+(* Applies to HEAD-01 document-level ATX lines of loj/v1alpha2 only, except paragraph_caption.
+   No trailing EOL here. *)
 heading = hashes, " ", (group | article | supplement) ;
 hashes = "#", ["#", ["#", ["#", ["#", ["#"]]]]] ;
 group = "第", numeral, ("編" | "章" | "節" | "款" | "目"), branches, gap, title ;
@@ -11,7 +12,13 @@ ascii_decimal = ? ASCII decimal 1..9999, no leading zero ? ;
 fullwidth_decimal = ? Fullwidth decimal １..９９９９, no leading zero ? ;
 japanese = ? Canonical positional Japanese 1..9999 per NUM-01 ? ;
 title = ? Nonempty plain text, no inline markup, CR/LF or trailing whitespace ? ;
-caption = ? Nonempty plain text, no parentheses, inline markup, CR/LF or trailing whitespace ? ;
+caption = caption_part, {caption_part} ;   (* HEAD-01: fullwidth parentheses nest and balance.
+   Because caption is balanced and article ends after the closing "）", the "（" after the number
+   always pairs with the final "）"; e.g. "（定義）（略）" and "（雲（白雲の保管）" are not derivable. *)
+caption_part = caption_char | "（", caption, "）" ;
+caption_char = ? Plain text character other than "（" (U+FF08), "）" (U+FF09), CR or LF; no inline markup ? ;
+paragraph_caption = "（", caption, "）" ;   (* PARA-02: the whole caption line of a paragraph marked
+   caption=present (its first nonblank body line), not an ATX heading; nothing before or after. *)
 (* Appendix: hashes + SPACE + exact manifest title; see HEAD-03.
    Only the first appendix file requires this heading. Later appendix files may
    begin with any nonblank Markdown body, per MAN-03. Cross-file block completion

@@ -88,8 +88,10 @@ fn load(repo: &Path, f: &mut Findings) -> Option<Value> {
             return None;
         }
         Loaded::Unreadable(e) => {
-            f.incomplete.insert(RB);
-            f.error(RB, "REBR-01", REBUILD, e, FILE, "");
+            f.unprocessable(
+                RB,
+                crate::common::Diagnostic::error("REBR-01", REBUILD, e).at_pointer(FILE, ""),
+            );
             return None;
         }
     };
@@ -109,7 +111,7 @@ fn load(repo: &Path, f: &mut Findings) -> Option<Value> {
 
 /// REBR-02: the Record and the checked sources are those of `history.yaml`.
 /// TYPE-03: Evidence points to a Source of `history.yaml`.
-/// Returns how each checked source treats glyphs (`sourceChecks[].glyphs`).
+/// Returns how each checked source treats glyphs (`sourceChecks[].glyphPreservation`).
 fn sources<'a>(doc: &'a Value, h: &Value, f: &mut Findings) -> HashMap<&'a str, &'a str> {
     if doc["record"]["id"] != h["record"]["id"] {
         f.error(
@@ -141,7 +143,7 @@ fn sources<'a>(doc: &'a Value, h: &Value, f: &mut Findings) -> HashMap<&'a str, 
                     &format!("/sourceChecks/{i}/source"),
                 );
             }
-            glyphs_of.insert(id, s["glyphs"].as_str().unwrap_or(""));
+            glyphs_of.insert(id, s["glyphPreservation"].as_str().unwrap_or(""));
         }
     }
     let mut refs = Vec::new();
@@ -241,7 +243,7 @@ fn verified_glyphs(
     f: &mut Findings,
 ) {
     for (id, r) in revisions {
-        if r["text"]["glyphs"] != "verified" {
+        if r["text"]["glyphCheck"] != "verified" {
             continue;
         }
         let preserved = list(&r["text"]["sources"]).iter().any(|e| {
@@ -255,7 +257,7 @@ fn verified_glyphs(
                 RB,
                 "REBR-03",
                 REBUILD,
-                format!("revision {id} has text.glyphs verified without a preserved source"),
+                format!("revision {id} has text.glyphCheck verified without a preserved source"),
                 FILE,
                 "/sourceChecks",
             );
@@ -281,9 +283,9 @@ mod tests {
         let doc = json!({
             "record": {"id": "r2"},
             "sourceChecks": [
-                {"source": "s1", "glyphs": "preserved"},
-                {"source": "s9", "glyphs": "normalized"},
-                {"glyphs": "preserved"},
+                {"source": "s1", "glyphPreservation": "preserved"},
+                {"source": "s9", "glyphPreservation": "normalized"},
+                {"glyphPreservation": "preserved"},
             ],
             "mappings": [{"evidence": [{"source": "s2"}, {"source": "s8"}]}],
         });
@@ -311,11 +313,11 @@ mod tests {
     #[test]
     fn verified_glyphs_are_reported_in_the_order_of_the_revision_ids() {
         let h = json!({"revisions": [
-            {"id": "c", "text": {"glyphs": "verified", "sources": [{"source": "s2"}]}},
-            {"id": "a", "text": {"glyphs": "verified", "sources": []}},
-            {"id": "b", "text": {"glyphs": "verified", "sources": [{"source": "s1"}]}},
-            {"id": "d", "text": {"glyphs": "unverified"}},
-            {"text": {"glyphs": "verified"}},
+            {"id": "c", "text": {"glyphCheck": "verified", "sources": [{"source": "s2"}]}},
+            {"id": "a", "text": {"glyphCheck": "verified", "sources": []}},
+            {"id": "b", "text": {"glyphCheck": "verified", "sources": [{"source": "s1"}]}},
+            {"id": "d", "text": {"glyphCheck": "unverified"}},
+            {"text": {"glyphCheck": "verified"}},
         ]});
         let revisions: BTreeMap<&str, &Value> = list(&h["revisions"])
             .iter()
@@ -329,11 +331,11 @@ mod tests {
             [
                 (
                     "REBR-03",
-                    "revision a has text.glyphs verified without a preserved source"
+                    "revision a has text.glyphCheck verified without a preserved source"
                 ),
                 (
                     "REBR-03",
-                    "revision c has text.glyphs verified without a preserved source"
+                    "revision c has text.glyphCheck verified without a preserved source"
                 ),
             ]
         );
