@@ -55,7 +55,9 @@ fn span_check(span: &Value, source: &HashMap<String, String>) -> Result<(), Stri
         .ok_or_else(|| format!("unknown source: {path}"))?;
     let offset = |key: &str| {
         byte_offset(&span[key])
-            .and_then(|n| usize::try_from(n).ok())
+            // Preserve the legacy diagnostic for offsets beyond usize on 32-bit.
+            // usize::MAX is past any source text and is never used for slicing.
+            .map(|n| usize::try_from(n).unwrap_or(usize::MAX))
             .ok_or_else(|| format!("invalid byte offset {} in {path}", span[key]))
     };
     let (start, end) = (offset("start_byte")?, offset("end_byte")?);
