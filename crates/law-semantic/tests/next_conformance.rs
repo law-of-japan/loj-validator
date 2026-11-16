@@ -190,7 +190,7 @@ fn diagnostic_belongs_to(d: &Value, own: &[Check]) -> bool {
             "XREF-02" => Check::RELATION_CONSISTENCY,
             "XREF-03" | "XREF-06" => Check::TIME_CONSISTENCY,
             "XREF-05" => Check::DISPLAY_CONSISTENCY,
-            _ => return false,
+            _ => panic!("unclassified cross-record diagnostic: {rule}"),
         },
         "BASIC" | "MAN" => match rule {
             "BASIC-03" => Check::L1,
@@ -221,9 +221,15 @@ fn diagnostic_belongs_to(d: &Value, own: &[Check]) -> bool {
         "REG" => Check::REGISTRY,
         "REB" | "REBR" => Check::REBUILD,
         "CHG" => Check::CHANGE,
-        _ => return false,
+        _ => panic!("unclassified diagnostic family: {rule}"),
     };
     own.contains(&check)
+}
+
+#[test]
+#[should_panic(expected = "unclassified diagnostic family")]
+fn unknown_rule_families_cannot_hide_errors() {
+    diagnostic_belongs_to(&json!({"rule":"FUTURE-01"}), &[Check::L1]);
 }
 
 #[test]
@@ -366,6 +372,7 @@ fn problems(case: &Value, expected: &Value, actual: &Actual) -> Vec<String> {
         None => case["check"].as_str().unwrap().to_owned(),
     })
     .unwrap();
+    // CONF-01 compares only listed results: success explicitly permits incomplete.
     if case["success"] == true {
         let errors: Vec<_> = diagnostics
             .iter()

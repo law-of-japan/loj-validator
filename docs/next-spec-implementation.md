@@ -144,3 +144,8 @@ Passing the fixed cases is a necessary condition only (CONF-02).
   they cannot detect an accidental match at a different intended location.
   Source matching, view generation, time queries and lossless file rewriting are
   not provided, and their conditional requirements are not claimed as implemented.
+
+Date arithmetic in the next-specification API (`Date::add_days`, `after_months`)
+returns `Option<Date>` for invalid dates or unrepresentable years. Intermediate
+arithmetic uses i128; TimePoint calc evaluation outside years 1..=9999 or its
+integer-count representation returns None and a TIME-03 undetermined finding.

@@ -151,7 +151,15 @@ pub(crate) fn check_time(tp: &Value, pointer: &str, file: &str, f: &mut Findings
                                     file,
                                     pointer,
                                 ),
-                                None => {}
+                                None => f.note(
+                                    check,
+                                    Class::Undetermined,
+                                    "TIME-03",
+                                    COMMON,
+                                    "calc could not be evaluated within the supported date range",
+                                    file,
+                                    pointer,
+                                ),
                             }
                         } else {
                             f.note(
@@ -878,6 +886,19 @@ mod tests {
 
     fn day(value: &str) -> Value {
         json!({"state": "date", "precision": "day", "value": value})
+    }
+
+    #[test]
+    fn unevaluable_calc_is_not_silently_accepted() {
+        let mut f = Findings::default();
+        f.applicable.insert(HS);
+        let time = json!({"state":"derived","base":day("2024-01-01"),"value":"2024-01-02","calc":{"op":"afterElapsed","unit":"day","count":i64::MAX}});
+        check_time(&time, "/effective", FILE, &mut f, HS);
+        assert_eq!(f.result(HS), crate::common::ResultValue::Incomplete);
+        assert!(f
+            .items
+            .iter()
+            .any(|(_, d)| d.rule == "TIME-03" && d.class == Class::Undetermined));
     }
 
     #[test]

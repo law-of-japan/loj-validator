@@ -249,7 +249,7 @@ proptest! {
     ]) {
         if let Some(date) = law_semantic::common::time::Date::parse(&source) {
             prop_assert_eq!(date.to_iso(), source);
-            prop_assert_eq!(date.add_days(1).add_days(-1), date);
+            prop_assert_eq!(date.add_days(1).and_then(|d| d.add_days(-1)), Some(date));
         }
     }
 
