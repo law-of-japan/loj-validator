@@ -35,7 +35,8 @@ pub const CANCELLED: &str = "validation cancelled before completion";
 /// Run with a cancellation flag on this thread. Nested scopes and unwinding
 /// restore the previous flag. Spawned threads do not inherit this scope.
 /// Work may finish before cancellation is observed (see the module
-/// documentation for the checkpoints). Set the flag to true and never reset it.
+/// documentation for the checkpoints), but the public next-specification
+/// entry points still return `incomplete` for every selected check. Set the flag to true and never reset it.
 /// A failure to stop or reap git remains an environment error rather than a
 /// cancellation error; cancellation does not guarantee successful cleanup.
 pub fn with_flag<T>(flag: Arc<AtomicBool>, run: impl FnOnce() -> T) -> T {
@@ -295,7 +296,9 @@ mod tests {
             report.diagnostics
         );
         assert!(total > 100, "too few checkpoints for the test: {total}");
-        for at in [1, total / 3, total / 2, total - 1] {
+        // `total`: cancelled at the last checkpoint, after which no loop polls
+        // again; only the final `finish` can observe it.
+        for at in [1, total / 3, total / 2, total - 1, total] {
             let (report, passed) = test_hook::run(Some(at), &run);
             only_cancellation(&report);
             assert!(
