@@ -165,7 +165,8 @@ const GIT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(120);
 
 type Output = (std::process::ExitStatus, Vec<u8>, Vec<u8>);
 
-/// Run `cmd`, reading its output on separate threads so a full pipe never blocks
+/// Run `cmd` with closed stdin (use `run_with_input` to supply bytes), reading
+/// its output on separate threads so a full pipe never blocks
 /// it, and kill it if it runs longer than `limit`. Only the direct child is killed:
 /// this assumes plain git commands, which (with hooks disabled) start no process
 /// that would keep the pipes open after git exits.
@@ -508,6 +509,12 @@ impl Bundle {
         limit: std::time::Duration,
     ) -> Result<PathBuf, ExportError> {
         use ExportError::{Environment, Tree};
+        let environment = |error| {
+            Environment(match error {
+                GitError::Timeout(_) => GitError::Timeout(limit),
+                other => other,
+            })
+        };
         let start = std::time::Instant::now();
         let remaining = || {
             limit
@@ -518,12 +525,12 @@ impl Bundle {
         // Callers pass resolved hashes; an invalid one is a caller bug, which must
         // stop the check like an environment failure rather than be noted as a
         // property of the tree.
-        revision(commit).map_err(Environment)?;
+        revision(commit).map_err(environment)?;
         let (status, listing, stderr) = run_with_timeout(
             self.command(&["ls-tree", "-r", "-z", "-l", "--full-tree", commit]),
             remaining()?,
         )
-        .map_err(Environment)?;
+        .map_err(environment)?;
         if !status.success() {
             return Err(Environment(GitError::Failed(failure(&status, &stderr))));
         }
@@ -608,14 +615,14 @@ impl Bundle {
             remaining()?,
             input.into_bytes(),
         )
-        .map_err(Environment)?;
+        .map_err(environment)?;
         if !status.success() {
             return Err(Environment(GitError::Failed(failure(&status, &stderr))));
         }
         remaining()?;
-        let blobs = batch_blobs(&bytes, &entries).map_err(Environment)?;
+        let blobs = batch_blobs(&bytes, &entries).map_err(environment)?;
         remaining()?;
-        let out = temp("loj-tree").map_err(Environment)?;
+        let out = temp("loj-tree").map_err(environment)?;
         // Registered before writing, so a failure part-way still removes the tree.
         self.exports.borrow_mut().push(out.clone());
         for ((name, _, _), blob) in entries.iter().zip(blobs) {
