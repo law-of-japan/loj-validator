@@ -50,21 +50,18 @@ fn read_snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError> {
     let mut pending = vec![dir.clone()];
     while let Some(directory) = pending.pop() {
         if crate::cancellation::checkpoint() {
-            return Err(ExportError::Environment(GitError::Cancelled));
+            return Err(ExportError::Cancelled);
         }
-        for entry in std::fs::read_dir(directory)
-            .map_err(|e| ExportError::Environment(GitError::Io(e.to_string())))?
-        {
+        for entry in std::fs::read_dir(directory).map_err(|e| ExportError::Io(e.to_string()))? {
             if crate::cancellation::checkpoint() {
-                return Err(ExportError::Environment(GitError::Cancelled));
+                return Err(ExportError::Cancelled);
             }
-            let entry = entry.map_err(|e| ExportError::Environment(GitError::Io(e.to_string())))?;
+            let entry = entry.map_err(|e| ExportError::Io(e.to_string()))?;
             let path = entry.path();
             if path.is_dir() {
                 pending.push(path);
             } else {
-                let bytes = std::fs::read(&path)
-                    .map_err(|e| ExportError::Environment(GitError::Io(e.to_string())))?;
+                let bytes = std::fs::read(&path).map_err(|e| ExportError::Io(e.to_string()))?;
                 let relative = path
                     .strip_prefix(&dir)
                     .expect("exported tree entry is inside its root")
@@ -86,11 +83,8 @@ fn read_snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError> {
     // in the tree) is no manifest, a finding about the data; failing to look at or
     // read the file leaves the check undetermined.
     let manifest = dir.join("history.yaml");
-    let unreadable = |e: std::io::Error| {
-        ExportError::Environment(GitError::Io(format!(
-            "cannot read history.yaml at {commit}: {e}"
-        )))
-    };
+    let unreadable =
+        |e: std::io::Error| ExportError::Io(format!("cannot read history.yaml at {commit}: {e}"));
     let history_bytes = match std::fs::metadata(&manifest) {
         Ok(m) if m.is_file() => Some(std::fs::read(&manifest).map_err(unreadable)?),
         Ok(_) => None,
@@ -430,7 +424,11 @@ fn load_snapshot(
             s.build_asts(|id| change.must_keep(id));
             cache.insert(commit.to_owned(), Some(s));
         }
-        Err(ExportError::Environment(e)) => return Err(format!("{commit}: {e}")),
+        // Cancellation stops the check like an environment failure; the report
+        // is then made incomplete by `cancellation::finish`.
+        Err(e @ (ExportError::Environment(_) | ExportError::Io(_) | ExportError::Cancelled)) => {
+            return Err(format!("{commit}: {e}"))
+        }
         Err(ExportError::Tree(e)) => {
             f.incomplete.insert(CH);
             f.note(
@@ -784,6 +782,28 @@ mod tests {
             "{:?}",
             r.diagnostics
         );
+    }
+
+    /// Cancellation observed while walking the exported files is reported as a
+    /// cancellation, not as a git or file-system failure.
+    #[test]
+    fn snapshot_cancellation_is_its_own_kind() {
+        let s = Scratch::new();
+        let b = Bundle::open(&s.bundle(&[("100644", "blob", "law.yaml")])).unwrap();
+        let head = b.branch("main").unwrap().unwrap();
+        let (whole, checkpoints) =
+            crate::cancellation::test_hook::run(None, || read_snapshot(&b, &head).is_ok());
+        assert!(whole);
+        assert!(checkpoints > 0, "the walk has checkpoints");
+        for at in 1..=checkpoints {
+            let (result, _) =
+                crate::cancellation::test_hook::run(Some(at), || read_snapshot(&b, &head));
+            assert!(
+                matches!(result, Err(ExportError::Cancelled)),
+                "checkpoint {at}: {:?}",
+                result.err()
+            );
+        }
     }
 
     /// When git fails (not "absent"), the check is incomplete with git's reason,
