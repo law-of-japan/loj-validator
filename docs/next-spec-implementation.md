@@ -72,6 +72,11 @@ cannot be selected.
   a cap on kept output. Bundle files over 1 GiB are refused. The exported tree is
   checked before anything is written: safe, portable, case-distinct names, regular
   files only, 16 MiB per file, 128 MiB and 100,000 files in all.
+  Export reads the checked object IDs with one `git cat-file --batch` process,
+  keeps at most 128 MiB of blob data plus batch headers in memory, verifies its
+  response sizes, and shares a 120 s deadline across tree listing,
+  validation, blob retrieval and file writes. The deadline is checked between
+  filesystem operations; a blocked filesystem call cannot be interrupted.
 - Known limit: the fetch itself is bounded only by the bundle size and the timeout.
   A highly compressible bundle can unpack to more objects than its size suggests.
   Run the change and reference checks on untrusted bundles in a disposable
