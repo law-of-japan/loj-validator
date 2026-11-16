@@ -2,8 +2,8 @@
 //! ID and scoped-number uniqueness, source hash and UTF-8 ranges, origin
 //! containment, empty bodies, mixed supplements, deletion declarations, anchor
 //! bindings and same-file reference resolution.
-// Legacy pipeline: its unwraps read an AST that the entry points have
-// checked against the schema. law-of-japan/loj-validator#7 tracks them.
+// Legacy pipeline: array/string unwraps follow validation against the built-in
+// schema. JSON Schema integers also admit integral floats; decode those explicitly.
 #![allow(clippy::unwrap_used)]
 use crate::references;
 use serde_json::{json, Value};
@@ -16,19 +16,51 @@ fn issue(out: &mut Vec<Value>, code: &str, message: String, node: &Value, relate
         "primary_span":node["origins"].get(0),"related_spans":related}));
 }
 
+/// JSON Schema integers include `1.0` and `1e0`. Decode without rounding or
+/// saturating; offsets that cannot be represented must not reach byte slicing.
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+fn byte_offset(value: &Value) -> Option<u64> {
+    if let Some(n) = value.as_u64() {
+        return Some(n);
+    }
+    let n = value.as_f64()?;
+    // The exclusive bound is exactly 2^64; u64::MAX rounded to f64 is also 2^64.
+    // These checks make the cast lossless, including for schema-valid 2^53-1.
+    if n.is_finite() && (0.0..18_446_744_073_709_551_616.0).contains(&n) && n.fract() == 0.0 {
+        Some(n as u64)
+    } else {
+        None
+    }
+}
+
+fn span_contains(parent: &Value, child: &Value) -> bool {
+    if parent["source"] != child["source"] {
+        return false;
+    }
+    match (
+        byte_offset(&parent["start_byte"]),
+        byte_offset(&parent["end_byte"]),
+        byte_offset(&child["start_byte"]),
+        byte_offset(&child["end_byte"]),
+    ) {
+        (Some(ps), Some(pe), Some(cs), Some(ce)) => ps <= cs && pe >= ce,
+        _ => false,
+    }
+}
+
 fn span_check(span: &Value, source: &HashMap<String, String>) -> Result<(), String> {
     let path = span["source"].as_str().unwrap();
     let text = source
         .get(path)
         .ok_or_else(|| format!("unknown source: {path}"))?;
-    // An offset that does not fit `usize` is past the end of any text.
     let offset = |key: &str| {
-        span[key]
-            .as_u64()
+        byte_offset(&span[key])
+            // Preserve the legacy diagnostic for offsets beyond usize on 32-bit.
+            // usize::MAX is past any source text and is never used for slicing.
             .map(|n| usize::try_from(n).unwrap_or(usize::MAX))
-            .unwrap()
+            .ok_or_else(|| format!("invalid byte offset {} in {path}", span[key]))
     };
-    let (start, end) = (offset("start_byte"), offset("end_byte"));
+    let (start, end) = (offset("start_byte")?, offset("end_byte")?);
     if start >= end
         || end > text.len()
         || !text.is_char_boundary(start)
@@ -89,11 +121,11 @@ impl Checks {
                 issue(&mut self.issues, "SPAN_INVALID", msg, n, json!([]));
             }
             if let Some(p) = parent {
-                let contains = p["origins"].as_array().unwrap().iter().any(|ps| {
-                    ps["source"] == span["source"]
-                        && ps["start_byte"].as_u64() <= span["start_byte"].as_u64()
-                        && ps["end_byte"].as_u64() >= span["end_byte"].as_u64()
-                });
+                let contains = p["origins"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|ps| span_contains(ps, span));
                 if !contains {
                     issue(
                         &mut self.issues,
@@ -110,11 +142,11 @@ impl Checks {
                 if let Err(msg) = span_check(span, &self.sources) {
                     issue(&mut self.issues, "SPAN_INVALID", msg, n, json!([]));
                 }
-                let contains = n["origins"].as_array().unwrap().iter().any(|ps| {
-                    ps["source"] == span["source"]
-                        && ps["start_byte"].as_u64() <= span["start_byte"].as_u64()
-                        && ps["end_byte"].as_u64() >= span["end_byte"].as_u64()
-                });
+                let contains = n["origins"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|ps| span_contains(ps, span));
                 if !contains {
                     issue(
                         &mut self.issues,
@@ -131,11 +163,11 @@ impl Checks {
                 if let Err(msg) = span_check(span, &self.sources) {
                     issue(&mut self.issues, "SPAN_INVALID", msg, n, json!([]));
                 }
-                let contains = n["origins"].as_array().unwrap().iter().any(|ps| {
-                    ps["source"] == span["source"]
-                        && ps["start_byte"].as_u64() <= span["start_byte"].as_u64()
-                        && ps["end_byte"].as_u64() >= span["end_byte"].as_u64()
-                });
+                let contains = n["origins"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|ps| span_contains(ps, span));
                 if !contains {
                     issue(
                         &mut self.issues,
@@ -285,18 +317,11 @@ pub fn validate(schema: &Value, data: &Value) -> Result<Vec<Value>, String> {
                 );
             }
             if let Some(id) = anchor["node_id"].as_str() {
-                let contains =
-                    checks
-                        .ids
-                        .get(id)
-                        .and_then(Value::as_array)
-                        .is_some_and(|origins| {
-                            origins.iter().any(|ps| {
-                                ps["source"] == span["source"]
-                                    && ps["start_byte"].as_u64() <= span["start_byte"].as_u64()
-                                    && ps["end_byte"].as_u64() >= span["end_byte"].as_u64()
-                            })
-                        });
+                let contains = checks
+                    .ids
+                    .get(id)
+                    .and_then(Value::as_array)
+                    .is_some_and(|origins| origins.iter().any(|ps| span_contains(ps, span)));
                 if !contains && !checks.duplicate_ids.contains(id) {
                     issue(
                         &mut checks.issues,

@@ -73,6 +73,106 @@ fn optional_capture_groups_do_not_panic() {
 }
 
 #[test]
+fn integer_valued_float_offsets_do_not_panic() {
+    let mut data = map_markdown(
+        "# 試験法\n\n## 第一条\n\n本文。\n",
+        "t.md",
+        "t",
+        &law_of_japan_profile(),
+    )
+    .unwrap();
+    assert!(validate_document(&data).unwrap().is_empty());
+    data["laws"][0]["origins"][0]["start_byte"] = json!(0.0);
+    assert_eq!(conforms(&data), Ok(true));
+    assert!(validate_document(&data).unwrap().is_empty());
+}
+
+fn float_offsets(value: &mut Value) {
+    match value {
+        Value::Object(fields) => {
+            for (key, value) in fields {
+                if matches!(key.as_str(), "start_byte" | "end_byte") {
+                    *value = serde_json::from_str(&format!("{value}e0")).unwrap();
+                } else {
+                    float_offsets(value);
+                }
+            }
+        }
+        Value::Array(items) => items.iter_mut().for_each(float_offsets),
+        _ => {}
+    }
+}
+
+#[test]
+fn float_offsets_preserve_containment_and_bounds() {
+    let base = map_markdown(
+        "# 試験法\n\n## 第一条\n\n[第一条](#第一条)を参照する。\n",
+        "t.md",
+        "t",
+        &law_of_japan_profile(),
+    )
+    .unwrap();
+    assert!(validate_document(&base).unwrap().is_empty());
+    assert!(!base["anchors"].as_array().unwrap().is_empty());
+    let mut floats = base.clone();
+    float_offsets(&mut floats);
+    floats["laws"][0]["origins"][0]["start_byte"] = json!(-0.0);
+    assert_eq!(conforms(&floats), Ok(true));
+    assert!(validate_document(&floats).unwrap().is_empty());
+    let mut outside = base.clone();
+    outside["laws"][0]["origins"][0]["end_byte"] = json!(1);
+    floats["laws"][0]["origins"][0]["end_byte"] = json!(1.0);
+    let expected = codes(&validate_document(&outside).unwrap());
+    assert!(expected.contains(&"SPAN_OUTSIDE_PARENT".into()));
+    assert_eq!(codes(&validate_document(&floats).unwrap()), expected);
+    floats["laws"][0]["origins"][0]["end_byte"] = json!(9007199254740991.0);
+    assert_eq!(conforms(&floats), Ok(true));
+    assert!(codes(&validate_document(&floats).unwrap()).contains(&"SPAN_INVALID".into()));
+}
+
+#[test]
+fn malformed_legacy_fields_stop_before_relational_unwraps() {
+    let base = map_markdown(
+        "# 試験法\n\n## 第一条\n\n本文。\n",
+        "t.md",
+        "t",
+        &law_of_japan_profile(),
+    )
+    .unwrap();
+    for pointer in [
+        "/sources",
+        "/sources/0/path",
+        "/sources/0/text",
+        "/sources/0/sha256",
+        "/laws",
+        "/laws/0/id",
+        "/laws/0/kind",
+        "/laws/0/origins",
+        "/laws/0/origins/0/source",
+        "/laws/0/origins/0/start_byte",
+        "/laws/0/children",
+        "/laws/0/content",
+        "/laws/0/references",
+        "/anchors",
+        "/diagnostics",
+    ] {
+        let mut bad = base.clone();
+        *bad.pointer_mut(pointer).unwrap() = Value::Null;
+        assert_eq!(
+            codes(&validate_document(&bad).unwrap()),
+            ["SCHEMA_INVALID"],
+            "{pointer}"
+        );
+        assert!(validate(&json!({}), &bad).is_err(), "{pointer}");
+    }
+    for value in [json!(-1), json!(0.5), json!(1e30), json!("0")] {
+        let mut bad = base.clone();
+        bad["laws"][0]["origins"][0]["start_byte"] = value;
+        assert_eq!(codes(&validate_document(&bad).unwrap()), ["SCHEMA_INVALID"]);
+    }
+}
+
+#[test]
 fn permissive_schema_does_not_reach_relational_checks() {
     // `{}` accepts anything; the relational checks still need the real contract.
     let result = validate(&json!({}), &json!({"laws": "not an array"}));
