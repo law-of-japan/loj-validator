@@ -218,6 +218,9 @@ pub fn load_with_space(dir: &Path, space: Option<&str>, f: &mut Findings) -> Opt
             }
         };
     for path in files {
+        if crate::cancellation::checkpoint() {
+            break;
+        }
         let name = path
             .file_name()
             .unwrap_or_default()

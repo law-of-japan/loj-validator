@@ -101,10 +101,24 @@ cannot be selected.
   normal Drop cleanup. Cancellation wins over timeout when both are observed.
   Subsequent git calls in that scope cannot start. Nested scopes restore the
   previous flag, including on unwind; other threads do not inherit the flag.
-  Non-git work and blocked filesystem calls may finish before cancellation is
-  reported. After execute returns, the CLI checks the flag once: cancellation
-  produces exit 3 and a JSON error with kind `incomplete`; later signals do not
-  change the result. Registrations remain until exit, so repeated signals cannot
+  Other work polls the same flag at checkpoints in loops that grow with the
+  input: per document, Revision, Record file, repository, exported file, commit
+  and reference, and per Markdown token and tree node. A single YAML or
+  CommonMark parse, a single hash and a blocked filesystem call are not
+  interrupted and finish before the next checkpoint. A check that observes
+  cancellation leaves its loop and returns through normal Drop cleanup; there
+  is no unwinding. Because the loops stop early, the public entry points
+  (`checks::run`, `checks::run_with_space`, `v1alpha2::check` and the `fixref`
+  checks) check the flag once more before returning: when it is set, every
+  selected result (and every Record report) is `incomplete`, partial
+  diagnostics, references, resolutions and ASTs are discarded, and one
+  undetermined VAL-04 diagnostic remains. Outside a scope checkpoints never
+  cancel, so results are unchanged. A flag set after the last checkpoint but
+  before that final check also cancels the report, even if every check had
+  completed. A cancelled `--ast` run writes no AST.
+  After execute returns, the CLI checks the flag once: cancellation produces
+  exit 3 and a JSON error with kind `incomplete`; later signals do not change
+  the result. Registrations remain until exit, so repeated signals cannot
   interrupt cleanup or output. Windows, legacy and v1alpha1 are unchanged.
   This interruption boundary precedes publication of any validation report:
   a cancelled invocation reports interruption even if it has already found a

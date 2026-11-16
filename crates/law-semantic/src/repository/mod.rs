@@ -74,6 +74,9 @@ pub fn check(repo: &Path, checks: &[Check]) -> Report {
     let mut paths = crate::common::documents::DocumentPaths::new(&repo.join("history.yaml")).ok();
     let record = h.as_ref().map(|h| h["record"]["id"].clone());
     for (i, r) in revisions.iter().enumerate() {
+        if crate::cancellation::checkpoint() {
+            break;
+        }
         let Some(id) = r["id"].as_str() else { continue };
         if !matches!(r["text"]["status"].as_str(), Some("complete" | "partial")) {
             continue;
@@ -152,6 +155,9 @@ pub fn check(repo: &Path, checks: &[Check]) -> Report {
                 .filter_map(|s| s["id"].as_str().map(str::to_owned))
                 .collect();
             for r in &revisions {
+                if crate::cancellation::checkpoint() {
+                    break;
+                }
                 let Some(id) = r["id"].as_str() else { continue };
                 if !matches!(r["text"]["status"].as_str(), Some("complete" | "partial")) {
                     continue;
@@ -232,6 +238,9 @@ fn row_key_reuse(h: &Value, asts: &HashMap<String, Option<Value>>, f: &mut Findi
     // true = present at the previous comparable revision; false = deleted.
     let mut state: HashMap<String, bool> = HashMap::new();
     while let Some(visit) = stack.pop() {
+        if crate::cancellation::checkpoint() {
+            break;
+        }
         let i = match visit {
             Visit::Exit(changes) => {
                 for (key, old) in changes.into_iter().rev() {
@@ -293,6 +302,9 @@ fn scope_nodes(h: &Value, asts: &HashMap<String, Option<Value>>, f: &mut Finding
         .iter()
         .enumerate()
     {
+        if crate::cancellation::checkpoint() {
+            break;
+        }
         let id = r["id"].as_str().unwrap_or("");
         for b in r["basis"].as_array().unwrap_or(&empty) {
             let Some(rel) = relations.iter().find(|x| x["id"] == b["relation"]) else {

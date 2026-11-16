@@ -670,6 +670,9 @@ fn packages(revisions: &[Value], by_id: &ById, repo: &Path, f: &mut Findings) {
         }
     };
     for entry in entries {
+        if crate::cancellation::checkpoint() {
+            break;
+        }
         let e = match entry {
             Ok(entry) => entry,
             Err(error) => {

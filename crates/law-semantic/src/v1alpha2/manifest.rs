@@ -190,6 +190,10 @@ pub(super) fn load(path: &Path, ctx: &mut Context) -> Option<(Value, Documents)>
         .as_array()
         .expect("an array by the manifest schema")
     {
+        if crate::cancellation::checkpoint() {
+            ctx.incomplete = true;
+            break;
+        }
         let name = document["path"]
             .as_str()
             .expect("a string by the manifest schema");

@@ -27,6 +27,9 @@ pub fn check_with_space(
     // Manifests by Record ID; unreadable ones leave the L4 results incomplete.
     let mut manifests: BTreeMap<String, (String, Value)> = BTreeMap::new();
     for repo in repositories {
+        if crate::cancellation::checkpoint() {
+            break;
+        }
         let mut hf = Findings::default();
         match crate::repository::load_history(repo, &mut hf) {
             Some(h) => {
@@ -69,6 +72,9 @@ pub fn check_with_space(
     }
     let mut per_record = Vec::new();
     for (this, (path, h)) in &manifests {
+        if crate::cancellation::checkpoint() {
+            break;
+        }
         let mut local = Findings::default();
         local.applicable.extend([RES, CON, TIME, DISPLAY]);
         let subject = Subject {
@@ -141,6 +147,9 @@ fn display_numbers(reg: &registry::Registry, repo: &Path, history: &Value, f: &m
     let mut budget =
         crate::common::budget::ReadBudget::new(128 * 1024 * 1024, crate::common::MAX_FILE_BYTES);
     for revision in list(&history["revisions"]) {
+        if crate::cancellation::checkpoint() {
+            break;
+        }
         if !matches!(
             revision["text"]["status"].as_str(),
             Some("complete" | "partial")

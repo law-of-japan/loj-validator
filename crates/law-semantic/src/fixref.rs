@@ -183,7 +183,9 @@ pub fn check_structured(
                 Class::Error
             };
             f.note(RF, class, "FIXREF-01", COMMON, error.message(), "", "");
-            return f.into_report(&[RF]);
+            let mut report = f.into_report(&[RF]);
+            crate::cancellation::finish(&mut report, &[RF]);
+            return report;
         }
     };
     let mut report = check_with_space(bundle, registry, &text, space);
@@ -208,6 +210,7 @@ pub fn check_structured(
             }
         }
     }
+    crate::cancellation::finish(&mut report, &[RF]);
     report
 }
 
@@ -263,6 +266,7 @@ pub fn check_with_space(
         r.target.insert("commit".into(), json!(commit));
     }
     r.resolution = Some(resolution);
+    crate::cancellation::finish(&mut r, &[RF]);
     r
 }
 

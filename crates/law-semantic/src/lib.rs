@@ -31,6 +31,8 @@
 //! and reference checks, the git wrapper) are private: a check is reached
 //! through its input kind, not through its module.
 pub mod cancellation;
+// These modules stop at cancellation checkpoints and rely on the final
+// `cancellation::finish` of `checks::run_with_space`: keep them crate-private.
 pub(crate) mod change;
 pub mod checks;
 pub mod common;

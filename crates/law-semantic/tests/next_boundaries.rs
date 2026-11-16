@@ -1,7 +1,7 @@
 //! Synthetic boundaries beyond the fixed conformance corpus.
 #![allow(clippy::unwrap_used)]
 use law_semantic::checks::{run_with_space, Input};
-use law_semantic::common::{Check, ResultValue};
+use law_semantic::common::{Check, Class, ResultValue};
 use serde_json::{json, Value};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -24,10 +24,84 @@ fn library_git_cancellation_is_incomplete_not_a_violation() {
     });
     assert_eq!(report.result(Check::CHANGE), Some(ResultValue::Incomplete));
     assert_eq!(report.exit_code(), 3);
-    assert!(report
-        .diagnostics
-        .iter()
-        .any(|d| d.message.contains("git operation cancelled")));
+    // The git error is replaced, as every partial finding is, by the one
+    // cancellation diagnostic.
+    assert_eq!(report.diagnostics.len(), 1, "{:?}", report.diagnostics);
+    let d = &report.diagnostics[0];
+    assert_eq!((d.rule.as_str(), d.class), ("VAL-04", Class::Undetermined));
+    assert_eq!(d.code, "common/v1alpha1/cancelled");
+}
+
+/// Every public next-specification entry point turns a cancelled scope into
+/// `incomplete`, whatever the input would otherwise produce, and outside a
+/// scope the same inputs keep their results.
+#[test]
+fn library_cancellation_without_git_is_incomplete_at_every_entry_point() {
+    use std::sync::{atomic::AtomicBool, Arc};
+    let cancelled = |run: &dyn Fn() -> law_semantic::common::Report| {
+        law_semantic::cancellation::with_flag(Arc::new(AtomicBool::new(true)), run)
+    };
+    let only_cancellation = |report: &law_semantic::common::Report| {
+        assert!(
+            report
+                .results
+                .iter()
+                .all(|(_, r)| *r == ResultValue::Incomplete),
+            "{:?}",
+            report.results
+        );
+        assert_eq!(report.exit_code(), 3);
+        assert_eq!(report.diagnostics.len(), 1, "{:?}", report.diagnostics);
+        assert_eq!(report.diagnostics[0].rule, "VAL-04");
+        assert!(!report.diagnostics[0].is_error());
+        assert!(report.references.is_empty() && report.resolution.is_none());
+    };
+    let dir = Scratch::new();
+    // A failing package: cancellation must not keep its violation either.
+    let bad = "# 第一条\n<!-- loj:unknown -->";
+    let checked = package(&dir, bad);
+    assert_eq!(checked.report.result(Check::L1), Some(ResultValue::Fail));
+    let levels = [Check::L0, Check::L1];
+    let checked = law_semantic::cancellation::with_flag(Arc::new(AtomicBool::new(true)), || {
+        law_semantic::v1alpha2::check(&dir.0, &levels)
+    });
+    only_cancellation(&checked.report);
+    assert!(checked.ast.is_none() && checked.sources.is_empty());
+    for input in [
+        Input::Package(dir.0.clone()),
+        Input::Registry(dir.0.clone()),
+        Input::Records {
+            registry: dir.0.clone(),
+            repositories: vec![dir.0.clone()],
+        },
+    ] {
+        let checks = input.default_checks();
+        only_cancellation(&cancelled(&|| {
+            run_with_space(&input, &checks, Some("alpha"))
+        }));
+    }
+    let good = "# 第一条\n<!-- loj:paragraph number=1 -->\n本文。\n<!-- loj:end-paragraph -->";
+    assert_eq!(
+        package(&dir, good).report.result(Check::L1),
+        Some(ResultValue::Pass)
+    );
+    only_cancellation(&cancelled(&|| {
+        run_with_space(&Input::Package(dir.0.clone()), &[Check::L1], None)
+    }));
+    // A structured reference refused before any git or file access.
+    let bundle = dir.0.join("absent.bundle");
+    let value = json!({"record": "not a record"});
+    let refused = law_semantic::fixref::check_structured(&bundle, &dir.0, &value, None);
+    assert_ne!(
+        refused.result(Check::REFERENCE),
+        Some(ResultValue::Incomplete)
+    );
+    only_cancellation(&cancelled(&|| {
+        law_semantic::fixref::check_structured(&bundle, &dir.0, &value, None)
+    }));
+    only_cancellation(&cancelled(&|| {
+        law_semantic::fixref::check(&bundle, &dir.0, "not a reference")
+    }));
 }
 
 struct Scratch(PathBuf);

@@ -103,9 +103,11 @@ Rust APIでは `Report.records` からRecord別報告を取得できます。
 HIST-06/12の警告専用の順序比較は、判定不能でも合否を変えません。
 `--format json`ではエラーの場合もJSONを一つだけ標準出力に返します。
 
-Unixの次期仕様CLIは、検査中のSIGINT/SIGTERMを中断要求として扱います。実行中のgitプロセスグループを停止してから一時ディレクトリを回収し、終了コード3を返します。JSON出力は `{"error":{"kind":"incomplete","message":"validation interrupted"}}` です。git以外の処理やブロック中のファイル操作は完了まで待つ場合があります。
+Unixの次期仕様CLIは、検査中のSIGINT/SIGTERMを中断要求として扱います。実行中のgitプロセスグループを停止してから一時ディレクトリを回収し、終了コード3を返します。JSON出力は `{"error":{"kind":"incomplete","message":"validation interrupted"}}` です。git以外の検査も、ファイル・Revision・Record・法令リポジトリ・commit・参照ごとと、Markdownのトークン・ノードごとに中断を確認して打ち切ります。1回のYAML解析、1ファイルのCommonMark解析やハッシュ計算、ブロック中のファイル操作は中断できず、完了まで待ちます。
 
 検査・出力文字列の生成から戻った直後に中断フラグを1回確認し、その時点で結果を確定します。フラグが立っていれば、生成済みの違反結果も中断結果へ置き換えます。確定後のシグナルは出力を変更せず、繰り返しのシグナルも強制終了にはなりません。SIGKILL・abort・ホスト障害での回収は保証しません。Windows・v1alpha1・legacyの中断動作は従来どおりです。
+
+Rust APIでは `law_semantic::cancellation::with_flag` で中断フラグのスコープを与えられます（ライブラリはシグナルハンドラを登録しません）。スコープ内でフラグが立つと、次期仕様の公開検査関数（`checks::run`・`run_with_space`、`v1alpha2::check`、`fixref`の検査）は、選択したすべての結果を未完了にし、部分的な診断・参照結果・ASTを捨てて、VAL-04の判定不能の診断を1件返します。スコープの外では結果は変わりません。
 
 ## 使い方
 
