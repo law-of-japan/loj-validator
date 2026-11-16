@@ -68,7 +68,7 @@ v1alpha1の正式適合データはライセンス・commit・SHA-256一覧と�
 
 ## 次期仕様の使い方
 
-固定仕様は `a9c5be83da58170082594e6de989cd7ee4af8bf4`、規範適合ケースは311件です。
+固定仕様は `b676b0adbec2594f46c4c0162586310845bf0080`、規範適合ケースは320件です。
 
 ```text
 loj-validator check PATH [--level L0|L1|L3|L4]... [--category NAME]... [--check NAME]...

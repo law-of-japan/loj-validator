@@ -1009,6 +1009,178 @@
       },
       "expected": "conformance/common/v1alpha1/expected/common-040.json",
       "success": false
+    },
+    {
+      "id": "common-041",
+      "title": "官報正誤のSourceを本文の出典に加える官報正誤",
+      "requirements": [
+        "CHG-02",
+        "CHG-01"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-041/repo.bundle",
+        "base": "f1162fe2cfefa04e9a0d656706e37977fb3d0731",
+        "head": "a335815db319570e97a2046e12f7918b78f9042a"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-041.json",
+      "success": true
+    },
+    {
+      "id": "common-042",
+      "title": "官報正誤のSourceを本文の出典で指さない官報正誤",
+      "requirements": [
+        "CHG-02",
+        "CHG-01"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-042/repo.bundle",
+        "base": "a335815db319570e97a2046e12f7918b78f9042a",
+        "head": "d759229e030d88651032d4f81d2feaf54168c2a4"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-042.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-042/repo.bundle",
+          "from": "conformance/common/v1alpha1/valid/common-041/repo.bundle",
+          "edits": []
+        }
+      ]
+    },
+    {
+      "id": "common-043",
+      "title": "同じ値の種類の宣言を二つ置いたcommit",
+      "requirements": [
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-043/repo.bundle",
+        "base": "f1162fe2cfefa04e9a0d656706e37977fb3d0731",
+        "head": "b0b236c28c5a46dd630b6352e12ea1922a5b25b3"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-043.json",
+      "success": false
+    },
+    {
+      "id": "common-044",
+      "title": "宣言した版を二行に置いたcommit",
+      "requirements": [
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-044/repo.bundle",
+        "base": "b0b236c28c5a46dd630b6352e12ea1922a5b25b3",
+        "head": "225ee0ee33b12da83bb663e7178b0f2e71fea755"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-044.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-044/repo.bundle",
+          "from": "conformance/common/v1alpha1/invalid/common-043/repo.bundle",
+          "edits": []
+        }
+      ]
+    },
+    {
+      "id": "common-045",
+      "title": "宣言した版を二行に置いた書式変更",
+      "requirements": [
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-045/repo.bundle",
+        "base": "342736570869225d992c96fcdd63e4534a97ef74",
+        "head": "8c0193b619f62ea9021a09bf908a130eb547cedd"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-045.json",
+      "success": false
+    },
+    {
+      "id": "common-046",
+      "title": "正本ブランチに置いたmergeのcommit",
+      "requirements": [
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-046/repo.bundle",
+        "base": "f1162fe2cfefa04e9a0d656706e37977fb3d0731",
+        "head": "d803085ff73980588773dd7bbf3185fe04ccf505"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-046.json",
+      "success": false
+    },
+    {
+      "id": "common-047",
+      "title": "宣言した版の本文を変えず、本文の出典の箇所だけを直す記録訂正（CHG-01の宣言の誤りだが、変更検査は判定しない）",
+      "requirements": [
+        "CHG-02",
+        "CHG-01"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-047/repo.bundle",
+        "base": "342736570869225d992c96fcdd63e4534a97ef74",
+        "head": "c3a15b209135a5d4690f8674c2b226ab8b08bb91"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-047.json",
+      "success": true
+    },
+    {
+      "id": "common-048",
+      "title": "ASTを生成できない版の本文を直す記録訂正",
+      "requirements": [
+        "CHG-02",
+        "CHG-04"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-048/repo.bundle",
+        "base": "79ab67ea77bdfd3bb548afb78a1c771f9ed2e337",
+        "head": "aff26a5d09faaebe5d60ac22953515afaa237c44"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-048.json",
+      "success": true
+    },
+    {
+      "id": "common-049",
+      "title": "一部しか本文がない版の欠落を補う復元",
+      "requirements": [
+        "CHG-02",
+        "CHG-04"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-049/repo.bundle",
+        "base": "cca9787c25fdc0aaf6e8864bce831e8afca1708e",
+        "head": "97518846c2f74bfaa203f1db4261ef65a6accea3"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-049.json",
+      "success": true
     }
   ]
 }
