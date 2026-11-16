@@ -169,6 +169,7 @@ type Output = (std::process::ExitStatus, Vec<u8>, Vec<u8>);
 /// Run `cmd` with closed stdin (use `run_with_input` to supply bytes), reading
 /// its output on separate threads so a full pipe never blocks it. On timeout,
 /// kill the process group on Unix, or the direct child on other platforms.
+/// Successful hook-free git commands are expected to leave no detached children.
 fn run_with_timeout(cmd: Command, limit: std::time::Duration) -> Result<Output, GitError> {
     run_with_input(cmd, limit, Vec::new())
 }
@@ -1021,14 +1022,14 @@ pub(crate) mod tests {
             let mut cmd = Command::new("sh");
             cmd.args([
                 "-c",
-                &format!("printf ready > \"$1\"; (sleep 2; printf survived > \"$2\") & {ending}"),
+                &format!("(printf ready > \"$1\"; sleep 2; printf survived > \"$2\") & {ending}"),
                 "sh",
             ])
             .arg(&ready)
             .arg(&survived);
             let limit = std::time::Duration::from_millis(500);
             assert_eq!(run_with_timeout(cmd, limit), Err(GitError::Timeout(limit)));
-            assert!(ready.exists(), "the parent started before the deadline");
+            assert!(ready.exists(), "the grandchild started before the deadline");
             std::thread::sleep(std::time::Duration::from_millis(2200));
             assert!(!survived.exists(), "a grandchild survived the timeout");
         }
