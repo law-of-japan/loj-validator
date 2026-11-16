@@ -148,16 +148,79 @@ fn result_value(s: &str) -> ResultValue {
     }
 }
 
+/// CONF-01 compares diagnostic identity and only explicitly expected positions.
+fn diagnostic_matches(expected: &Value, actual: &Value) -> bool {
+    ["rule", "schemaVersion", "class"]
+        .iter()
+        .all(|key| expected[*key] == actual[*key])
+        && expected.get("location").is_none_or(|location| {
+            ["path", "start", "end"]
+                .iter()
+                .all(|key| location[*key] == actual["location"][*key])
+        })
+}
+
+#[test]
+fn expected_diagnostic_classes_are_required() {
+    use law_semantic::common::{Class, Diagnostic};
+
+    let case = json!({"check": "L1", "success": true});
+    for class in [Class::Warning, Class::Undetermined, Class::Pending] {
+        let diagnostic = Diagnostic::error("MD-01", "loj/v1alpha2", "synthetic").with_class(class);
+        let expected = json!({"diagnostics": [diagnostic.to_json()]});
+        let mut actual = Actual {
+            report: Report::default(),
+            ast: None,
+            positions: Vec::new(),
+        };
+        actual.report.set(Check::L1, ResultValue::Pass);
+        assert!(!problems(&case, &expected, &actual).is_empty());
+        actual.report.diagnostics.push(diagnostic);
+        assert!(problems(&case, &expected, &actual).is_empty());
+        actual.report.diagnostics[0].class = Class::Error;
+        assert!(!diagnostic_matches(
+            &expected["diagnostics"][0],
+            &actual.report.diagnostics[0].to_json()
+        ));
+    }
+}
+
+#[test]
+fn expected_diagnostic_locations_are_required() {
+    let expected = json!({
+        "rule": "MAN-03", "schemaVersion": "loj/v1alpha2", "class": "error",
+        "location": {"path": "second.md", "start": 0, "end": 42}
+    });
+    let mut actual = expected.clone();
+    actual["message"] = json!("implementation-specific explanation");
+    actual["location"]["line"] = json!(1);
+    assert!(diagnostic_matches(&expected, &actual));
+    for (key, wrong) in [
+        ("path", json!("first.md")),
+        ("start", json!(1)),
+        ("end", json!(41)),
+    ] {
+        let mut mismatch = actual.clone();
+        mismatch["location"][key] = wrong;
+        assert!(!diagnostic_matches(&expected, &mismatch));
+    }
+    actual.as_object_mut().unwrap().remove("location");
+    assert!(!diagnostic_matches(&expected, &actual));
+    let mut without_location = expected.clone();
+    without_location.as_object_mut().unwrap().remove("location");
+    assert!(diagnostic_matches(&without_location, &expected));
+    for key in ["rule", "schemaVersion", "class"] {
+        let mut mismatch = expected.clone();
+        mismatch[key] = json!("different");
+        assert!(!diagnostic_matches(&expected, &mismatch));
+    }
+}
+
 fn problems(case: &Value, expected: &Value, actual: &Actual) -> Vec<String> {
     let mut problems = Vec::new();
     let report = &actual.report;
     let json = report.to_json();
     let diagnostics = json["diagnostics"].as_array().unwrap();
-    let has = |rule: &Value, version: &Value| {
-        diagnostics
-            .iter()
-            .any(|d| d["rule"] == *rule && d["schemaVersion"] == *version && d["class"] == "error")
-    };
     let mut expected_results = Vec::new();
     if let Some(results) = expected["results"].as_array() {
         for r in results {
@@ -235,11 +298,9 @@ fn problems(case: &Value, expected: &Value, actual: &Actual) -> Vec<String> {
     }
     if let Some(ds) = expected["diagnostics"].as_array() {
         for d in ds {
-            if !has(&d["rule"], &d["schemaVersion"]) {
+            if !diagnostics.iter().any(|got| diagnostic_matches(d, got)) {
                 problems.push(format!(
-                    "missing {} {} diagnostic; got {}",
-                    d["rule"],
-                    d["schemaVersion"],
+                    "missing diagnostic {d}; got {}",
                     serde_json::to_string(diagnostics).unwrap()
                 ));
             }
