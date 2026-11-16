@@ -150,14 +150,22 @@ fn result_value(s: &str) -> ResultValue {
 
 /// CONF-01 compares diagnostic identity and only explicitly expected positions.
 fn diagnostic_matches(expected: &Value, actual: &Value) -> bool {
-    ["rule", "schemaVersion", "class"]
-        .iter()
-        .all(|key| expected[*key] == actual[*key])
-        && expected.get("location").is_none_or(|location| {
-            ["path", "start", "end"]
-                .iter()
-                .all(|key| location[*key] == actual["location"][*key])
+    ["rule", "schemaVersion", "class"].iter().all(|key| {
+        expected
+            .get(*key)
+            .is_some_and(|value| value.is_string() && actual.get(*key) == Some(value))
+    }) && expected.get("location").is_none_or(|location| {
+        ["path", "start", "end"].iter().all(|key| {
+            location.get(*key).is_some_and(|value| {
+                let valid = if *key == "path" {
+                    value.is_string()
+                } else {
+                    value.is_u64()
+                };
+                valid && actual["location"].get(*key) == Some(value)
+            })
         })
+    })
 }
 
 #[test]
@@ -213,6 +221,13 @@ fn expected_diagnostic_locations_are_required() {
         let mut mismatch = expected.clone();
         mismatch[key] = json!("different");
         assert!(!diagnostic_matches(&expected, &mismatch));
+    }
+    for key in ["path", "start", "end"] {
+        let mut malformed = expected.clone();
+        malformed["location"].as_object_mut().unwrap().remove(key);
+        assert!(!diagnostic_matches(&malformed, &malformed));
+        malformed["location"][key] = Value::Null;
+        assert!(!diagnostic_matches(&malformed, &malformed));
     }
 }
 
