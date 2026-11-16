@@ -93,7 +93,10 @@ cannot be selected.
 - `Bundle::Drop` removes its private `loj-bundle-*` and `loj-tree-*` temporary
   directories on normal return and panic unwinding (best effort if removal fails).
   Abort, SIGINT, SIGTERM, SIGKILL and host failure can bypass Drop and leave files
-  behind. No global signal handler or automatic stale-directory sweep is installed
+  behind. On Unix, the dedicated git group does not receive the terminal
+  foreground group's SIGINT: git can outlive the interrupted validator and keep
+  writing until it exits or its process group is stopped externally.
+  No global signal handler or automatic stale-directory sweep is installed
   by the library. Use a dedicated temporary volume/directory for untrusted checks
   and reclaim it after all validator and child processes have stopped. Do not
   delete matching directories that may belong to a live check.
