@@ -279,7 +279,9 @@ fn terminate(child: &mut std::process::Child) -> Result<(), GitError> {
 /// Check stored bytes, not decompressed object sizes or peak fetch disk usage.
 fn check_object_store(root: &Path, limit: u64) -> Result<(), GitError> {
     let start = std::time::Instant::now();
-    let io = |e: std::io::Error| GitError::Io(e.to_string());
+    let io = |e: std::io::Error| {
+        GitError::Io(format!("cannot read object store {}: {e}", root.display()))
+    };
     if !std::fs::symlink_metadata(root).map_err(io)?.is_dir() {
         return Err(GitError::Io("object store is not a directory".into()));
     }
@@ -295,7 +297,12 @@ fn check_object_store(root: &Path, limit: u64) -> Result<(), GitError> {
             continue;
         };
         let path = entry.map_err(io)?.path();
-        let metadata = std::fs::symlink_metadata(&path).map_err(io)?;
+        let metadata = std::fs::symlink_metadata(&path).map_err(|e| {
+            GitError::Io(format!(
+                "cannot inspect object store entry {}: {e}",
+                path.display()
+            ))
+        })?;
         if metadata.is_file() {
             total = total
                 .checked_add(metadata.len())
@@ -306,7 +313,12 @@ fn check_object_store(root: &Path, limit: u64) -> Result<(), GitError> {
                 )));
             }
         } else if metadata.is_dir() {
-            pending.push(std::fs::read_dir(&path).map_err(io)?);
+            pending.push(std::fs::read_dir(&path).map_err(|e| {
+                GitError::Io(format!(
+                    "cannot list object store directory {}: {e}",
+                    path.display()
+                ))
+            })?);
         } else {
             return Err(GitError::Io(
                 "object store contains a non-regular entry".into(),
@@ -489,6 +501,9 @@ impl Bundle {
         cmd.arg("-C")
             .arg(&self.dir)
             .args(["-c", "core.autocrlf=false", "-c", "core.safecrlf=false"])
+            // Fetch must not leave automatic maintenance rewriting the store
+            // while the post-fetch budget check walks it (or after Drop).
+            .args(["-c", "maintenance.auto=false", "-c", "gc.auto=0"])
             .args(["-c", &format!("core.hooksPath={NULL_DEVICE}")])
             .args(args)
             .env("GIT_CONFIG_NOSYSTEM", "1")
@@ -964,6 +979,55 @@ pub(crate) mod tests {
         let head = b.branch("main").unwrap().unwrap();
         assert!(b.export(&head).is_err(), "{entries:?}");
         assert!(b.exports.borrow().is_empty(), "nothing was written");
+    }
+
+    #[test]
+    fn fetch_does_not_start_automatic_object_repacking() {
+        let s = Scratch::new();
+        let bundle = s.bundle(&[("100644", "blob", "a")]);
+        let b = Bundle {
+            dir: temp("loj-maintenance-test").unwrap(),
+            exports: Default::default(),
+        };
+        b.git(&["init", "--quiet", "--bare", "."]).unwrap();
+        // Force the automatic loose-object task to run synchronously after fetch
+        // unless the command wrapper disables automatic maintenance entirely.
+        for (key, value) in [
+            ("maintenance.autoDetach", "false"),
+            ("maintenance.gc.enabled", "false"),
+            ("maintenance.loose-objects.enabled", "true"),
+            ("maintenance.loose-objects.auto", "1"),
+            ("fetch.unpackLimit", "100"),
+        ] {
+            b.git(&["config", key, value]).unwrap();
+        }
+        for content in [b"loose-a".as_slice(), b"loose-b", b"loose-c"] {
+            let (status, _, _) = run_with_input(
+                b.command(&["hash-object", "-w", "--stdin"]),
+                GIT_TIMEOUT,
+                content.to_vec(),
+            )
+            .unwrap();
+            assert!(status.success());
+        }
+        b.git(&[
+            "fetch",
+            "--quiet",
+            &bundle.to_string_lossy(),
+            "+refs/heads/*:refs/heads/*",
+        ])
+        .unwrap();
+        assert!(
+            std::fs::read_dir(b.dir.join("objects/pack"))
+                .unwrap()
+                .all(|entry| !entry
+                    .unwrap()
+                    .file_name()
+                    .to_string_lossy()
+                    .starts_with("loose-")),
+            "automatic maintenance repacked the loose objects"
+        );
+        assert!(b.branch("main").unwrap().is_some());
     }
 
     #[test]
