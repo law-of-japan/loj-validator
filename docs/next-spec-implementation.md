@@ -69,7 +69,12 @@ cannot be selected.
   `target.repository`.
 - A bundle is untrusted. git runs isolated from the caller's environment, user and
   system configuration and hooks, with `fsckObjects`, a 120 s timeout per command and
-  a cap on kept output. Bundle files over 1 GiB are refused. The exported tree is
+  a cap on kept output. Bundle files over 1 GiB are refused. After fetch, the
+  stored file bytes under `objects/` (packs, indexes and loose objects) are
+  checked against a separate 1 GiB limit, with its own 120 s traversal deadline
+  starting after fetch (in addition to the per-command timeout).
+  Each regular-file path is counted, including hardlink aliases. Unreadable or
+  non-regular entries stop the check as incomplete. The exported tree is
   checked before anything is written: safe, portable, case-distinct names, regular
   files only, 16 MiB per file, 128 MiB and 100,000 files in all.
   Export reads the checked object IDs with one `git cat-file --batch` process,
@@ -77,10 +82,24 @@ cannot be selected.
   response sizes, and shares a 120 s deadline across tree listing,
   validation, blob retrieval and file writes. The deadline is checked between
   filesystem operations; a blocked filesystem call cannot be interrupted.
-- Known limit: the fetch itself is bounded only by the bundle size and the timeout.
-  A highly compressible bundle can unpack to more objects than its size suggests.
-  Run the change and reference checks on untrusted bundles in a disposable
-  environment with a disk quota.
+- Known limit: the post-fetch store check does not bound peak disk use during
+  fetch, allocated filesystem blocks, or decompressed object sizes. A highly
+  compressible bundle can unpack to more objects than its size suggests. Run
+  checks on untrusted bundles in a disposable environment with a disk quota.
+- On Unix, git starts in a dedicated process group; timeout kills that group,
+  including descendants retaining pipes after the direct child exits. The pinned
+  Unix-only `nix` dependency supplies safe signal APIs. On Windows, only the
+  direct child is killed; inherited-pipe waits still have a deadline.
+- `Bundle::Drop` removes its private `loj-bundle-*` and `loj-tree-*` temporary
+  directories on normal return and panic unwinding (best effort if removal fails).
+  Abort, SIGINT, SIGTERM, SIGKILL and host failure can bypass Drop and leave files
+  behind. On Unix, the dedicated git group does not receive the terminal
+  foreground group's SIGINT: git can outlive the interrupted validator and keep
+  writing until it exits or its process group is stopped externally.
+  No global signal handler or automatic stale-directory sweep is installed
+  by the library. Use a dedicated temporary volume/directory for untrusted checks
+  and reclaim it after all validator and child processes have stopped. Do not
+  delete matching directories that may belong to a live check.
 
 ## CLI
 

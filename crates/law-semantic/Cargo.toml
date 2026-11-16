@@ -16,6 +16,10 @@ regex = { workspace = true }
 yaml-rust2 = { version = "=0.10.4", default-features = false }
 same-file = "=1.0.6"
 
+[target.'cfg(unix)'.dependencies]
+# Safe process-group signals without introducing unsafe code in this crate.
+nix = { version = "=0.29.0", default-features = false, features = ["signal", "process"] }
+
 [dev-dependencies]
 # Property tests only. Pinned like the other inputs of a test run; without the
 # fork and timeout features, which need extra crates and child processes.
