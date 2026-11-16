@@ -50,6 +50,7 @@ class SnapshotIntegrityTests(unittest.TestCase):
     def test_invalid_manifests_fail(self):
         for data in [[], {}, {"../outside": "0" * 64}, {"/absolute": "0" * 64},
                      {"a\\b": "0" * 64}, {"assets/input.bin": "bad"},
+                     {"assets/input.bin": "A" * 64},
                      {"COMMIT": "0" * 64}, {"assets/input.bin": 1}]:
             with self.subTest(data=data):
                 self.write_manifest(data)
@@ -70,6 +71,10 @@ class SnapshotIntegrityTests(unittest.TestCase):
         asset.unlink()
         asset.symlink_to(self.root / "COMMIT")
         self.assertTrue(any("symlink" in error for error in verify(self.root)))
+        commit = self.root / "COMMIT"
+        commit.unlink()
+        commit.symlink_to(self.root / "SHA256SUMS.json")
+        self.assertIn("missing or non-regular metadata: COMMIT", verify(self.root))
 
 
 if __name__ == "__main__":

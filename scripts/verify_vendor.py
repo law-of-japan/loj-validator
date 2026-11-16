@@ -43,6 +43,7 @@ def verify(root):
         if not isinstance(manifest, dict) or not manifest:
             return ["manifest must be a nonempty object"]
         for name, digest in manifest.items():
+            # Reject Windows drive/stream syntax as well as traversal on every OS.
             if (
                 not name
                 or "\\" in name

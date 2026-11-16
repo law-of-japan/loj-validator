@@ -210,7 +210,7 @@ cargo clippy --workspace --all-targets --locked -- -D warnings
 
 CIの独立したジョブで、両方の`vendor/loj-spec*`のファイル集合と生バイトのSHA-256を
 `SHA256SUMS.json`に照合します。欠落・一覧外のファイル・改変・シンボリックリンクを
-検出します。生成メタデータの`COMMIT`と`SHA256SUMS.json`だけは一覧比較から除外し、
+検出します（空ディレクトリは対象外）。生成メタデータの`COMMIT`と`SHA256SUMS.json`だけは一覧比較から除外し、
 通常ファイルとしての存在を確認します。`COMMIT`と実装中の固定値の一致は適合テストが確認します。
 ローカルではPython 3.9以上の標準ライブラリだけで実行できます。
 
