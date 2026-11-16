@@ -15,5 +15,8 @@ serde_json = { workspace = true }
 [dev-dependencies]
 jsonschema = { workspace = true }
 
+[target.'cfg(unix)'.dependencies]
+signal-hook = "=0.3.18"
+
 [lints]
 workspace = true

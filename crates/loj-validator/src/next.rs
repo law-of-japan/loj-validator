@@ -20,7 +20,11 @@ pub const USAGE: &str = "next specification (loj/v1alpha2 and history, glyphs, r
   --ast is package-only; --registration-space requires a registry input.
   Checks: L0, L1, L3[/category], L4[/category], registry, rebuild, change, reference.
   L2, L3/sourceMatch and L4/clauseReference are reserved and cannot be selected.
-  Without a selection, every check that applies to the input runs.";
+  Without a selection, every check that applies to the input runs.
+  Unix CLI: SIGINT/SIGTERM stop git groups and clean temporary directories, then
+  exit 3; JSON reports error.kind=incomplete. Non-git work may finish first.
+  Signals after result completion do not change output; repeated signals do not
+  force exit. SIGKILL/abort/host failure cannot guarantee cleanup.";
 
 pub struct Args {
     pub input: Input,
