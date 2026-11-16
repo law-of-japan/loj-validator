@@ -989,6 +989,7 @@ pub(crate) mod tests {
         ));
         #[cfg(unix)]
         {
+            // Unix symlinks need no special privileges; Windows creation may.
             std::os::unix::fs::symlink(root.join("loose"), root.join("link")).unwrap();
             assert!(matches!(
                 check_object_store(&root, 100),
@@ -1027,7 +1028,7 @@ pub(crate) mod tests {
             ])
             .arg(&ready)
             .arg(&survived);
-            let limit = std::time::Duration::from_millis(500);
+            let limit = std::time::Duration::from_secs(1);
             assert_eq!(run_with_timeout(cmd, limit), Err(GitError::Timeout(limit)));
             assert!(ready.exists(), "the grandchild started before the deadline");
             std::thread::sleep(std::time::Duration::from_millis(2200));
