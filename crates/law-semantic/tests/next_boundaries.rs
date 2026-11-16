@@ -373,3 +373,42 @@ fn amendment_numbers_and_content_counts_are_checked() {
         assert!(found.contains(&"AMEND-01".to_owned()), "{name}: {found:?}");
     }
 }
+
+#[test]
+fn amendment_contents_accept_any_subitem_level_and_must_be_closed() {
+    let dir = Scratch::new();
+    let head = "# 第一条\n<!-- loj:paragraph number=1 -->\n甲法の一部を次のように改正する。\n\
+<!-- loj:amendment number=1 -->\n第五条第一号イに次のように加える。\n<!-- loj:amendment-content -->\n";
+    let body = "<!-- loj:subitem level=2 number=1 -->\n（１）　霧\n<!-- loj:end-subitem -->\n";
+    let tail = "<!-- loj:end-amendment-content -->\n<!-- loj:end-amendment -->\n<!-- loj:end-paragraph -->\n";
+    let result = package(&dir, &format!("{head}{body}{tail}"));
+    assert_eq!(
+        result.report.result(Check::L1),
+        Some(ResultValue::Pass),
+        "{:?}",
+        result.report.diagnostics
+    );
+    // A content left open at the end of the file fails; it never passes silently.
+    let unclosed = package(&dir, &format!("{head}{body}"));
+    assert_eq!(unclosed.report.result(Check::L1), Some(ResultValue::Fail));
+    assert!(rules(&unclosed).contains(&"DIR-02".to_owned()));
+}
+
+#[test]
+fn deeply_nested_amendments_are_incomplete_not_a_crash() {
+    let dir = Scratch::new();
+    let open = "<!-- loj:amendment number=1 -->\n改める。\n<!-- loj:amendment-content -->\n\
+<!-- loj:paragraph number=1 -->\n本文。\n";
+    let close = "<!-- loj:end-paragraph -->\n<!-- loj:end-amendment-content -->\n<!-- loj:end-amendment -->\n";
+    let depth = 5_000;
+    let text = format!(
+        "# 第一条\n<!-- loj:paragraph number=1 -->\n本文。\n{}{}<!-- loj:end-paragraph -->\n",
+        open.repeat(depth),
+        close.repeat(depth)
+    );
+    let result = package(&dir, &text);
+    assert_eq!(
+        result.report.result(Check::L1),
+        Some(ResultValue::Incomplete)
+    );
+}

@@ -13,6 +13,8 @@ use serde_json::{json, Value};
 use std::{collections::HashSet, ops::Range, sync::LazyLock};
 
 const SEPARATORS: &[char] = &['の', 'ノ'];
+/// Open containers at once; the deepest valid nesting is under 20.
+const MAX_DEPTH: usize = 64;
 
 /// Unicode 15.1 White_Space, fixed for MD-04 (25 code points).
 fn white_space(c: char) -> bool {
@@ -818,11 +820,14 @@ impl<'a> Builder<'a> {
                 break;
             }
             let span = &token.span;
-            if self.nodes.len() >= 20_000 || span.len() > 4096 {
+            // MAX_DEPTH bounds the recursion of `export`: amendments inside
+            // contents (AMEND-02) are kept in the tree, so nesting is otherwise
+            // unbounded. A valid package stays far below it.
+            if self.nodes.len() >= 20_000 || span.len() > 4096 || doc.stack.len() >= MAX_DEPTH {
                 ctx.incomplete = true;
                 ctx.diag(
                     "AST-01",
-                    "Implementation limit: 20000 nodes or 4096-byte structural token",
+                    "Implementation limit: 20000 nodes, 4096-byte structural token or 64 open containers",
                     path,
                     span.start,
                     span.end,
