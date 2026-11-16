@@ -616,12 +616,11 @@ impl Bundle {
         commit: &str,
         limit: std::time::Duration,
     ) -> Result<PathBuf, ExportError> {
-        use ExportError::{Environment, Tree};
-        let environment = |error| {
-            Environment(match error {
-                GitError::Timeout(_) => GitError::Timeout(limit),
-                other => other,
-            })
+        use ExportError::{Environment, Io, Tree};
+        let environment = |error| match error {
+            GitError::Cancelled => ExportError::Cancelled,
+            GitError::Timeout(_) => Environment(GitError::Timeout(limit)),
+            other => Environment(other),
         };
         let start = std::time::Instant::now();
         let remaining = || {
@@ -730,16 +729,16 @@ impl Bundle {
         remaining()?;
         let blobs = batch_blobs(&bytes, &entries).map_err(environment)?;
         remaining()?;
-        let out = temp("loj-tree").map_err(environment)?;
+        let out = temp("loj-tree").map_err(|e| Io(e.to_string()))?;
         // Registered before writing, so a failure part-way still removes the tree.
         self.exports.borrow_mut().push(out.clone());
         for ((name, _, _), blob) in entries.iter().zip(blobs) {
             remaining()?;
             let path = out.join(name);
             if let Some(p) = path.parent() {
-                std::fs::create_dir_all(p).map_err(|e| Environment(GitError::Io(e.to_string())))?;
+                std::fs::create_dir_all(p).map_err(|e| Io(e.to_string()))?;
             }
-            std::fs::write(&path, blob).map_err(|e| Environment(GitError::Io(e.to_string())))?;
+            std::fs::write(&path, blob).map_err(|e| Io(e.to_string()))?;
         }
         remaining()?;
         Ok(out)
@@ -785,16 +784,24 @@ pub enum ExportError {
     /// The tree itself is refused (an unsafe or non-UTF-8 name, an unsupported
     /// entry, the input budget, a case collision): a property of that commit.
     Tree(String),
-    /// Git failed, or the export could not be written: a property of the
-    /// environment, which other commits would hit too.
+    /// Git failed: a property of the environment, which other commits would
+    /// hit too. Never [`GitError::Cancelled`], which is [`ExportError::Cancelled`].
     Environment(GitError),
+    /// The exported tree could not be written or read back (a temporary
+    /// directory, an exported file): also a property of the environment.
+    Io(String),
+    /// The caller requested cancellation, inside git or at a checkpoint over
+    /// the exported files. The report is made incomplete by
+    /// `cancellation::finish`; this is neither a finding nor a git failure.
+    Cancelled,
 }
 
 impl std::fmt::Display for ExportError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ExportError::Tree(e) => f.write_str(e),
+            ExportError::Tree(e) | ExportError::Io(e) => f.write_str(e),
             ExportError::Environment(e) => e.fmt(f),
+            ExportError::Cancelled => f.write_str("export cancelled"),
         }
     }
 }
@@ -802,7 +809,7 @@ impl std::fmt::Display for ExportError {
 impl std::error::Error for ExportError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            ExportError::Tree(_) => None,
+            ExportError::Tree(_) | ExportError::Io(_) | ExportError::Cancelled => None,
             ExportError::Environment(e) => Some(e),
         }
     }
@@ -1142,6 +1149,20 @@ pub(crate) mod tests {
         });
     }
 
+    /// Cancellation reaching git during an export is its own kind, not an
+    /// environment failure, and leaves nothing written.
+    #[test]
+    fn cancelled_export_is_not_a_git_failure() {
+        use std::sync::{atomic::AtomicBool, Arc};
+        let s = Scratch::new();
+        let b = Bundle::open(&s.bundle(&[("100644", "blob", "history.yaml")])).unwrap();
+        let head = b.branch("main").unwrap().unwrap();
+        let result =
+            crate::cancellation::with_flag(Arc::new(AtomicBool::new(true)), || b.export(&head));
+        assert_eq!(result, Err(ExportError::Cancelled));
+        assert!(b.exports.borrow().is_empty(), "nothing was written");
+    }
+
     #[test]
     fn regular_tree_exports() {
         let s = Scratch::new();
@@ -1315,6 +1336,12 @@ pub(crate) mod tests {
         let tree = ExportError::Tree("unsafe path in the bundle tree: \"a:b\"".into());
         assert_eq!(tree.to_string(), "unsafe path in the bundle tree: \"a:b\"");
         assert!(tree.source().is_none());
+        // Neither a file-system failure nor a cancellation is a git error.
+        let io = ExportError::Io("disk full".into());
+        assert_eq!(io.to_string(), "disk full");
+        assert!(io.source().is_none());
+        assert_eq!(ExportError::Cancelled.to_string(), "export cancelled");
+        assert!(ExportError::Cancelled.source().is_none());
     }
 
     #[test]

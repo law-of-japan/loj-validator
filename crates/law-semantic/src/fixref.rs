@@ -431,7 +431,9 @@ fn resolve_in(
         Err(ExportError::Tree(e)) => {
             return not_fetched(f, out, reference, format!("tree refused: {e}"));
         }
-        Err(ExportError::Environment(e)) => return not_fetched(f, out, reference, e.to_string()),
+        Err(e @ (ExportError::Environment(_) | ExportError::Io(_) | ExportError::Cancelled)) => {
+            return not_fetched(f, out, reference, e.to_string())
+        }
     };
     let Some(h) = snap.history.as_ref() else {
         return err(f, "FIXREF-06", format!("no history manifest at {commit}"));
