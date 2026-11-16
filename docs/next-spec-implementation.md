@@ -94,10 +94,19 @@ cannot be selected.
   direct child is killed; inherited-pipe waits still have a deadline.
 - `Bundle::Drop` removes its private `loj-bundle-*` and `loj-tree-*` temporary
   directories on normal return and panic unwinding (best effort if removal fails).
-  Abort, SIGINT, SIGTERM, SIGKILL and host failure can bypass Drop and leave files
-  behind. On Unix, the dedicated git group does not receive the terminal
-  foreground group's SIGINT: git can outlive the interrupted validator and keep
-  writing until it exits or its process group is stopped externally.
+  The Unix next-spec CLI registers SIGINT/SIGTERM through pinned `signal-hook`
+  and passes an atomic flag in a thread-local cancellation scope. Git checks it
+  before spawning and every at most 50 ms while waiting. The owning thread kills
+  the group before reaping its leader (preventing PID reuse), then returns through
+  normal Drop cleanup. Cancellation wins over timeout when both are observed.
+  Subsequent git calls in that scope cannot start. Nested scopes restore the
+  previous flag, including on unwind; other threads do not inherit the flag.
+  Non-git work and blocked filesystem calls may finish before cancellation is
+  reported. After execute returns, the CLI checks the flag once: cancellation
+  produces exit 3 and a JSON error with kind `incomplete`; later signals do not
+  change the result. Registrations remain until exit, so repeated signals cannot
+  interrupt cleanup or output. Windows, legacy and v1alpha1 are unchanged.
+  Abort, SIGKILL and host failure can still bypass Drop and leave files behind.
   No global signal handler or automatic stale-directory sweep is installed
   by the library. Use a dedicated temporary volume/directory for untrusted checks
   and reclaim it after all validator and child processes have stopped. Do not

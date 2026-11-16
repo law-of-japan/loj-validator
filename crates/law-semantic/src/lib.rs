@@ -30,6 +30,7 @@
 //! The modules behind [`checks::run`] (the registry, repositories, the change
 //! and reference checks, the git wrapper) are private: a check is reached
 //! through its input kind, not through its module.
+pub mod cancellation;
 pub(crate) mod change;
 pub mod checks;
 pub mod common;

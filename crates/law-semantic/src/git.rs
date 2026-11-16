@@ -10,6 +10,8 @@ use std::process::Command;
 /// bundle: a check that meets one is incomplete, not failed.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GitError {
+    /// The caller requested cancellation.
+    Cancelled,
     /// The bundle file cannot be read, or is over the size limit.
     Bundle(String),
     /// The file system failed (a temporary directory, an exported file).
@@ -35,6 +37,7 @@ pub enum GitError {
 impl std::fmt::Display for GitError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            GitError::Cancelled => f.write_str("git operation cancelled"),
             GitError::Bundle(e) | GitError::Io(e) | GitError::Failed(e) => f.write_str(e),
             GitError::Unavailable(e) => write!(f, "git is not available: {e}"),
             GitError::Timeout(limit) => {
@@ -181,6 +184,9 @@ fn run_with_input(
 ) -> Result<Output, GitError> {
     use std::io::Read;
     use std::process::Stdio;
+    if crate::cancellation::is_cancelled() {
+        return Err(GitError::Cancelled);
+    }
     let start = std::time::Instant::now();
     #[cfg(unix)]
     {
@@ -219,6 +225,10 @@ fn run_with_input(
     let err = reader(child.stderr.take().map(|p| Box::new(p) as _));
     let mut pause = std::time::Duration::from_millis(1);
     let status = loop {
+        if crate::cancellation::is_cancelled() {
+            terminate(&mut child)?;
+            return Err(GitError::Cancelled);
+        }
         if start.elapsed() >= limit {
             terminate(&mut child)?;
             return Err(GitError::Timeout(limit));
@@ -1119,6 +1129,17 @@ pub(crate) mod tests {
             std::thread::sleep(std::time::Duration::from_millis(2200));
             assert!(!survived.exists(), "a grandchild survived the timeout");
         }
+    }
+
+    #[test]
+    fn cancelled_scope_does_not_spawn_git() {
+        use std::sync::{atomic::AtomicBool, Arc};
+        crate::cancellation::with_flag(Arc::new(AtomicBool::new(true)), || {
+            assert_eq!(
+                run_with_timeout(Command::new("loj-no-such-program"), GIT_TIMEOUT),
+                Err(GitError::Cancelled)
+            );
+        });
     }
 
     #[test]
