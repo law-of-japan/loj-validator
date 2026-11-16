@@ -208,6 +208,17 @@ cargo test --workspace --locked
 cargo clippy --workspace --all-targets --locked -- -D warnings
 ```
 
+CIの独立したジョブで、両方の`vendor/loj-spec*`のファイル集合と生バイトのSHA-256を
+`SHA256SUMS.json`に照合します。欠落・一覧外のファイル・改変・シンボリックリンクを
+検出します。生成メタデータの`COMMIT`と`SHA256SUMS.json`だけは一覧比較から除外し、
+通常ファイルとしての存在を確認します。`COMMIT`と実装中の固定値の一致は適合テストが確認します。
+ローカルではPython 3.9以上の標準ライブラリだけで実行できます。
+
+```powershell
+python -B -m unittest discover -s scripts -p test_verify_vendor.py
+python -B scripts/verify_vendor.py
+```
+
 - `law-semantic`: プロトタイプの単体試験4件（番号正規化の表形式試験2件、スラグ、フラグメント）、意味AST 28例（期待診断コード集合の完全一致）、マッピング境界17例と2表現の同等性、参照12仕様×2表現と対の同等性・アンカー重複・ソース分離、API・不正設定の試験。
 - `loj-validator`: 例の両層合格、構造のみ不合格でも意味層を実行、構造を緩めた場合の意味層の項欠落・重複・リンク切れ検出、両層不合格、見出しレベル正規化の不一致、範囲外参照のカバレッジ表示、壊れたYAML/JSON/プロファイル/ファイルでの終了コード2とJSON出力、引数誤り。
 

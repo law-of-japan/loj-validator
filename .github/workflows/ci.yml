@@ -16,6 +16,20 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  vendor:
+    name: Vendored specification integrity
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Test snapshot verifier
+        run: python3 -m unittest discover -s scripts -p 'test_verify_vendor.py'
+      - name: Verify both pinned snapshots
+        run: python3 scripts/verify_vendor.py
+
   rust:
     name: Rust ${{ matrix.toolchain }} / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
