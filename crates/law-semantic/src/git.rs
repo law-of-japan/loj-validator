@@ -167,15 +167,29 @@ type Output = (std::process::ExitStatus, Vec<u8>, Vec<u8>);
 /// it, and kill it if it runs longer than `limit`. Only the direct child is killed:
 /// this assumes plain git commands, which (with hooks disabled) start no process
 /// that would keep the pipes open after git exits.
-fn run_with_timeout(mut cmd: Command, limit: std::time::Duration) -> Result<Output, GitError> {
+fn run_with_timeout(cmd: Command, limit: std::time::Duration) -> Result<Output, GitError> {
+    run_with_input(cmd, limit, Vec::new())
+}
+
+fn run_with_input(
+    mut cmd: Command,
+    limit: std::time::Duration,
+    input: Vec<u8>,
+) -> Result<Output, GitError> {
     use std::io::Read;
     use std::process::Stdio;
+    let start = std::time::Instant::now();
     let mut child = cmd
-        .stdin(Stdio::null())
+        .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
         .map_err(|e| GitError::Unavailable(e.to_string()))?;
+    let mut stdin = child.stdin.take().expect("piped stdin");
+    let writer = std::thread::spawn(move || {
+        use std::io::Write;
+        stdin.write_all(&input)
+    });
     let reader = |pipe: Option<Box<dyn Read + Send>>| {
         std::thread::spawn(move || {
             // Keep at most MAX_OUTPUT bytes; drain the rest so git never blocks on
@@ -195,24 +209,33 @@ fn run_with_timeout(mut cmd: Command, limit: std::time::Duration) -> Result<Outp
     };
     let out = reader(child.stdout.take().map(|p| Box::new(p) as _));
     let err = reader(child.stderr.take().map(|p| Box::new(p) as _));
-    let start = std::time::Instant::now();
     let mut pause = std::time::Duration::from_millis(1);
+    let mut exited = None;
     let status = loop {
-        match child.try_wait().map_err(|e| GitError::Io(e.to_string()))? {
-            Some(status) => break status,
-            None if start.elapsed() > limit => {
-                let _ = child.kill();
-                let _ = child.wait();
-                return Err(GitError::Timeout(limit));
-            }
-            None => {
-                std::thread::sleep(pause);
-                pause = (pause * 2).min(std::time::Duration::from_millis(50));
+        if start.elapsed() >= limit {
+            let _ = child.kill();
+            let _ = child.wait();
+            return Err(GitError::Timeout(limit));
+        }
+        if exited.is_none() {
+            exited = child.try_wait().map_err(|e| GitError::Io(e.to_string()))?;
+        }
+        if out.is_finished() && err.is_finished() && writer.is_finished() {
+            if let Some(status) = exited {
+                break status;
             }
         }
+        std::thread::sleep(pause.min(limit.saturating_sub(start.elapsed())));
+        pause = (pause * 2).min(std::time::Duration::from_millis(50));
     };
     let (stdout, overflow) = out.join().unwrap_or_default();
     let (stderr, _) = err.join().unwrap_or_default();
+    let written = writer
+        .join()
+        .map_err(|_| GitError::Io("git input thread panicked".into()))?;
+    if status.success() {
+        written.map_err(|e| GitError::Io(e.to_string()))?;
+    }
     if overflow {
         return Err(GitError::OutputLimit);
     }
@@ -374,6 +397,10 @@ impl Bundle {
     /// configuration, so the result depends only on the bundle. `Err` means git
     /// did not run to the end (not started, timed out, output over the limit).
     fn run(&self, args: &[&str]) -> Result<Output, GitError> {
+        run_with_timeout(self.command(args), GIT_TIMEOUT)
+    }
+
+    fn command(&self, args: &[&str]) -> Command {
         let mut cmd = Command::new("git");
         for (key, _) in std::env::vars_os() {
             if key.to_string_lossy().starts_with("GIT_") {
@@ -388,7 +415,7 @@ impl Bundle {
             .env("GIT_CONFIG_NOSYSTEM", "1")
             .env("GIT_CONFIG_GLOBAL", NULL_DEVICE)
             .env("GIT_TERMINAL_PROMPT", "0");
-        run_with_timeout(cmd, GIT_TIMEOUT)
+        cmd
     }
     /// The full hash of a commit. `Ok(None)` means the revision is not a commit
     /// hash or branch, or no such commit is in the bundle; `Err` means git failed.
@@ -465,31 +492,42 @@ impl Bundle {
                 .unwrap_or_default(),
         ))
     }
-    /// The blob at `commit:path`, raw, for an entry listed in the tree. `Err`
-    /// means git failed.
-    fn blob(&self, commit: &str, path: &str) -> Result<Vec<u8>, GitError> {
-        revision(commit)?;
-        self.git(&["cat-file", "blob", &format!("{commit}:{path}")])
-            .map_err(|e| GitError::Blob {
-                path: path.to_owned(),
-                source: Box::new(e),
-            })
-    }
     /// Write the tree of `commit` to a fresh directory, byte for byte. Every entry
     /// name is checked before anything is written; symbolic links, submodules and
     /// non-UTF-8 names are refused with an `Err`, never followed or written.
     pub fn export(&self, commit: &str) -> Result<PathBuf, ExportError> {
+        self.export_with_limit(commit, GIT_TIMEOUT)
+    }
+
+    fn export_with_limit(
+        &self,
+        commit: &str,
+        limit: std::time::Duration,
+    ) -> Result<PathBuf, ExportError> {
         use ExportError::{Environment, Tree};
+        let start = std::time::Instant::now();
+        let remaining = || {
+            limit
+                .checked_sub(start.elapsed())
+                .filter(|d| !d.is_zero())
+                .ok_or(Environment(GitError::Timeout(limit)))
+        };
         // Callers pass resolved hashes; an invalid one is a caller bug, which must
         // stop the check like an environment failure rather than be noted as a
         // property of the tree.
         revision(commit).map_err(Environment)?;
-        let listing = self
-            .git(&["ls-tree", "-r", "-z", "-l", "--full-tree", commit])
-            .map_err(Environment)?;
+        let (status, listing, stderr) = run_with_timeout(
+            self.command(&["ls-tree", "-r", "-z", "-l", "--full-tree", commit]),
+            remaining()?,
+        )
+        .map_err(Environment)?;
+        if !status.success() {
+            return Err(Environment(GitError::Failed(failure(&status, &stderr))));
+        }
         let mut entries = Vec::new();
         let mut total: u64 = 0;
         for entry in listing.split(|b| *b == 0).filter(|n| !n.is_empty()) {
+            remaining()?;
             let entry = String::from_utf8(entry.to_vec())
                 .map_err(|_| {
                     format!(
@@ -528,12 +566,20 @@ impl Bundle {
                     "bundle tree has more than {MAX_ENTRIES} files"
                 )));
             }
-            entries.push(name.to_owned());
+            let oid = meta
+                .split_whitespace()
+                .nth(2)
+                .ok_or(Environment(GitError::Unexpected("missing object ID")))?;
+            if !matches!(oid.len(), 40 | 64) || !oid.bytes().all(|b| b.is_ascii_hexdigit()) {
+                return Err(Environment(GitError::Unexpected("invalid object ID")));
+            }
+            entries.push((name.to_owned(), oid.to_owned(), size));
         }
         // Names (and directory prefixes) that differ only by case would overwrite
         // each other on a case-insensitive file system.
         let mut folded = std::collections::BTreeMap::new();
-        for name in &entries {
+        for (name, _, _) in &entries {
+            remaining()?;
             let mut prefix = String::new();
             for part in name.split('/') {
                 if !prefix.is_empty() {
@@ -550,16 +596,55 @@ impl Bundle {
                 }
             }
         }
+        let input = entries
+            .iter()
+            .map(|(_, oid, _)| format!("{oid}\n"))
+            .collect::<String>();
+        let (status, bytes, stderr) = run_with_input(
+            self.command(&["cat-file", "--batch"]),
+            remaining()?,
+            input.into_bytes(),
+        )
+        .map_err(Environment)?;
+        if !status.success() {
+            return Err(Environment(GitError::Failed(failure(&status, &stderr))));
+        }
+        remaining()?;
+        let mut batch = bytes.as_slice();
         let out = temp("loj-tree").map_err(Environment)?;
         // Registered before writing, so a failure part-way still removes the tree.
         self.exports.borrow_mut().push(out.clone());
-        for name in entries {
-            let bytes = self.blob(commit, &name).map_err(Environment)?;
+        for (name, oid, size) in entries {
+            remaining()?;
+            let invalid_blob = |reason| {
+                Environment(GitError::Blob {
+                    path: name.clone(),
+                    source: Box::new(GitError::Unexpected(reason)),
+                })
+            };
+            let end = batch
+                .iter()
+                .position(|b| *b == b'\n')
+                .ok_or_else(|| invalid_blob("missing batch header"))?;
+            if batch[..end] != *format!("{oid} blob {size}").as_bytes() {
+                return Err(invalid_blob("unexpected batch header"));
+            }
+            batch = &batch[end + 1..];
+            let size = usize::try_from(size).map_err(|_| Environment(GitError::OutputLimit))?;
+            if batch.get(size) != Some(&b'\n') {
+                return Err(invalid_blob("truncated batch blob"));
+            }
+            let (blob, rest) = batch.split_at(size);
+            batch = &rest[1..];
             let path = out.join(&name);
             if let Some(p) = path.parent() {
                 std::fs::create_dir_all(p).map_err(|e| Environment(GitError::Io(e.to_string())))?;
             }
-            std::fs::write(&path, bytes).map_err(|e| Environment(GitError::Io(e.to_string())))?;
+            std::fs::write(&path, blob).map_err(|e| Environment(GitError::Io(e.to_string())))?;
+        }
+        remaining()?;
+        if !batch.is_empty() {
+            return Err(Environment(GitError::Unexpected("trailing batch output")));
         }
         Ok(out)
     }
@@ -794,6 +879,36 @@ pub(crate) mod tests {
         assert_eq!(std::fs::read(out.join("history.yaml")).unwrap(), b"x\n");
         drop(b);
         assert!(!out.exists(), "the export is removed with the bundle");
+    }
+
+    #[test]
+    fn batch_export_preserves_binary_empty_and_duplicate_blobs() {
+        let s = Scratch::new();
+        let binary = b"\0\xff\r\nheader blob 12\n";
+        let blob = s.run(&["hash-object", "-w", "--stdin"], Some(binary));
+        let empty = s.run(&["hash-object", "-w", "--stdin"], Some(b""));
+        let tree = s.run(
+            &["mktree"],
+            Some(
+                format!(
+            "100644 blob {blob}\ta.bin\n100755 blob {blob}\tb.bin\n100644 blob {empty}\tempty\n"
+        )
+                .as_bytes(),
+            ),
+        );
+        let b = Bundle::open(&s.bundle_tree(&tree)).unwrap();
+        let head = b.branch("main").unwrap().unwrap();
+        let out = b.export(&head).unwrap();
+        for name in ["a.bin", "b.bin"] {
+            assert_eq!(std::fs::read(out.join(name)).unwrap(), binary);
+        }
+        assert_eq!(std::fs::read(out.join("empty")).unwrap(), b"");
+        assert_eq!(
+            b.export_with_limit(&head, std::time::Duration::ZERO),
+            Err(ExportError::Environment(GitError::Timeout(
+                std::time::Duration::ZERO
+            )))
+        );
     }
 
     #[test]
