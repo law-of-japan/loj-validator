@@ -158,6 +158,7 @@ const MAX_ENTRIES: usize = 100_000;
 /// The most output kept from one git command. Batch exports need MAX_TOTAL plus
 /// at most MAX_ENTRIES headers (under 100 bytes each), below this cap.
 const MAX_OUTPUT: u64 = 2 * MAX_TOTAL;
+const _: () = assert!(MAX_TOTAL + MAX_ENTRIES as u64 * 100 <= MAX_OUTPUT);
 
 /// The longest one git command may run before it is killed.
 const GIT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(120);
