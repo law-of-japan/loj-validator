@@ -32,7 +32,7 @@ Markdown一般構文、法令用追加構文、意味制約のレベル配分は
 
 ## 既定の次期仕様との照合
 
-次期仕様は `b676b0adbec2594f46c4c0162586310845bf0080` に固定しています。
+次期仕様は `b200fdb13957c6d6c7f9805d59c78980abac093d` に固定しています。
 L0はファイル・Manifest、L1はMarkdown固有構造・番号・表示・ASTです。MD系列の違反はL1で扱います。
 L3はRecordごとの `historyStructure` と `evidence`、L4はRecordごとの
 `relationResolution`・`relationConsistency`・`timeConsistency`・`displayConsistency`を独立して報告します。
