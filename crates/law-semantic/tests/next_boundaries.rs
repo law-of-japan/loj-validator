@@ -6,6 +6,30 @@ use serde_json::{json, Value};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 
+#[test]
+fn library_git_cancellation_is_incomplete_not_a_violation() {
+    use std::sync::{atomic::AtomicBool, Arc};
+    let scratch = Scratch::new();
+    scratch.write(
+        "input.bundle",
+        b"synthetic bundle; cancellation precedes git",
+    );
+    let input = Input::Change {
+        bundle: scratch.0.join("input.bundle"),
+        base: "aaaa".into(),
+        head: "bbbb".into(),
+    };
+    let report = law_semantic::cancellation::with_flag(Arc::new(AtomicBool::new(true)), || {
+        run_with_space(&input, &[Check::CHANGE], None)
+    });
+    assert_eq!(report.result(Check::CHANGE), Some(ResultValue::Incomplete));
+    assert_eq!(report.exit_code(), 3);
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.message.contains("git operation cancelled")));
+}
+
 struct Scratch(PathBuf);
 impl Scratch {
     fn new() -> Self {
