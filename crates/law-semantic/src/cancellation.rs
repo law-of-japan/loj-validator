@@ -30,15 +30,16 @@ thread_local! {
 }
 
 /// Message of the diagnostic left in a cancelled report. Like other
-/// diagnostic messages it is implementation specific (VAL-07) and may change
-/// with the next specification; match on `rule` and `class` instead.
-pub const CANCELLED: &str = "validation cancelled before completion";
+/// diagnostic messages it is implementation specific (VAL-07); callers match
+/// on `rule`, `class` and `code`.
+pub(crate) const CANCELLED: &str = "validation cancelled before completion";
 
 /// Run with a cancellation flag on this thread. Nested scopes and unwinding
 /// restore the previous flag. Spawned threads do not inherit this scope.
 /// Work may finish before cancellation is observed (see the module
 /// documentation for the checkpoints), but the public next-specification
-/// entry points still return `incomplete` for every selected check. Set the flag to true and never reset it.
+/// entry points still return `incomplete` for every selected check. Set the
+/// flag to true and never reset it.
 /// A failure to stop or reap git remains an environment error rather than a
 /// cancellation error; cancellation does not guarantee successful cleanup.
 pub fn with_flag<T>(flag: Arc<AtomicBool>, run: impl FnOnce() -> T) -> T {
@@ -94,6 +95,8 @@ fn cancel(report: &mut Report, checks: &[Check]) {
     report.diagnostics = vec![
         Diagnostic::error("VAL-04", crate::common::COMMON, CANCELLED)
             .with_class(Class::Undetermined)
+            // The code is namespaced by the schemaVersion of the VAL-04 rule
+            // (common/v1alpha1), like every other common diagnostic code.
             .with_code("common/v1alpha1/cancelled"),
     ];
     report.references.clear();

@@ -1,7 +1,7 @@
 //! Synthetic boundaries beyond the fixed conformance corpus.
 #![allow(clippy::unwrap_used)]
 use law_semantic::checks::{run_with_space, Input};
-use law_semantic::common::{Check, ResultValue};
+use law_semantic::common::{Check, Class, ResultValue};
 use serde_json::{json, Value};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -27,11 +27,9 @@ fn library_git_cancellation_is_incomplete_not_a_violation() {
     // The git error is replaced, as every partial finding is, by the one
     // cancellation diagnostic.
     assert_eq!(report.diagnostics.len(), 1, "{:?}", report.diagnostics);
-    assert_eq!(
-        report.diagnostics[0].message,
-        law_semantic::cancellation::CANCELLED
-    );
-    assert!(!report.diagnostics[0].is_error());
+    let d = &report.diagnostics[0];
+    assert_eq!((d.rule.as_str(), d.class), ("VAL-04", Class::Undetermined));
+    assert_eq!(d.code, "common/v1alpha1/cancelled");
 }
 
 /// Every public next-specification entry point turns a cancelled scope into
