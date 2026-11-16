@@ -96,7 +96,7 @@ cannot be selected.
   directories on normal return and panic unwinding (best effort if removal fails).
   The Unix next-spec CLI registers SIGINT/SIGTERM through pinned `signal-hook`
   and passes an atomic flag in a thread-local cancellation scope. Git checks it
-  before spawning and every at most 50 ms while waiting. The owning thread kills
+  before spawning and at intervals of at most 50 ms while waiting. The owning thread kills
   the group before reaping its leader (preventing PID reuse), then returns through
   normal Drop cleanup. Cancellation wins over timeout when both are observed.
   Subsequent git calls in that scope cannot start. Nested scopes restore the
@@ -106,6 +106,12 @@ cannot be selected.
   produces exit 3 and a JSON error with kind `incomplete`; later signals do not
   change the result. Registrations remain until exit, so repeated signals cannot
   interrupt cleanup or output. Windows, legacy and v1alpha1 are unchanged.
+  This interruption boundary precedes publication of any validation report:
+  a cancelled invocation reports interruption even if it has already found a
+  violation. The usual fail-over-incomplete aggregation applies to completed
+  validation reports, not to this CLI interruption error. Signal registration
+  failure also returns 3 because the environment could not support a safely
+  interruptible check; it is neither an input violation nor an argument error.
   Abort, SIGKILL and host failure can still bypass Drop and leave files behind.
   No global signal handler or automatic stale-directory sweep is installed
   by the library. Use a dedicated temporary volume/directory for untrusted checks
