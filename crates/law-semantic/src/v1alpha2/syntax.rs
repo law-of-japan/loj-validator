@@ -764,6 +764,10 @@ impl<'a> Builder<'a> {
             .is_some_and(|(_, _, next)| next == scope_name);
         file_boundaries(&doc, &tokens, continued, ctx);
         for token in &tokens {
+            if crate::cancellation::checkpoint() {
+                ctx.incomplete = true;
+                break;
+            }
             let span = &token.span;
             if self.nodes.len() >= 20_000 || span.len() > 4096 {
                 ctx.incomplete = true;
@@ -1258,6 +1262,10 @@ impl<'a> Builder<'a> {
     ) -> Value {
         let nodes = &self.nodes;
         for i in 0..nodes.len() {
+            if crate::cancellation::checkpoint() {
+                ctx.incomplete = true;
+                break;
+            }
             structure(nodes, i, documents, self.law, ctx);
         }
         for n in nodes {
@@ -1287,6 +1295,10 @@ pub(super) fn build(
 ) -> Value {
     let mut builder = Builder::new(manifest, ctx);
     for index in 0..documents.len() {
+        if crate::cancellation::checkpoint() {
+            ctx.incomplete = true;
+            break;
+        }
         builder.read(documents, index, ctx);
     }
     builder.finish(manifest, documents, ctx)

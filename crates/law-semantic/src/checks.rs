@@ -94,6 +94,8 @@ pub fn run_with_space(input: &Input, checks: &[Check], space: Option<&str>) -> R
             reference,
         } => crate::fixref::check_with_space(bundle, registry, reference, space),
     };
+    // A cancelled check holds partial results only (see `cancellation`).
+    crate::cancellation::finish(&mut report, checks);
     for c in checks {
         if report.result(*c).is_none() {
             report.set(*c, crate::common::ResultValue::NotApplicable);

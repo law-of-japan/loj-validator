@@ -49,9 +49,15 @@ fn read_snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError> {
     let mut documents = BTreeMap::new();
     let mut pending = vec![dir.clone()];
     while let Some(directory) = pending.pop() {
+        if crate::cancellation::checkpoint() {
+            return Err(ExportError::Environment(GitError::Cancelled));
+        }
         for entry in std::fs::read_dir(directory)
             .map_err(|e| ExportError::Environment(GitError::Io(e.to_string())))?
         {
+            if crate::cancellation::checkpoint() {
+                return Err(ExportError::Environment(GitError::Cancelled));
+            }
             let entry = entry.map_err(|e| ExportError::Environment(GitError::Io(e.to_string())))?;
             let path = entry.path();
             if path.is_dir() {
@@ -144,6 +150,9 @@ impl Snapshot {
             let Some(id) = revision["id"].as_str() else {
                 continue;
             };
+            if crate::cancellation::checkpoint() {
+                break;
+            }
             let Some(path) = self.packages.get(id) else {
                 continue;
             };
@@ -284,6 +293,9 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
     // even when the commit is both a parent and a child in the range.
     let mut cache: BTreeMap<String, Option<Snapshot>> = BTreeMap::new();
     for (commit, parents) in commits {
+        if crate::cancellation::checkpoint() {
+            return undetermined(f, report.target, GitError::Cancelled.to_string());
+        }
         let at = format!("commit {commit}");
         if parents.len() > 1 {
             f.error(

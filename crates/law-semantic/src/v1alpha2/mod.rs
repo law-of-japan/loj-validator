@@ -136,6 +136,10 @@ pub fn check(input: &Path, levels: &[Check]) -> PackageCheck {
     let manifest_ok = loaded.is_some();
     if let Some((manifest, documents)) = loaded {
         for (_, source, _) in &documents {
+            if crate::cancellation::checkpoint() {
+                ctx.incomplete = true;
+                break;
+            }
             // L0: each file is parsed as CommonMark (never fails, MD-03).
             for _ in pulldown_cmark::Parser::new(source) {}
         }
@@ -208,6 +212,16 @@ pub fn check(input: &Path, levels: &[Check]) -> PackageCheck {
     }
     let l1_pass = report.result(Check::L1) == Some(ResultValue::Pass);
     report.diagnostics = ctx.diagnostics.into_iter().map(|(_, d)| d).collect();
+    // A cancelled package check holds a partial tree only (see `cancellation`).
+    if crate::cancellation::finish(&mut report, levels) {
+        return PackageCheck {
+            report,
+            ast: None,
+            positions: Vec::new(),
+            source_map: Map::new(),
+            sources: Vec::new(),
+        };
+    }
     PackageCheck {
         report,
         ast: if l1_pass { ast } else { None },
