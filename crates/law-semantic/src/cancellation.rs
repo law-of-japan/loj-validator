@@ -29,7 +29,9 @@ thread_local! {
     static FLAG: RefCell<Option<Arc<AtomicBool>>> = const { RefCell::new(None) };
 }
 
-/// Message of the diagnostic left in a cancelled report.
+/// Message of the diagnostic left in a cancelled report. Like other
+/// diagnostic messages it is implementation specific (VAL-07) and may change
+/// with the next specification; match on `rule` and `class` instead.
 pub const CANCELLED: &str = "validation cancelled before completion";
 
 /// Run with a cancellation flag on this thread. Nested scopes and unwinding
@@ -183,6 +185,7 @@ mod tests {
     }
 
     /// Synthetic input generators: numbered articles with one paragraph each.
+    /// `loj-validator/tests/interrupt_cli.rs` has a copy for the CLI crate.
     mod synthetic {
         use serde_json::json;
         use std::path::{Path, PathBuf};

@@ -96,6 +96,7 @@ fn signals_stop_git_descendants_and_remove_private_directories() {
 }
 
 /// Numbered articles of a synthetic package (kanji numerals up to 9999).
+/// A copy of the generator in `law-semantic/src/cancellation.rs` tests.
 fn synthetic_text(articles: usize) -> String {
     const DIGITS: [&str; 10] = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九"];
     let kanji = |mut n: usize| {
