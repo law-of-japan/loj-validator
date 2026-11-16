@@ -1034,6 +1034,14 @@ impl<'a> Builder<'a> {
         ctx: &mut Context,
     ) {
         let Some(mut frame) = doc.frames.pop() else {
+            // Unreachable: the caller found an open content. Never drop the heading silently.
+            ctx.diag(
+                "AMEND-02",
+                "Heading in an amendment content without its context",
+                doc.path,
+                span.start,
+                span.end,
+            );
             return;
         };
         let scope = std::mem::replace(&mut doc.scope, frame.content);
@@ -1516,8 +1524,10 @@ fn structure(
         let files = documents.iter().filter(|d| d.2 == "main").count();
         let message = if n.content.is_empty() {
             Some("Main provision has no classification, article or paragraph")
-        } else if direct && (structural || files > 1) {
-            Some("Mixed main provision form or split paragraph form")
+        } else if direct && structural {
+            Some("Main provision mixes paragraphs with classifications or articles")
+        } else if direct && files > 1 {
+            Some("Main provision in the paragraph form must be one file")
         } else {
             None
         };
@@ -1673,7 +1683,9 @@ fn amendment_shape(nodes: &[Node], i: usize, ctx: &mut Context) {
                 || one(&|c| c.kind == Kind::Item)
                 || one(&|c| c.kind == Kind::Table)
                 || (one(&|c| c.kind == Kind::Subitem)
-                    && children.iter().all(|c| c.level == children[0].level));
+                    && children
+                        .first()
+                        .is_some_and(|f| children.iter().all(|c| c.level == f.level)));
             let valid = if children.is_empty() {
                 text
             } else {

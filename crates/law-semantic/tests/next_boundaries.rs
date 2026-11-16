@@ -338,3 +338,38 @@ fn text_and_headings_in_amendment_contents_follow_the_document_rules() {
         .to_string()
         .contains("\"synthetic/main/article/1/paragraph/2\""));
 }
+
+#[test]
+fn amendment_numbers_and_content_counts_are_checked() {
+    let dir = Scratch::new();
+    let amendment = |number: &str, contents: usize| {
+        let content =
+            "<!-- loj:amendment-content -->\n（見出し）\n<!-- loj:end-amendment-content -->\n";
+        format!(
+            "<!-- loj:amendment number={number} -->\n第五条の見出しを次のように改める。\n{}<!-- loj:end-amendment -->\n",
+            content.repeat(contents)
+        )
+    };
+    let law = |amendments: &str| {
+        format!(
+            "# 第一条\n<!-- loj:paragraph number=1 -->\n甲法の一部を次のように改正する。\n{amendments}<!-- loj:end-paragraph -->\n"
+        )
+    };
+    let ok = law(&(amendment("1", 1) + &amendment("2", 1)));
+    let result = package(&dir, &ok);
+    assert_eq!(
+        result.report.result(Check::L1),
+        Some(ResultValue::Pass),
+        "{:?}",
+        result.report.diagnostics
+    );
+    for (name, text) in [
+        ("gap", law(&(amendment("1", 1) + &amendment("3", 1)))),
+        ("duplicate", law(&(amendment("1", 1) + &amendment("1", 1)))),
+        ("no content", law(&amendment("1", 0))),
+        ("two contents", law(&amendment("1", 2))),
+    ] {
+        let found = rules(&package(&dir, &text));
+        assert!(found.contains(&"AMEND-01".to_owned()), "{name}: {found:?}");
+    }
+}
