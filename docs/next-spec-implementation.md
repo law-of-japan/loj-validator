@@ -80,7 +80,10 @@ or nothing passed.
 
 - Success: every expected result matches, no `error` diagnostic, the AST matches
   exactly, expected positions are present.
-- Failure: every expected `error` diagnostic (`rule` + `schemaVersion`) is present;
+- Diagnostics in either kind of case match `rule`, `schemaVersion` and `class`.
+  When an expected diagnostic specifies `location`, its `path`, `start` and `end`
+  must match; other diagnostic fields and additional diagnostics are allowed.
+- Failure: every expected diagnostic is present;
   without expected results the case's own check must not pass.
 - `references` (CONF-01): every expected entry is reported with the same `target` and
   `result`; extra references are allowed.
