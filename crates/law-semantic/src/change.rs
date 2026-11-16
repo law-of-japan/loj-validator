@@ -32,9 +32,18 @@ pub(crate) struct Snapshot {
     pub packages: BTreeMap<String, String>,
     pub files: BTreeMap<String, [u8; 32]>,
     pub documents: BTreeMap<String, Value>,
+    /// Export retained until Bundle is dropped. Deferred AST generation must
+    /// finish while that bundle is alive (the change-check cache is local to it).
+    directory: std::path::PathBuf,
 }
 
 pub(crate) fn snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError> {
+    let mut snapshot = read_snapshot(b, commit)?;
+    snapshot.build_asts(|_| true);
+    Ok(snapshot)
+}
+
+fn read_snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError> {
     let dir = b.export(commit)?;
     let mut files = BTreeMap::new();
     let mut documents = BTreeMap::new();
@@ -91,7 +100,6 @@ pub(crate) fn snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError
         }
         _ => None,
     };
-    let mut asts = BTreeMap::new();
     let mut packages = BTreeMap::new();
     for r in history
         .as_ref()
@@ -109,23 +117,49 @@ pub(crate) fn snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError
             ));
         }
         let path = crate::repository::history::package_path(r);
-        let pkg = crate::v1alpha2::check(&dir.join(&path), &[Check::L0, Check::L1]);
-        let ast = match pkg.ast {
-            _ if r["text"]["status"] == "partial" => Err("partial text".into()),
-            Some(a) => Ok(a),
-            None => Err("the package does not pass L1".into()),
-        };
-        asts.insert(id.to_owned(), ast);
         packages.insert(id.to_owned(), path);
     }
     Ok(Snapshot {
         history,
         history_bytes,
-        asts,
+        asts: BTreeMap::new(),
         packages,
         files,
         documents,
+        directory: dir,
     })
+}
+
+impl Snapshot {
+    /// CHG-02: declared corrections/restorations do not build an AST. A cached
+    /// commit may need that AST later, as the parent of a different change.
+    fn build_asts(&mut self, needed: impl Fn(&str) -> bool) {
+        for revision in self
+            .history
+            .as_ref()
+            .and_then(|h| h["revisions"].as_array())
+            .into_iter()
+            .flatten()
+        {
+            let Some(id) = revision["id"].as_str() else {
+                continue;
+            };
+            let Some(path) = self.packages.get(id) else {
+                continue;
+            };
+            if !needed(id) || self.asts.contains_key(id) {
+                continue;
+            }
+            let ast = if revision["text"]["status"] == "partial" {
+                Err("partial text".into())
+            } else {
+                let pkg =
+                    crate::v1alpha2::check(&self.directory.join(path), &[Check::L0, Check::L1]);
+                pkg.ast.ok_or_else(|| "the package does not pass L1".into())
+            };
+            self.asts.insert(id.to_owned(), ast);
+        }
+    }
 }
 
 /// CHG-03: only a wholly valid final paragraph, excluding the first one.
@@ -163,7 +197,7 @@ fn trailer_fields(message: &str) -> Vec<(&str, &str)> {
     fields
 }
 
-fn trailers(message: &str) -> (Vec<String>, Option<Vec<String>>) {
+fn trailers(message: &str) -> (Vec<String>, Vec<String>) {
     let fields = trailer_fields(message);
     let kinds = fields
         .iter()
@@ -173,9 +207,9 @@ fn trailers(message: &str) -> (Vec<String>, Option<Vec<String>>) {
     let revisions: Vec<String> = fields
         .iter()
         .filter(|(name, _)| *name == "LoJ-Revisions")
-        .flat_map(|(_, value)| value.split(", ").map(str::to_owned))
+        .map(|(_, value)| (*value).into())
         .collect();
-    (kinds, (!revisions.is_empty()).then_some(revisions))
+    (kinds, revisions)
 }
 
 fn reviewed(message: &str) -> bool {
@@ -294,8 +328,15 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
             );
             continue;
         }
+        let change = Change {
+            commit: &commit,
+            at: &at,
+            kind: &kind,
+            declared: &declared,
+            reviewed: reviewed(&message),
+        };
         for c in parent.into_iter().chain(std::iter::once(&commit)) {
-            if let Err(why) = load_snapshot(b, c, &at, &mut cache, &mut f) {
+            if let Err(why) = load_snapshot(b, c, &change, &mut cache, &mut f) {
                 return undetermined(f, report.target, why);
             }
         }
@@ -310,13 +351,6 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
         let Some(Some(after)) = cache.get(&commit) else {
             continue;
         };
-        let change = Change {
-            commit: &commit,
-            at: &at,
-            kind: &kind,
-            declared: &declared,
-            reviewed: reviewed(&message),
-        };
         change.compare(before, after, &mut f);
     }
     let mut r = f.into_report(&[CH]);
@@ -325,8 +359,8 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
 }
 
 /// CHG-03: the commit declares exactly one known `LoJ-Change`. Returns the
-/// kind and the `LoJ-Revisions`, or `None` when the trees are not to be
-/// compared because the kind is unknown.
+/// kind and the `LoJ-Revisions`, or `None` when the declarations are invalid
+/// and the trees must not be compared. Revision trailer lines are not combined.
 fn declared_change(
     commit: &str,
     at: &str,
@@ -334,9 +368,24 @@ fn declared_change(
     f: &mut Findings,
 ) -> Option<(String, Vec<String>)> {
     let (kinds, revisions) = trailers(message);
+    if revisions.len() > 1 {
+        f.error(
+            CH,
+            "CHG-03",
+            COMMON,
+            format!("{commit} declares more than one LoJ-Revisions"),
+            at,
+            "",
+        );
+        return None;
+    }
     let problem = match kinds.as_slice() {
         [k] if KINDS.contains(&k.as_str()) => {
-            return Some((k.clone(), revisions.unwrap_or_default()))
+            let declared = revisions
+                .first()
+                .map(|value| value.split(", ").map(str::to_owned).collect())
+                .unwrap_or_default();
+            return Some((k.clone(), declared));
         }
         [] => format!("{commit} declares no LoJ-Change"),
         [k] => format!("{commit}: unknown change kind {k}"),
@@ -352,15 +401,19 @@ fn declared_change(
 fn load_snapshot(
     b: &Bundle,
     commit: &str,
-    at: &str,
+    change: &Change<'_>,
     cache: &mut BTreeMap<String, Option<Snapshot>>,
     f: &mut Findings,
 ) -> Result<(), String> {
-    if cache.contains_key(commit) {
+    if let Some(cached) = cache.get_mut(commit) {
+        if let Some(snapshot) = cached {
+            snapshot.build_asts(|id| change.must_keep(id));
+        }
         return Ok(());
     }
-    match snapshot(b, commit) {
-        Ok(s) => {
+    match read_snapshot(b, commit) {
+        Ok(mut s) => {
+            s.build_asts(|id| change.must_keep(id));
             cache.insert(commit.to_owned(), Some(s));
         }
         Err(ExportError::Environment(e)) => return Err(format!("{commit}: {e}")),
@@ -372,7 +425,7 @@ fn load_snapshot(
                 "CHG-02",
                 COMMON,
                 format!("{commit}: tree refused: {e}"),
-                at,
+                change.at,
                 "",
             );
             cache.insert(commit.to_owned(), None);
@@ -586,6 +639,94 @@ mod tests {
                 .map(|(_, d)| (d.rule.as_str(), d.message.as_str()))
                 .collect();
             assert_eq!(found, [("CHG-03", problem)]);
+        }
+    }
+
+    #[test]
+    fn duplicate_revision_trailers_are_rejected_before_comparison() {
+        for kind in KINDS {
+            for (first, second) in [("r1", "r1"), ("r1", "r2"), ("", "r1"), ("", "")] {
+                let message = format!(
+                    "Change\n\nLoJ-Change: {kind}\nLoJ-Revisions: {first}\nLoJ-Revisions: {second}\n"
+                );
+                let mut f = Findings::default();
+                assert_eq!(declared_change("c1", "commit c1", &message, &mut f), None);
+                assert_eq!(f.items.len(), 1);
+                assert_eq!(f.items[0].1.rule, "CHG-03");
+                assert_eq!(f.items[0].1.class, Class::Error);
+            }
+        }
+        // These trees have an unreadable history manifest. Exporting them would
+        // add an undetermined finding; reject the trailers before loading them.
+        let s = Scratch::new();
+        let (path, commits) = s.chain(&[
+            b"base\n",
+            b"Change\n\nLoJ-Change: migration\nLoJ-Revisions:\nLoJ-Revisions:\n",
+        ]);
+        let report = check(&path, &commits[0], &commits[1]);
+        assert_eq!(result(&report), ResultValue::Fail);
+        assert_eq!(report.diagnostics.len(), 1);
+        assert_eq!(report.diagnostics[0].rule, "CHG-03");
+    }
+
+    #[test]
+    fn cached_snapshots_build_asts_only_when_a_comparison_needs_them() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../vendor/loj-spec");
+        let manifest: Value = serde_json::from_slice(
+            &std::fs::read(root.join("conformance/common/v1alpha1/manifest.json")).unwrap(),
+        )
+        .unwrap();
+        // These case IDs belong to the pinned specification; revisiting the pin
+        // also requires preserving these complete, invalid-L1, and partial inputs.
+        for case_id in ["common-041", "common-048", "common-049"] {
+            let case = manifest["cases"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|case| case["id"] == case_id)
+                .unwrap();
+            let b = Bundle::open(&root.join(case["input"]["bundle"].as_str().unwrap())).unwrap();
+            let commit = case["input"]["base"].as_str().unwrap();
+            let declared = ["b7k2m9qd".to_owned()];
+            for kind in ["correction", "officialCorrection", "restoration"] {
+                let mut change = Change {
+                    commit,
+                    at: "test commit",
+                    kind,
+                    declared: &declared,
+                    reviewed: false,
+                };
+                let mut cache = BTreeMap::new();
+                let mut f = Findings::default();
+                load_snapshot(&b, commit, &change, &mut cache, &mut f).unwrap();
+                let cached = cache[commit].as_ref().unwrap();
+                assert!(cached.asts.is_empty());
+                assert!(cached.packages.contains_key(&declared[0]));
+                let directory = cached.directory.clone();
+
+                // The next commit requires all ASTs, even if it declares IDs.
+                change.kind = "metadata";
+                load_snapshot(&b, commit, &change, &mut cache, &mut f).unwrap();
+                let cached = cache[commit].as_ref().unwrap();
+                assert_eq!(cached.directory, directory);
+                assert_eq!(cached.asts.len(), 1);
+                assert_eq!(cached.asts, snapshot(&b, commit).unwrap().asts);
+                assert!(f.items.is_empty());
+
+                // Undeclared versions must still be checked during correction.
+                change.kind = kind;
+                change.declared = &[];
+                let mut other_cache = BTreeMap::new();
+                load_snapshot(&b, commit, &change, &mut other_cache, &mut f).unwrap();
+                assert_eq!(other_cache[commit].as_ref().unwrap().asts, cached.asts);
+                change.compare(cached, cached, &mut f);
+                if case_id != "common-041" {
+                    assert!(f
+                        .items
+                        .iter()
+                        .any(|(_, d)| d.rule == "CHG-04" && d.class == Class::Undetermined));
+                }
+            }
         }
     }
 

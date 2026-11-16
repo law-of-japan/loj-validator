@@ -1,6 +1,6 @@
 # Next specification implementation (loj/v1alpha2 and the new kinds)
 
-Target: loj-spec commit `a9c5be83da58170082594e6de989cd7ee4af8bf4`, vendored as
+Target: loj-spec commit `b676b0adbec2594f46c4c0162586310845bf0080`, vendored as
 `spec`, `schemas`, `conformance`, `grammar/v1alpha2` and `LICENSE` in `vendor/loj-spec` with `COMMIT` and
 `SHA256SUMS.json`. The v1alpha1 fixtures of `b704631` stay unchanged in
 `vendor/loj-spec-v1alpha1`; the v1alpha1 and legacy pipelines are unchanged.
@@ -109,7 +109,7 @@ or nothing passed.
 | Suite | Normative | Passed | Informative (not counted) |
 |---|---|---|---|
 | loj/v1alpha2 | 181 | 181 | 1 (pkg-026, L2) |
-| common/v1alpha1 | 40 | 40 | 0 |
+| common/v1alpha1 | 49 | 49 | 0 |
 | loj-history/v1alpha1 | 61 | 61 | 0 |
 | loj-glyphs/v1alpha1 | 11 | 11 | 0 |
 | loj-registry/v1alpha1 | 13 | 13 | 0 |
@@ -119,7 +119,7 @@ Passing the fixed cases is a necessary condition only (CONF-02).
 
 ## Normative boundaries
 
-- There are 311 normative cases and one informative L2 case. `derivedFrom` and
+- There are 320 normative cases and one informative L2 case. `derivedFrom` and
   `rejectedBy` are audit metadata, never instructions to regenerate or skip inputs.
 - MD-04 emptiness uses the 25 Unicode 15.1 White_Space code points. Paragraph
   captions require `caption=present`; Toc placement and mixed number scripts are
@@ -131,8 +131,12 @@ Passing the fixed cases is a necessary condition only (CONF-02).
 - `sourceUris`, `glyphCheck`, `glyphPreservation` and `collection` are the current
   field names; the closed schemas reject their former names.
 - CHG-02 checks dependent metadata and file boundaries as well as AST equality.
+  Declared corrections and restorations do not build or compare their ASTs;
+  cached snapshots build them only if a later change needs the comparison.
+  Evidence is checked in the resulting history, without requiring new evidence.
   CHG-03 reads only a syntactically valid final trailer paragraph, with ASCII
-  space/tab trimming and LF splitting; merge commits are rejected without comparison.
+  space/tab trimming and LF splitting; merge commits and duplicate `LoJ-Change`
+  or `LoJ-Revisions` trailers are rejected without comparison, for every kind.
   CHG-04 reports each uncomparable AST, even when a format violation also exists.
   A review trailer removes only the automatic-format violation, not incompleteness.
   No normative migration mapping exists for this specification pair.
