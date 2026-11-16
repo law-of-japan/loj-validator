@@ -1,0 +1,11 @@
+schemaVersion: loj-glyphs/v1alpha1
+revision: p3x8k6dt
+notes:
+  - id: g1
+    node: 19660625-act-86/main/paragraph/1/amendment/1/content/table/1/row/f9km/cell/2
+    offset: 0
+    recorded: "政令で定める日"
+    kind: sourceEdit
+    description: "印刷の「二月十一日」を線で消し、手書きで「政令で定める日」と訂正。手書きの字の字体は下書きの資料（衆議院の制定法律の本文）に従う"
+    evidence: [{source: src-goshomei-s41-86, locator: "2画像 建国記念の日の項"}, {source: src-shugiin, locator: "本則"}]
+    verification: {state: confirmed}

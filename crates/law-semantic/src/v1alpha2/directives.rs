@@ -37,6 +37,12 @@ pub(super) enum Container {
         rowspan: Option<u64>,
         colspan: Option<u64>,
     },
+    /// AMEND-01: an amendment with content.
+    Amendment {
+        number: String,
+    },
+    /// AMEND-01/02: the content of an amendment.
+    AmendmentContent,
 }
 
 impl Container {
@@ -48,6 +54,8 @@ impl Container {
             Container::Table { .. } => Kind::Table,
             Container::Row { .. } => Kind::Row,
             Container::Cell { .. } => Kind::Cell,
+            Container::Amendment { .. } => Kind::Amendment,
+            Container::AmendmentContent => Kind::AmendmentContent,
         }
     }
 }
@@ -95,7 +103,7 @@ pub(super) fn marker(s: &str) -> Result<Marker, Invalid> {
     let kind = Kind::from_marker(words.next().ok_or_else(invalid)?).ok_or_else(invalid)?;
     let allowed: &[&str] = match kind {
         Kind::Paragraph => &["number", "numbering", "caption"],
-        Kind::Item | Kind::Table => &["number"],
+        Kind::Item | Kind::Table | Kind::Amendment => &["number"],
         Kind::Subitem => &["number", "level"],
         Kind::Row => &["key"],
         Kind::Cell => &["rowspan", "colspan"],
@@ -176,6 +184,8 @@ pub(super) fn marker(s: &str) -> Result<Marker, Invalid> {
             })?,
         }),
         Kind::Cell => Marker::Open(Container::Cell { rowspan, colspan }),
+        Kind::Amendment => Marker::Open(Container::Amendment { number: number? }),
+        Kind::AmendmentContent => Marker::Open(Container::AmendmentContent),
         // `Kind::from_marker` returns no other kind.
         _ => return Err(invalid()),
     })
@@ -230,6 +240,24 @@ mod tests {
         assert!(marker("<!-- loj:cell -->").is_ok());
         assert!(marker("<!-- loj:cell colspan=2 rowspan=10 -->").is_ok());
         assert!(marker("<!-- loj:enact-statement -->").is_ok());
+        assert!(matches!(
+            marker("<!-- loj:amendment number=2 -->"),
+            Ok(Marker::Open(Container::Amendment { number })) if number == "2"
+        ));
+        assert!(matches!(
+            marker("<!-- loj:amendment-content -->"),
+            Ok(Marker::Open(Container::AmendmentContent))
+        ));
+        assert!(matches!(
+            marker("<!-- loj:end-amendment-content -->"),
+            Ok(Marker::Close(Kind::AmendmentContent))
+        ));
+        for bad in [
+            "<!-- loj:amendment -->",
+            "<!-- loj:amendment-content number=1 -->",
+        ] {
+            assert!(marker(bad).is_err(), "{bad}");
+        }
         assert!(matches!(
             marker("<!-- loj:end-preamble -->"),
             Ok(Marker::Close(Kind::Preamble))

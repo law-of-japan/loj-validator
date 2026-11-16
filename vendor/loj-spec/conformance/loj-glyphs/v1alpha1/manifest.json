@@ -323,6 +323,25 @@
           ]
         }
       ]
+    },
+    {
+      "id": "glyph-012",
+      "title": "改正法の版の改正内容の中のセルを指す見え消しの注記",
+      "requirements": [
+        "GLYPH-04",
+        "GLYPH-09",
+        "AMEND-02",
+        "PARA-03"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/valid/glyph-012/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-012.json",
+      "success": true
     }
   ]
 }

@@ -256,3 +256,85 @@ fn duplicate_or_unidentified_l4_inputs_are_incomplete() {
         );
     }
 }
+
+fn rules(result: &law_semantic::v1alpha2::PackageCheck) -> Vec<String> {
+    result
+        .report
+        .diagnostics
+        .iter()
+        .filter(|d| d.class == Class::Error)
+        .map(|d| d.rule.clone())
+        .collect()
+}
+
+#[test]
+fn amendment_contents_keep_their_own_article_context() {
+    let dir = Scratch::new();
+    // Two amendments: the first content holds a deleted and an active quoted
+    // article; the second content holds a paragraph group. Neither content's
+    // article context leaks into the next content or into the amending law.
+    let text = "# 第一条\n<!-- loj:paragraph number=1 -->\n甲法の一部を次のように改正する。\n\
+<!-- loj:amendment number=1 -->\n第四条及び第五条を次のように改める。\n<!-- loj:amendment-content -->\n\
+# 第四条\n削除\n# 第五条（記録）\n<!-- loj:paragraph number=1 -->\n記録する。\n<!-- loj:end-paragraph -->\n\
+<!-- loj:end-amendment-content -->\n<!-- loj:end-amendment -->\n\
+<!-- loj:amendment number=2 -->\n第六条に次の一項を加える。\n<!-- loj:amendment-content -->\n\
+<!-- loj:paragraph number=2 -->\n２　公表する。\n<!-- loj:end-paragraph -->\n\
+<!-- loj:end-amendment-content -->\n<!-- loj:end-amendment -->\n<!-- loj:end-paragraph -->\n\
+# 第二条\n<!-- loj:paragraph number=1 -->\n乙法の一部を次のように改正する。\n\
+<!-- loj:item number=1 -->\n一　第二条を次のように改める。\n<!-- loj:amendment number=1 -->\n第二条を次のように改める。\n\
+<!-- loj:amendment-content -->\n# 第二条\n<!-- loj:paragraph number=1 -->\n雪を記録する。\n<!-- loj:end-paragraph -->\n\
+<!-- loj:end-amendment-content -->\n<!-- loj:end-amendment -->\n<!-- loj:end-item -->\n<!-- loj:end-paragraph -->\n";
+    let result = package(&dir, text);
+    assert_eq!(
+        result.report.result(Check::L1),
+        Some(ResultValue::Pass),
+        "{:?}",
+        result.report.diagnostics
+    );
+    let ast = result.ast.unwrap().to_string();
+    let first = "synthetic/main/article/1/paragraph/1/amendment/1/content";
+    assert!(ast.contains(&format!("\"{first}/article/4\"")), "{ast}");
+    assert!(ast.contains("\"status\":\"deleted\""), "{ast}");
+    assert!(ast.contains(&format!("\"{first}/article/5/paragraph/1\"")));
+    let second = "synthetic/main/article/1/paragraph/1/amendment/2/content/paragraph/2";
+    assert!(ast.contains(&format!("\"{second}\"")), "{ast}");
+    assert!(ast.contains("\"synthetic/main/article/2/paragraph/1\""));
+    let quoted = "synthetic/main/article/2/paragraph/1/item/1/amendment/1/content/article/2";
+    assert!(ast.contains(&format!("\"{quoted}\"")), "{ast}");
+}
+
+#[test]
+fn text_and_headings_in_amendment_contents_follow_the_document_rules() {
+    let dir = Scratch::new();
+    let head = "# 第一条\n<!-- loj:paragraph number=1 -->\n甲法の一部を次のように改正する。\n\
+<!-- loj:amendment number=1 -->\n第五条を次のように改める。\n<!-- loj:amendment-content -->\n";
+    let tail = "<!-- loj:end-amendment-content -->\n<!-- loj:end-amendment -->\n<!-- loj:end-paragraph -->\n";
+    // Text after a quoted article heading, outside its paragraphs: MD-03.
+    let loose = format!(
+        "{head}# 第五条\n本文。\n<!-- loj:paragraph number=1 -->\n記録する。\n<!-- loj:end-paragraph -->\n{tail}"
+    );
+    assert!(rules(&package(&dir, &loose)).contains(&"MD-03".to_owned()));
+    // A supplement heading in a content is unrecognized (HEAD-01), never HEAD-03.
+    let supplement = format!(
+        "{head}# 附　則\n<!-- loj:paragraph number=1 -->\n施行する。\n<!-- loj:end-paragraph -->\n{tail}"
+    );
+    let found = rules(&package(&dir, &supplement));
+    assert!(found.contains(&"HEAD-01".to_owned()), "{found:?}");
+    assert!(!found.contains(&"HEAD-03".to_owned()), "{found:?}");
+    // In the article form, a paragraph after an article belongs to it.
+    let article_form =
+        "# 第一条\n<!-- loj:paragraph number=1 -->\n本文。\n<!-- loj:end-paragraph -->\n\
+<!-- loj:paragraph number=2 -->\n２　本文。\n<!-- loj:end-paragraph -->\n";
+    let result = package(&dir, article_form);
+    assert_eq!(
+        result.report.result(Check::L1),
+        Some(ResultValue::Pass),
+        "{:?}",
+        result.report.diagnostics
+    );
+    assert!(result
+        .ast
+        .unwrap()
+        .to_string()
+        .contains("\"synthetic/main/article/1/paragraph/2\""));
+}

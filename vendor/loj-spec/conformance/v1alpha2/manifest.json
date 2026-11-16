@@ -2949,6 +2949,418 @@
       },
       "expected": "conformance/v1alpha2/expected/pkg-182.json",
       "success": false
+    },
+    {
+      "id": "pkg-183",
+      "title": "項だけからなる本則（表示番号のある二つの項）",
+      "requirements": [
+        "PARA-03",
+        "DISP-01",
+        "ID-01",
+        "AST-01",
+        "DIR-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-183/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-183.json",
+      "success": true
+    },
+    {
+      "id": "pkg-184",
+      "title": "改正法の本則（項番号のない一つの項）",
+      "requirements": [
+        "PARA-03",
+        "DISP-01",
+        "ID-01",
+        "AST-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-184/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-184.json",
+      "success": true
+    },
+    {
+      "id": "pkg-185",
+      "title": "制定文と、無番号の二つの項からなる本則",
+      "requirements": [
+        "PARA-03",
+        "PARA-01",
+        "PRE-02",
+        "ID-01",
+        "AST-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-185/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-185.json",
+      "success": true
+    },
+    {
+      "id": "pkg-186",
+      "title": "項の後の条の見出し（本則の形式の混在）",
+      "requirements": [
+        "PARA-03"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-186/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-186.json",
+      "success": false
+    },
+    {
+      "id": "pkg-187",
+      "title": "二つのファイルに分けた項の形式の本則",
+      "requirements": [
+        "PARA-03",
+        "MAN-03"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-187/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-187.json",
+      "success": false
+    },
+    {
+      "id": "pkg-188",
+      "title": "条を置かない章の下の項",
+      "requirements": [
+        "DIR-02",
+        "PARA-03"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-188/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-188.json",
+      "success": false
+    },
+    {
+      "id": "pkg-189",
+      "title": "制定文だけで条も項もない本則",
+      "requirements": [
+        "PARA-03",
+        "PRE-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-189/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-189.json",
+      "success": false
+    },
+    {
+      "id": "pkg-190",
+      "title": "項の形式の本則の項の後の制定文",
+      "requirements": [
+        "PRE-02",
+        "PARA-03"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-190/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-190.json",
+      "success": false
+    },
+    {
+      "id": "pkg-191",
+      "title": "項の形式の本則の一つだけの無番号の項",
+      "requirements": [
+        "PARA-01",
+        "PARA-03"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-191/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-191.json",
+      "success": false
+    },
+    {
+      "id": "pkg-192",
+      "title": "改正法の本則と附則の改正規定（表の行・条の全文・本文だけの改正の指示）",
+      "requirements": [
+        "AMEND-01",
+        "AMEND-02",
+        "AMEND-03",
+        "PARA-03",
+        "ID-01",
+        "AST-01",
+        "TABLE-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-192/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-192.json",
+      "success": true
+    },
+    {
+      "id": "pkg-193",
+      "title": "条の形式の改正法の改正内容（項・号・細分・本文・章と同じ番号の条）",
+      "requirements": [
+        "AMEND-01",
+        "AMEND-02",
+        "HEAD-02",
+        "ID-01",
+        "AST-01",
+        "DIR-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-193/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-193.json",
+      "success": true
+    },
+    {
+      "id": "pkg-194",
+      "title": "改正内容のない改正規定",
+      "requirements": [
+        "AMEND-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-194/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-194.json",
+      "success": false
+    },
+    {
+      "id": "pkg-195",
+      "title": "改正内容の後の改正規定の本文",
+      "requirements": [
+        "AMEND-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-195/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-195.json",
+      "success": false
+    },
+    {
+      "id": "pkg-196",
+      "title": "改正の指示のない改正規定",
+      "requirements": [
+        "AMEND-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-196/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-196.json",
+      "success": false
+    },
+    {
+      "id": "pkg-197",
+      "title": "改正規定の番号が1から始まらない",
+      "requirements": [
+        "AMEND-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-197/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-197.json",
+      "success": false
+    },
+    {
+      "id": "pkg-198",
+      "title": "改正規定の外の改正内容",
+      "requirements": [
+        "DIR-02",
+        "AMEND-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-198/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-198.json",
+      "success": false
+    },
+    {
+      "id": "pkg-199",
+      "title": "項と表を混ぜた改正内容",
+      "requirements": [
+        "AMEND-02",
+        "AMEND-03"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-199/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-199.json",
+      "success": false
+    },
+    {
+      "id": "pkg-200",
+      "title": "空の改正内容",
+      "requirements": [
+        "AMEND-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-200/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-200.json",
+      "success": false
+    },
+    {
+      "id": "pkg-201",
+      "title": "levelの違う細分を並べた改正内容",
+      "requirements": [
+        "AMEND-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-201/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-201.json",
+      "success": false
+    },
+    {
+      "id": "pkg-202",
+      "title": "改正内容の中の改正規定",
+      "requirements": [
+        "AMEND-02",
+        "AMEND-03"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-202/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-202.json",
+      "success": false
+    },
+    {
+      "id": "pkg-203",
+      "title": "改正規定の本文の中の条の見出し（改正内容の外の引用条）",
+      "requirements": [
+        "DIR-02",
+        "MD-03",
+        "AMEND-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-203/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-203.json",
+      "success": false
+    },
+    {
+      "id": "pkg-204",
+      "title": "改正内容の中の項の中の見出し",
+      "requirements": [
+        "DIR-02",
+        "MD-03",
+        "AMEND-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-204/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-204.json",
+      "success": false
+    },
+    {
+      "id": "pkg-205",
+      "title": "改正内容の中の条の番号の重複",
+      "requirements": [
+        "HEAD-02",
+        "AMEND-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-205/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-205.json",
+      "success": false
+    },
+    {
+      "id": "pkg-206",
+      "title": "改正内容の中の条を置かない章の下の項",
+      "requirements": [
+        "DIR-02",
+        "AMEND-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-206/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-206.json",
+      "success": false
+    },
+    {
+      "id": "pkg-207",
+      "title": "改正内容の中の附則の見出し",
+      "requirements": [
+        "HEAD-01",
+        "AMEND-03"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-207/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-207.json",
+      "success": false
     }
   ]
 }

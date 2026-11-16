@@ -402,6 +402,10 @@ fn text(
 /// Close a container: own-text (DIR-02), children counts and display (DISP-01).
 fn close(nodes: &mut [Node], index: usize, ctx: &mut Context) {
     let kind = nodes[index].kind;
+    if matches!(kind, Kind::Amendment | Kind::AmendmentContent) {
+        // AMEND-01/02 check the shape on the finished tree.
+        return;
+    }
     if matches!(kind, Kind::Table | Kind::Row) {
         let child = if kind == Kind::Table {
             Kind::Row
@@ -555,15 +559,30 @@ fn supplement_label(label: &str) -> Supplement {
 /// DIR-02: whether the container that `open` starts may be a child of `p`.
 fn valid_parent(open: &Container, p: &Node) -> bool {
     match open {
-        Container::Paragraph { .. } => {
-            p.kind == Kind::Article || p.kind == Kind::SupplementaryProvision
-        }
-        Container::Item { .. } => p.kind == Kind::Paragraph,
+        // PARA-03: a main provision without articles; AMEND-02: an amendment content.
+        Container::Paragraph { .. } => matches!(
+            p.kind,
+            Kind::Article
+                | Kind::SupplementaryProvision
+                | Kind::MainProvision
+                | Kind::AmendmentContent
+        ),
+        Container::Item { .. } => matches!(p.kind, Kind::Paragraph | Kind::AmendmentContent),
+        // AMEND-02: any level directly in an amendment content.
+        Container::Subitem { .. } if p.kind == Kind::AmendmentContent => true,
         Container::Subitem { level: 1, .. } => p.kind == Kind::Item,
         Container::Subitem { level, .. } => p.kind == Kind::Subitem && p.level + 1 == *level,
-        Container::Table { .. } => matches!(p.kind, Kind::Paragraph | Kind::Item | Kind::Subitem),
+        Container::Table { .. } => matches!(
+            p.kind,
+            Kind::Paragraph | Kind::Item | Kind::Subitem | Kind::AmendmentContent
+        ),
         Container::Row { .. } => p.kind == Kind::Table,
         Container::Cell { .. } => p.kind == Kind::Row,
+        // AMEND-01; an amendment inside a content is AMEND-02, not a parent error.
+        Container::Amendment { .. } => {
+            matches!(p.kind, Kind::Paragraph | Kind::Item | Kind::Subitem)
+        }
+        Container::AmendmentContent => p.kind == Kind::Amendment,
     }
 }
 
@@ -583,15 +602,43 @@ struct Document<'a> {
     article: Option<usize>,
     /// Open containers, innermost last.
     stack: Vec<usize>,
+    /// Open amendment contents, innermost last (AMEND-02).
+    frames: Vec<Frame>,
     /// End of the last structural line that was handled.
     cursor: usize,
 }
 
+/// AMEND-02: an open amendment content is a scope of its own for its
+/// classifications and articles.
+struct Frame {
+    content: usize,
+    groups: Vec<usize>,
+    article: Option<usize>,
+}
+
+impl Document<'_> {
+    /// The open amendment content when it is the innermost container.
+    fn content_frame(&self, nodes: &[Node]) -> Option<&Frame> {
+        let innermost = *self.stack.last()?;
+        (nodes[innermost].kind == Kind::AmendmentContent)
+            .then(|| self.frames.last())
+            .flatten()
+    }
+}
+
 /// MAN-03: how a later file of a scope begins, and how a nonfinal appendix
 /// file ends. `continued` says that the next file belongs to the same scope.
-fn file_boundaries(doc: &Document, tokens: &[Token], continued: bool, ctx: &mut Context) {
+fn file_boundaries(
+    doc: &Document,
+    tokens: &[Token],
+    continued: bool,
+    paragraph_form: bool,
+    ctx: &mut Context,
+) {
     let (path, source) = (doc.path, doc.source);
-    if !doc.first && !doc.appendix {
+    // A main provision in the paragraph form has one file (PARA-03), which
+    // is reported there instead.
+    if !doc.first && !doc.appendix && !paragraph_form {
         let starts_with_structure = tokens.first().is_some_and(|t| {
             t.heading
                 && source[..t.span.start].trim_matches(white_space).is_empty()
@@ -756,13 +803,15 @@ impl<'a> Builder<'a> {
             special_heading: appendix && !first,
             article: None,
             stack: Vec::new(),
+            frames: Vec::new(),
             cursor: 0,
         };
         let tokens = tokens(source);
         let continued = documents
             .get(index + 1)
             .is_some_and(|(_, _, next)| next == scope_name);
-        file_boundaries(&doc, &tokens, continued, ctx);
+        let paragraph_form = scope == self.main && self.main_paragraphs();
+        file_boundaries(&doc, &tokens, continued, paragraph_form, ctx);
         for token in &tokens {
             if crate::cancellation::checkpoint() {
                 ctx.incomplete = true;
@@ -784,7 +833,15 @@ impl<'a> Builder<'a> {
                 continue;
             }
             let before = doc.cursor..span.start;
-            if let Some(&i) = doc.stack.last() {
+            if let Some(frame) = doc
+                .content_frame(&self.nodes)
+                .filter(|f| f.article.is_some() || !f.groups.is_empty())
+            {
+                // AMEND-02: after a heading in a content, text belongs to its
+                // article as at document level (a deleted article, or MD-03).
+                let article = frame.article;
+                outside(&mut self.nodes, article, source, path, before, ctx);
+            } else if let Some(&i) = doc.stack.last() {
                 text(&mut self.nodes, i, source, path, before, ctx);
             } else if appendix && doc.special_heading {
                 text(&mut self.nodes, scope, source, path, before, ctx);
@@ -855,10 +912,13 @@ impl<'a> Builder<'a> {
             text(&mut self.nodes, doc.scope, source, path, span.clone(), ctx);
             return;
         }
-        if doc.scope == self.main {
+        // AMEND-02: a heading directly in an amendment content is one of its
+        // classifications or articles, and closes none of the open markers.
+        let in_content = doc.content_frame(&self.nodes).is_some();
+        if doc.scope == self.main && !in_content {
             self.main_heading_seen = true;
         }
-        if !doc.stack.is_empty() {
+        if !doc.stack.is_empty() && !in_content {
             ctx.diag(
                 "MD-03",
                 "Heading inside explicit container",
@@ -893,6 +953,21 @@ impl<'a> Builder<'a> {
             return;
         };
         let supplement = supplement_label(label);
+        if in_content {
+            if !matches!(supplement, Supplement::No) {
+                // AMEND-02/03: a supplement heading in a content is unrecognized.
+                ctx.diag(
+                    "HEAD-01",
+                    "Unrecognized legal heading in an amendment content",
+                    path,
+                    span.start,
+                    span.end,
+                );
+                return;
+            }
+            self.content_heading(doc, label, span, ctx);
+            return;
+        }
         if matches!(supplement, Supplement::BadSpacing) {
             ctx.diag(
                 "HEAD-03",
@@ -947,6 +1022,36 @@ impl<'a> Builder<'a> {
         scope.path = doc.path.to_owned();
         scope.span = span.clone();
         doc.special_heading = true;
+    }
+
+    /// AMEND-02: read a heading with the content as the scope and its own
+    /// classification context, then restore the context of the document.
+    fn content_heading(
+        &mut self,
+        doc: &mut Document,
+        label: &str,
+        span: &Range<usize>,
+        ctx: &mut Context,
+    ) {
+        let Some(mut frame) = doc.frames.pop() else {
+            return;
+        };
+        let scope = std::mem::replace(&mut doc.scope, frame.content);
+        std::mem::swap(&mut doc.article, &mut frame.article);
+        std::mem::swap(&mut self.groups, &mut frame.groups);
+        self.structural_heading(doc, label, span, ctx);
+        std::mem::swap(&mut self.groups, &mut frame.groups);
+        std::mem::swap(&mut doc.article, &mut frame.article);
+        doc.scope = scope;
+        doc.frames.push(frame);
+    }
+
+    /// PARA-03: the main provision has paragraphs directly under it.
+    fn main_paragraphs(&self) -> bool {
+        self.nodes[self.main]
+            .children(&self.nodes, Kind::Paragraph)
+            .next()
+            .is_some()
     }
 
     /// A classification or article heading (HEAD-01, NUM-01).
@@ -1090,6 +1195,9 @@ impl<'a> Builder<'a> {
             self.nodes[i].span.end = span.end;
             close(&mut self.nodes, i, ctx);
             doc.stack.pop();
+            if kind == Kind::AmendmentContent {
+                doc.frames.pop();
+            }
         } else {
             ctx.diag(
                 "DIR-02",
@@ -1120,6 +1228,8 @@ impl<'a> Builder<'a> {
             && doc.scope == self.main
             && doc.first
             && !self.main_heading_seen
+            // PRE-01/PRE-02/TOC-01: in the paragraph form, before the first paragraph.
+            && !self.main_paragraphs()
             && (preamble || !self.preamble_seen)
             && (kind != Kind::EnactStatement || !toc_seen);
         if !placed {
@@ -1164,12 +1274,33 @@ impl<'a> Builder<'a> {
         ctx: &mut Context,
     ) {
         let path = doc.path;
-        let parent = doc
-            .stack
-            .last()
-            .copied()
-            .or(doc.article)
-            .unwrap_or(doc.scope);
+        let parent = if let Some(frame) = doc.content_frame(&self.nodes) {
+            // AMEND-02: in a content, the open article or classification, as
+            // at document level.
+            frame
+                .article
+                .or(frame.groups.last().copied())
+                .unwrap_or(frame.content)
+        } else if let Some(&i) = doc.stack.last() {
+            i
+        } else if doc.scope == self.main {
+            // PARA-03: a paragraph after a classification without an article
+            // belongs to the classification (and is a parent error, DIR-02).
+            doc.article
+                .or(self.groups.last().copied())
+                .unwrap_or(doc.scope)
+        } else {
+            doc.article.unwrap_or(doc.scope)
+        };
+        if matches!(open, Container::Amendment { .. }) && !doc.frames.is_empty() {
+            ctx.diag(
+                "AMEND-02",
+                "An amendment content cannot contain an amendment",
+                path,
+                span.start,
+                span.end,
+            );
+        }
         let p = &self.nodes[parent];
         if !valid_parent(&open, p) {
             if p.kind == Kind::Toc {
@@ -1219,9 +1350,11 @@ impl<'a> Builder<'a> {
                 let c = (p.children(&self.nodes, Kind::Cell).count() + 1).to_string();
                 (format!("cell/{c}"), Some(c))
             }
+            Container::AmendmentContent => (kind.id_segment(), None),
             Container::Paragraph { number, .. }
             | Container::Item { number }
-            | Container::Table { number } => (
+            | Container::Table { number }
+            | Container::Amendment { number } => (
                 format!("{}/{number}", kind.id_segment()),
                 Some(number.clone()),
             ),
@@ -1247,10 +1380,20 @@ impl<'a> Builder<'a> {
                 node.rowspan = rowspan;
                 node.colspan = colspan;
             }
-            Container::Item { .. } | Container::Table { .. } => {}
+            Container::Item { .. }
+            | Container::Table { .. }
+            | Container::Amendment { .. }
+            | Container::AmendmentContent => {}
         }
         let i = add(&mut self.nodes, parent, node, ctx, &mut self.ids);
         doc.stack.push(i);
+        if kind == Kind::AmendmentContent {
+            doc.frames.push(Frame {
+                content: i,
+                groups: Vec::new(),
+                article: None,
+            });
+        }
     }
 
     /// Check the finished tree, record the positions (SRC-01) and export the AST.
@@ -1351,7 +1494,7 @@ fn structure(
     if (n.rank > 0 && n.rank < 6
         || matches!(
             n.kind,
-            Kind::MainProvision | Kind::SupplementaryProvision | Kind::AppendedMaterial
+            Kind::SupplementaryProvision | Kind::AppendedMaterial
         ))
         && n.content.is_empty()
     {
@@ -1363,6 +1506,26 @@ fn structure(
             n.span.end,
         );
     }
+    if n.kind == Kind::MainProvision {
+        // PARA-03: one form, one file for the paragraph form, never empty.
+        let direct = n.children(nodes, Kind::Paragraph).next().is_some();
+        let structural = n
+            .content
+            .iter()
+            .any(|c| matches!(c, Content::Node(j) if nodes[*j].kind != Kind::Paragraph));
+        let files = documents.iter().filter(|d| d.2 == "main").count();
+        let message = if n.content.is_empty() {
+            Some("Main provision has no classification, article or paragraph")
+        } else if direct && (structural || files > 1) {
+            Some("Mixed main provision form or split paragraph form")
+        } else {
+            None
+        };
+        if let Some(message) = message {
+            ctx.diag("PARA-03", message, &n.path, n.span.start, n.span.end);
+        }
+    }
+    amendment_shape(nodes, i, ctx);
     if n.kind == Kind::SupplementaryProvision {
         let direct = n.children(nodes, Kind::Paragraph).next().is_some();
         let structural = n
@@ -1449,6 +1612,84 @@ fn structure(
                 }
             }
         }
+    }
+}
+
+/// AMEND-01: instruction text, then exactly one content, nothing after it;
+/// amendments are numbered 1..n within their parent. AMEND-02: a content is
+/// one group of children, or text only, and never empty.
+fn amendment_shape(nodes: &[Node], i: usize, ctx: &mut Context) {
+    let n = &nodes[i];
+    let blank =
+        |c: &Content| matches!(c, Content::Text(t, _) if t.trim_matches(white_space).is_empty());
+    for (k, j) in n.children(nodes, Kind::Amendment).enumerate() {
+        let a = &nodes[j];
+        if a.number.as_deref() != Some(&(k + 1).to_string()) {
+            ctx.diag(
+                "AMEND-01",
+                "Amendment numbers are the order 1..n within the parent",
+                &a.path,
+                a.span.start,
+                a.span.end,
+            );
+        }
+    }
+    match n.kind {
+        Kind::Amendment => {
+            let contents = n.children(nodes, Kind::AmendmentContent).count();
+            let position = n.content.iter().position(|c| matches!(c, Content::Node(_)));
+            let instruction = position.is_some_and(|p| {
+                n.content[..p]
+                    .iter()
+                    .any(|c| matches!(c, Content::Text(..)) && !blank(c))
+            });
+            let after = position.map_or(&[][..], |p| &n.content[p + 1..]);
+            if contents != 1 || !instruction || !after.iter().all(blank) {
+                ctx.diag(
+                    "AMEND-01",
+                    "An amendment is instruction text followed by exactly one content",
+                    &n.path,
+                    n.span.start,
+                    n.span.end,
+                );
+            }
+        }
+        Kind::AmendmentContent => {
+            let children: Vec<&Node> = n
+                .content
+                .iter()
+                .filter_map(|c| match c {
+                    Content::Node(j) => Some(&nodes[*j]),
+                    Content::Text(..) => None,
+                })
+                .collect();
+            let text = n
+                .content
+                .iter()
+                .any(|c| !blank(c) && matches!(c, Content::Text(..)));
+            let one = |f: &dyn Fn(&Node) -> bool| children.iter().all(|c| f(c));
+            let group = one(&|c| c.rank > 0)
+                || one(&|c| c.kind == Kind::Paragraph)
+                || one(&|c| c.kind == Kind::Item)
+                || one(&|c| c.kind == Kind::Table)
+                || (one(&|c| c.kind == Kind::Subitem)
+                    && children.iter().all(|c| c.level == children[0].level));
+            let valid = if children.is_empty() {
+                text
+            } else {
+                group && !text
+            };
+            if !valid {
+                ctx.diag(
+                    "AMEND-02",
+                    "An amendment content is one group of children, or text only",
+                    &n.path,
+                    n.span.start,
+                    n.span.end,
+                );
+            }
+        }
+        _ => {}
     }
 }
 

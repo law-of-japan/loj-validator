@@ -1,0 +1,340 @@
+{
+  "ast": {
+    "schemaVersion": "loj/v1alpha2",
+    "law": {
+      "id": "20990101-act-1",
+      "title": "架空雲保管法（実在しないサンプル）",
+      "type": "act",
+      "number": "架空法律第一号",
+      "promulgatedAt": "2099-01-01",
+      "language": "ja"
+    },
+    "root": {
+      "kind": "Law",
+      "id": "20990101-act-1",
+      "number": null,
+      "display": "架空雲保管法（実在しないサンプル）",
+      "content": [
+        {
+          "kind": "MainProvision",
+          "id": "20990101-act-1/main",
+          "number": null,
+          "display": "",
+          "content": [
+            {
+              "kind": "Paragraph",
+              "id": "20990101-act-1/main/paragraph/1",
+              "number": "1",
+              "display": "",
+              "content": [
+                {
+                  "text": "架空雨量法（架空法律第二号）の一部を次のように改正する。\n"
+                },
+                {
+                  "kind": "Amendment",
+                  "id": "20990101-act-1/main/paragraph/1/amendment/1",
+                  "number": "1",
+                  "display": "",
+                  "content": [
+                    {
+                      "text": "第二条白雲の項の次に次のように加える。\n"
+                    },
+                    {
+                      "kind": "AmendmentContent",
+                      "id": "20990101-act-1/main/paragraph/1/amendment/1/content",
+                      "number": null,
+                      "display": "",
+                      "content": [
+                        {
+                          "kind": "Table",
+                          "id": "20990101-act-1/main/paragraph/1/amendment/1/content/table/1",
+                          "number": "1",
+                          "display": "",
+                          "content": [
+                            {
+                              "kind": "Row",
+                              "id": "20990101-act-1/main/paragraph/1/amendment/1/content/table/1/row/q7cz",
+                              "number": null,
+                              "display": "",
+                              "content": [
+                                {
+                                  "kind": "Cell",
+                                  "id": "20990101-act-1/main/paragraph/1/amendment/1/content/table/1/row/q7cz/cell/1",
+                                  "number": "1",
+                                  "display": "",
+                                  "content": [
+                                    {
+                                      "text": "巻雲\n"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "Cell",
+                                  "id": "20990101-act-1/main/paragraph/1/amendment/1/content/table/1/row/q7cz/cell/2",
+                                  "number": "2",
+                                  "display": "",
+                                  "content": [
+                                    {
+                                      "text": "政令で定める日\n"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "Cell",
+                                  "id": "20990101-act-1/main/paragraph/1/amendment/1/content/table/1/row/q7cz/cell/3",
+                                  "number": "3",
+                                  "display": "",
+                                  "content": [
+                                    {
+                                      "text": "高い空の雲を観る。\n"
+                                    }
+                                  ]
+                                }
+                              ],
+                              "key": "q7cz"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "Amendment",
+                  "id": "20990101-act-1/main/paragraph/1/amendment/2",
+                  "number": "2",
+                  "display": "",
+                  "content": [
+                    {
+                      "text": "第二条積雲の項の次に次のように加える。\n"
+                    },
+                    {
+                      "kind": "AmendmentContent",
+                      "id": "20990101-act-1/main/paragraph/1/amendment/2/content",
+                      "number": null,
+                      "display": "",
+                      "content": [
+                        {
+                          "kind": "Table",
+                          "id": "20990101-act-1/main/paragraph/1/amendment/2/content/table/1",
+                          "number": "1",
+                          "display": "",
+                          "content": [
+                            {
+                              "kind": "Row",
+                              "id": "20990101-act-1/main/paragraph/1/amendment/2/content/table/1/row/h4ts",
+                              "number": null,
+                              "display": "",
+                              "content": [
+                                {
+                                  "kind": "Cell",
+                                  "id": "20990101-act-1/main/paragraph/1/amendment/2/content/table/1/row/h4ts/cell/1",
+                                  "number": "1",
+                                  "display": "",
+                                  "content": [
+                                    {
+                                      "text": "層雲\n"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "Cell",
+                                  "id": "20990101-act-1/main/paragraph/1/amendment/2/content/table/1/row/h4ts/cell/2",
+                                  "number": "2",
+                                  "display": "",
+                                  "content": [
+                                    {
+                                      "text": "九月十五日\n"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "Cell",
+                                  "id": "20990101-act-1/main/paragraph/1/amendment/2/content/table/1/row/h4ts/cell/3",
+                                  "number": "3",
+                                  "display": "",
+                                  "content": [
+                                    {
+                                      "text": "低い空の雲を観る。\n"
+                                    }
+                                  ]
+                                }
+                              ],
+                              "key": "h4ts"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "numbering": "explicit"
+            }
+          ]
+        },
+        {
+          "kind": "SupplementaryProvision",
+          "id": "20990101-act-1/supplement/original",
+          "number": null,
+          "display": "附　則",
+          "content": [
+            {
+              "kind": "Paragraph",
+              "id": "20990101-act-1/supplement/original/paragraph/1",
+              "number": "1",
+              "display": "１",
+              "content": [
+                {
+                  "text": "（施行期日）\n１　この法律は、公布の日から施行する。\n"
+                }
+              ],
+              "numbering": "explicit",
+              "caption": "（施行期日）"
+            },
+            {
+              "kind": "Paragraph",
+              "id": "20990101-act-1/supplement/original/paragraph/2",
+              "number": "2",
+              "display": "２",
+              "content": [
+                {
+                  "text": "（架空雲台帳法の一部改正）\n２　架空雲台帳法（架空法律第三号）の一部を次のように改正する。\n"
+                },
+                {
+                  "kind": "Amendment",
+                  "id": "20990101-act-1/supplement/original/paragraph/2/amendment/1",
+                  "number": "1",
+                  "display": "",
+                  "content": [
+                    {
+                      "text": "第十五条第一項の表中白雲審議会の項の次に次のように加える。\n"
+                    },
+                    {
+                      "kind": "AmendmentContent",
+                      "id": "20990101-act-1/supplement/original/paragraph/2/amendment/1/content",
+                      "number": null,
+                      "display": "",
+                      "content": [
+                        {
+                          "kind": "Table",
+                          "id": "20990101-act-1/supplement/original/paragraph/2/amendment/1/content/table/1",
+                          "number": "1",
+                          "display": "",
+                          "content": [
+                            {
+                              "kind": "Row",
+                              "id": "20990101-act-1/supplement/original/paragraph/2/amendment/1/content/table/1/row/x2fe",
+                              "number": null,
+                              "display": "",
+                              "content": [
+                                {
+                                  "kind": "Cell",
+                                  "id": "20990101-act-1/supplement/original/paragraph/2/amendment/1/content/table/1/row/x2fe/cell/1",
+                                  "number": "1",
+                                  "display": "",
+                                  "content": [
+                                    {
+                                      "text": "巻雲審議会\n"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "kind": "Cell",
+                                  "id": "20990101-act-1/supplement/original/paragraph/2/amendment/1/content/table/1/row/x2fe/cell/2",
+                                  "number": "2",
+                                  "display": "",
+                                  "content": [
+                                    {
+                                      "text": "巻雲について調査審議すること。\n"
+                                    }
+                                  ]
+                                }
+                              ],
+                              "key": "x2fe"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "text": "附則第四項中「審議会」の下に「、巻雲審議会」を加える。\n"
+                }
+              ],
+              "numbering": "explicit",
+              "caption": "（架空雲台帳法の一部改正）"
+            },
+            {
+              "kind": "Paragraph",
+              "id": "20990101-act-1/supplement/original/paragraph/3",
+              "number": "3",
+              "display": "３",
+              "content": [
+                {
+                  "text": "（架空雲観測法の一部改正）\n３　架空雲観測法（架空法律第四号）の一部を次のように改正する。\n\n第五条の見出しを「（雲の日の行事）」に改め、同条第一項及び第二項を削り、同条第三項中「雲の行事」を「雲の日の行事」に改め、同項を同条とする。\n"
+                }
+              ],
+              "numbering": "explicit",
+              "caption": "（架空雲観測法の一部改正）"
+            },
+            {
+              "kind": "Paragraph",
+              "id": "20990101-act-1/supplement/original/paragraph/4",
+              "number": "4",
+              "display": "４",
+              "content": [
+                {
+                  "text": "（架空雲福祉法の一部改正）\n４　架空雲福祉法（架空法律第五号）の一部を次のように改正する。\n"
+                },
+                {
+                  "kind": "Amendment",
+                  "id": "20990101-act-1/supplement/original/paragraph/4/amendment/1",
+                  "number": "1",
+                  "display": "",
+                  "content": [
+                    {
+                      "text": "第五条を次のように改める。\n"
+                    },
+                    {
+                      "kind": "AmendmentContent",
+                      "id": "20990101-act-1/supplement/original/paragraph/4/amendment/1/content",
+                      "number": null,
+                      "display": "",
+                      "content": [
+                        {
+                          "kind": "Article",
+                          "id": "20990101-act-1/supplement/original/paragraph/4/amendment/1/content/article/5",
+                          "number": "5",
+                          "display": "第五条（雲の日の行事）",
+                          "content": [
+                            {
+                              "kind": "Paragraph",
+                              "id": "20990101-act-1/supplement/original/paragraph/4/amendment/1/content/article/5/paragraph/1",
+                              "number": "1",
+                              "display": "",
+                              "content": [
+                                {
+                                  "text": "国は、雲の日において、雲についての関心を深める行事を行う。\n"
+                                }
+                              ],
+                              "numbering": "explicit"
+                            }
+                          ],
+                          "status": "active"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "numbering": "explicit",
+              "caption": "（架空雲福祉法の一部改正）"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -102,7 +102,9 @@
             "Preamble",
             "Table",
             "Row",
-            "Cell"
+            "Cell",
+            "Amendment",
+            "AmendmentContent"
           ]
         },
         "id": {
@@ -245,6 +247,7 @@
                   "MainProvision",
                   "SupplementaryProvision",
                   "AppendedMaterial",
+                  "AmendmentContent",
                   "EnactStatement",
                   "Toc",
                   "Preamble",
@@ -345,6 +348,8 @@
                   "Table",
                   "Row",
                   "Cell",
+                  "Amendment",
+                  "AmendmentContent",
                   "EnactStatement",
                   "Toc",
                   "Preamble"
