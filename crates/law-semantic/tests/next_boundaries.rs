@@ -24,10 +24,14 @@ fn library_git_cancellation_is_incomplete_not_a_violation() {
     });
     assert_eq!(report.result(Check::CHANGE), Some(ResultValue::Incomplete));
     assert_eq!(report.exit_code(), 3);
-    assert!(report
-        .diagnostics
-        .iter()
-        .all(|d| d.message == law_semantic::cancellation::CANCELLED && !d.is_error()));
+    // The git error is replaced, as every partial finding is, by the one
+    // cancellation diagnostic.
+    assert_eq!(report.diagnostics.len(), 1, "{:?}", report.diagnostics);
+    assert_eq!(
+        report.diagnostics[0].message,
+        law_semantic::cancellation::CANCELLED
+    );
+    assert!(!report.diagnostics[0].is_error());
 }
 
 /// Every public next-specification entry point turns a cancelled scope into

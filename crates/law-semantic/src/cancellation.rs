@@ -172,6 +172,15 @@ mod tests {
         assert_eq!(report.result(Check::L0), Some(ResultValue::Pass));
     }
 
+    #[test]
+    fn finish_without_selected_checks_cancels_only_existing_results() {
+        let mut report = Report::default();
+        report.set(Check::L0, ResultValue::Pass);
+        let cancelled = with_flag(Arc::new(AtomicBool::new(true)), || finish(&mut report, &[]));
+        assert!(cancelled);
+        assert_eq!(report.results, vec![(Check::L0, ResultValue::Incomplete)]);
+    }
+
     /// Synthetic input generators: numbered articles with one paragraph each.
     mod synthetic {
         use serde_json::json;
@@ -179,6 +188,8 @@ mod tests {
 
         pub(super) struct Dir(pub(super) PathBuf);
         impl Dir {
+            /// `name` must be unique among the tests of this module: tests run
+            /// in parallel within one process.
             pub(super) fn new(name: &str) -> Self {
                 let path = std::env::temp_dir()
                     .join(format!("loj-cancellation-{name}-{}", std::process::id()));
