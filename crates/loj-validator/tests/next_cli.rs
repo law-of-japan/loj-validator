@@ -152,6 +152,8 @@ fn registration_space_and_record_selection_are_explicit_cli_inputs() {
         "--registration-space=",
         "--registration-space=Upper",
         "--registration-space=a/b",
+        "--registration-space=alpha",
+        "--record=synthetic",
     ] {
         let (code, r) = json(&["check", PKG, arg]);
         assert_eq!(code, 2, "{r}");

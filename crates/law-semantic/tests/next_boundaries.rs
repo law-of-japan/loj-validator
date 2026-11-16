@@ -111,3 +111,50 @@ fn diagnostic_offsets_use_original_crlf_and_four_byte_characters() {
         result.report.diagnostics
     );
 }
+
+#[test]
+fn fragmented_caption_diagnostic_uses_the_later_source_fragment() {
+    let dir = Scratch::new();
+    let text = "# 第一条\r\n<!-- loj:paragraph number=1 caption=present -->\r\n\r\n<!-- loj:unknown -->\r\n(bad caption)\r\n本文。\r\n<!-- loj:end-paragraph -->";
+    let result = package(&dir, text);
+    let start = text.find("(bad caption)").unwrap();
+    assert!(
+        result.report.diagnostics.iter().any(|d| d.rule == "PARA-02"
+            && d.location.as_ref().is_some_and(
+                |l| l["start"] == start && l["end"] == start + "(bad caption)\r\n".len()
+            )),
+        "{:?}",
+        result.report.diagnostics
+    );
+}
+#[test]
+fn duplicate_or_unidentified_l4_inputs_are_incomplete() {
+    let dir = Scratch::new();
+    dir.write(
+        "registry/records/a7k2m9qd3x.yaml",
+        record("a7k2m9qd3x").to_string(),
+    );
+    let h = json!({"schemaVersion":"loj-history/v1alpha1","record":{"id":"a7k2m9qd3x"},"revisions":[],"relations":[]});
+    dir.write("a/history.yaml", h.to_string());
+    dir.write("b/history.yaml", h.to_string());
+    let input = Input::Records {
+        registry: dir.0.join("registry"),
+        repositories: vec![dir.0.join("a"), dir.0.join("b")],
+    };
+    let checks = input.default_checks();
+    for value in [
+        h,
+        json!({"schemaVersion":"loj-history/v1alpha1","record":{"id":false}}),
+    ] {
+        dir.write("b/history.yaml", value.to_string());
+        let report = run_with_space(&input, &checks, Some("alpha"));
+        assert!(
+            report
+                .results
+                .iter()
+                .all(|(_, r)| *r == ResultValue::Incomplete),
+            "{:?}",
+            report.results
+        );
+    }
+}

@@ -39,7 +39,10 @@ cannot be selected.
   change/reference results include the resolved commit when available.
 - L3/L4 retain each input Record's report in the Rust `Report.records` API.
   `--record ID` emits one of these reports; omission emits the aggregate. The
-  single-target report schema has no extra top-level `records` property. Byte spans use `location.path/start/end`;
+  single-target report schema has no extra top-level `records` property. Selected
+  reports judge only that Record, including required counterparts, not unrelated
+  input failures. Duplicate or malformed Record identities make the input set
+  unprocessable; no overwritten Record is silently skipped. Byte spans use `location.path/start/end`;
   YAML semantic findings use the extension `location.file/pointer`, without
   fabricated byte positions.
 - Glyph notes of a version whose package fails L1 are not judged: `evidence` is

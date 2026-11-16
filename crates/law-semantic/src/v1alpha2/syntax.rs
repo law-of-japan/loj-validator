@@ -77,6 +77,9 @@ fn rectangular_table(nodes: &[Node], table: usize) -> bool {
                 cursor = *end;
             }
             let node = &nodes[cell];
+            if node.colspan == Some(0) || node.rowspan == Some(0) {
+                return false;
+            }
             let Some(end) = cursor.checked_add(node.colspan.unwrap_or(1)) else {
                 return false;
             };
@@ -188,6 +191,27 @@ impl Fragments {
     }
     fn iter(&self) -> impl Iterator<Item = &Position> {
         std::iter::once(&self.first).chain(&self.rest)
+    }
+    /// Map a concatenated text offset back to its original source fragment.
+    fn locate(&self, mut offset: usize, length: usize) -> Position {
+        for p in self.iter() {
+            let size = p.end - p.start;
+            if offset < size {
+                let start = p.start + offset;
+                return Position {
+                    path: p.path.clone(),
+                    start,
+                    end: start.saturating_add(length).min(p.end),
+                };
+            }
+            offset -= size;
+        }
+        let last = self.last();
+        Position {
+            path: last.path.clone(),
+            start: last.end,
+            end: last.end,
+        }
     }
 }
 #[derive(Clone)]
@@ -441,13 +465,13 @@ fn close(nodes: &mut [Node], index: usize, ctx: &mut Context) {
                 n.caption = Some(caption.into());
                 caption_span = Some((offset, line.len()));
                 if !caption_ok(caption) {
-                    let p = positions.first();
+                    let p = positions.locate(offset, line.len());
                     ctx.diag(
                         "PARA-02",
                         "Invalid paragraph caption",
                         &p.path,
-                        p.start + offset,
-                        (p.start + offset + line.len()).min(p.end),
+                        p.start,
+                        p.end,
                     );
                 }
                 offset += line.len();
@@ -460,14 +484,15 @@ fn close(nodes: &mut [Node], index: usize, ctx: &mut Context) {
         offset += line.len();
     }
     if n.caption_present && first_line.is_empty() {
-        let p = positions.first();
-        let (offset, length) = caption_span.unwrap_or((0, p.end - p.start));
+        let first = positions.first();
+        let (offset, length) = caption_span.unwrap_or((0, first.end - first.start));
+        let p = positions.locate(offset, length);
         ctx.diag(
             "PARA-02",
             "Paragraph caption requires following body text before its children",
             &p.path,
-            p.start + offset,
-            (p.start + offset + length).min(p.end),
+            p.start,
+            p.end,
         );
     }
     if n.implicit {
@@ -497,25 +522,13 @@ fn close(nodes: &mut [Node], index: usize, ctx: &mut Context) {
                 .is_none_or(|r| r.trim_matches(white_space).is_empty()))
     {
         // Locate this line even when own text has multiple source fragments.
-        let mut relative = offset;
-        let mut pos = positions.first();
-        for p in positions.iter() {
-            // `text` records nonempty ranges only, so `start < end`.
-            let len = p.end - p.start;
-            pos = p;
-            if relative < len {
-                break;
-            }
-            relative -= len;
-        }
-        let start = pos.start + relative;
-        let end = (start + first_line_bytes).min(pos.end);
+        let pos = positions.locate(offset, first_line_bytes);
         ctx.diag(
             "DISP-01",
             "Display number missing or inconsistent",
             &pos.path,
-            start,
-            end,
+            pos.start,
+            pos.end,
         );
     }
 }

@@ -72,6 +72,29 @@ pub fn parse(s: &str) -> Result<Parsed, String> {
 /// # Errors
 /// Returns a diagnostic message for an invalid shape or missing space context.
 pub fn to_string_reference(value: &Value, space: Option<&str>) -> Result<String, String> {
+    string_reference(value, space).map_err(|error| error.message())
+}
+
+#[derive(Debug)]
+enum ConversionError {
+    MissingSpace,
+    Invalid(String),
+}
+impl ConversionError {
+    fn message(self) -> String {
+        match self {
+            Self::MissingSpace => "registration space was not supplied".into(),
+            Self::Invalid(message) => message,
+        }
+    }
+}
+impl From<&str> for ConversionError {
+    fn from(message: &str) -> Self {
+        Self::Invalid(message.into())
+    }
+}
+
+fn string_reference(value: &Value, space: Option<&str>) -> Result<String, ConversionError> {
     let kind = if value.get("record").is_none() {
         "RecordRef"
     } else if value.get("commit").is_some() {
@@ -83,7 +106,7 @@ pub fn to_string_reference(value: &Value, space: Option<&str>) -> Result<String,
     let validator =
         crate::common::validator(&schema.to_string(), &[crate::repository::history::TYPES]);
     if let Some(error) = validator.iter_errors(value).next() {
-        return Err(error.to_string());
+        return Err(ConversionError::Invalid(error.to_string()));
     }
     let record = if kind == "RecordRef" {
         value
@@ -94,7 +117,7 @@ pub fn to_string_reference(value: &Value, space: Option<&str>) -> Result<String,
         .as_str()
         .or(space)
         .filter(|s| !s.is_empty())
-        .ok_or("registration space was not supplied")?;
+        .ok_or(ConversionError::MissingSpace)?;
     if !crate::common::valid_registration_space(space) {
         return Err("invalid registration space".into());
     }
@@ -125,6 +148,7 @@ pub fn to_structured(reference: &str) -> Result<Value, String> {
     let p = parse(reference)?;
     let record = json!({"space": p.space, "id": p.record});
     if p.revision.is_empty() {
+        to_string_reference(&record, None)?;
         return Ok(record);
     }
     let mut value = json!({"record": record, "revision": p.revision});
@@ -148,17 +172,17 @@ pub fn check_structured(
     value: &Value,
     space: Option<&str>,
 ) -> Report {
-    let text = match to_string_reference(value, space) {
+    let text = match string_reference(value, space) {
         Ok(text) => text,
-        Err(message) => {
+        Err(error) => {
             let mut f = Findings::default();
             f.applicable.insert(RF);
-            let class = if message == "registration space was not supplied" {
+            let class = if matches!(error, ConversionError::MissingSpace) {
                 Class::Undetermined
             } else {
                 Class::Error
             };
-            f.note(RF, class, "FIXREF-01", COMMON, message, "", "");
+            f.note(RF, class, "FIXREF-01", COMMON, error.message(), "", "");
             return f.into_report(&[RF]);
         }
     };
@@ -293,8 +317,16 @@ fn resolve(
         return;
     };
     if p.space != reg.space {
-        *out = json!({"result": "notFetched"});
-        return;
+        return not_fetched(
+            f,
+            out,
+            reference,
+            if reg.space.is_empty() {
+                "registration space was not supplied".into()
+            } else {
+                "reference names another registration space".into()
+            },
+        );
     }
     let record = match reg.resolve(&json!({"id": p.record})) {
         Resolution::Resolved(id) => id,

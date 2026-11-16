@@ -30,7 +30,22 @@ pub fn check_with_space(
         let mut hf = Findings::default();
         match crate::repository::load_history(repo, &mut hf) {
             Some(h) => {
-                if let Some(id) = h["record"]["id"].as_str() {
+                let id = h["record"]["id"].as_str().filter(|id| !id.is_empty());
+                if id.is_none() || id.is_some_and(|id| manifests.contains_key(id)) {
+                    for c in [RES, CON, TIME, DISPLAY] {
+                        f.note(
+                            c,
+                            Class::Undetermined,
+                            "XREF-01",
+                            COMMON,
+                            "input histories have a missing or duplicate Record ID",
+                            &repo.join("history.yaml").to_string_lossy(),
+                            "/record/id",
+                        );
+                    }
+                    return finish(f, references, checks);
+                }
+                if let Some(id) = id {
                     manifests.insert(id.to_owned(), (repo.to_string_lossy().into_owned(), h));
                 }
             }

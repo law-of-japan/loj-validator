@@ -92,7 +92,9 @@ L2・`sourceMatch`・`clauseReference`は予約済みで、指定すると引数
 JSONは必ず `target.repository`・`target.commit`、`results`、`diagnostics`を含みます。
 ディレクトリ入力の `target.commit` は空文字であり、特定の記録版への適合の主張には使えません。
 bundle入力では特定できたcommitを返します。L3/L4のRecord別結果は `--record ID` で選択します。
-省略時は全体の集計です。Rust APIでは `Report.records` からRecord別報告を取得できます。
+省略時は全体の集計です。選択時はそのRecordの判定だけを返すため、照合に不要な別Recordの読込失敗は含みません。
+`--record`は法令リポジトリ/L4入力、`--registration-space`は登録台帳を伴う入力、`--ast`は版パッケージ入力でだけ使えます。
+Rust APIでは `Report.records` からRecord別報告を取得できます。
 参照結果は `references`・`resolution` で返します。診断の元UTF-8バイト位置は `location.path/start/end`、
 バイト位置のないYAMLの意味診断は `location.file/pointer` です。位置を推測して埋めません。
 

@@ -16,7 +16,8 @@ pub const USAGE: &str = "next specification (loj/v1alpha2 and history, glyphs, r
   or a registry (records/). Categories: historyStructure, evidence (L3);
   relationResolution, relationConsistency, timeConsistency, displayConsistency (L4).
   --registration-space SPACE supplies the registry space ([a-z][a-z0-9-]*);
-  no default is inferred from space.yaml. --record ID returns that input Record's report.
+  no default is inferred from space.yaml. --record ID selects a repository/records report.
+  --ast is package-only; --registration-space requires a registry input.
   Checks: L0, L1, L3[/category], L4[/category], registry, rebuild, change, reference.
   L2, L3/sourceMatch and L4/clauseReference are reserved and cannot be selected.
   Without a selection, every check that applies to the input runs.";
@@ -124,6 +125,20 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
         (None, None, None, None, None) => return Err("missing input path".into()),
         _ => return Err("inconsistent input options (see usage)".into()),
     };
+    if registration_space.is_some()
+        && !matches!(
+            &input,
+            Input::Registry(_) | Input::Records { .. } | Input::Reference { .. }
+        )
+    {
+        return Err("--registration-space requires a registry input".into());
+    }
+    if record.is_some() && !matches!(&input, Input::Repository(_) | Input::Records { .. }) {
+        return Err("--record requires a repository or records input".into());
+    }
+    if ast.is_some() && !matches!(&input, Input::Package(_)) {
+        return Err("--ast requires a package input".into());
+    }
     let mut checks = Vec::new();
     for l in &levels {
         if !matches!(l.as_str(), "L0" | "L1" | "L3" | "L4") {

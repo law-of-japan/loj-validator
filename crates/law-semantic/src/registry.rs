@@ -127,7 +127,10 @@ impl Registry {
                     ))
                 }
                 Some("withdrawn") => return Resolution::NonexistentConfirmed,
-                _ => return Resolution::Resolved(rec["id"].as_str().unwrap_or(&id).to_owned()),
+                Some("active" | "provisional") => {
+                    return Resolution::Resolved(rec["id"].as_str().unwrap_or(&id).to_owned())
+                }
+                _ => return Resolution::NotFetched("unknown Record status".into()),
             }
         }
         Resolution::NotFetched("merge chain too long".into())
@@ -174,7 +177,24 @@ pub fn load_with_space(dir: &Path, space: Option<&str>, f: &mut Findings) -> Opt
         }
     };
     f.applicable.insert(R);
-    let mut files: Vec<_> = entries.flatten().map(|e| e.path()).collect();
+    let mut files = match entries
+        .map(|entry| entry.map(|entry| entry.path()))
+        .collect::<std::io::Result<Vec<_>>>()
+    {
+        Ok(files) => files,
+        Err(error) => {
+            f.unprocessable(
+                R,
+                crate::common::Diagnostic::error(
+                    "REG-01",
+                    REGISTRY,
+                    format!("records/ entry unreadable: {error}"),
+                )
+                .at_pointer("records", ""),
+            );
+            return None;
+        }
+    };
     files.sort();
     // RID-01/02: IDs and aliases never collide, ignoring case.
     let mut issued: HashMap<String, (String, bool)> = HashMap::new();
@@ -192,14 +212,6 @@ pub fn load_with_space(dir: &Path, space: Option<&str>, f: &mut Findings) -> Opt
                     },
                     REGISTRY,
                     format!("{id} collides (ignoring case) with an ID or alias of {prev}"),
-                    path,
-                    ptr,
-                );
-                f.error(
-                    R,
-                    "RID-02",
-                    REGISTRY,
-                    format!("{id} differs only in case from an issued ID"),
                     path,
                     ptr,
                 );
@@ -496,5 +508,7 @@ mod space_tests {
             reg.resolve(&json!({"id":"synthetic", "space":"beta"})),
             Resolution::NotFetched(_)
         ));
+        reg.records.get_mut("synthetic").unwrap()["status"] = json!("unknown-future-status");
+        assert!(matches!(reg.resolve(&local), Resolution::NotFetched(_)));
     }
 }

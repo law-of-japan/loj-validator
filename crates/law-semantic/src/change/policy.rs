@@ -141,6 +141,8 @@ pub(super) fn check(change: &Change<'_>, before: &Snapshot, after: &Snapshot, f:
             || matches!(path.as_str(), "history.yaml" | "rebuild.yaml")
             || path.starts_with("records/");
         if !canonical {
+            // CHG-01 excludes generators, CI configuration and documentation:
+            // only the canonical data kinds are subject to change classification.
             continue;
         }
         let allowed = match change.kind {
@@ -198,6 +200,13 @@ fn history(
     affected: &BTreeSet<String>,
     f: &mut Findings,
 ) {
+    if before.history.is_none() && after.history.is_some() && change.kind != "revisionAdd" {
+        change.error(
+            f,
+            "CHG-02",
+            "only revisionAdd can introduce a history manifest in a text change".into(),
+        );
+    }
     let empty = serde_json::json!({});
     let (old, new) = (
         before.history.as_ref().unwrap_or(&empty),
@@ -433,6 +442,16 @@ fn registry_ids(change: &Change<'_>, before: &Snapshot, after: &Snapshot, f: &mu
         {
             continue;
         }
+        if !after.files.contains_key(path) && !after.documents.contains_key(path) {
+            f.error(
+                CH,
+                "REG-01",
+                crate::registry::REGISTRY,
+                format!("retired Record file must be retained: {path}"),
+                change.at,
+                "",
+            );
+        }
         for id in std::iter::once(&record["id"])
             .chain(list(&record["aliases"]).iter().map(|alias| &alias["id"]))
         {
@@ -458,10 +477,13 @@ fn registry_ids(change: &Change<'_>, before: &Snapshot, after: &Snapshot, f: &mu
                         Some("merged" | "split" | "withdrawn")
                     )
                 {
-                    change.error(
-                        f,
+                    f.error(
+                        CH,
                         "RID-05",
+                        crate::registry::REGISTRY,
                         format!("retired registry identifier reused in {path}"),
+                        change.at,
+                        "",
                     );
                 }
             }
@@ -491,6 +513,80 @@ mod tests {
             ..Snapshot::default()
         }
     }
+    #[test]
+    fn dependent_mappings_and_revision_fix_are_scoped() {
+        let h = json!({"revisions":[{"id":"b7k2m9qd","status":"active","basis":[{"relation":"rel","items":["item"]}]}],"relations":[{"id":"rel","status":"active","items":[{"id":"item"}]}],"termination":[{"relation":"rel"}]});
+        let before = snapshot(h.clone());
+        let mut after = snapshot(h);
+        let h = after.history.as_mut().unwrap();
+        h["revisions"][0]["status"] = json!("retracted");
+        h["relations"][0]["status"] = json!("retracted");
+        h["termination"] = json!([]);
+        assert!(!inspect("revisionFix", &before, &after).failed(CH));
+        after.history.as_mut().unwrap()["revisions"][0]["id"] = json!("c7k2m9qd");
+        assert!(inspect("revisionFix", &before, &after).failed(CH));
+        let mut before = Snapshot::default();
+        let mut after = Snapshot::default();
+        before.documents.insert(
+            "rebuild.yaml".into(),
+            json!({"mappings":[{"commit":"c","revisions":["b7k2m9qd"],"verification":"old"}]}),
+        );
+        after
+            .documents
+            .insert("rebuild.yaml".into(), json!({"mappings":[]}));
+        let change = Change {
+            commit: "c",
+            at: "c",
+            kind: "restoration",
+            declared: &[],
+            reviewed: false,
+        };
+        let mut f = Findings::default();
+        mappings(
+            &change,
+            &before,
+            &after,
+            &BTreeSet::from(["b7k2m9qd".into()]),
+            &mut f,
+        );
+        assert!(!f.failed(CH));
+        before.documents.get_mut("rebuild.yaml").unwrap()["mappings"][0]["revisions"] =
+            json!(["b7k2m9qd", "c7k2m9qd"]);
+        mappings(
+            &change,
+            &before,
+            &after,
+            &BTreeSet::from(["b7k2m9qd".into()]),
+            &mut f,
+        );
+        assert!(f.failed(CH));
+    }
+
+    #[test]
+    fn official_correction_requires_its_source_kind_and_retired_records_survive() {
+        let before = snapshot(
+            json!({"revisions":[{"id":"b7k2m9qd","text":{"sources":[{"source":"s"}]}}],"sources":[{"id":"s","kind":"other"}]}),
+        );
+        let after = snapshot(before.history.clone().unwrap());
+        assert!(inspect("officialCorrection", &before, &after).failed(CH));
+        let mut after = after;
+        after.history.as_mut().unwrap()["sources"][0]["kind"] = json!("officialCorrection");
+        assert!(!inspect("officialCorrection", &before, &after).failed(CH));
+        let mut before = Snapshot::default();
+        before.documents.insert(
+            "records/retired.yaml".into(),
+            json!({"id":"retired","status":"merged"}),
+        );
+        let after = Snapshot::default();
+        let f = inspect("metadata", &before, &after);
+        assert!(f
+            .items
+            .iter()
+            .any(|(_, d)| d.rule == "REG-01" && d.schema_version == crate::registry::REGISTRY));
+        let empty = Snapshot::default();
+        assert!(inspect("correction", &empty, &snapshot(json!({"revisions":[]}))).failed(CH));
+    }
+
     #[test]
     fn ambiguous_ids_are_incomplete_and_unknown_kinds_cannot_change_data() {
         let change = Change {

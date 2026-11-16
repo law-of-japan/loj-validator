@@ -645,10 +645,38 @@ fn packages(revisions: &[Value], by_id: &ById, repo: &Path, f: &mut Findings) {
             );
         }
     }
-    let Ok(entries) = std::fs::read_dir(repo.join("versions")) else {
-        return;
+    let entries = match std::fs::read_dir(repo.join("versions")) {
+        Ok(entries) => entries,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return,
+        Err(error) => {
+            f.unprocessable(
+                HS,
+                crate::common::Diagnostic::error(
+                    "HIST-01",
+                    HISTORY,
+                    format!("versions/ unreadable: {error}"),
+                )
+                .at_pointer("versions", ""),
+            );
+            return;
+        }
     };
-    for e in entries.flatten() {
+    for entry in entries {
+        let e = match entry {
+            Ok(entry) => entry,
+            Err(error) => {
+                f.unprocessable(
+                    HS,
+                    crate::common::Diagnostic::error(
+                        "HIST-01",
+                        HISTORY,
+                        format!("versions/ entry unreadable: {error}"),
+                    )
+                    .at_pointer("versions", ""),
+                );
+                continue;
+            }
+        };
         let name = e.file_name().to_string_lossy().into_owned();
         let rel = format!("versions/{name}");
         if !expected_dirs.contains(&rel)
@@ -850,6 +878,23 @@ mod tests {
 
     fn day(value: &str) -> Value {
         json!({"state": "date", "precision": "day", "value": value})
+    }
+
+    #[test]
+    fn unreadable_versions_listing_is_incomplete() {
+        let root =
+            std::env::temp_dir().join(format!("loj-versions-listing-{}", std::process::id()));
+        std::fs::create_dir(&root).unwrap();
+        std::fs::write(root.join("versions"), "not a directory").unwrap();
+        let mut f = Findings::default();
+        f.applicable.insert(HS);
+        packages(&[], &ById::new(), &root, &mut f);
+        std::fs::remove_dir_all(root).unwrap();
+        assert_eq!(f.result(HS), crate::common::ResultValue::Incomplete);
+        assert!(f
+            .items
+            .iter()
+            .any(|(_, d)| d.code.ends_with("/unprocessable")));
     }
 
     #[test]
