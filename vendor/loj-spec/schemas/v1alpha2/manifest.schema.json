@@ -32,6 +32,7 @@
           ]
         },
         "number": {
+          "$comment": "MAN-01, CORE-02: a display value; the adopted number claim of the registry is authoritative (XREF-05).",
           "anyOf": [
             {
               "type": "string",
@@ -43,6 +44,7 @@
           ]
         },
         "promulgatedAt": {
+          "$comment": "MAN-01, CORE-02: a display value; the relation's promulgated TimePoint is authoritative.",
           "anyOf": [
             {
               "type": "string",
@@ -134,7 +136,7 @@
       },
       "minItems": 0
     },
-    "sources": {
+    "sourceUris": {
       "type": "array",
       "items": {
         "type": "string",
@@ -148,7 +150,7 @@
         "type": "string",
         "minLength": 1
       },
-      "minItems": 0
+      "minItems": 1
     }
   },
   "required": [

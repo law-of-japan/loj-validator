@@ -1,0 +1,16 @@
+schemaVersion: loj-registry/v1alpha1
+id: k7m2p9qd3x
+label: 祝日法の重複した登録（架空）
+status: merged
+identity:
+  evidence: [{source: src-fiction, locator: 登録の記録}]
+  verification: {state: confirmed}
+collection: {state: notCollected}
+sources:
+  - {id: src-fiction, kind: other, title: 架空の登録の記録（適合ケース）}
+numbers: []
+externalIds: []
+replacedBy:
+  - record: {id: 19480720-law-178, space: LoJ, label: 昭和二十三年法律第百七十八号}
+    evidence: [{source: src-fiction, locator: 統合の記録}]
+    verification: {state: confirmed}

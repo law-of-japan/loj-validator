@@ -1,0 +1,9 @@
+{
+  "results": [
+    {
+      "check": "L4",
+      "category": "timeConsistency",
+      "result": "pass"
+    }
+  ]
+}

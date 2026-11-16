@@ -37,7 +37,7 @@
           "source": {
             "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/localId"
           },
-          "glyphs": {
+          "glyphPreservation": {
             "enum": [
               "preserved",
               "normalized",
@@ -55,7 +55,7 @@
         "additionalProperties": false,
         "required": [
           "source",
-          "glyphs",
+          "glyphPreservation",
           "evidence"
         ]
       },

@@ -1,0 +1,14 @@
+{
+  "diagnostics": [
+    {
+      "rule": "HEAD-03",
+      "schemaVersion": "loj/v1alpha2",
+      "class": "error",
+      "location": {
+        "path": "supp.md",
+        "start": 0,
+        "end": 11
+      }
+    }
+  ]
+}

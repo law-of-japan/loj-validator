@@ -14,6 +14,7 @@ const RF: Check = Check::REFERENCE;
 pub struct Parsed {
     pub space: String,
     pub record: String,
+    /// Empty for a Record reference.
     pub revision: String,
     pub commit: Option<String>,
     pub node: Option<String>,
@@ -40,10 +41,14 @@ pub fn parse(s: &str) -> Result<Parsed, String> {
         None => (rest, None),
     };
     let parts: Vec<&str> = path.split('/').collect();
-    let [space, record, revision] = parts[..] else {
-        return Err("expected loj:<space>/<record>/<revision>".into());
+    let (space, record, revision) = match parts.as_slice() {
+        [space, record] if commit.is_none() && node.is_none() => (*space, *record, ""),
+        [space, record, revision] if !revision.is_empty() => (*space, *record, *revision),
+        _ => return Err("expected loj:<space>/<record>[/<revision>[@<commit>][#<node>]]".into()),
     };
-    if [space, record, revision].iter().any(|p| p.is_empty())
+    if [space, record]
+        .iter()
+        .any(|p| p.is_empty() || p.contains(['@', '#']))
         || node
             .as_deref()
             .is_some_and(|n| n.is_empty() || n.contains(['@', '#']))
@@ -60,7 +65,129 @@ pub fn parse(s: &str) -> Result<Parsed, String> {
     })
 }
 
-fn full_hash(c: &str) -> bool {
+/// Convert a structured RecordRef, RevisionRef or FixedRef to FIXREF-02.
+/// Auxiliary label, path and repository fields are deliberately not serialized.
+/// An omitted registration space requires explicit caller context.
+///
+/// # Errors
+/// Returns a diagnostic message for an invalid shape or missing space context.
+pub fn to_string_reference(value: &Value, space: Option<&str>) -> Result<String, String> {
+    let kind = if value.get("record").is_none() {
+        "RecordRef"
+    } else if value.get("commit").is_some() {
+        "FixedRef"
+    } else {
+        "RevisionRef"
+    };
+    let schema = json!({"$ref": format!("https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/{kind}")});
+    let validator =
+        crate::common::validator(&schema.to_string(), &[crate::repository::history::TYPES]);
+    if let Some(error) = validator.iter_errors(value).next() {
+        return Err(error.to_string());
+    }
+    let record = if kind == "RecordRef" {
+        value
+    } else {
+        &value["record"]
+    };
+    let space = record["space"]
+        .as_str()
+        .or(space)
+        .filter(|s| !s.is_empty())
+        .ok_or("registration space was not supplied")?;
+    if !crate::common::valid_registration_space(space) {
+        return Err("invalid registration space".into());
+    }
+    let mut text = format!(
+        "loj:{space}/{}",
+        record["id"].as_str().ok_or("missing Record ID")?
+    );
+    if kind != "RecordRef" {
+        text.push('/');
+        text.push_str(value["revision"].as_str().ok_or("missing Revision ID")?);
+    }
+    if let Some(commit) = value["commit"].as_str() {
+        text.push('@');
+        text.push_str(commit);
+    }
+    if let Some(node) = value["node"].as_str() {
+        text.push('#');
+        text.push_str(node);
+    }
+    Ok(text)
+}
+
+/// Recover the identity fields of a FIXREF-02 reference.
+///
+/// # Errors
+/// Returns an error when the reference has invalid syntax.
+pub fn to_structured(reference: &str) -> Result<Value, String> {
+    let p = parse(reference)?;
+    let record = json!({"space": p.space, "id": p.record});
+    if p.revision.is_empty() {
+        return Ok(record);
+    }
+    let mut value = json!({"record": record, "revision": p.revision});
+    if let Some(commit) = p.commit {
+        value["commit"] = json!(commit);
+    }
+    if let Some(node) = p.node {
+        value["node"] = json!(node);
+    }
+    // The schema also checks IDs and prevents nodes on Revision references.
+    to_string_reference(&value, None)?;
+    Ok(value)
+}
+
+/// Resolve a structured reference. `path` is checked against HIST-08 and is
+/// never used as an alternative read location.
+#[must_use]
+pub fn check_structured(
+    bundle: &Path,
+    registry: &Path,
+    value: &Value,
+    space: Option<&str>,
+) -> Report {
+    let text = match to_string_reference(value, space) {
+        Ok(text) => text,
+        Err(message) => {
+            let mut f = Findings::default();
+            f.applicable.insert(RF);
+            let class = if message == "registration space was not supplied" {
+                Class::Undetermined
+            } else {
+                Class::Error
+            };
+            f.note(RF, class, "FIXREF-01", COMMON, message, "", "");
+            return f.into_report(&[RF]);
+        }
+    };
+    let mut report = check_with_space(bundle, registry, &text, space);
+    if report
+        .resolution
+        .as_ref()
+        .is_some_and(|r| r["result"] == "resolved")
+    {
+        if let Some(path) = value["path"].as_str() {
+            let expected = format!(
+                "versions/{}/law.yaml",
+                value["revision"].as_str().unwrap_or("")
+            );
+            if path != expected {
+                report.diagnostics.push(crate::common::Diagnostic::error(
+                    "FIXREF-03",
+                    COMMON,
+                    "path differs from the revision package",
+                ));
+                report.set(RF, crate::common::ResultValue::Fail);
+                report.resolution = Some(json!({"result": "error"}));
+            }
+        }
+    }
+    report
+}
+
+pub(crate) fn full_hash(c: &str) -> bool {
     (c.len() == 40 || c.len() == 64)
         && c.bytes()
             .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
@@ -68,10 +195,27 @@ fn full_hash(c: &str) -> bool {
 
 #[must_use]
 pub fn check(bundle: &Path, registry_dir: &Path, reference: &str) -> Report {
+    check_with_space(bundle, registry_dir, reference, None)
+}
+
+#[must_use]
+pub fn check_with_space(
+    bundle: &Path,
+    registry_dir: &Path,
+    reference: &str,
+    space: Option<&str>,
+) -> Report {
     let mut f = Findings::default();
     f.applicable.insert(RF);
     let mut resolution = json!({"result": "error"});
-    resolve(bundle, registry_dir, reference, &mut f, &mut resolution);
+    resolve(
+        bundle,
+        registry_dir,
+        reference,
+        space,
+        &mut f,
+        &mut resolution,
+    );
     match resolution["result"].as_str() {
         Some("notFetched") => {
             f.incomplete.insert(RF);
@@ -89,11 +233,23 @@ pub fn check(bundle: &Path, registry_dir: &Path, reference: &str) -> Report {
         _ => {}
     }
     let mut r = f.into_report(&[RF]);
+    r.target
+        .insert("repository".into(), json!(bundle.to_string_lossy()));
+    if let Some(commit) = resolution["commit"].as_str() {
+        r.target.insert("commit".into(), json!(commit));
+    }
     r.resolution = Some(resolution);
     r
 }
 
-fn resolve(bundle: &Path, registry_dir: &Path, reference: &str, f: &mut Findings, out: &mut Value) {
+fn resolve(
+    bundle: &Path,
+    registry_dir: &Path,
+    reference: &str,
+    space: Option<&str>,
+    f: &mut Findings,
+    out: &mut Value,
+) {
     let err = |f: &mut Findings, rule: &str, msg: String| {
         f.error(RF, rule, COMMON, msg, reference, "");
     };
@@ -101,6 +257,20 @@ fn resolve(bundle: &Path, registry_dir: &Path, reference: &str, f: &mut Findings
         Ok(p) => p,
         Err(e) => return err(f, "FIXREF-02", e),
     };
+    if !crate::common::valid_registration_space(&p.space) {
+        f.error(
+            RF,
+            "RID-04",
+            registry::REGISTRY,
+            "invalid registration space",
+            reference,
+            "",
+        );
+        return;
+    }
+    if !p.revision.is_empty() && !crate::repository::history::valid_revision_id(&p.revision) {
+        return err(f, "FIXREF-03", "reference must use a revision_id".into());
+    }
     // FIXREF-07: a node needs a commit.
     if p.node.is_some() && p.commit.is_none() {
         err(f, "FIXREF-07", "a node is given without @<commit>".into());
@@ -118,7 +288,7 @@ fn resolve(bundle: &Path, registry_dir: &Path, reference: &str, f: &mut Findings
         }
     }
     let mut scratch = Findings::default();
-    let Some(reg) = registry::load(registry_dir, &mut scratch) else {
+    let Some(reg) = registry::load_with_space(registry_dir, space, &mut scratch) else {
         *out = json!({"result": "notFetched"});
         return;
     };
@@ -137,6 +307,10 @@ fn resolve(bundle: &Path, registry_dir: &Path, reference: &str, f: &mut Findings
         *out = json!({"result": "notFetched"});
         return;
     };
+    if p.revision.is_empty() {
+        *out = json!({"result": "resolved", "record": record});
+        return;
+    }
     let branch = rec["repository"]["canonicalBranch"]
         .as_str()
         .unwrap_or("main")
@@ -304,11 +478,40 @@ fn own_text(n: &Value, id: &str) -> Option<String> {
 mod tests {
     use super::*;
     #[test]
+    fn structured_identity_roundtrips_and_requires_space_context() {
+        let value = json!({"record":{"id":"synthetic", "label":"display"}, "revision":"b7k2m9qd", "commit":"a".repeat(40), "node":"law/main", "path":"versions/b7k2m9qd/law.yaml", "repository":"auxiliary"});
+        assert!(to_string_reference(&value, None).is_err());
+        let text = to_string_reference(&value, Some("alpha")).unwrap();
+        let back = to_structured(&text).unwrap();
+        assert_eq!(back["record"], json!({"id":"synthetic", "space":"alpha"}));
+        assert_eq!(back["revision"], value["revision"]);
+        assert_eq!(back["commit"], value["commit"]);
+        assert_eq!(back["node"], value["node"]);
+        assert!(back.get("path").is_none());
+        assert_eq!(to_string_reference(&back, None).unwrap(), text);
+        assert_eq!(
+            to_structured("loj:alpha/synthetic").unwrap(),
+            json!({"id":"synthetic", "space":"alpha"})
+        );
+        for commit in ["A".repeat(40), "a".repeat(39), "main".into()] {
+            let mut bad = value.clone();
+            bad["commit"] = json!(commit);
+            assert!(to_string_reference(&bad, Some("alpha")).is_err());
+        }
+        assert!(to_string_reference(
+            &json!({"record":{"id":"synthetic"},"revision":"b7k2m9qd","node":"law"}),
+            Some("alpha")
+        )
+        .is_err());
+    }
+
+    #[test]
     fn string_forms() {
         let p = parse("loj:loj/a/b7k2m9qd@0123#a/main").unwrap();
         assert_eq!(p.commit.as_deref(), Some("0123"));
         assert_eq!(p.node.as_deref(), Some("a/main"));
-        assert!(parse("loj:loj/a").is_err());
+        assert_eq!(parse("loj:loj/a").unwrap().revision, "");
+        assert!(parse("loj:loj/a@0123").is_err());
         assert!(parse("lo:loj/a/b").is_err());
         assert!(!full_hash("02086ca"));
         assert!(full_hash(&"a".repeat(64)));

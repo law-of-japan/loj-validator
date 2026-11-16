@@ -33,7 +33,21 @@
         "path": "conformance/loj-rebuild/v1alpha1/invalid/rebuild-002/repo"
       },
       "expected": "conformance/loj-rebuild/v1alpha1/expected/rebuild-002.json",
-      "success": false
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-rebuild/v1alpha1/invalid/rebuild-002/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "rebuild.yaml",
+              "old": "commit: 43934f17a35c8b4dce2caec609bddbae4eb6841b",
+              "new": "commit: 43934f1"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "rebuild-003",
@@ -48,7 +62,20 @@
         "path": "conformance/loj-rebuild/v1alpha1/invalid/rebuild-003/repo"
       },
       "expected": "conformance/loj-rebuild/v1alpha1/expected/rebuild-003.json",
-      "success": false
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-rebuild/v1alpha1/invalid/rebuild-003/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "rebuild.yaml",
+              "old": "  - source: src-egov\n",
+              "new": "  - source: src-egov-nowhere\n"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "rebuild-004",
@@ -63,7 +90,49 @@
         "path": "conformance/loj-rebuild/v1alpha1/invalid/rebuild-004/repo"
       },
       "expected": "conformance/loj-rebuild/v1alpha1/expected/rebuild-004.json",
-      "success": false
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-rebuild/v1alpha1/invalid/rebuild-004/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "rebuild.yaml",
+              "old": "revisions: [98mj5vgx]",
+              "new": "revisions: [98mj5vgy]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rebuild-005",
+      "title": "構造の差の件数",
+      "requirements": [
+        "REBR-05"
+      ],
+      "check": "rebuild",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-rebuild/v1alpha1/invalid/rebuild-005/repo"
+      },
+      "expected": "conformance/loj-rebuild/v1alpha1/expected/rebuild-005.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-rebuild/v1alpha1/invalid/rebuild-005/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "rebuild.yaml",
+              "old": "    note: 旧本文は祝日の表を箇条書きで書いている\n",
+              "new": "    note: 旧本文は祝日の表を箇条書きで書いている\n    count: 1\n"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

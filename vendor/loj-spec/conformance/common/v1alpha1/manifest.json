@@ -42,7 +42,25 @@
         ]
       },
       "expected": "conformance/common/v1alpha1/expected/common-002.json",
-      "success": false
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-002/hist-004",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-004/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "            value: \"2019-04-30\"\n",
+              "new": "            value: \"2019-04-29\"\n"
+            },
+            {
+              "file": "history.yaml",
+              "old": "        value: \"2019-04-30\"\n",
+              "new": "        value: \"2019-04-29\"\n"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "common-003",
@@ -78,8 +96,8 @@
       "input": {
         "kind": "change",
         "bundle": "conformance/common/v1alpha1/valid/common-004/repo.bundle",
-        "base": "02086ca793ace385b61e6fa5692709895e7e9b0e",
-        "head": "8b678d2467c3b9eab705300a35c17b5b57acc37b"
+        "base": "f1162fe2cfefa04e9a0d656706e37977fb3d0731",
+        "head": "b20b2ff86a55e995bb9b7409defea3a3efbbc9d1"
       },
       "expected": "conformance/common/v1alpha1/expected/common-004.json",
       "success": true
@@ -96,8 +114,8 @@
       "input": {
         "kind": "change",
         "bundle": "conformance/common/v1alpha1/valid/common-004/repo.bundle",
-        "base": "8b678d2467c3b9eab705300a35c17b5b57acc37b",
-        "head": "d7b514444a5f766269025e52d6dda8b9671df556"
+        "base": "b20b2ff86a55e995bb9b7409defea3a3efbbc9d1",
+        "head": "7d6641cedd2f103e31dff9cd0d063ebf021413cb"
       },
       "expected": "conformance/common/v1alpha1/expected/common-005.json",
       "success": true
@@ -113,11 +131,18 @@
       "input": {
         "kind": "change",
         "bundle": "conformance/common/v1alpha1/invalid/common-006/repo.bundle",
-        "base": "d7b514444a5f766269025e52d6dda8b9671df556",
-        "head": "35b3c1b815e242be90211750b851b17b1c835b0a"
+        "base": "7d6641cedd2f103e31dff9cd0d063ebf021413cb",
+        "head": "bb9a472cb68b07334308c394d024e29570a3f103"
       },
       "expected": "conformance/common/v1alpha1/expected/common-006.json",
-      "success": false
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-006/repo.bundle",
+          "from": "conformance/common/v1alpha1/valid/common-004/repo.bundle",
+          "edits": []
+        }
+      ]
     },
     {
       "id": "common-007",
@@ -130,11 +155,18 @@
       "input": {
         "kind": "change",
         "bundle": "conformance/common/v1alpha1/invalid/common-007/repo.bundle",
-        "base": "35b3c1b815e242be90211750b851b17b1c835b0a",
-        "head": "f59ef0fb1025fcc7bb6b168631c4efb673bbdece"
+        "base": "bb9a472cb68b07334308c394d024e29570a3f103",
+        "head": "64394c4a5759dbfb2f76ac624934c47c5f74b994"
       },
       "expected": "conformance/common/v1alpha1/expected/common-007.json",
-      "success": false
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-007/repo.bundle",
+          "from": "conformance/common/v1alpha1/valid/common-004/repo.bundle",
+          "edits": []
+        }
+      ]
     },
     {
       "id": "common-008",
@@ -150,7 +182,7 @@
         "kind": "reference",
         "bundle": "conformance/common/v1alpha1/valid/common-004/repo.bundle",
         "registry": "conformance/common/v1alpha1/valid/common-008/registry",
-        "reference": "loj:loj/20990101-act-1/b7k2m9qd@02086ca793ace385b61e6fa5692709895e7e9b0e#20990101-act-1/main/article/1/paragraph/1"
+        "reference": "loj:loj/20990101-act-1/b7k2m9qd@f1162fe2cfefa04e9a0d656706e37977fb3d0731#20990101-act-1/main/article/1/paragraph/1"
       },
       "expected": "conformance/common/v1alpha1/expected/common-008.json",
       "success": true
@@ -188,7 +220,19 @@
         "reference": "loj:loj/20990101-act-1/b7k2m9qd#20990101-act-1/main/article/1/paragraph/1"
       },
       "expected": "conformance/common/v1alpha1/expected/common-010.json",
-      "success": false
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-010/registry",
+          "from": "conformance/common/v1alpha1/valid/common-008/registry",
+          "edits": []
+        },
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-010/repo.bundle",
+          "from": "conformance/common/v1alpha1/valid/common-004/repo.bundle",
+          "edits": []
+        }
+      ]
     },
     {
       "id": "common-011",
@@ -203,10 +247,22 @@
         "kind": "reference",
         "bundle": "conformance/common/v1alpha1/invalid/common-011/repo.bundle",
         "registry": "conformance/common/v1alpha1/invalid/common-011/registry",
-        "reference": "loj:loj/20990101-act-1/b7k2m9qd@02086ca"
+        "reference": "loj:loj/20990101-act-1/b7k2m9qd@f1162fe"
       },
       "expected": "conformance/common/v1alpha1/expected/common-011.json",
-      "success": false
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-011/registry",
+          "from": "conformance/common/v1alpha1/valid/common-008/registry",
+          "edits": []
+        },
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-011/repo.bundle",
+          "from": "conformance/common/v1alpha1/valid/common-004/repo.bundle",
+          "edits": []
+        }
+      ]
     },
     {
       "id": "common-012",
@@ -220,9 +276,738 @@
         "kind": "reference",
         "bundle": "conformance/common/v1alpha1/invalid/common-012/repo.bundle",
         "registry": "conformance/common/v1alpha1/invalid/common-012/registry",
-        "reference": "loj:loj/20990101-act-1/zzzzzzzz@02086ca793ace385b61e6fa5692709895e7e9b0e"
+        "reference": "loj:loj/20990101-act-1/zzzzzzzz@f1162fe2cfefa04e9a0d656706e37977fb3d0731"
       },
       "expected": "conformance/common/v1alpha1/expected/common-012.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-012/registry",
+          "from": "conformance/common/v1alpha1/valid/common-008/registry",
+          "edits": []
+        },
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-012/repo.bundle",
+          "from": "conformance/common/v1alpha1/valid/common-004/repo.bundle",
+          "edits": []
+        }
+      ]
+    },
+    {
+      "id": "common-013",
+      "title": "版パッケージの番号と採用中の番号主張（祝日法）",
+      "requirements": [
+        "XREF-05",
+        "MAN-01",
+        "REG-03"
+      ],
+      "check": "L4",
+      "category": "displayConsistency",
+      "normative": true,
+      "input": {
+        "kind": "records",
+        "registry": "conformance/loj-registry/v1alpha1/valid/reg-001/registry",
+        "repositories": [
+          "conformance/loj-history/v1alpha1/valid/hist-001/repo"
+        ]
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-013.json",
+      "success": true
+    },
+    {
+      "id": "common-014",
+      "title": "版パッケージの番号が採用中の番号主張と食い違う",
+      "requirements": [
+        "XREF-05",
+        "MAN-01"
+      ],
+      "check": "L4",
+      "category": "displayConsistency",
+      "normative": true,
+      "input": {
+        "kind": "records",
+        "registry": "conformance/loj-registry/v1alpha1/valid/reg-001/registry",
+        "repositories": [
+          "conformance/common/v1alpha1/valid/common-014/hist-001"
+        ]
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-014.json",
+      "success": true,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/valid/common-014/hist-001",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "versions/zwgmz1rt/law.yaml",
+              "old": "\"昭和二十三年法律第百七十八号\"",
+              "new": "\"昭和二十三年法律第百七十九号\""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "common-015",
+      "title": "同じ改正法令の公布の時点が一致する（架空）",
+      "requirements": [
+        "XREF-06",
+        "HIST-03"
+      ],
+      "check": "L4",
+      "category": "timeConsistency",
+      "normative": true,
+      "input": {
+        "kind": "records",
+        "registry": "conformance/common/v1alpha1/valid/common-015/registry",
+        "repositories": [
+          "conformance/loj-history/v1alpha1/valid/hist-016/repo",
+          "conformance/common/v1alpha1/valid/common-015/hist-016b"
+        ]
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-015.json",
+      "success": true,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/valid/common-015/hist-016b",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-016/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "record: {id: 20990401-law-1, label: 架空の法律（時点の計算の例）}",
+              "new": "record: {id: 20990402-law-3, label: 架空の法律（公布の時点の比較の例）}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "common-016",
+      "title": "同じ改正法令の公布の時点が食い違う（架空）",
+      "requirements": [
+        "XREF-06"
+      ],
+      "check": "L4",
+      "category": "timeConsistency",
+      "normative": true,
+      "input": {
+        "kind": "records",
+        "registry": "conformance/common/v1alpha1/valid/common-015/registry",
+        "repositories": [
+          "conformance/loj-history/v1alpha1/valid/hist-016/repo",
+          "conformance/common/v1alpha1/invalid/common-016/hist-016b"
+        ]
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-016.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-016/hist-016b",
+          "from": "conformance/common/v1alpha1/valid/common-015/hist-016b",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "      value: \"2099-06-01\"\n      raw: 令和八十一年六月一日\n",
+              "new": "      value: \"2099-06-02\"\n      raw: 令和八十一年六月二日\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "common-017",
+      "title": "全部改正後のRecordと旧Recordの全部改正の関係が対応する（架空）",
+      "requirements": [
+        "XREF-01",
+        "XREF-02",
+        "HIST-04"
+      ],
+      "check": "L4",
+      "category": "relationConsistency",
+      "normative": true,
+      "input": {
+        "kind": "records",
+        "registry": "conformance/common/v1alpha1/valid/common-017/registry",
+        "repositories": [
+          "conformance/common/v1alpha1/valid/common-017/20990101-law-5",
+          "conformance/common/v1alpha1/valid/common-017/20991001-law-9"
+        ]
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-017.json",
+      "success": true
+    },
+    {
+      "id": "common-018",
+      "title": "totallyRevisesが旧Recordにない関係を指す（架空）",
+      "requirements": [
+        "XREF-02"
+      ],
+      "check": "L4",
+      "category": "relationConsistency",
+      "normative": true,
+      "input": {
+        "kind": "records",
+        "registry": "conformance/common/v1alpha1/valid/common-017/registry",
+        "repositories": [
+          "conformance/common/v1alpha1/valid/common-017/20990101-law-5",
+          "conformance/common/v1alpha1/invalid/common-018/20991001-law-9"
+        ]
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-018.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-018/20991001-law-9",
+          "from": "conformance/common/v1alpha1/valid/common-017/20991001-law-9",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "relation: rel-total}",
+              "new": "relation: rel-nowhere}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "common-019",
+      "title": "確定した関係の起点が登録を撤回したRecord（架空）",
+      "requirements": [
+        "XREF-01",
+        "REG-02",
+        "VAL-06"
+      ],
+      "check": "L4",
+      "category": "relationResolution",
+      "normative": true,
+      "input": {
+        "kind": "records",
+        "registry": "conformance/common/v1alpha1/invalid/common-019/registry",
+        "repositories": [
+          "conformance/common/v1alpha1/invalid/common-019/20990101-law-5",
+          "conformance/common/v1alpha1/valid/common-017/20991001-law-9"
+        ]
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-019.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-019/registry",
+          "from": "conformance/common/v1alpha1/valid/common-017/registry",
+          "edits": [
+            {
+              "file": "records/20991001-law-9.yaml",
+              "old": "status: active\n",
+              "new": "status: withdrawn\n"
+            }
+          ]
+        },
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-019/20990101-law-5",
+          "from": "conformance/common/v1alpha1/valid/common-017/20990101-law-5",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "    verification: {state: unverified, reason: 架空の資料}\n    status: active\n",
+              "new": "    verification: {state: confirmed}\n    status: active\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "common-020",
+      "title": "totallyRevisesが撤回した関係を指す（架空）",
+      "requirements": [
+        "XREF-02"
+      ],
+      "check": "L4",
+      "category": "relationConsistency",
+      "normative": true,
+      "input": {
+        "kind": "records",
+        "registry": "conformance/common/v1alpha1/valid/common-017/registry",
+        "repositories": [
+          "conformance/common/v1alpha1/invalid/common-020/20990101-law-5",
+          "conformance/common/v1alpha1/valid/common-017/20991001-law-9"
+        ]
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-020.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-020/20990101-law-5",
+          "from": "conformance/common/v1alpha1/valid/common-017/20990101-law-5",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "    verification: {state: unverified, reason: 架空の資料}\n    status: active\n",
+              "new": "    verification: {state: unverified, reason: 架空の資料による撤回}\n    status: retracted\n"
+            },
+            {
+              "file": "history.yaml",
+              "old": "termination:\n  - {type: totallyRevised, relation: rel-total}\n",
+              "new": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "common-021",
+      "title": "totallyRevisesが全部改正でない関係を指す（架空）",
+      "requirements": [
+        "XREF-02"
+      ],
+      "check": "L4",
+      "category": "relationConsistency",
+      "normative": true,
+      "input": {
+        "kind": "records",
+        "registry": "conformance/common/v1alpha1/valid/common-017/registry",
+        "repositories": [
+          "conformance/common/v1alpha1/invalid/common-021/20990101-law-5",
+          "conformance/common/v1alpha1/valid/common-017/20991001-law-9"
+        ]
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-021.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-021/20990101-law-5",
+          "from": "conformance/common/v1alpha1/valid/common-017/20990101-law-5",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "    type: totallyRevises\n",
+              "new": "    type: repeals\n"
+            },
+            {
+              "file": "history.yaml",
+              "old": "type: totallyRevised, relation",
+              "new": "type: repealed, relation"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "common-022",
+      "title": "全部改正の関係の起点が別のRecord（架空）",
+      "requirements": [
+        "XREF-02"
+      ],
+      "check": "L4",
+      "category": "relationConsistency",
+      "normative": true,
+      "input": {
+        "kind": "records",
+        "registry": "conformance/common/v1alpha1/valid/common-017/registry",
+        "repositories": [
+          "conformance/common/v1alpha1/invalid/common-022/20990101-law-5",
+          "conformance/common/v1alpha1/valid/common-017/20991001-law-9"
+        ]
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-022.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-022/20990101-law-5",
+          "from": "conformance/common/v1alpha1/valid/common-017/20990101-law-5",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "    from: {id: 20991001-law-9, label: 架空の新法（全部改正の例）}\n",
+              "new": "    from: {id: 20990101-law-5, label: 架空の旧法（全部改正の例）}\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "common-023",
+      "title": "未確認の関係の起点が登録を撤回したRecord（架空）",
+      "requirements": [
+        "XREF-01",
+        "VAL-06"
+      ],
+      "check": "L4",
+      "category": "relationResolution",
+      "normative": true,
+      "input": {
+        "kind": "records",
+        "registry": "conformance/common/v1alpha1/valid/common-023/registry",
+        "repositories": [
+          "conformance/common/v1alpha1/valid/common-017/20990101-law-5",
+          "conformance/common/v1alpha1/valid/common-017/20991001-law-9"
+        ]
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-023.json",
+      "success": true,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/valid/common-023/registry",
+          "from": "conformance/common/v1alpha1/valid/common-017/registry",
+          "edits": [
+            {
+              "file": "records/20991001-law-9.yaml",
+              "old": "status: active\n",
+              "new": "status: withdrawn\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "common-024",
+      "title": "記録訂正で、同じ版の本文の出典（history.yamlのtext.sources）を併せて更新する",
+      "requirements": [
+        "CHG-02",
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-024/repo.bundle",
+        "base": "f1162fe2cfefa04e9a0d656706e37977fb3d0731",
+        "head": "34936fb55aaac6c995adcbbb59792efcf05c0841"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-024.json",
+      "success": true
+    },
+    {
+      "id": "common-025",
+      "title": "ASTを生成できない版を含む変更は判定不能",
+      "requirements": [
+        "CHG-02",
+        "CHG-04"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-025/repo.bundle",
+        "base": "b4fb14ad30b1886f64ca1a04185e54c52d8a9588",
+        "head": "e9c821aea8a0fdcaaaa852ea27c08d9476dbb2a7"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-025.json",
+      "success": true
+    },
+    {
+      "id": "common-026",
+      "title": "ASTを生成できない版のファイルを書式変更で変える",
+      "requirements": [
+        "CHG-04"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-026/repo.bundle",
+        "base": "e9c821aea8a0fdcaaaa852ea27c08d9476dbb2a7",
+        "head": "a933fe6b04f6a664ca8fb5f93bd7f153362913e3"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-026.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-026/repo.bundle",
+          "from": "conformance/common/v1alpha1/valid/common-025/repo.bundle",
+          "edits": []
+        }
+      ]
+    },
+    {
+      "id": "common-027",
+      "title": "ASTを生成できない版のファイルを人のレビューの記録を付けて書式変更で変える",
+      "requirements": [
+        "CHG-04",
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-027/repo.bundle",
+        "base": "e9c821aea8a0fdcaaaa852ea27c08d9476dbb2a7",
+        "head": "9b4faef4dc60577e8309b2ef067a01bcd547cac5"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-027.json",
+      "success": true
+    },
+    {
+      "id": "common-028",
+      "title": "他の登録空間のRecordを起点とする関係",
+      "requirements": [
+        "VAL-03",
+        "XREF-01",
+        "VAL-06"
+      ],
+      "check": "L4",
+      "category": "relationResolution",
+      "normative": true,
+      "input": {
+        "kind": "records",
+        "registry": "conformance/loj-registry/v1alpha1/valid/reg-001/registry",
+        "repositories": [
+          "conformance/common/v1alpha1/valid/common-028/hist-004"
+        ]
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-028.json",
+      "success": true,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/valid/common-028/hist-004",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-004/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "    from: {id: 20170616-law-63, label:",
+              "new": "    from: {id: 20170616-law-63, space: other-space, label:"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "common-029",
+      "title": "ASTを生成できない版のファイルを、人のレビューの記録を二つ付けて書式変更で変える",
+      "requirements": [
+        "CHG-04",
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-029/repo.bundle",
+        "base": "e9c821aea8a0fdcaaaa852ea27c08d9476dbb2a7",
+        "head": "4d09e37ba1b0a8050518fee39b6dad7d5734bc93"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-029.json",
+      "success": false
+    },
+    {
+      "id": "common-030",
+      "title": "ASTを生成できない版のファイルを、人のレビューの記録を値を空にして付けて書式変更で変える",
+      "requirements": [
+        "CHG-04",
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-030/repo.bundle",
+        "base": "e9c821aea8a0fdcaaaa852ea27c08d9476dbb2a7",
+        "head": "3982b3c27cea10cf6b6e0f820802bbb876952243"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-030.json",
+      "success": false
+    },
+    {
+      "id": "common-031",
+      "title": "ASTを生成できない版のファイルを、人のレビューの記録を値を空白だけにして付けて書式変更で変える",
+      "requirements": [
+        "CHG-04",
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-031/repo.bundle",
+        "base": "e9c821aea8a0fdcaaaa852ea27c08d9476dbb2a7",
+        "head": "0680e045330422fc5f44dd5967499af28b0488e8"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-031.json",
+      "success": false
+    },
+    {
+      "id": "common-032",
+      "title": "コロンの後にタブと二つの空白を置いた種類の宣言",
+      "requirements": [
+        "CHG-03",
+        "CHG-02"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-032/repo.bundle",
+        "base": "f1162fe2cfefa04e9a0d656706e37977fb3d0731",
+        "head": "d0f831f16c2631cb80356fc1da0451e72f06636a"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-032.json",
+      "success": true
+    },
+    {
+      "id": "common-033",
+      "title": "宣言した版を書いた書式変更",
+      "requirements": [
+        "CHG-03",
+        "CHG-02"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-032/repo.bundle",
+        "base": "d0f831f16c2631cb80356fc1da0451e72f06636a",
+        "head": "4a43fc06ed289805610c8a362c6dbfb742f33e0e"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-033.json",
+      "success": true
+    },
+    {
+      "id": "common-034",
+      "title": "名前とコロンの間に空白を置いた種類の宣言",
+      "requirements": [
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-034/repo.bundle",
+        "base": "4a43fc06ed289805610c8a362c6dbfb742f33e0e",
+        "head": "a1489efefc405eaf4baedb64154a833ebe782e93"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-034.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-034/repo.bundle",
+          "from": "conformance/common/v1alpha1/valid/common-032/repo.bundle",
+          "edits": []
+        }
+      ]
+    },
+    {
+      "id": "common-035",
+      "title": "trailerの後に段落が続く種類の宣言",
+      "requirements": [
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-035/repo.bundle",
+        "base": "a1489efefc405eaf4baedb64154a833ebe782e93",
+        "head": "91480d413b7a5e3de488d742a57caa1ae1741320"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-035.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-035/repo.bundle",
+          "from": "conformance/common/v1alpha1/valid/common-032/repo.bundle",
+          "edits": []
+        }
+      ]
+    },
+    {
+      "id": "common-036",
+      "title": "ASTを生成できない版を含む変更の判定不能の診断",
+      "requirements": [
+        "CHG-04"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-036/repo.bundle",
+        "base": "b4fb14ad30b1886f64ca1a04185e54c52d8a9588",
+        "head": "e9c821aea8a0fdcaaaa852ea27c08d9476dbb2a7"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-036.json",
+      "success": true,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/valid/common-036/repo.bundle",
+          "from": "conformance/common/v1alpha1/valid/common-025/repo.bundle",
+          "edits": []
+        }
+      ]
+    },
+    {
+      "id": "common-037",
+      "title": "ASTを生成できない版のファイルを書式変更で変える違反と判定不能の診断",
+      "requirements": [
+        "CHG-04"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-037/repo.bundle",
+        "base": "e9c821aea8a0fdcaaaa852ea27c08d9476dbb2a7",
+        "head": "a933fe6b04f6a664ca8fb5f93bd7f153362913e3"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-037.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-037/repo.bundle",
+          "from": "conformance/common/v1alpha1/invalid/common-026/repo.bundle",
+          "edits": []
+        }
+      ]
+    },
+    {
+      "id": "common-038",
+      "title": "行末をCRLFにした種類の宣言",
+      "requirements": [
+        "CHG-03",
+        "CHG-02"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-038/repo.bundle",
+        "base": "f1162fe2cfefa04e9a0d656706e37977fb3d0731",
+        "head": "eddbd5c5e78677575c8daa27fb618cd141f15fe2"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-038.json",
+      "success": true
+    },
+    {
+      "id": "common-039",
+      "title": "ASTを生成できない版のファイルを、人のレビューの記録を値を全角空白だけにして付けて書式変更で変える",
+      "requirements": [
+        "CHG-04",
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-039/repo.bundle",
+        "base": "e9c821aea8a0fdcaaaa852ea27c08d9476dbb2a7",
+        "head": "779919dd0baced6704fd5eafdc17c498bd3690a9"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-039.json",
+      "success": true
+    },
+    {
+      "id": "common-040",
+      "title": "変更の種類でない値の宣言",
+      "requirements": [
+        "CHG-03",
+        "CHG-01"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-040/repo.bundle",
+        "base": "f1162fe2cfefa04e9a0d656706e37977fb3d0731",
+        "head": "49c7d236e715d4ce697907c49bdf0a5576defc36"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-040.json",
       "success": false
     }
   ]

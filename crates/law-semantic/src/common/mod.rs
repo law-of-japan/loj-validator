@@ -18,11 +18,20 @@ pub mod yaml;
 pub use report::{Check, Class, Diagnostic, Report, ResultValue};
 
 /// loj-spec commit of the vendored next specification.
-pub const SPEC_COMMIT: &str = "4ac8f2b47c98e76fa5ccda35d7a3ee60f0816ad4";
+pub const SPEC_COMMIT: &str = "a9c5be83da58170082594e6de989cd7ee4af8bf4";
 /// Rule namespace of the common requirements.
 pub const COMMON: &str = "common/v1alpha1";
 /// Per-file read limit; larger inputs are reported as incomplete.
 pub const MAX_FILE_BYTES: u64 = 16 * 1024 * 1024;
+
+/// RID-04 registration-space input syntax.
+#[must_use]
+pub fn valid_registration_space(space: &str) -> bool {
+    space.as_bytes().first().is_some_and(u8::is_ascii_lowercase)
+        && space
+            .bytes()
+            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+}
 
 /// Why strict text decoding failed (BASIC-02 / CORE-03 bytes).
 #[derive(Debug, Clone, PartialEq, Eq)]

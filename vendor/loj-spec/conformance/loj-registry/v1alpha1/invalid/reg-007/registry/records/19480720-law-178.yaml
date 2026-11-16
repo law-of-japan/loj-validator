@@ -5,7 +5,7 @@ status: active
 identity:
   evidence: [{source: src-kanpo-19480720, locator: 1コマ}]
   verification: {state: confirmed}
-text: {state: collected}
+collection: {state: collected}
 sources:
   - id: src-kanpo-19480720
     kind: promulgation

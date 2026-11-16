@@ -12,12 +12,18 @@ use std::path::Path;
 const RES: Check = Check::RELATION_RESOLUTION;
 const CON: Check = Check::RELATION_CONSISTENCY;
 const TIME: Check = Check::TIME_CONSISTENCY;
+const DISPLAY: Check = Check::DISPLAY_CONSISTENCY;
 
-pub fn check(registry_dir: &Path, repositories: &[std::path::PathBuf], checks: &[Check]) -> Report {
+pub fn check_with_space(
+    registry_dir: &Path,
+    repositories: &[std::path::PathBuf],
+    checks: &[Check],
+    space: Option<&str>,
+) -> Report {
     let mut f = Findings::default();
     let mut references: Vec<(Check, Value)> = Vec::new();
     let mut scratch = Findings::default();
-    let reg = registry::load(registry_dir, &mut scratch);
+    let reg = registry::load_with_space(registry_dir, space, &mut scratch);
     // Manifests by Record ID; unreadable ones leave the L4 results incomplete.
     let mut manifests: BTreeMap<String, (String, Value)> = BTreeMap::new();
     for repo in repositories {
@@ -29,7 +35,7 @@ pub fn check(registry_dir: &Path, repositories: &[std::path::PathBuf], checks: &
                 }
             }
             None => {
-                for c in [RES, CON, TIME] {
+                for c in [RES, CON, TIME, DISPLAY] {
                     f.incomplete.insert(c);
                 }
                 f.items.extend(hf.items);
@@ -37,16 +43,19 @@ pub fn check(registry_dir: &Path, repositories: &[std::path::PathBuf], checks: &
         }
     }
     let Some(reg) = reg else {
-        for c in [RES, CON, TIME] {
+        for c in [RES, CON, TIME, DISPLAY] {
             f.incomplete.insert(c);
         }
         f.items.extend(scratch.items);
         return finish(f, references, checks);
     };
-    for c in [RES, CON, TIME] {
+    for c in [RES, CON, TIME, DISPLAY] {
         f.applicable.insert(c);
     }
+    let mut per_record = Vec::new();
     for (this, (path, h)) in &manifests {
+        let mut local = Findings::default();
+        local.applicable.extend([RES, CON, TIME, DISPLAY]);
         let subject = Subject {
             reg: &reg,
             manifests: &manifests,
@@ -54,12 +63,195 @@ pub fn check(registry_dir: &Path, repositories: &[std::path::PathBuf], checks: &
             file: format!("{path}/history.yaml"),
             h,
         };
-        subject.endpoints(&mut f, &mut references);
-        subject.total_revision_relations(&mut f);
-        subject.total_revision_origins(&mut f);
-        subject.same_as(&mut f, &mut references);
+        subject.endpoints(&mut local, &mut references);
+        subject.total_revision_origins(&mut local);
+        subject.same_as(&mut local, &mut references);
+        if checks.contains(&DISPLAY) {
+            display_numbers(&reg, Path::new(path), h, &mut local);
+        }
+        per_record.push((this, path, local));
     }
-    finish(f, references, checks)
+    let mut cross = Findings::default();
+    promulgated_consistency(&reg, &manifests, &mut cross);
+    let mut records = Vec::new();
+    for (id, path, mut local) in per_record {
+        local.items.extend(
+            cross
+                .items
+                .iter()
+                .filter(|(_, d)| {
+                    d.location
+                        .as_ref()
+                        .is_some_and(|l| l["file"] == format!("{path}/history.yaml"))
+                })
+                .cloned(),
+        );
+        f.incomplete.extend(local.incomplete.iter().copied());
+        f.items.extend(local.items.iter().cloned());
+        let mut report = local.into_report(checks);
+        report.target.insert("repository".into(), json!(path));
+        records.push((id.clone(), report));
+    }
+    let mut report = finish(f, references, checks);
+    report
+        .target
+        .insert("repository".into(), json!(registry_dir.to_string_lossy()));
+    report.records = records;
+    report
+}
+
+/// XREF-05 reads only the declared revisions' own default package paths.
+fn display_numbers(reg: &registry::Registry, repo: &Path, history: &Value, f: &mut Findings) {
+    let Some(id) = resolved_id(reg, &history["record"]) else {
+        f.incomplete.insert(DISPLAY);
+        return;
+    };
+    let Some(record) = reg.records.get(&id) else {
+        return;
+    };
+    let Some(claim) = list(&record["numbers"])
+        .iter()
+        .find(|n| n["decision"] == "adopted")
+    else {
+        return;
+    };
+    if claim["state"] == "conflicting" {
+        return;
+    }
+    let Ok(mut paths) = crate::common::documents::DocumentPaths::new(&repo.join("history.yaml"))
+    else {
+        f.incomplete.insert(DISPLAY);
+        return;
+    };
+    let mut budget =
+        crate::common::budget::ReadBudget::new(128 * 1024 * 1024, crate::common::MAX_FILE_BYTES);
+    for revision in list(&history["revisions"]) {
+        if !matches!(
+            revision["text"]["status"].as_str(),
+            Some("complete" | "partial")
+        ) {
+            continue;
+        }
+        let Some(id) = revision["id"].as_str() else {
+            continue;
+        };
+        if id.len() != 8
+            || !id
+                .bytes()
+                .all(|b| b"0123456789abcdefghjkmnpqrstvwxyz".contains(&b))
+        {
+            f.incomplete.insert(DISPLAY);
+            continue;
+        }
+        let path = format!("versions/{id}/law.yaml");
+        let manifest = paths
+            .resolve_yaml(&path)
+            .ok()
+            .and_then(|p| budget.read_file(&p).ok().flatten())
+            .and_then(|bytes| crate::common::strict_text(bytes).ok())
+            .and_then(|text| crate::common::yaml::parse(&text).ok());
+        let Some(manifest) = manifest.filter(|m| m["schemaVersion"] == "loj/v1alpha2") else {
+            f.note(
+                DISPLAY,
+                Class::Undetermined,
+                "XREF-05",
+                COMMON,
+                "package could not be read for display comparison",
+                &path,
+                "/law/number",
+            );
+            continue;
+        };
+        let number = &manifest["law"]["number"];
+        let matches = match claim["state"].as_str() {
+            Some("exists" | "illegible") => {
+                number == &claim["raw"]
+                    || claim["structured"]["period"]["raw"]
+                        .as_str()
+                        .zip(claim["raw"].as_str())
+                        .is_some_and(|(period, raw)| {
+                            number.as_str() == Some(format!("{period}{raw}").as_str())
+                        })
+            }
+            Some("nonexistent" | "unknown") => number.is_null(),
+            _ => continue,
+        };
+        if !matches {
+            f.note(
+                DISPLAY,
+                Class::Warning,
+                "XREF-05",
+                COMMON,
+                "law.number differs from the adopted number claim",
+                &path,
+                "/law/number",
+            );
+        }
+    }
+}
+
+/// XREF-06 groups by the resolved origin and compares only across Records.
+fn promulgated_consistency(
+    reg: &registry::Registry,
+    manifests: &BTreeMap<String, (String, Value)>,
+    f: &mut Findings,
+) {
+    use crate::common::time::Date;
+    use std::collections::BTreeSet;
+    let mut groups: BTreeMap<String, BTreeMap<&str, BTreeSet<Option<Date>>>> = BTreeMap::new();
+    for (record, (_, history)) in manifests {
+        for relation in list(&history["relations"]) {
+            if relation["status"] == "retracted" || !relation["promulgated"].is_object() {
+                continue;
+            }
+            let Some(origin) = resolved_id(reg, &relation["from"]) else {
+                continue;
+            };
+            groups
+                .entry(origin)
+                .or_default()
+                .entry(record)
+                .or_default()
+                .insert(fixed_day(&relation["promulgated"]));
+        }
+    }
+    for (origin, records) in groups {
+        if records.len() < 2 {
+            continue;
+        }
+        for record in records.keys() {
+            let file = format!("{}/history.yaml", manifests[*record].0);
+            if records.values().any(|days| days.contains(&None)) {
+                f.note(
+                    TIME,
+                    Class::Undetermined,
+                    "XREF-06",
+                    COMMON,
+                    format!("promulgation of {origin} is not fixed in all Records"),
+                    &file,
+                    "/relations",
+                );
+            }
+            let fixed_records = records
+                .values()
+                .filter(|days| days.iter().any(Option::is_some))
+                .count();
+            let days: BTreeSet<Date> = records
+                .values()
+                .flat_map(|days| days.iter().flatten().copied())
+                .collect();
+            if fixed_records >= 2 && days.len() > 1 {
+                f.error(
+                    TIME,
+                    "XREF-06",
+                    COMMON,
+                    format!("promulgation of {origin} differs across Records"),
+                    &file,
+                    "/relations",
+                );
+            }
+        }
+    }
 }
 
 /// One history manifest under the L4 checks, and what it is checked against.
@@ -77,30 +269,21 @@ struct Subject<'a> {
 impl Subject<'_> {
     /// A `references` entry of the report for a reference from this Record.
     fn reference(&self, target: &str, result: &str) -> Value {
-        json!({"from": format!("{}/{}", self.reg.space, self.this), "target": target, "result": result})
+        let mut value = json!({"target": target, "result": result});
+        if !self.reg.space.is_empty() {
+            value["from"] = json!(format!("loj:{}/{}", self.reg.space, self.this));
+        }
+        value
     }
 
     /// XREF-01: this Record and the endpoints of its relations are registered.
     fn endpoints(&self, f: &mut Findings, references: &mut Vec<(Check, Value)>) {
         let (reg, file, h) = (self.reg, &self.file, self.h);
-        // The end point is this Record itself; it must be registered.
-        let me = &h["record"];
-        if !matches!(reg.resolve(me), Resolution::Resolved(_)) {
-            f.incomplete.insert(RES);
-            f.note(
-                RES,
-                Class::Undetermined,
-                "XREF-01",
-                COMMON,
-                format!("{} is not resolved in the registry", reg.target(me)),
-                file,
-                "/record",
-            );
-        }
         let mut endpoints = Vec::new();
         for (i, r) in list(&h["relations"]).iter().enumerate() {
             let confirmed = r["status"] == "active" && r["verification"]["state"] == "confirmed";
             endpoints.push((format!("/relations/{i}/from"), &r["from"], confirmed));
+            endpoints.push(("/record".into(), &h["record"], confirmed));
         }
         for (i, r) in list(&h["revisions"]).iter().enumerate() {
             if r["totallyRevises"].is_object() {
@@ -113,7 +296,19 @@ impl Subject<'_> {
         }
         for (ptr, rref, confirmed) in endpoints {
             let res = reg.resolve(rref);
-            references.push((RES, self.reference(&reg.target(rref), res.as_str())));
+            if let Some(target) = reg.target(rref) {
+                references.push((RES, self.reference(&target, res.as_str())));
+            } else {
+                f.note(
+                    RES,
+                    Class::Undetermined,
+                    "XREF-01",
+                    COMMON,
+                    "registration space is needed to serialize the reference",
+                    file,
+                    &ptr,
+                );
+            }
             match res {
                 Resolution::Resolved(_) => {}
                 Resolution::NotFetched(why) => {
@@ -123,7 +318,7 @@ impl Subject<'_> {
                         Class::Undetermined,
                         "XREF-01",
                         COMMON,
-                        format!("{} not fetched: {why}", reg.target(rref)),
+                        format!("{rref} not fetched: {why}"),
                         file,
                         &ptr,
                     );
@@ -134,10 +329,7 @@ impl Subject<'_> {
                             RES,
                             "XREF-01",
                             COMMON,
-                            format!(
-                                "confirmed relation refers to {} confirmed nonexistent",
-                                reg.target(rref)
-                            ),
+                            format!("confirmed relation refers to {rref} confirmed nonexistent"),
                             file,
                             &ptr,
                         );
@@ -171,39 +363,6 @@ impl Subject<'_> {
         Some((id, other))
     }
 
-    /// XREF-02: an active totallyRevises relation has a totalRevision origin
-    /// in the history of the Record it comes from.
-    fn total_revision_relations(&self, f: &mut Findings) {
-        for (i, r) in list(&self.h["relations"]).iter().enumerate() {
-            if r["type"] != "totallyRevises" || r["status"] != "active" {
-                continue;
-            }
-            let ptr = format!("/relations/{i}");
-            let Some((from, other)) = self.counterpart(&r["from"], &ptr, f) else {
-                continue;
-            };
-            let agrees = list(&other["revisions"]).iter().any(|v| {
-                v["origin"] == "totalRevision"
-                    && resolved_id(self.reg, &v["totallyRevises"]["record"]).as_deref()
-                        == Some(self.this)
-                    && v["totallyRevises"]["relation"] == r["id"]
-            });
-            if !agrees {
-                f.error(
-                    CON,
-                    "XREF-02",
-                    COMMON,
-                    format!(
-                        "{from} has no totalRevision origin for relation {}",
-                        r["id"]
-                    ),
-                    &self.file,
-                    &ptr,
-                );
-            }
-        }
-    }
-
     /// XREF-02: a totalRevision origin names a totallyRevises relation, from
     /// this Record, in the history of the Record it revises.
     fn total_revision_origins(&self, f: &mut Findings) {
@@ -219,9 +378,23 @@ impl Subject<'_> {
             let rel = list(&other["relations"])
                 .iter()
                 .find(|r| r["id"] == v["totallyRevises"]["relation"]);
+            let own = resolved_id(self.reg, &self.h["record"]);
+            if rel.is_some_and(|r| resolved_id(self.reg, &r["from"]).is_none()) || own.is_none() {
+                f.note(
+                    CON,
+                    Class::Undetermined,
+                    "XREF-02",
+                    COMMON,
+                    "relation endpoint is not fetched",
+                    &self.file,
+                    &ptr,
+                );
+                continue;
+            }
             let ok = rel.is_some_and(|r| {
                 r["type"] == "totallyRevises"
-                    && resolved_id(self.reg, &r["from"]).as_deref() == Some(self.this)
+                    && r["status"] == "active"
+                    && resolved_id(self.reg, &r["from"]) == own
             });
             if !ok {
                 f.error(
@@ -250,13 +423,31 @@ impl Subject<'_> {
                 continue;
             }
             let rev = s["revision"].as_str().unwrap_or("");
-            let target = format!("{}/{rev}", reg.target(&s["record"]));
+            let reference_target = reg
+                .target(&s["record"])
+                .map(|target| format!("{target}/{rev}"));
+            if reference_target.is_none() {
+                f.note(
+                    TIME,
+                    Class::Undetermined,
+                    "XREF-03",
+                    COMMON,
+                    "registration space is needed to serialize the reference",
+                    file,
+                    &ptr,
+                );
+            }
+            let target = reference_target
+                .as_deref()
+                .unwrap_or("reference without a registration space");
             let other = match reg.resolve(&s["record"]) {
                 Resolution::Resolved(id) => self.manifests.get(&id),
                 _ => None,
             };
             let Some((_, other)) = other else {
-                references.push((TIME, self.reference(&target, "notFetched")));
+                if reference_target.is_some() {
+                    references.push((TIME, self.reference(target, "notFetched")));
+                }
                 f.incomplete.insert(TIME);
                 f.note(
                     TIME,
@@ -270,7 +461,9 @@ impl Subject<'_> {
                 continue;
             };
             let Some(r) = list(&other["revisions"]).iter().find(|r| r["id"] == rev) else {
-                references.push((TIME, self.reference(&target, "nonexistentConfirmed")));
+                if reference_target.is_some() {
+                    references.push((TIME, self.reference(target, "nonexistentConfirmed")));
+                }
                 f.error(
                     TIME,
                     "XREF-03",
@@ -281,7 +474,9 @@ impl Subject<'_> {
                 );
                 continue;
             };
-            references.push((TIME, self.reference(&target, "resolved")));
+            if reference_target.is_some() {
+                references.push((TIME, self.reference(target, "resolved")));
+            }
             match (fixed_day(tp), fixed_day(&r["effective"])) {
                 (Some(a), Some(b)) if a != b => f.error(
                     TIME,

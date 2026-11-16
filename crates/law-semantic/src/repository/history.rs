@@ -22,6 +22,21 @@ const FILE: &str = "history.yaml";
 
 /// Map a schema error of the history manifest to its rule.
 pub(crate) fn classify(schema_path: &str, _instance: &str) -> (Check, &'static str, &'static str) {
+    for (path, rule) in [
+        ("/properties/revisions/items/allOf/0/then", "HIST-05"),
+        ("/properties/revisions/items/allOf/0/else", "HIST-04"),
+        ("/properties/revisions/items/allOf/1", "HIST-04"),
+        ("/properties/revisions/items/allOf/2", "HIST-10"),
+        (
+            "/properties/revisions/items/properties/applicability/allOf",
+            "HIST-07",
+        ),
+        ("/properties/termination/items/allOf/0", "HIST-12"),
+    ] {
+        if schema_path.starts_with(path) {
+            return (HS, rule, HISTORY);
+        }
+    }
     if schema_path.contains("/$defs/revisionId") {
         return (HS, "REV-01", HISTORY);
     }
@@ -37,7 +52,7 @@ pub(crate) fn time_points<'a>(v: &'a Value, pointer: String, out: &mut Vec<(Stri
         Value::Object(m) => {
             for (k, x) in m {
                 let p = format!("{pointer}/{k}");
-                if (k == "effective" || k == "base") && x.is_object() {
+                if matches!(k.as_str(), "effective" | "base" | "promulgated") && x.is_object() {
                     out.push((p.clone(), x));
                 }
                 time_points(x, p, out);
@@ -60,6 +75,7 @@ pub(crate) fn evidence_refs<'a>(v: &'a Value, pointer: String, out: &mut Vec<(St
                 let p = format!("{pointer}/{k}");
                 let list = k == "evidence"
                     || k == "surveyed"
+                    || k == "correctionsSurveyed"
                     || (k == "sources" && m.contains_key("status"));
                 if list {
                     if let Some(a) = x.as_array() {
@@ -140,7 +156,7 @@ pub(crate) fn check_time(tp: &Value, pointer: &str, file: &str, f: &mut Findings
                         } else {
                             f.note(
                                 check,
-                                Class::Undetermined,
+                                Class::Warning,
                                 "TIME-03",
                                 COMMON,
                                 "derived without calc: computed value not checked",
@@ -150,6 +166,15 @@ pub(crate) fn check_time(tp: &Value, pointer: &str, file: &str, f: &mut Findings
                         }
                     }
                 }
+            } else if tp.get("value").is_some() {
+                f.error(
+                    check,
+                    "TIME-03",
+                    COMMON,
+                    "derived without a fixed base must not have a value",
+                    file,
+                    pointer,
+                );
             }
         }
         _ => {}
@@ -198,9 +223,35 @@ pub(crate) fn check(h: &Value, repo: &Path, f: &mut Findings) {
     }
     for (i, r) in revisions.iter().enumerate() {
         let p = format!("/revisions/{i}");
-        based_on(r, &p, &by_id, f);
+        let retroactive = list(&r["basis"]).iter().any(|basis| {
+            relations
+                .get(basis["relation"].as_str().unwrap_or(""))
+                .is_some_and(|relation| {
+                    list(&relation["items"]).iter().any(|item| {
+                        list(&basis["items"]).contains(&item["id"])
+                            && item.get("retroactive").is_some()
+                    })
+                })
+        });
+        based_on(r, &p, &by_id, retroactive, f);
         basis(r, &p, &relations, f);
         replaced_by(r, &p, &by_id, f);
+        if r["text"]["glyphCheck"] == "verified"
+            && !list(&r["text"]["sources"]).iter().any(|e| {
+                list(&h["sources"])
+                    .iter()
+                    .any(|s| s["id"] == e["source"] && s["glyphPreservation"] == "preserved")
+            })
+        {
+            f.error(
+                EV,
+                "GLYPH-10",
+                super::GLYPHS,
+                "verified glyphCheck requires evidence from a glyph-preserving Source",
+                FILE,
+                &format!("{p}/text/sources"),
+            );
+        }
     }
     one_revision_per_time(revisions, f);
     packages(revisions, &by_id, repo, f);
@@ -267,6 +318,23 @@ fn relation_ids<'a>(h: &'a Value, f: &mut Findings) -> ById<'a> {
             );
         }
         let mut items = HashSet::new();
+        if r["status"] == "active"
+            && matches!(r["type"].as_str(), Some("repeals" | "totallyRevises"))
+            && list(&r["items"])
+                .iter()
+                .filter(|item| item["verification"]["state"] != "retracted")
+                .count()
+                > 1
+        {
+            f.error(
+                HS,
+                "HIST-03",
+                HISTORY,
+                "active termination relation has multiple non-retracted items",
+                FILE,
+                &format!("/relations/{i}/items"),
+            );
+        }
         for (j, it) in list(&r["items"]).iter().enumerate() {
             if let Some(iid) = it["id"].as_str() {
                 if !items.insert(iid) {
@@ -307,7 +375,7 @@ fn revision_ids<'a>(revisions: &'a [Value], f: &mut Findings) -> ById<'a> {
 
 /// HIST-04: the basedOn target exists and the chain has no cycle.
 /// HIST-06: the base state does not take effect after the revision.
-fn based_on(r: &Value, p: &str, by_id: &ById, f: &mut Findings) {
+fn based_on(r: &Value, p: &str, by_id: &ById, retroactive: bool, f: &mut Findings) {
     let b = match &r["basedOn"] {
         Value::String(b) => b.as_str(),
         Value::Object(_) => {
@@ -335,6 +403,16 @@ fn based_on(r: &Value, p: &str, by_id: &ById, f: &mut Findings) {
         );
         return;
     };
+    if r["status"] == "active" && base["status"] != "active" {
+        f.error(
+            HS,
+            "HIST-04",
+            HISTORY,
+            "active revision cannot be based on a withdrawn, merged or split revision",
+            FILE,
+            &format!("{p}/basedOn"),
+        );
+    }
     let mut seen = HashSet::from([r["id"].as_str().unwrap_or("")]);
     let mut cur = b;
     while let Some(next) = by_id.get(cur) {
@@ -354,9 +432,12 @@ fn based_on(r: &Value, p: &str, by_id: &ById, f: &mut Findings) {
             None => break,
         }
     }
-    let day = |t: &Value| (t["state"] == "date").then(|| fixed_day(t)).flatten();
+    let day = fixed_day;
+    if base["origin"] == "coverageStart" && day(&base["effective"]).is_none() {
+        return;
+    }
     match (day(&base["effective"]), day(&r["effective"])) {
-        (Some(a), Some(c)) if a > c => f.note(
+        (Some(a), Some(c)) if a > c && !retroactive => f.note(
             HS,
             Class::Warning,
             "HIST-06",
@@ -381,6 +462,16 @@ fn based_on(r: &Value, p: &str, by_id: &ById, f: &mut Findings) {
 /// HIST-05: basis refers to items of one relation of this manifest, and
 /// each item takes effect when the revision does.
 fn basis(r: &Value, p: &str, relations: &ById, f: &mut Findings) {
+    if r.get("origin").is_none() && list(&r["basis"]).len() != 1 {
+        f.error(
+            HS,
+            "HIST-05",
+            HISTORY,
+            "non-origin revision requires exactly one basis",
+            FILE,
+            &format!("{p}/basis"),
+        );
+    }
     let mut basis_relations = HashSet::new();
     for (j, b) in list(&r["basis"]).iter().enumerate() {
         let Some(rel) = b["relation"].as_str() else {
@@ -399,6 +490,40 @@ fn basis(r: &Value, p: &str, relations: &ById, f: &mut Findings) {
             );
             continue;
         };
+        if r["status"] == "active" && relation["status"] == "retracted" {
+            f.error(
+                HS,
+                "HIST-05",
+                HISTORY,
+                "active revision cannot use a retracted relation",
+                FILE,
+                &bp,
+            );
+        }
+        let retroactive = list(&relation["items"]).iter().any(|item| {
+            list(&b["items"]).contains(&item["id"]) && item.get("retroactive").is_some()
+        });
+        match fixed_day(&relation["promulgated"]).zip(fixed_day(&r["effective"])) {
+            Some((promulgated, effective)) if promulgated > effective && !retroactive => f.note(
+                HS,
+                Class::Warning,
+                "HIST-06",
+                HISTORY,
+                "revision takes effect before promulgation without retroactive evidence",
+                FILE,
+                &format!("{p}/effective"),
+            ),
+            None => f.note(
+                HS,
+                Class::Undetermined,
+                "HIST-06",
+                HISTORY,
+                "promulgation and effective dates cannot be ordered",
+                FILE,
+                &format!("{p}/effective"),
+            ),
+            _ => {}
+        }
         for (k, item) in list(&b["items"]).iter().enumerate() {
             let Some(iid) = item.as_str() else { continue };
             match list(&relation["items"]).iter().find(|x| x["id"] == iid) {
@@ -411,11 +536,18 @@ fn basis(r: &Value, p: &str, relations: &ById, f: &mut Findings) {
                     &format!("{bp}/items/{k}"),
                 ),
                 Some(x) => {
+                    if r["status"] == "active" && x["verification"]["state"] == "retracted" {
+                        f.error(
+                            HS,
+                            "HIST-05",
+                            HISTORY,
+                            "active revision cannot use a retracted item",
+                            FILE,
+                            &format!("{bp}/items/{k}"),
+                        );
+                    }
                     let (a, c) = (&x["effective"], &r["effective"]);
-                    if a["state"] == "date"
-                        && c["state"] == "date"
-                        && (a["value"] != c["value"] || a["precision"] != c["precision"])
-                    {
+                    if fixed_day(a).zip(fixed_day(c)).is_some_and(|(a, c)| a != c) {
                         f.error(
                             HS,
                             "HIST-05",
@@ -468,7 +600,10 @@ fn one_revision_per_time(revisions: &[Value], f: &mut Findings) {
         }
         for b in list(&r["basis"]) {
             if let Some(rel) = b["relation"].as_str() {
-                let key = (rel, r["effective"].to_string());
+                let Some(day) = fixed_day(&r["effective"]) else {
+                    continue;
+                };
+                let key = (rel, day.to_iso());
                 if let Some(first) = seen.insert(key, i) {
                     f.error(
                         HS,
@@ -536,6 +671,19 @@ fn packages(revisions: &[Value], by_id: &ById, repo: &Path, f: &mut Findings) {
 /// REV-03 / HIST-08 for one revision that has text: the package directory is
 /// named by the revision id, and the package and its glyph notes exist.
 fn package_files(r: &Value, id: &str, package: &str, p: &str, repo: &Path, f: &mut Findings) {
+    if r["text"]["package"]
+        .as_str()
+        .is_some_and(|declared| declared != package)
+    {
+        f.error(
+            HS,
+            "HIST-08",
+            HISTORY,
+            "text.package must be the revision's default package path",
+            FILE,
+            &format!("{p}/package"),
+        );
+    }
     let dir = Path::new(package)
         .parent()
         .and_then(|d| d.file_name())
@@ -562,7 +710,7 @@ fn package_files(r: &Value, id: &str, package: &str, p: &str, repo: &Path, f: &m
     }
     let default_notes = format!("versions/{id}/glyphs.yaml");
     match r["text"]["glyphNotes"].as_str() {
-        Some(n) if !repo.join(n).is_file() => f.error(
+        Some(n) if n != default_notes || !repo.join(&default_notes).is_file() => f.error(
             HS,
             "HIST-08",
             HISTORY,
@@ -587,65 +735,102 @@ fn package_files(r: &Value, id: &str, package: &str, p: &str, repo: &Path, f: &m
 fn termination(h: &Value, relations: &ById, revisions: &[Value], f: &mut Findings) {
     for (i, t) in list(&h["termination"]).iter().enumerate() {
         let p = format!("/termination/{i}");
-        let want = match t["type"].as_str() {
-            Some("repealed") => "repeals",
-            Some("totallyRevised") => "totallyRevises",
-            _ => continue,
-        };
-        let Some(rel) = t["relation"].as_str() else {
-            continue;
-        };
-        let Some(r) = relations.get(rel) else {
-            f.error(
-                HS,
-                "HIST-12",
-                HISTORY,
-                format!("termination relation {rel} is not in this manifest"),
-                FILE,
-                &p,
-            );
-            continue;
-        };
-        if r["type"] != want {
-            f.error(
-                HS,
-                "HIST-12",
-                HISTORY,
-                format!(
-                    "termination {} needs a {want} relation, {rel} is {}",
-                    t["type"], r["type"]
-                ),
-                FILE,
-                &p,
-            );
-            continue;
-        }
-        let end = list(&r["items"])
-            .iter()
-            .find_map(|x| fixed_day(&x["effective"]));
-        let Some(end) = end else { continue };
-        for (j, rv) in revisions.iter().enumerate() {
-            if fixed_day(&rv["effective"]).is_some_and(|d| d > end) {
-                f.note(
+        let end = if t["type"] == "expired" {
+            fixed_day(&t["effective"])
+        } else {
+            let want = match t["type"].as_str() {
+                Some("repealed") => "repeals",
+                Some("totallyRevised") => "totallyRevises",
+                _ => continue,
+            };
+            let Some(rel) = t["relation"].as_str() else {
+                continue;
+            };
+            let Some(r) = relations.get(rel) else {
+                f.error(
                     HS,
-                    Class::Warning,
                     "HIST-12",
                     HISTORY,
-                    "revision takes effect after the termination",
+                    format!("termination relation {rel} is not in this manifest"),
                     FILE,
-                    &format!("/revisions/{j}/effective"),
+                    &p,
                 );
+                continue;
+            };
+            if r["type"] != want
+                || r["status"] != "active"
+                || list(&r["items"])
+                    .iter()
+                    .filter(|item| item["verification"]["state"] != "retracted")
+                    .count()
+                    == 0
+            {
+                f.error(
+                    HS,
+                    "HIST-12",
+                    HISTORY,
+                    format!(
+                        "termination {} needs a {want} relation, {rel} is {}",
+                        t["type"], r["type"]
+                    ),
+                    FILE,
+                    &p,
+                );
+                continue;
             }
+            if list(&r["items"])
+                .iter()
+                .filter(|item| item["verification"]["state"] != "retracted")
+                .count()
+                > 1
+            {
+                continue;
+            }
+            list(&r["items"])
+                .iter()
+                .filter(|item| item["verification"]["state"] != "retracted")
+                .find_map(|x| fixed_day(&x["effective"]))
+        };
+
+        for (j, rv) in revisions
+            .iter()
+            .enumerate()
+            .filter(|(_, r)| r["status"] == "active")
+        {
+            let (class, message) = match (fixed_day(&rv["effective"]), end) {
+                (Some(day), Some(end)) if day > end => (
+                    Class::Warning,
+                    "revision takes effect after the termination",
+                ),
+                (Some(_), Some(_)) => continue,
+                _ => (
+                    Class::Undetermined,
+                    "termination order requires two fixed dates",
+                ),
+            };
+            f.note(
+                HS,
+                class,
+                "HIST-12",
+                HISTORY,
+                message,
+                FILE,
+                &format!("/revisions/{j}/effective"),
+            );
         }
     }
 }
 
-/// `text.package`, or `versions/<revision_id>/law.yaml`.
+pub(crate) fn valid_revision_id(id: &str) -> bool {
+    id.len() == 8
+        && id
+            .bytes()
+            .all(|b| b"0123456789abcdefghjkmnpqrstvwxyz".contains(&b))
+}
+
+/// HIST-08 fixes the package location independently of untrusted metadata.
 pub(crate) fn package_path(r: &Value) -> String {
-    r["text"]["package"]
-        .as_str()
-        .map(str::to_owned)
-        .unwrap_or_else(|| format!("versions/{}/law.yaml", r["id"].as_str().unwrap_or("")))
+    format!("versions/{}/law.yaml", r["id"].as_str().unwrap_or(""))
 }
 
 #[cfg(test)]
@@ -683,7 +868,7 @@ mod tests {
         let by_id = revision_ids(revisions, &mut f);
         assert!(f.items.is_empty());
         for (i, r) in revisions.iter().enumerate() {
-            based_on(r, &format!("/revisions/{i}"), &by_id, &mut f);
+            based_on(r, &format!("/revisions/{i}"), &by_id, false, &mut f);
         }
         assert_eq!(
             found(&f),
@@ -742,7 +927,7 @@ mod tests {
     #[test]
     fn basis_must_name_items_of_one_relation_at_the_same_time() {
         let h = json!({"relations": [
-            {"id": "r1", "items": [
+            {"id": "r1", "promulgated": day("2020-01-01"), "items": [
                 {"id": "i1", "effective": day("2020-04-01")},
                 {"id": "i2", "effective": day("2021-04-01")},
             ]},
@@ -763,6 +948,7 @@ mod tests {
         assert_eq!(
             found(&f),
             [
+                ("HIST-05", Class::Error, "/revisions/1/basis".to_owned()),
                 ("HIST-05", Class::Error, "/revisions/1/effective".to_owned()),
                 (
                     "HIST-05",
@@ -770,6 +956,11 @@ mod tests {
                     "/revisions/1/basis/0/items/1".to_owned()
                 ),
                 ("HIST-05", Class::Error, "/revisions/1/basis/1".to_owned()),
+                (
+                    "HIST-06",
+                    Class::Undetermined,
+                    "/revisions/1/effective".to_owned()
+                ),
                 ("HIST-05", Class::Error, "/revisions/1/basis".to_owned()),
             ]
         );
@@ -779,19 +970,19 @@ mod tests {
     fn termination_needs_a_relation_of_its_type() {
         let h = json!({
             "relations": [
-                {"id": "rep", "type": "repeals", "items": [{"effective": day("2022-01-01")}]},
+                {"id": "rep", "status": "active", "type": "repeals", "items": [{"effective": day("2022-01-01")}]},
                 {"id": "amd", "type": "amends"},
             ],
             "termination": [
                 {"type": "repealed", "relation": "rep"},
                 {"type": "repealed", "relation": "amd"},
                 {"type": "totallyRevised", "relation": "gone"},
-                {"type": "expired", "relation": "gone"},
+                {"type": "expired", "effective": day("2023-01-01")},
             ],
         });
         let revisions = json!([
-            {"effective": day("2021-12-31")},
-            {"effective": day("2022-01-02")},
+            {"status": "active", "effective": day("2021-12-31")},
+            {"status": "active", "effective": day("2022-01-02")},
         ]);
         let mut f = Findings::default();
         let relations = relation_ids(&h, &mut f);

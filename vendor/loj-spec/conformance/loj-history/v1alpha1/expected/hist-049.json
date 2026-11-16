@@ -1,0 +1,16 @@
+{
+  "results": [
+    {
+      "check": "L3",
+      "category": "historyStructure",
+      "result": "fail"
+    }
+  ],
+  "diagnostics": [
+    {
+      "rule": "HIST-05",
+      "schemaVersion": "loj-history/v1alpha1",
+      "class": "error"
+    }
+  ]
+}

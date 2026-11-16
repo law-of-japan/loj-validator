@@ -5,22 +5,22 @@ legacy:
   frozenAt: 09710a8ea128543b04627eb70e353b9675c27177
 sourceChecks:
   - source: src-goshomei-s41-86
-    glyphs: preserved
+    glyphPreservation: preserved
     evidence: [{source: src-goshomei-s41-86, locator: 2画像}]
     note: 改正法の本文は新字体（「第二条」「国を愛する心」）。建国記念の日の日付欄は、印刷の「二月十一日」を消して手書きで「政令で定める日」と訂正している。官報（昭和41年6月25日）と官報正誤は未確認
   - source: src-goshomei
-    glyphs: preserved
+    glyphPreservation: preserved
     evidence: [{source: src-goshomei, locator: 2・3画像}]
     note: 官報より高い解像度で、「豊」「号」（附則第二項）を確認できた。項番号の全角・半角は決められない
   - source: src-kanpo-19480928
-    glyphs: preserved
+    glyphPreservation: preserved
     evidence: [{source: src-kanpo-19480928, locator: 2コマ 正誤}]
   - source: src-egov-nowhere
-    glyphs: normalized
+    glyphPreservation: normalized
     evidence: [{source: src-egov, locator: 第一条}]
     note: 新字体で収録。字体の仮置きにだけ使った
   - source: src-kanpo-19480720
-    glyphs: preserved
+    glyphPreservation: preserved
     evidence: [{source: src-kanpo-19480720, locator: 1コマ}]
     note: 旧字体（國、條）を保持。画像の解像度では「祝」の偏、「豊／豐」「号／號」「労／勞」「産／產」等を決められない
 mappings:
@@ -64,7 +64,7 @@ differences:
     count: 12   # 本文の「國」8、条の見出しの「條」3、題名の「國」1
     legacy: {commit: e11aa2a3d1a826bef934e37929af1b6c917f97c6, path: article.md}
     evidence: [{source: src-kanpo-19480720, locator: 1コマ}]
-    verification: {state: unverified, reason: "字体を照合していない字（text.glyphs: unverified）は数えていない"}
+    verification: {state: unverified, reason: "字体を照合していない字（text.glyphCheck: unverified）は数えていない"}
   - revision: zwgmz1rt
     class: structure
     node: 19480720-law-178/main/article/2/paragraph/1/table/1
@@ -77,4 +77,4 @@ differences:
     count: 12   # 制定時の版から引き継いだ「國」8、「條」3、題名の「國」1。改正で加えた行は新字体で、旧本文と一致する
     legacy: {commit: 4505a64ebedfad2a3f3d5240d8ad93a208309393, path: article.md}
     evidence: [{source: src-kanpo-19480720, locator: 1コマ}, {source: src-goshomei-s41-86, locator: 本則}]
-    verification: {state: unverified, reason: "字体を照合していない字（text.glyphs: unverified）は数えていない"}
+    verification: {state: unverified, reason: "字体を照合していない字（text.glyphCheck: unverified）は数えていない"}

@@ -76,7 +76,19 @@ impl DocumentPaths {
     /// leaves the directory, is not a regular file, or is a file that an
     /// earlier path already named.
     pub(crate) fn resolve(&mut self, name: &str) -> Result<PathBuf, Refused> {
-        if !safe_path(name) || !self.seen.insert(name.to_ascii_lowercase()) {
+        self.resolve_checked(name, safe_path(name))
+    }
+
+    /// The same confinement and physical-file checks for repository YAML.
+    pub(crate) fn resolve_yaml(&mut self, name: &str) -> Result<PathBuf, Refused> {
+        let safe = name
+            .strip_suffix(".yaml")
+            .is_some_and(|stem| safe_path(&format!("{stem}.md")));
+        self.resolve_checked(name, safe)
+    }
+
+    fn resolve_checked(&mut self, name: &str, safe: bool) -> Result<PathBuf, Refused> {
+        if !safe || !self.seen.insert(name.to_ascii_lowercase()) {
             return Err(refused("Forbidden or duplicate path"));
         }
         let mut physical = self.root.clone();

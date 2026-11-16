@@ -426,7 +426,7 @@ impl Bundle {
     /// Commits of `base..head`, oldest first, each with its first parent. Both must
     /// be resolved commits (callers pass the hashes `commit` returned); an invalid
     /// revision is an `Err`, like a git failure.
-    pub fn range(&self, base: &str, head: &str) -> Result<Vec<(String, Option<String>)>, GitError> {
+    pub fn range(&self, base: &str, head: &str) -> Result<Vec<(String, Vec<String>)>, GitError> {
         revision(base)?;
         revision(head)?;
         let list = self.git(&[
@@ -443,7 +443,7 @@ impl Bundle {
             .map(|l| {
                 let mut w = l.split(' ');
                 let c = w.next().unwrap_or("").to_owned();
-                (c, w.next().map(str::to_owned))
+                (c, w.map(str::to_owned).collect())
             })
             .collect())
     }

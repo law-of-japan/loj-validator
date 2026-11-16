@@ -1,4 +1,10 @@
 {
+  "results": [
+    {
+      "check": "L0",
+      "result": "incomplete"
+    }
+  ],
   "diagnostics": [
     {
       "rule": "BASIC-01",

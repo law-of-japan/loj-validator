@@ -5,14 +5,146 @@ use super::kind::Kind;
 use super::Context;
 use crate::common::{
     markdown::{bare, incomplete_split_blocks, line_end, plain_heading},
-    number::{number, Digits},
-    structure::{tail_ok, tokens, Token, ARTICLE_RANK, ATX},
+    number::Digits,
+    structure::{tokens, Token, ARTICLE_RANK, ATX},
 };
 use regex::Regex;
 use serde_json::{json, Value};
 use std::{collections::HashSet, ops::Range, sync::LazyLock};
 
 const SEPARATORS: &[char] = &['の', 'ノ'];
+
+/// Unicode 15.1 White_Space, fixed for MD-04 (25 code points).
+fn white_space(c: char) -> bool {
+    matches!(c, '\u{0009}'..='\u{000d}' | '\u{0020}' | '\u{0085}' | '\u{00a0}' |
+        '\u{1680}' | '\u{2000}'..='\u{200a}' | '\u{2028}' | '\u{2029}' |
+        '\u{202f}' | '\u{205f}' | '\u{3000}')
+}
+
+fn number(text: &str, separators: &[char], digits: Digits) -> Option<String> {
+    let mut style = None;
+    for c in text.chars().filter(|c| !separators.contains(c)) {
+        let next = if c.is_ascii_digit() {
+            0
+        } else if ('０'..='９').contains(&c) {
+            1
+        } else {
+            2
+        };
+        if style.is_some_and(|old| old != next) {
+            return None;
+        }
+        style = Some(next);
+    }
+    crate::common::number::number(text, separators, digits)
+}
+
+fn subitem_number(token: &str) -> (Option<String>, u8) {
+    const IROHA: &str = "イロハニホヘトチリヌルヲワカヨタレソツネナラムウヰノオクヤマケフコエテアサキユメミシヱヒモセス";
+    if token.chars().count() == 1 {
+        if let Some(i) = IROHA.chars().position(|c| token.starts_with(c)) {
+            return (Some((i + 1).to_string()), 1);
+        }
+    }
+    if let Some(inner) = token.strip_prefix('（').and_then(|s| s.strip_suffix('）')) {
+        let style = if inner.starts_with(|c: char| c.is_ascii_digit()) {
+            2
+        } else {
+            3
+        };
+        return (number(inner, &[], Digits::Arabic), style);
+    }
+    (number(token, SEPARATORS, Digits::Ascii), 0)
+}
+
+/// TABLE-04 uses intervals, never a grid proportional to untrusted span values.
+fn rectangular_table(nodes: &[Node], table: usize) -> bool {
+    use std::collections::BTreeMap;
+    let rows: Vec<_> = nodes[table].children(nodes, Kind::Row).collect();
+    let mut occupied: BTreeMap<u64, u64> = BTreeMap::new();
+    let mut expires: BTreeMap<usize, Vec<u64>> = BTreeMap::new();
+    let mut covered = 0u64;
+    let mut width = None;
+    for (row, index) in rows.iter().enumerate() {
+        for start in expires.remove(&row).unwrap_or_default() {
+            if let Some(end) = occupied.remove(&start) {
+                covered -= end - start;
+            }
+        }
+        let mut cursor = 0u64;
+        for cell in nodes[*index].children(nodes, Kind::Cell) {
+            while let Some(end) = occupied.get(&cursor) {
+                cursor = *end;
+            }
+            let node = &nodes[cell];
+            let Some(end) = cursor.checked_add(node.colspan.unwrap_or(1)) else {
+                return false;
+            };
+            if occupied.range(cursor..end).next().is_some() {
+                return false;
+            }
+            let Ok(span) = usize::try_from(node.rowspan.unwrap_or(1)) else {
+                return false;
+            };
+            let Some(until) = row.checked_add(span).filter(|until| *until <= rows.len()) else {
+                return false;
+            };
+            let Some(total) = covered.checked_add(end - cursor) else {
+                return false;
+            };
+            covered = total;
+            occupied.insert(cursor, end);
+            expires.entry(until).or_default().push(cursor);
+            cursor = end;
+        }
+        let end = occupied.last_key_value().map_or(0, |(_, end)| *end);
+        if covered != end || width.is_some_and(|width| width != end) {
+            return false;
+        }
+        width = Some(end);
+    }
+    true
+}
+
+fn caption_ok(text: &str) -> bool {
+    if !text.starts_with('（')
+        || !text.ends_with('）')
+        || !plain_heading(&format!("# {text}"), text)
+    {
+        return false;
+    }
+    let mut depth = 0usize;
+    let mut previous_open = false;
+    for (offset, c) in text.char_indices() {
+        match c {
+            '（' => {
+                depth += 1;
+                previous_open = true;
+            }
+            '）' => {
+                if depth == 0 || previous_open {
+                    return false;
+                }
+                depth -= 1;
+                if depth == 0 && offset + c.len_utf8() != text.len() {
+                    return false;
+                }
+                previous_open = false;
+            }
+            '\r' | '\n' => return false,
+            _ => previous_open = false,
+        }
+    }
+    depth == 0
+}
+
+fn tail_ok(rank: usize, tail: &str) -> bool {
+    if rank == ARTICLE_RANK {
+        tail.is_empty() || caption_ok(tail)
+    } else {
+        crate::common::structure::tail_ok(rank, tail)
+    }
+}
 
 /// A structural heading label: number, kind, branch numbers, rest.
 static HEADING: LazyLock<Regex> = LazyLock::new(|| {
@@ -73,6 +205,8 @@ struct Node {
     deleted: bool,
     rank: usize,
     implicit: bool,
+    caption_present: bool,
+    caption: Option<String>,
     key: Option<String>,
     rowspan: Option<u64>,
     colspan: Option<u64>,
@@ -98,6 +232,8 @@ impl Node {
             deleted: false,
             rank: 0,
             implicit: false,
+            caption_present: false,
+            caption: None,
             key: None,
             rowspan: None,
             colspan: None,
@@ -127,7 +263,12 @@ fn export(nodes: &[Node], index: usize) -> Value {
     match n.kind {
         Kind::Article => v["status"] = json!(if n.deleted { "deleted" } else { "active" }),
         Kind::Subitem => v["level"] = json!(n.level),
-        Kind::Paragraph => v["numbering"] = json!(if n.implicit { "implicit" } else { "explicit" }),
+        Kind::Paragraph => {
+            v["numbering"] = json!(if n.implicit { "implicit" } else { "explicit" });
+            if let Some(caption) = &n.caption {
+                v["caption"] = json!(caption);
+            }
+        }
         Kind::Row => v["key"] = json!(n.key),
         Kind::Cell => {
             if let Some(r) = n.rowspan {
@@ -153,8 +294,10 @@ fn add(
             "HEAD-02"
         } else if node.kind == Kind::Row {
             "TABLE-02"
-        } else if matches!(node.kind, Kind::Preamble | Kind::EnactStatement) {
-            if node.kind == Kind::Preamble {
+        } else if matches!(node.kind, Kind::Preamble | Kind::EnactStatement | Kind::Toc) {
+            if node.kind == Kind::Toc {
+                "TOC-01"
+            } else if node.kind == Kind::Preamble {
                 "PRE-01"
             } else {
                 "PRE-02"
@@ -178,14 +321,14 @@ fn add(
         );
     }
     let i = nodes.len();
-    let front = matches!(node.kind, Kind::Preamble | Kind::EnactStatement);
+    let front = matches!(node.kind, Kind::Preamble | Kind::EnactStatement | Kind::Toc);
     nodes.push(node);
     if front {
         // AST-01: EnactStatement, Preamble, then MainProvision.
         let at = nodes[parent]
             .content
             .iter()
-            .take_while(|c| matches!(c, Content::Node(j) if matches!(nodes[*j].kind, Kind::EnactStatement | Kind::Preamble)))
+            .take_while(|c| matches!(c, Content::Node(j) if matches!(nodes[*j].kind, Kind::EnactStatement | Kind::Preamble | Kind::Toc)))
             .count();
         nodes[parent].content.insert(at, Content::Node(i));
     } else {
@@ -206,7 +349,7 @@ fn text(
     }
     if matches!(nodes[index].kind, Kind::Table | Kind::Row) {
         // DIR-02: only blank lines directly inside Table and Row; never stored.
-        if !source[span.clone()].trim().is_empty() {
+        if !source[span.clone()].trim_matches(white_space).is_empty() {
             ctx.diag(
                 "DIR-02",
                 "Text directly inside a table or row",
@@ -258,16 +401,24 @@ fn close(nodes: &mut [Node], index: usize, ctx: &mut Context) {
         return;
     }
     let n = &mut nodes[index];
-    let first = n.content.iter().find_map(|c| {
-        if let Content::Text(t, p) = c {
-            (!t.trim().is_empty()).then_some((t, p))
-        } else {
-            None
-        }
-    });
+    let first = n
+        .content
+        .iter()
+        .take_while(|c| !n.caption_present || !matches!(c, Content::Node(_)))
+        .find_map(|c| {
+            if let Content::Text(t, p) = c {
+                (!t.trim_matches(white_space).is_empty()).then_some((t, p))
+            } else {
+                None
+            }
+        });
     let Some((t, positions)) = first else {
         ctx.diag(
-            "DIR-02",
+            if n.caption_present {
+                "PARA-02"
+            } else {
+                "DIR-02"
+            },
             "Container has no own non-whitespace text",
             &n.path,
             n.span.start,
@@ -276,19 +427,51 @@ fn close(nodes: &mut [Node], index: usize, ctx: &mut Context) {
         return;
     };
     // DISP-01 applies to explicit paragraphs, items and subitems only.
-    if !matches!(kind, Kind::Paragraph | Kind::Item | Kind::Subitem) || n.implicit {
+    if !matches!(kind, Kind::Paragraph | Kind::Item | Kind::Subitem) {
         return;
     }
     let mut offset = 0;
     let mut first_line = "";
     let mut first_line_bytes = 0;
+    let mut caption_span = None;
     for line in t.split_inclusive('\n') {
-        if !line.trim().is_empty() {
+        if !line.trim_matches(white_space).is_empty() {
+            if n.caption_present && caption_span.is_none() {
+                let caption = bare(line);
+                n.caption = Some(caption.into());
+                caption_span = Some((offset, line.len()));
+                if !caption_ok(caption) {
+                    let p = positions.first();
+                    ctx.diag(
+                        "PARA-02",
+                        "Invalid paragraph caption",
+                        &p.path,
+                        p.start + offset,
+                        (p.start + offset + line.len()).min(p.end),
+                    );
+                }
+                offset += line.len();
+                continue;
+            }
             first_line = bare(line);
             first_line_bytes = line.len();
             break;
         }
         offset += line.len();
+    }
+    if n.caption_present && first_line.is_empty() {
+        let p = positions.first();
+        let (offset, length) = caption_span.unwrap_or((0, p.end - p.start));
+        ctx.diag(
+            "PARA-02",
+            "Paragraph caption requires following body text before its children",
+            &p.path,
+            p.start + offset,
+            (p.start + offset + length).min(p.end),
+        );
+    }
+    if n.implicit {
+        return;
     }
     let token = first_line.split([' ', '　']).next().unwrap_or("");
     let digits = match kind {
@@ -296,7 +479,13 @@ fn close(nodes: &mut [Node], index: usize, ctx: &mut Context) {
         Kind::Subitem => Digits::Ascii,
         _ => Digits::Any,
     };
-    let parsed = number(token, SEPARATORS, digits);
+    let parsed = if kind == Kind::Subitem {
+        subitem_number(token).0
+    } else if kind == Kind::Item && token.chars().any(|c| ('０'..='９').contains(&c)) {
+        None
+    } else {
+        number(token, SEPARATORS, digits)
+    };
     let omitted = kind == Kind::Paragraph && n.number.as_deref() == Some("1") && parsed.is_none();
     if !omitted {
         n.display = token.into();
@@ -305,7 +494,7 @@ fn close(nodes: &mut [Node], index: usize, ctx: &mut Context) {
         && (parsed != n.number
             || first_line
                 .get(token.len()..)
-                .is_none_or(|r| r.trim().is_empty()))
+                .is_none_or(|r| r.trim_matches(white_space).is_empty()))
     {
         // Locate this line even when own text has multiple source fragments.
         let mut relative = offset;
@@ -392,7 +581,7 @@ fn file_boundaries(doc: &Document, tokens: &[Token], continued: bool, ctx: &mut 
     if !doc.first && !doc.appendix {
         let starts_with_structure = tokens.first().is_some_and(|t| {
             t.heading
-                && source[..t.span.start].trim().is_empty()
+                && source[..t.span.start].trim_matches(white_space).is_empty()
                 && ATX
                     .captures(bare(&source[t.span.clone()]))
                     .is_some_and(|c| HEADING.is_match(&c[1]))
@@ -408,7 +597,7 @@ fn file_boundaries(doc: &Document, tokens: &[Token], continued: bool, ctx: &mut 
         }
     }
     if doc.appendix {
-        if !doc.first && source.trim().is_empty() {
+        if !doc.first && source.trim_matches(white_space).is_empty() {
             ctx.diag(
                 "MAN-03",
                 "Subsequent appendix file must contain nonblank text",
@@ -586,6 +775,21 @@ impl<'a> Builder<'a> {
                 outside(&mut self.nodes, doc.article, source, path, before, ctx);
             }
             if token.heading {
+                if doc
+                    .stack
+                    .last()
+                    .is_some_and(|i| self.nodes[*i].kind == Kind::Toc)
+                {
+                    ctx.diag(
+                        "TOC-01",
+                        "TOC content must not use structural headings",
+                        path,
+                        span.start,
+                        span.end,
+                    );
+                    doc.cursor = span.end;
+                    continue;
+                }
                 self.heading(&mut doc, token, ctx);
             } else {
                 self.reserved_marker(&mut doc, span, ctx);
@@ -842,6 +1046,7 @@ impl<'a> Builder<'a> {
             Marker::Close(kind) => self.closing_marker(doc, kind, span, ctx),
             Marker::Preamble => self.front_matter(doc, Kind::Preamble, span, ctx),
             Marker::EnactStatement => self.front_matter(doc, Kind::EnactStatement, span, ctx),
+            Marker::Toc => self.front_matter(doc, Kind::Toc, span, ctx),
             Marker::Open(open) => self.container(doc, open, span, ctx),
         }
     }
@@ -891,16 +1096,24 @@ impl<'a> Builder<'a> {
     ) {
         let path = doc.path;
         let preamble = kind == Kind::Preamble;
+        let toc_seen = self.nodes.iter().any(|node| node.kind == Kind::Toc);
         let placed = doc.stack.is_empty()
             && doc.article.is_none()
             && self.groups.is_empty()
             && doc.scope == self.main
             && doc.first
             && !self.main_heading_seen
-            && (preamble || !self.preamble_seen);
+            && (preamble || !self.preamble_seen)
+            && (kind != Kind::EnactStatement || !toc_seen);
         if !placed {
             ctx.diag(
-                if preamble { "PRE-01" } else { "PRE-02" },
+                if kind == Kind::Toc || (kind == Kind::EnactStatement && toc_seen) {
+                    "TOC-01"
+                } else if preamble {
+                    "PRE-01"
+                } else {
+                    "PRE-02"
+                },
                 "Preamble or enact statement out of place",
                 path,
                 span.start,
@@ -913,7 +1126,9 @@ impl<'a> Builder<'a> {
         if preamble {
             self.preamble_seen = true;
         }
-        let id = if preamble {
+        let id = if kind == Kind::Toc {
+            format!("{}/toc", self.law)
+        } else if preamble {
             format!("{}/preamble", self.law)
         } else {
             format!("{}/enact-statement", self.law)
@@ -940,6 +1155,15 @@ impl<'a> Builder<'a> {
             .unwrap_or(doc.scope);
         let p = &self.nodes[parent];
         if !valid_parent(&open, p) {
+            if p.kind == Kind::Toc {
+                ctx.diag(
+                    "TOC-01",
+                    "TOC content cannot contain markers",
+                    path,
+                    span.start,
+                    span.end,
+                );
+            }
             ctx.diag(
                 "DIR-02",
                 "Invalid legal parent or subitem level",
@@ -994,7 +1218,12 @@ impl<'a> Builder<'a> {
             span.clone(),
         );
         match open {
-            Container::Paragraph { implicit, .. } => node.implicit = implicit,
+            Container::Paragraph {
+                implicit, caption, ..
+            } => {
+                node.implicit = implicit;
+                node.caption_present = caption;
+            }
             Container::Subitem { level, .. } => node.level = level,
             Container::Row { key } => node.key = Some(key),
             Container::Cell { rowspan, colspan } => {
@@ -1059,6 +1288,32 @@ fn structure(
     ctx: &mut Context,
 ) {
     let n = &nodes[i];
+    if n.kind == Kind::Table && !rectangular_table(nodes, i) {
+        ctx.diag(
+            "TABLE-04",
+            "Table cells overlap, leave gaps, or extend outside the rectangle",
+            &n.path,
+            n.span.start,
+            n.span.end,
+        );
+    }
+    let mut subitem_style = None;
+    for child in n.children(nodes, Kind::Subitem) {
+        let subitem = &nodes[child];
+        let (parsed, style) = subitem_number(&subitem.display);
+        if parsed.is_some() {
+            if subitem_style.is_some_and(|old| old != style) {
+                ctx.diag(
+                    "DISP-01",
+                    "Sibling subitems must use the same display-number style",
+                    &subitem.path,
+                    subitem.span.start,
+                    subitem.span.end,
+                );
+            }
+            subitem_style = Some(style);
+        }
+    }
     if n.kind == Kind::Article && !n.deleted && n.content.is_empty() {
         ctx.diag(
             "HEAD-04",
@@ -1186,7 +1441,7 @@ fn outside(
     ctx: &mut Context,
 ) {
     let s = &source[span.clone()];
-    if s.trim().is_empty() {
+    if s.trim_matches(white_space).is_empty() {
         return;
     }
     if let Some(i) = article {
@@ -1196,7 +1451,7 @@ fn outside(
         if span.start == n.span.end
             && bare(first) == "削除"
             && lines.next().is_none_or(|l| bare(l).is_empty())
-            && s[first.len()..].trim().is_empty()
+            && s[first.len()..].trim_matches(white_space).is_empty()
         {
             n.deleted = true;
             return;
@@ -1214,6 +1469,61 @@ fn outside(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn whitespace_and_nested_captions_use_pinned_rules() {
+        let spaces = [
+            0x9, 0xa, 0xb, 0xc, 0xd, 0x20, 0x85, 0xa0, 0x1680, 0x2000, 0x2001, 0x2002, 0x2003,
+            0x2004, 0x2005, 0x2006, 0x2007, 0x2008, 0x2009, 0x200a, 0x2028, 0x2029, 0x202f, 0x205f,
+            0x3000,
+        ];
+        for code in spaces {
+            assert!(white_space(char::from_u32(code).unwrap()));
+        }
+        for c in ['\u{200b}', '\u{feff}', '\u{180e}'] {
+            assert!(!white_space(c));
+        }
+        assert!(caption_ok("（本文（補足））"));
+        for text in [
+            "（）",
+            "（本文（））",
+            "（本文）（補足）",
+            "（**本文**）",
+            "（本文",
+            "本文）",
+        ] {
+            assert!(!caption_ok(text), "{text}");
+        }
+    }
+
+    #[test]
+    fn rectangular_table_checks_intervals_without_expanding_large_spans() {
+        fn table(rows: &[&[(u64, u64)]]) -> bool {
+            let node = |kind| Node::new(kind, String::new(), None, String::new(), "", 0..0);
+            let mut nodes = vec![node(Kind::Table)];
+            for cells in rows {
+                let row = nodes.len();
+                nodes.push(node(Kind::Row));
+                nodes[0].content.push(Content::Node(row));
+                for &(colspan, rowspan) in *cells {
+                    let cell = nodes.len();
+                    let mut n = node(Kind::Cell);
+                    n.colspan = Some(colspan);
+                    n.rowspan = Some(rowspan);
+                    nodes.push(n);
+                    nodes[row].content.push(Content::Node(cell));
+                }
+            }
+            rectangular_table(&nodes, 0)
+        }
+        assert!(table(&[&[(1, 2), (1, 1)], &[(1, 1)]]));
+        assert!(!table(&[&[(1, 1), (1, 2)], &[(2, 1)]])); // overlap, never slide right
+        assert!(!table(&[&[(1, 1), (1, 2)], &[]])); // hole
+        assert!(!table(&[&[(1, 2)]])); // below the last row
+        assert!(table(&[&[(u64::MAX, 1)]])); // constant memory
+        assert!(!table(&[&[(u64::MAX, 1), (1, 1)]])); // overflow
+        assert!(!table(&[&[(1, u64::MAX)]]));
+    }
 
     #[test]
     fn fragments_always_have_a_first_and_a_last() {

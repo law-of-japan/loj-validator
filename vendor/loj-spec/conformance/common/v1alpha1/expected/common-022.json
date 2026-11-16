@@ -1,0 +1,16 @@
+{
+  "results": [
+    {
+      "check": "L4",
+      "category": "relationConsistency",
+      "result": "fail"
+    }
+  ],
+  "diagnostics": [
+    {
+      "rule": "XREF-02",
+      "schemaVersion": "common/v1alpha1",
+      "class": "error"
+    }
+  ]
+}

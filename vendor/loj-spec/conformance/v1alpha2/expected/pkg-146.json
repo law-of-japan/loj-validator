@@ -1,0 +1,14 @@
+{
+  "diagnostics": [
+    {
+      "rule": "DISP-01",
+      "schemaVersion": "loj/v1alpha2",
+      "class": "error",
+      "location": {
+        "path": "main.md",
+        "start": 139,
+        "end": 160
+      }
+    }
+  ]
+}

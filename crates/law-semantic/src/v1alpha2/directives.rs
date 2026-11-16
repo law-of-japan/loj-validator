@@ -9,6 +9,7 @@ pub(super) enum Marker {
     Close(Kind),
     Preamble,
     EnactStatement,
+    Toc,
     Open(Container),
 }
 
@@ -17,6 +18,7 @@ pub(super) enum Container {
     Paragraph {
         number: String,
         implicit: bool,
+        caption: bool,
     },
     Item {
         number: String,
@@ -82,13 +84,17 @@ pub(super) fn marker(s: &str) -> Result<Marker, Invalid> {
     if let Some(k) = inner.strip_prefix("end-") {
         return Ok(Marker::Close(Kind::from_marker(k).ok_or_else(invalid)?));
     }
-    if inner.contains(['\t', '\r', '\n']) || inner.starts_with(' ') || inner.ends_with(' ') {
+    if inner.contains(['\t', '\r', '\n'])
+        || inner.contains("  ")
+        || inner.starts_with(' ')
+        || inner.ends_with(' ')
+    {
         return Err(invalid());
     }
     let mut words = inner.split(' ').filter(|s| !s.is_empty());
     let kind = Kind::from_marker(words.next().ok_or_else(invalid)?).ok_or_else(invalid)?;
     let allowed: &[&str] = match kind {
-        Kind::Paragraph => &["number", "numbering"],
+        Kind::Paragraph => &["number", "numbering", "caption"],
         Kind::Item | Kind::Table => &["number"],
         Kind::Subitem => &["number", "level"],
         Kind::Row => &["key"],
@@ -97,6 +103,7 @@ pub(super) fn marker(s: &str) -> Result<Marker, Invalid> {
     };
     let (mut num, mut level, mut numbering, mut key) = (None, None, None, None);
     let (mut rowspan, mut colspan) = (None, None);
+    let mut caption = false;
     let mut error: Option<Invalid> = None;
     let mut seen = std::collections::HashSet::new();
     for word in words {
@@ -105,6 +112,8 @@ pub(super) fn marker(s: &str) -> Result<Marker, Invalid> {
             return Err(invalid());
         }
         match k {
+            "caption" if v == "present" => caption = true,
+            "caption" => return Err(invalid()),
             "number" => num = Some(number(v, &['-'], Digits::Ascii).ok_or_else(invalid)?),
             "level" => {
                 let n = v.parse::<usize>().ok().ok_or_else(invalid)?;
@@ -149,9 +158,11 @@ pub(super) fn marker(s: &str) -> Result<Marker, Invalid> {
     Ok(match kind {
         Kind::Preamble => Marker::Preamble,
         Kind::EnactStatement => Marker::EnactStatement,
+        Kind::Toc => Marker::Toc,
         Kind::Paragraph => Marker::Open(Container::Paragraph {
             number: number?,
             implicit: numbering.unwrap_or(false),
+            caption,
         }),
         Kind::Item => Marker::Open(Container::Item { number: number? }),
         Kind::Table => Marker::Open(Container::Table { number: number? }),
@@ -177,7 +188,7 @@ mod tests {
     fn grammar() {
         assert!(matches!(
             marker("<!-- loj:paragraph numbering=implicit number=2 -->"),
-            Ok(Marker::Open(Container::Paragraph { implicit: true, number })) if number == "2"
+            Ok(Marker::Open(Container::Paragraph { implicit: true, number, .. })) if number == "2"
         ));
         assert!(matches!(
             marker("<!-- loj:paragraph number=3 -->"),

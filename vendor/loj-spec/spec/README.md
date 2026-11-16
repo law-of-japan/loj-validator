@@ -1,40 +1,62 @@
 # LoJ規範仕様
 
-LoJ（Law of Japan）のデータの規範仕様の入口である。本書は、規範とする文書の範囲、要求レベル、要件IDの付け方、組み合わせて使える版を定める。
+LoJ（Law of Japan）のデータの規範仕様の入口である。本書は、規範とする文書の範囲、要求レベル、要件IDの付け方、組み合わせて使える版、版の状態を定める。本仕様に固有の用語と、それを定める要件の一覧は[用語集（参考）](../docs/glossary.md)にある。
 
 ## 規範とするもの
 
 次を規範とする。
 
-| ディレクトリ | 対象 | schemaVersion |
-|---|---|---|
-| [common/v1alpha1](common/v1alpha1/01-overview.md) | 種類にまたがる要件（構成、文字、適合レベル、共通の型、時点値、変更の種類、固定参照、派生ビュー、Record間の検査） | なし（共通の型の版） |
-| [v1alpha2](v1alpha2/01-overview.md) | 版パッケージ（`law.yaml`と本文のMarkdown） | `loj/v1alpha2` |
-| [loj-history/v1alpha1](loj-history/v1alpha1/01-history.md) | 履歴マニフェスト（`history.yaml`） | `loj-history/v1alpha1` |
-| [loj-glyphs/v1alpha1](loj-glyphs/v1alpha1/01-glyphs.md) | 字体注記（`glyphs.yaml`） | `loj-glyphs/v1alpha1` |
-| [loj-registry/v1alpha1](loj-registry/v1alpha1/01-registry.md) | 登録台帳のRecord（`records/<Record ID>.yaml`） | `loj-registry/v1alpha1` |
-| [loj-rebuild/v1alpha1](loj-rebuild/v1alpha1/01-rebuild.md) | 原典からの再構築と再構築報告（`rebuild.yaml`） | `loj-rebuild/v1alpha1` |
+| ディレクトリ | 対象 | schemaVersion | 状態 |
+|---|---|---|---|
+| [common/v1alpha1](common/v1alpha1/01-overview.md) | 種類にまたがる要件（構成、文字、適合レベル、共通の型、時点値、変更の種類、固定参照、派生ビュー、Record間の検査） | なし（共通の型の版） | 草案 |
+| [v1alpha2](v1alpha2/01-overview.md) | 版パッケージ（`law.yaml`と本文のMarkdown） | `loj/v1alpha2` | 草案 |
+| [loj-history/v1alpha1](loj-history/v1alpha1/01-history.md) | 履歴マニフェスト（`history.yaml`） | `loj-history/v1alpha1` | 草案 |
+| [loj-glyphs/v1alpha1](loj-glyphs/v1alpha1/01-glyphs.md) | 字体注記（`glyphs.yaml`） | `loj-glyphs/v1alpha1` | 草案 |
+| [loj-registry/v1alpha1](loj-registry/v1alpha1/01-registry.md) | 登録台帳のRecord（`records/<Record ID>.yaml`） | `loj-registry/v1alpha1` | 草案 |
+| [loj-rebuild/v1alpha1](loj-rebuild/v1alpha1/01-rebuild.md) | 原典からの再構築と再構築報告（`rebuild.yaml`） | `loj-rebuild/v1alpha1` | 草案 |
 
+- 「状態」の列の意味は、[版の状態](#版の状態)で定める。
+- `spec/`の下でMarkdownを置くディレクトリは、この表と「[凍結した版](#凍結した版)」の表のディレクトリだけとする。版のディレクトリの下にディレクトリを作って、Markdownを置かない。
 - 各ディレクトリに対応する`schemas/`のJSON Schemaと、適合データ（`conformance/`）も規範とする。
 - `docs/`の文書、`examples/`の例、各ディレクトリの付録のうち「参考」と示したものは、参考情報である。
 - 規範の間に矛盾があれば、仕様の欠陥として報告する。実装の挙動で規範を上書きしない。
+
+## 要件の適用対象
+
+- 要件は、次のいずれかに適用する。要件ごとの名宛人と確かめ方の一覧は、[要件との対応表（参考）](../docs/coverage.md#要件の名宛人と確かめ方)にある。
+  - データ: 正本のファイルと、正本のcommit。適合レベル（[VAL-01](common/v1alpha1/03-validation.md)）と変更検査（[CHG-05](common/v1alpha1/07-changes.md)）で判定する。
+  - 入力者: データを作る作業と判断。データだけから判定できない部分は、原典照合とレビューで確かめる。
+  - 実装: 検査器、生成器、表示器等。特定の機能（例: 派生ビューの生成）を対象とする要件は、その機能を提供する実装にだけ適用する。機能を対象とする要件は、要件の本文の最初（章のすべての要件に及ぶときは章の冒頭）で、対象の機能と、その機能を提供する実装に適用することを示す。それを示さない実装への要件は、すべての実装に適用する。
+- 実装の適合の宣言の条件は、本仕様では定めない（[CONF-02](common/v1alpha1/04-conformance.md)）。
+- 次は、本仕様の規範ではない。
+  - 法令リポジトリの運用の手順（例: 作業ブランチの名前、リポジトリの説明文の書き方）。[リポジトリ管理ガイドライン](https://github.com/law-of-japan/loj-repository-management-guideline)で扱う。運用の手順は、本仕様の要件を満たす範囲で定める。
+  - 仕様の資料の管理（要件IDの付け方、版の状態、適合ケースの索引の管理情報、このリポジトリの検査）。本書の要件IDを持たない規則と、[CONTRIBUTING](../CONTRIBUTING.md)で扱う。法令データの検査の対象ではなく、診断の規則にならない。
+- 規範に残す規則と、運用・資料の管理に移す規則の分け方は、[DDR-024](../docs/design-decisions/024-scope-of-requirements.md)にある。
 
 ## 要求レベル
 
 - MUST（必須）、MUST NOT（禁止）、SHOULD（理由のある例外を許す推奨）、MAY（任意）で要求レベルを示す。
 - 要求レベルを示さない文は、定義または説明である。
+- 要件のフィールドの表は、次のとおりに読む。表で定める制約は、その表を持つ要件の要求であり、その要件を規則の正とする。
+  - 「必須」の列が「必須」のフィールドは、置かなければならない（MUST）。「必須（空可）」は、空の配列でもよいが、置かなければならない（MUST）。「必須（一つ以上）」は、一つ以上の項目を持たなければならない（MUST）。
+  - 「任意」のフィールドは、置いてよい（MAY）。
+  - 「〜で必須」「条件付き」等の条件を付けたフィールドは、条件を満たすとき置かなければならない（MUST）。条件を満たさないときに置いてよいかは、この読み方からは導かない。禁止する場合は、その要件の本文に書く。
+  - 値を「／」で区切って列挙したフィールドは、列挙した値のどれかでなければならない（MUST）。
+- 各種類のschemaは、要件の表と本文の制約のうち機械で読める部分の写しである。schemaと要件が食い違う場合は、仕様の欠陥として報告する。
+- 一つの規則の要求の語は、一つの要件にだけ書く。その要件を、規則の正とする。ほかの要件や章が同じ規則に触れる文は、要求の語を使わず、正の要件へのリンクを付けた要約である（[DDR-022](../docs/design-decisions/022-spec-structure.md)）。
+- 要約と正が食い違う場合は、正に従う。食い違いは仕様の欠陥として報告する。
 
 ## 要件ID
 
 - `## <ID> <名前>`の見出しで、一つの要件に一つのIDを付ける。要件IDは、検査の診断で報告する規則（rule）でもある（[VAL-07](common/v1alpha1/03-validation.md)）。
 - 一つの系列（IDの接頭辞）は、一つのディレクトリに属する。系列の名前は、すべてのディレクトリを通じて一意である。
-- 番号は、系列の中で読む順に01から振る。一度公開した版で使った番号を、後の版で別の意味に使ってはならない（MUST NOT）。廃止した番号は欠番として残す。
+- 番号は、系列の中で読む順に01から振る。一度公開した版（[版の状態](#版の状態)）で使った番号を、後の版で別の意味に使ってはならない（MUST NOT）。廃止した番号は欠番として残す。
 - 要件IDは版ごとに意味を持つ。同じIDでも、版が違えば別の規則である。
 
 | ディレクトリ | 系列 |
 |---|---|
 | common/v1alpha1 | CORE、CHAR、VAL、SRCM、CONF、TYPE、TIME、CHG、FIXREF、VIEW、XREF |
-| v1alpha2 | BASIC、MAN、MD、HEAD、NUM、DIR、DISP、AST、SRC、ID、REF、PARA、TABLE、PRE |
+| v1alpha2 | BASIC、MAN、MD、HEAD、NUM、DIR、DISP、AST、SRC、ID、REF、PARA、TABLE、PRE、TOC |
 | loj-history/v1alpha1 | HIST、REV |
 | loj-glyphs/v1alpha1 | GLYPH |
 | loj-registry/v1alpha1 | REG、RID |
@@ -50,6 +72,25 @@ LoJ（Law of Japan）のデータの規範仕様の入口である。本書は�
 
 - 版を上げるときは、行を加える。行を加えることは、既にある版の意味を変えることではない。
 - `loj/v1alpha1`の版パッケージは、どの組にも含まない。
+
+## 版の状態
+
+版は、草案・公開・凍結のいずれかの状態にある。草案と公開は「[規範とするもの](#規範とするもの)」の表の「状態」の列で、凍結は「[凍結した版](#凍結した版)」の表で示す。この二つの表を、版の状態の正とする。
+
+| 状態 | 意味 | 変更 |
+|---|---|---|
+| 草案 | `main`にあるが、公開していない版 | 版番号を上げずに、意味を変えてよい（MAY）。要件IDの番号も付け直してよい（MAY） |
+| 公開 | 表の状態を「公開」とした変更が、`main`に入った版 | 意味を変えない。意味を変えることは、[CORE-04](common/v1alpha1/01-overview.md)の要件が禁じている。意味を変えない修正（誤字、リンク、説明の補足）はできる |
+| 凍結 | 公開した版のうち、保守を止めた版 | 内容を変えてはならない（MUST NOT） |
+
+- 版は、表の状態を「公開」とした変更が`main`に入った時点で、公開した版になる。`main`に置いただけでは、公開にならない。
+- 意味を変えるとは、いずれかの入力について、適合の結果、診断の規則、ASTのいずれかが変わることをいう。曖昧さを解く修正も、期待結果が変わるなら、意味を変える修正である。
+- 次の変更は、適合の結果、診断の規則、ASTのいずれも変えない限り、意味を変えない: schemaの`description`と`$comment`、「参考」と示した付録、`docs/`の文書、`examples/`の例。
+- 草案の版は、予告なく変わる。草案の版に依存する実装は、その変更に追随する必要がある。
+- 公開した版を、草案に戻してはならない（MUST NOT）。
+- 版を公開したcommitには、Gitのタグを打たなければならない（MUST）。タグの名前は、schemaVersionと同じにする（例: `loj/v1alpha2`、`loj-history/v1alpha1`）。schemaVersionを持たない共通の型は、`common/v1alpha1`のように`common/<版>`とする。打ったタグを、動かしたり削除したりしてはならない（MUST NOT）。
+- 本書の要件IDを持たない規則（要件IDの付け方、版の状態、タグ）は、仕様の資料の管理の規則である。法令データの検査の対象ではなく、診断の規則にならない。表の形は`scripts/verify.py`が検査し、そのほかはレビューと公開の手順（[CONTRIBUTING](../CONTRIBUTING.md)）で確かめる。
+- タグは、公開したcommitの目印である。表の状態とタグが食い違う場合は、表の状態に従い、食い違いを欠陥として報告する。
 
 ## 凍結した版
 

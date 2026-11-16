@@ -135,6 +135,24 @@ mod tests {
         Date::parse(s).unwrap()
     }
     #[test]
+    fn derived_is_fixed_only_when_every_base_is_fixed() {
+        use serde_json::json;
+        let day = json!({"state":"date","precision":"day","value":"2024-01-01"});
+        let nested = json!({"state":"derived","base":{"state":"derived","base":day,"value":"2024-01-02"},"value":"2024-01-03"});
+        assert_eq!(fixed_day(&nested), Some(d("2024-01-03")));
+        for base in [
+            json!({"state":"unknown"}),
+            json!({"state":"date","precision":"month","value":"2024-01"}),
+            json!({"state":"derived","base":day}),
+        ] {
+            assert_eq!(
+                fixed_day(&json!({"state":"derived","base":base,"value":"2024-01-03"})),
+                None
+            );
+        }
+    }
+
+    #[test]
     fn calendar() {
         assert!(Date::parse("2023-02-29").is_none());
         assert!(Date::parse("2024-02-29").is_some());

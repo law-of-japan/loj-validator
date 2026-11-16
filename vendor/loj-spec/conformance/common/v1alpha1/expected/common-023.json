@@ -1,0 +1,15 @@
+{
+  "results": [
+    {
+      "check": "L4",
+      "category": "relationResolution",
+      "result": "pass"
+    }
+  ],
+  "references": [
+    {
+      "target": "loj:loj/20991001-law-9",
+      "result": "nonexistentConfirmed"
+    }
+  ]
+}

@@ -4,7 +4,7 @@
 
 - 再構築報告は、法令リポジトリの最上位の`rebuild.yaml`とする。一つのRecordにつき一つとし、再構築を進めるたびに同じファイルを更新する。過去の内容は、正本のGit履歴で追う。
 - 旧リポジトリから移していないRecord（新しく登録したRecord）には、再構築報告を置かない。
-- `schemaVersion`は厳密に`loj-rebuild/v1alpha1`でなければならない（MUST）。YAMLのデータモデルは[CORE-03](../../common/v1alpha1/01-overview.md)に従う。schemaは閉じており、未知のフィールドを拒否する。
+- `schemaVersion`は厳密に`loj-rebuild/v1alpha1`でなければならない（MUST）。ほかの値（知らない版を含む）のファイルは、処理不能として未完了とし、不合格にしない（[VAL-04](../../common/v1alpha1/03-validation.md)）。YAMLのデータモデルは[CORE-03](../../common/v1alpha1/01-overview.md)に従う。ファイルは、その`schemaVersion`のschemaに合わなければならない（MUST）。schemaは閉じており、未知のフィールドを拒否する。schemaに合わない箇所の診断の規則は、[VAL-07](../../common/v1alpha1/03-validation.md)による。
 - 再構築報告は正本に属するが、法令の状態のデータではない（REB-06）。
 - 再構築報告だけを変える変更の種類は`metadata`とする（[CHG-01](../../common/v1alpha1/07-changes.md)）。
 - 再構築報告の検査（schema、Revision・Source・ノードIDの解決、旧commitの存在（旧リポジトリを取得できる場合））は、適合レベルの外で行う。その結果を、法令データの適合として主張してはならない（MUST NOT）。
@@ -27,15 +27,16 @@
 
 ## REBR-03 資料の確認結果
 
-- `sourceChecks`の各項目は、`source`（Sourceの`id`）、`glyphs`、`evidence`、任意の`note`を持つ。`glyphs`は次のいずれかとする。
+- `sourceChecks`の各項目は、`source`（Sourceの`id`）、`glyphPreservation`、`evidence`、任意の`note`を持つ。`glyphPreservation`は次のいずれかとする。
 
-  | `glyphs` | 意味 |
+  | `glyphPreservation` | 意味 |
   |---|---|
   | `preserved` | 旧字体・異体字を保持している（例: 官報の画像） |
   | `normalized` | 新字体等に置き換えている（例: e-Gov） |
   | `unknown` | 確かめていない |
 
-- `glyphs`が`preserved`でない資料から起こした本文を、原典どおりと主張してはならない（MUST NOT）。その版の`text.glyphs`を`verified`にするには、`preserved`の資料と照合しなければならない（MUST。loj-glyphsのGLYPH-10）。
+- `glyphPreservation`が`preserved`でない資料から起こした本文を、原典どおりと主張してはならない（MUST NOT）。その版の`text.glyphCheck`を`verified`にするには、`preserved`の資料と照合する（[GLYPH-10](../../loj-glyphs/v1alpha1/01-glyphs.md)）。
+- `sourceChecks`は、旧リポジトリから移したときの資料の確認の記録である。GLYPH-10の条件は、Sourceの`glyphPreservation`（TYPE-02）で確かめる。両者が食い違っても、本版では違反としない。GLYPH-10の判定にはSourceの値を使う。
 
 ## REBR-04 旧commitとの対応と未再構築の改正
 
@@ -55,5 +56,6 @@
   | `omission` | 旧本文にない部分（附則の欠落等） | 箇所ごと。`node`または対象範囲（`scope`） |
   | `glyph` | 字体だけの差（原典の旧字体を、旧本文が新字体にしている等） | 版ごとに1件。件数（`count`）と、任意の例（`examples`） |
 
-- 字体だけの差かどうかは、派生処理（新字体への変換）で両方をそろえた結果を比べて判定してよい（MAY）。派生処理の結果を本文に書き戻してはならない（MUST NOT。[CHAR-05](../../common/v1alpha1/02-characters.md)）。
+- `class`が`glyph`でない項目は、`count`・`examples`を持ってはならない（MUST NOT）。件数で記録するのは字体の差だけである。
+- 字体だけの差かどうかは、派生処理（新字体への変換）で両方をそろえた結果を比べて判定してよい（MAY）。派生処理の結果は、本文に書き戻さない（[CHAR-05](../../common/v1alpha1/02-characters.md)）。
 - 差の原因が分からないもの（例: 官報正誤による差か、旧データの誤りか）は`verification: unverified`とし、理由に確かめていない点を書く。原因が分かるまで、旧データの誤りと決めつけてはならない（MUST NOT）。

@@ -66,6 +66,41 @@ v1alpha1の正式適合データはライセンス・commit・SHA-256一覧と�
 `LOJ_CONFORMANCE_REPORT_DIR`にディレクトリを設定すると、suiteごとのJSON結果を保存します。
 固定テストの成功は、未知の全入力への完全適合や法的正確性の証明ではありません。
 
+## 次期仕様の使い方
+
+固定仕様は `a9c5be83da58170082594e6de989cd7ee4af8bf4`、規範適合ケースは311件です。
+
+```text
+loj-validator check PATH [--level L0|L1|L3|L4]... [--category NAME]... [--check NAME]...
+                         [--format json|text] [--ast FILE] [--registration-space SPACE] [--record ID]
+loj-validator check --registry DIR --repository DIR... --registration-space SPACE
+loj-validator check BUNDLE --base COMMIT --head COMMIT
+loj-validator check BUNDLE --registry DIR --reference REF --registration-space SPACE
+```
+
+`PATH`は版パッケージ、法令リポジトリ、登録台帳です。検査を指定しなければ入力に適用する検査を実行します。
+L3の区分は `historyStructure`・`evidence`、L4は `relationResolution`・`relationConsistency`・`timeConsistency`・`displayConsistency`です。
+`displayConsistency`は採用中の番号主張と表示の不一致を警告します。
+適合レベルとは別に `registry`・`rebuild`・`change`・`reference`を選べます。
+L2・`sourceMatch`・`clauseReference`は予約済みで、指定すると引数エラーになります。
+
+`--registration-space`は登録台帳の登録空間を明示する任意の入力で、書式は `[a-z][a-z0-9-]*`、既定値はありません。
+`space.yaml`から推定しません。未入力でもspaceを省略したRecordRefは同じ台帳で解決しますが、
+明示spaceの解決と文字列表記への変換は判定不能です。別空間の参照は未取得となります。
+登録台帳の `replacedBy` は同じ台帳で解決する必要があるため、別空間を明示した場合は違反です。
+
+JSONは必ず `target.repository`・`target.commit`、`results`、`diagnostics`を含みます。
+ディレクトリ入力の `target.commit` は空文字であり、特定の記録版への適合の主張には使えません。
+bundle入力では特定できたcommitを返します。L3/L4のRecord別結果は `--record ID` で選択します。
+省略時は全体の集計です。Rust APIでは `Report.records` からRecord別報告を取得できます。
+参照結果は `references`・`resolution` で返します。診断の元UTF-8バイト位置は `location.path/start/end`、
+バイト位置のないYAMLの意味診断は `location.file/pointer` です。位置を推測して埋めません。
+
+終了コードは0が合格、1が違反、2が引数・設定・出力エラー、3が未完了（または合格した対象なし）です。
+違反があれば1を優先し、違反がなく判定不能なら3になります。警告・保留は合否を変えません。
+HIST-06/12の警告専用の順序比較は、判定不能でも合否を変えません。
+`--format json`ではエラーの場合もJSONを一つだけ標準出力に返します。
+
 ## 使い方
 
 ```powershell

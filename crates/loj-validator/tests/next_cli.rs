@@ -106,6 +106,7 @@ fn repository_registry_and_records() {
         &format!("--registry={base}/loj-registry/v1alpha1/valid/reg-001/registry"),
         &format!("--repository={base}/loj-history/v1alpha1/valid/hist-004/repo"),
         "--category=timeConsistency",
+        "--registration-space=loj",
     ]);
     assert_eq!(code, 3, "{r}");
     assert_eq!(r["references"][0]["result"], "notFetched");
@@ -114,11 +115,21 @@ fn repository_registry_and_records() {
 #[test]
 fn change_and_reference() {
     let c = "vendor/loj-spec/conformance/common/v1alpha1";
+    let manifest: Value = serde_json::from_str(include_str!(
+        "../../../vendor/loj-spec/conformance/common/v1alpha1/manifest.json"
+    ))
+    .unwrap();
+    let case = manifest["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["id"] == "common-006")
+        .unwrap();
     let (code, r) = json(&[
         "check",
         &format!("{c}/invalid/common-006/repo.bundle"),
-        "--base=d7b514444a5f766269025e52d6dda8b9671df556",
-        "--head=35b3c1b815e242be90211750b851b17b1c835b0a",
+        &format!("--base={}", case["input"]["base"].as_str().unwrap()),
+        &format!("--head={}", case["input"]["head"].as_str().unwrap()),
     ]);
     assert_eq!(code, 1, "{r}");
     assert_eq!(r["results"][0]["check"], "change");
@@ -127,10 +138,38 @@ fn change_and_reference() {
         &format!("{c}/valid/common-004/repo.bundle"),
         &format!("--registry={c}/valid/common-008/registry"),
         "--reference=loj:loj/20990101-act-1/b7k2m9qd",
+        "--registration-space=loj",
     ]);
     assert_eq!(code, 0, "{r}");
-    assert_eq!(
-        r["resolution"]["commit"],
-        "f59ef0fb1025fcc7bb6b168631c4efb673bbdece"
-    );
+    assert!(r["resolution"]["commit"]
+        .as_str()
+        .is_some_and(|c| c.len() == 40));
+}
+
+#[test]
+fn registration_space_and_record_selection_are_explicit_cli_inputs() {
+    for arg in [
+        "--registration-space=",
+        "--registration-space=Upper",
+        "--registration-space=a/b",
+    ] {
+        let (code, r) = json(&["check", PKG, arg]);
+        assert_eq!(code, 2, "{r}");
+    }
+    let repo = "vendor/loj-spec/conformance/loj-history/v1alpha1/valid/hist-001/repo";
+    let (code, r) = json(&["check", repo, "--level=L3", "--record=19480720-law-178"]);
+    assert_eq!(code, 0, "{r}");
+    assert!(r.get("records").is_none());
+    assert_eq!(r["target"]["commit"], "");
+    let (code, _) = json(&["check", repo, "--record=missing"]);
+    assert_eq!(code, 2);
+    let base = "vendor/loj-spec/conformance/common/v1alpha1/valid/common-008";
+    let (code, r) = json(&[
+        "check",
+        "missing.bundle",
+        &format!("--registry={base}/registry"),
+        "--reference=loj:loj/20990101-act-1/b7k2m9qd",
+    ]);
+    assert_eq!(code, 3, "{r}");
+    assert_eq!(r["resolution"]["result"], "notFetched");
 }

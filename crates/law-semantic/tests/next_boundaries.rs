@@ -1,0 +1,113 @@
+//! Synthetic boundaries beyond the fixed conformance corpus.
+#![allow(clippy::unwrap_used)]
+use law_semantic::checks::{run_with_space, Input};
+use law_semantic::common::{Check, ResultValue};
+use serde_json::{json, Value};
+use std::path::PathBuf;
+use std::sync::atomic::{AtomicU64, Ordering};
+
+struct Scratch(PathBuf);
+impl Scratch {
+    fn new() -> Self {
+        static NEXT: AtomicU64 = AtomicU64::new(0);
+        let path = std::env::temp_dir().join(format!(
+            "loj-next-boundaries-{}-{}",
+            std::process::id(),
+            NEXT.fetch_add(1, Ordering::Relaxed)
+        ));
+        std::fs::create_dir_all(&path).unwrap();
+        Self(path)
+    }
+    fn write(&self, path: &str, bytes: impl AsRef<[u8]>) {
+        let path = self.0.join(path);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(path, bytes).unwrap();
+    }
+}
+impl Drop for Scratch {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+fn record(id: &str) -> Value {
+    json!({"schemaVersion":"loj-registry/v1alpha1","id":id,"label":"Synthetic record",
+        "status":"active","identity":{"evidence":[{"source":"s","locator":"1"}],"verification":{"state":"confirmed"}},
+        "collection":{"state":"notCollected"},"sources":[{"id":"s","kind":"other","title":"Synthetic source"}],"numbers":[],"externalIds":[]})
+}
+#[test]
+fn registry_space_is_explicit_and_replaced_by_requires_the_same_registry() {
+    let dir = Scratch::new();
+    let a = record("a7k2m9qd3x");
+    let mut b = record("b7k2m9qd3x");
+    b["status"] = json!("merged");
+    b["replacedBy"] = json!([{"record":{"id":"a7k2m9qd3x","space":"alpha"},"evidence":[{"source":"s","locator":"2"}],"verification":{"state":"confirmed"}}]);
+    dir.write("records/a7k2m9qd3x.yaml", a.to_string());
+    dir.write("records/b7k2m9qd3x.yaml", b.to_string());
+    let input = Input::Registry(dir.0.clone());
+    let check = |space| run_with_space(&input, &[Check::REGISTRY], space);
+    assert_eq!(
+        check(Some("alpha")).result(Check::REGISTRY),
+        Some(ResultValue::Pass)
+    );
+    assert_eq!(
+        check(None).result(Check::REGISTRY),
+        Some(ResultValue::Incomplete)
+    );
+    assert_eq!(
+        check(Some("beta")).result(Check::REGISTRY),
+        Some(ResultValue::Fail)
+    );
+    let before = check(Some("alpha")).to_json();
+    for bytes in [b"id: beta".as_slice(), b"not: [yaml", b"\xff"] {
+        dir.write("space.yaml", bytes);
+        assert_eq!(check(Some("alpha")).to_json(), before);
+    }
+    b["replacedBy"][0]["record"]
+        .as_object_mut()
+        .unwrap()
+        .remove("space");
+    dir.write("records/b7k2m9qd3x.yaml", b.to_string());
+    assert_eq!(check(None).result(Check::REGISTRY), Some(ResultValue::Pass));
+}
+fn package(dir: &Scratch, text: &str) -> law_semantic::v1alpha2::PackageCheck {
+    dir.write("law.yaml", json!({"schemaVersion":"loj/v1alpha2","law":{"id":"synthetic","title":"Synthetic law","type":"act","number":null,"promulgatedAt":null,"language":"ja"},"documents":[{"path":"main.md","parent":"main"}]}).to_string());
+    dir.write("main.md", text);
+    law_semantic::v1alpha2::check(&dir.0, &[Check::L0, Check::L1])
+}
+#[test]
+fn paragraph_caption_is_explicit_and_must_precede_children() {
+    let dir = Scratch::new();
+    let good = "# 第一条\n<!-- loj:paragraph number=1 caption=present -->\n（見出し）\n本文。\n<!-- loj:end-paragraph -->";
+    let result = package(&dir, good);
+    assert_eq!(
+        result.report.result(Check::L1),
+        Some(ResultValue::Pass),
+        "{:?}",
+        result.report.diagnostics
+    );
+    assert!(result.ast.unwrap().to_string().contains("caption"));
+    let plain = package(&dir, &good.replace(" caption=present", ""));
+    assert!(!plain.ast.unwrap().to_string().contains("caption"));
+    let bad = "# 第一条\n<!-- loj:paragraph number=1 caption=present -->\n<!-- loj:item number=1 -->\n一　子の本文。\n<!-- loj:end-item -->\n（見出し）\n本文。\n<!-- loj:end-paragraph -->";
+    let result = package(&dir, bad);
+    assert!(result
+        .report
+        .diagnostics
+        .iter()
+        .any(|d| d.rule == "PARA-02"));
+}
+#[test]
+fn diagnostic_offsets_use_original_crlf_and_four_byte_characters() {
+    let dir = Scratch::new();
+    let text = "# 第一条\r\n<!-- loj:paragraph number=1 -->\r\n😀本文。\r\n<!-- loj:unknown -->";
+    let result = package(&dir, text);
+    let start = text.find("<!-- loj:unknown").unwrap();
+    assert!(
+        result.report.diagnostics.iter().any(|d| d.rule == "DIR-01"
+            && d.location
+                .as_ref()
+                .is_some_and(|l| l["start"] == start && l["end"] == text.len())),
+        "{:?}",
+        result.report.diagnostics
+    );
+}

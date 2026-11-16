@@ -1,0 +1,15 @@
+{
+  "results": [
+    {
+      "check": "L4",
+      "category": "relationResolution",
+      "result": "incomplete"
+    }
+  ],
+  "references": [
+    {
+      "target": "loj:other-space/20170616-law-63",
+      "result": "notFetched"
+    }
+  ]
+}

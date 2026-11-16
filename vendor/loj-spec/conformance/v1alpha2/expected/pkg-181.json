@@ -1,0 +1,14 @@
+{
+  "diagnostics": [
+    {
+      "rule": "MAN-03",
+      "schemaVersion": "loj/v1alpha2",
+      "class": "error",
+      "location": {
+        "path": "two.md",
+        "start": 0,
+        "end": 4
+      }
+    }
+  ]
+}

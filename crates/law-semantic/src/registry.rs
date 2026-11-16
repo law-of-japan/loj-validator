@@ -17,6 +17,9 @@ fn validator() -> &'static jsonschema::Validator {
 }
 
 fn classify(schema_path: &str, _instance: &str) -> (Check, &'static str, &'static str) {
+    if schema_path.contains("/$defs/spaceId") || schema_path.contains("/properties/space/") {
+        return (R, "RID-04", REGISTRY);
+    }
     if schema_path.starts_with("/properties/numbers/items/properties/glyphs") {
         return (R, "GLYPH-05", crate::repository::GLYPHS);
     }
@@ -32,7 +35,7 @@ fn classify(schema_path: &str, _instance: &str) -> (Check, &'static str, &'stati
         || schema_path.starts_with("/properties/aliases")
         || schema_path.starts_with("/properties/replacedBy")
         || schema_path.starts_with("/properties/identity")
-        || schema_path.starts_with("/properties/text")
+        || schema_path.starts_with("/properties/collection")
         || schema_path.starts_with("/properties/repository")
         || schema_path.starts_with("/properties/status")
     {
@@ -50,8 +53,7 @@ fn classify(schema_path: &str, _instance: &str) -> (Check, &'static str, &'stati
 /// A loaded registry.
 #[derive(Default)]
 pub struct Registry {
-    /// Registration space (RID-04). `space.yaml` has no defined form in this
-    /// version; its `id` is used when present, otherwise `loj`.
+    /// Explicit registration space (RID-04); empty when not supplied.
     pub space: String,
     pub records: BTreeMap<String, Value>,
     /// Lowercased alias -> record ID.
@@ -80,6 +82,9 @@ impl Registry {
     /// Resolve a RecordRef: merged Records to their target, split Records
     /// only to candidates (not resolved), aliases to their Record.
     pub fn resolve(&self, r: &Value) -> Resolution {
+        if r["space"].is_string() && self.space.is_empty() {
+            return Resolution::NotFetched("registration space was not supplied".into());
+        }
         if r["space"].as_str().is_some_and(|s| s != self.space) {
             return Resolution::NotFetched("another registration space".into());
         }
@@ -100,10 +105,21 @@ impl Registry {
                 },
             };
             match rec["status"].as_str() {
-                Some("merged") => match rec["replacedBy"][0]["record"]["id"].as_str() {
-                    Some(t) => id = t.to_owned(),
-                    None => return Resolution::NotFetched("merged without target".into()),
-                },
+                Some("merged") => {
+                    let target = &rec["replacedBy"][0]["record"];
+                    if target["space"]
+                        .as_str()
+                        .is_some_and(|space| space != self.space)
+                    {
+                        return Resolution::NotFetched(
+                            "merge target's registration space cannot be resolved".into(),
+                        );
+                    }
+                    match target["id"].as_str() {
+                        Some(t) => id = t.to_owned(),
+                        None => return Resolution::NotFetched("merged without target".into()),
+                    }
+                }
                 Some("split") => {
                     return Resolution::NotFetched(format!(
                         "{id} is split; candidates: {}",
@@ -116,36 +132,42 @@ impl Registry {
         }
         Resolution::NotFetched("merge chain too long".into())
     }
-    pub fn target(&self, r: &Value) -> String {
-        format!(
-            "{}/{}",
-            r["space"].as_str().unwrap_or(&self.space),
-            r["id"].as_str().unwrap_or("")
-        )
+    pub fn target(&self, r: &Value) -> Option<String> {
+        let space = r["space"].as_str().unwrap_or(&self.space);
+        (!space.is_empty()).then(|| format!("loj:{space}/{}", r["id"].as_str().unwrap_or("")))
     }
 }
 
 /// Load (and, with findings, check) the registry repository.
-pub fn load(dir: &Path, f: &mut Findings) -> Option<Registry> {
+pub fn load_with_space(dir: &Path, space: Option<&str>, f: &mut Findings) -> Option<Registry> {
+    if space.is_some_and(|s| !crate::common::valid_registration_space(s)) {
+        f.incomplete.insert(R);
+        f.note(
+            R,
+            crate::common::Class::Undetermined,
+            "RID-04",
+            REGISTRY,
+            "invalid registration-space input",
+            "",
+            "",
+        );
+        return None;
+    }
     let mut reg = Registry {
-        space: "loj".into(),
+        space: space.unwrap_or("").into(),
         ..Registry::default()
     };
-    if let Loaded::Ok(s, _) = load_yaml(&dir.join("space.yaml")) {
-        if let Some(id) = s["id"].as_str() {
-            reg.space = id.to_owned();
-        }
-    }
     let entries = match std::fs::read_dir(dir.join("records")) {
         Ok(e) => e,
         Err(e) => {
-            f.error(
+            f.unprocessable(
                 R,
-                "REG-01",
-                REGISTRY,
-                format!("records/ unreadable: {e}"),
-                "records",
-                "",
+                crate::common::Diagnostic::error(
+                    "REG-01",
+                    REGISTRY,
+                    format!("records/ unreadable: {e}"),
+                )
+                .at_pointer("records", ""),
             );
             f.incomplete.insert(R);
             return None;
@@ -155,27 +177,34 @@ pub fn load(dir: &Path, f: &mut Findings) -> Option<Registry> {
     let mut files: Vec<_> = entries.flatten().map(|e| e.path()).collect();
     files.sort();
     // RID-01/02: IDs and aliases never collide, ignoring case.
-    let mut issued: HashMap<String, String> = HashMap::new();
-    let mut claim = |f: &mut Findings, id: &str, owner: &str, path: &str, ptr: &str| {
-        if let Some(prev) = issued.insert(id.to_ascii_lowercase(), owner.to_owned()) {
-            f.error(
-                R,
-                "RID-01",
-                REGISTRY,
-                format!("{id} collides (ignoring case) with an ID or alias of {prev}"),
-                path,
-                ptr,
-            );
-            f.error(
-                R,
-                "RID-02",
-                REGISTRY,
-                format!("{id} differs only in case from an issued ID"),
-                path,
-                ptr,
-            );
-        }
-    };
+    let mut issued: HashMap<String, (String, bool)> = HashMap::new();
+    let mut claim =
+        |f: &mut Findings, id: &str, owner: &str, retired: bool, path: &str, ptr: &str| {
+            if let Some((prev, was_retired)) =
+                issued.insert(id.to_ascii_lowercase(), (owner.to_owned(), retired))
+            {
+                f.error(
+                    R,
+                    if retired || was_retired {
+                        "RID-05"
+                    } else {
+                        "RID-01"
+                    },
+                    REGISTRY,
+                    format!("{id} collides (ignoring case) with an ID or alias of {prev}"),
+                    path,
+                    ptr,
+                );
+                f.error(
+                    R,
+                    "RID-02",
+                    REGISTRY,
+                    format!("{id} differs only in case from an issued ID"),
+                    path,
+                    ptr,
+                );
+            }
+        };
     for path in files {
         let name = path
             .file_name()
@@ -201,7 +230,10 @@ pub fn load(dir: &Path, f: &mut Findings) -> Option<Registry> {
                 continue;
             }
             Loaded::Unreadable(e) => {
-                f.error(R, "REG-01", REGISTRY, e, &rel, "");
+                f.unprocessable(
+                    R,
+                    crate::common::Diagnostic::error("REG-01", REGISTRY, e).at_pointer(&rel, ""),
+                );
                 f.incomplete.insert(R);
                 continue;
             }
@@ -228,10 +260,14 @@ pub fn load(dir: &Path, f: &mut Findings) -> Option<Registry> {
             );
         }
         let id = rec["id"].as_str().unwrap_or(stem).to_owned();
-        claim(f, &id, &id, &rel, "/id");
+        let retired = matches!(
+            rec["status"].as_str(),
+            Some("merged" | "split" | "withdrawn")
+        );
+        claim(f, &id, &id, retired, &rel, "/id");
         for (i, a) in rec["aliases"].as_array().into_iter().flatten().enumerate() {
             if let Some(a) = a["id"].as_str() {
-                claim(f, a, &id, &rel, &format!("/aliases/{i}"));
+                claim(f, a, &id, retired, &rel, &format!("/aliases/{i}"));
                 reg.aliases.insert(a.to_ascii_lowercase(), id.clone());
             }
         }
@@ -246,17 +282,28 @@ pub fn load(dir: &Path, f: &mut Findings) -> Option<Registry> {
             .flatten()
             .enumerate()
         {
-            if let Some(t) = t["record"]["id"].as_str() {
-                if !reg.records.contains_key(t) {
-                    f.error(
-                        R,
-                        "REG-02",
-                        REGISTRY,
-                        format!("replacedBy {t} is not in the registry"),
-                        &format!("records/{id}.yaml"),
-                        &format!("/replacedBy/{i}"),
-                    );
-                }
+            let target = &t["record"];
+            if target["space"].is_string() && reg.space.is_empty() {
+                f.note(
+                    R,
+                    crate::common::Class::Undetermined,
+                    "REG-02",
+                    REGISTRY,
+                    "registration space is required to resolve explicit-space replacedBy",
+                    &format!("records/{id}.yaml"),
+                    &format!("/replacedBy/{i}"),
+                );
+            } else if target["id"].is_string()
+                && !matches!(reg.resolve(target), Resolution::Resolved(_))
+            {
+                f.error(
+                    R,
+                    "REG-02",
+                    REGISTRY,
+                    format!("replacedBy {target} does not resolve in the same registry"),
+                    &format!("records/{id}.yaml"),
+                    &format!("/replacedBy/{i}"),
+                );
             }
         }
     }
@@ -379,9 +426,9 @@ fn check_record(rec: &Value, rel: &str, f: &mut Findings) {
 }
 
 /// The registry check of `dir`.
-pub fn check(dir: &Path) -> Report {
+pub fn check_with_space(dir: &Path, space: Option<&str>) -> Report {
     let mut f = Findings::default();
-    load(dir, &mut f);
+    load_with_space(dir, space, &mut f);
     let mut r = f.into_report(&[R]);
     r.target
         .insert("repository".into(), json!(dir.to_string_lossy()));
@@ -421,5 +468,33 @@ mod tests {
                 "{offset}"
             );
         }
+    }
+}
+
+#[cfg(test)]
+mod space_tests {
+    use super::*;
+    #[test]
+    fn explicit_space_is_context_not_an_identifier_alias() {
+        let mut reg = Registry::default();
+        reg.records.insert(
+            "synthetic".into(),
+            json!({"id":"synthetic", "status":"active"}),
+        );
+        let local = json!({"id":"synthetic"});
+        let explicit = json!({"id":"synthetic", "space":"alpha"});
+        assert_eq!(
+            reg.resolve(&local),
+            Resolution::Resolved("synthetic".into())
+        );
+        assert!(matches!(reg.resolve(&explicit), Resolution::NotFetched(_)));
+        assert_eq!(reg.target(&local), None);
+        reg.space = "alpha".into();
+        assert_eq!(reg.resolve(&explicit), reg.resolve(&local));
+        assert_eq!(reg.target(&local).as_deref(), Some("loj:alpha/synthetic"));
+        assert!(matches!(
+            reg.resolve(&json!({"id":"synthetic", "space":"beta"})),
+            Resolution::NotFetched(_)
+        ));
     }
 }

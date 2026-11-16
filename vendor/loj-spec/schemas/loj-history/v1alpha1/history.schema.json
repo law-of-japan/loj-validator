@@ -37,6 +37,10 @@
           "from": {
             "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/RecordRef"
           },
+          "promulgated": {
+            "$comment": "HIST-03: the promulgation of the from-law; compared across Records by XREF-06.",
+            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/TimePoint"
+          },
           "items": {
             "type": "array",
             "items": {
@@ -56,6 +60,24 @@
                 },
                 "verification": {
                   "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Verification"
+                },
+                "retroactive": {
+                  "$comment": "HIST-03, HIST-06: the provision that makes this item retroactive.",
+                  "type": "object",
+                  "properties": {
+                    "raw": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "evidence": {
+                      "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/evidenceList"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "raw",
+                    "evidence"
+                  ]
                 }
               },
               "additionalProperties": false,
@@ -232,7 +254,9 @@
                 }
               ]
             },
-            "minItems": 1
+            "minItems": 1,
+            "maxItems": 1,
+            "$comment": "HIST-05: exactly one item, either a relation and its items or the staged enactment."
           },
           "effective": {
             "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/TimePoint"
@@ -347,7 +371,8 @@
               },
               "package": {
                 "type": "string",
-                "pattern": "^(?:[A-Za-z0-9_.-]+/)*law\\.yaml$"
+                "pattern": "^versions/[0-9a-hjkmnp-tv-z]{8}/law\\.yaml$",
+                "$comment": "HIST-08: the Revision's own revision_id (checked by the validator)."
               },
               "gaps": {
                 "type": "array",
@@ -359,7 +384,7 @@
               "sources": {
                 "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/evidenceList"
               },
-              "glyphs": {
+              "glyphCheck": {
                 "enum": [
                   "verified",
                   "unverified"
@@ -367,7 +392,127 @@
               },
               "glyphNotes": {
                 "type": "string",
-                "pattern": "^(?:[A-Za-z0-9_.-]+/)*[A-Za-z0-9_.-]+\\.yaml$"
+                "pattern": "^versions/[0-9a-hjkmnp-tv-z]{8}/glyphs\\.yaml$",
+                "$comment": "HIST-08, GLYPH-01: the Revision's own revision_id (checked by the validator)."
+              },
+              "variances": {
+                "$comment": "HIST-08, GLYPH-07: wording differences between source materials.",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "scope": {
+                      "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Scope"
+                    },
+                    "readings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "source": {
+                            "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/localId"
+                          },
+                          "locator": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "raw": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "additionalProperties": false,
+                        "required": [
+                          "source",
+                          "locator",
+                          "raw"
+                        ]
+                      },
+                      "minItems": 2
+                    },
+                    "verification": {
+                      "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Verification"
+                    },
+                    "resolvedBy": {
+                      "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/Evidence"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "scope",
+                    "readings",
+                    "verification"
+                  ]
+                },
+                "minItems": 1
+              },
+              "correctionsSurveyed": {
+                "$comment": "HIST-08, REB-05: whether official corrections were surveyed.",
+                "type": "object",
+                "properties": {
+                  "state": {
+                    "enum": [
+                      "surveyed",
+                      "unsurveyed"
+                    ]
+                  },
+                  "evidence": {
+                    "$ref": "https://law-of-japan.github.io/loj-spec/schemas/common/v1alpha1/types.schema.json#/$defs/evidenceList"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "state"
+                ],
+                "allOf": [
+                  {
+                    "if": {
+                      "properties": {
+                        "state": {
+                          "const": "surveyed"
+                        }
+                      }
+                    },
+                    "then": {
+                      "required": [
+                        "evidence"
+                      ],
+                      "properties": {
+                        "evidence": {
+                          "minItems": 1
+                        }
+                      },
+                      "not": {
+                        "required": [
+                          "reason"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "if": {
+                      "properties": {
+                        "state": {
+                          "const": "unsurveyed"
+                        }
+                      }
+                    },
+                    "then": {
+                      "required": [
+                        "reason"
+                      ],
+                      "not": {
+                        "required": [
+                          "evidence"
+                        ]
+                      }
+                    }
+                  }
+                ]
               }
             },
             "required": [
@@ -389,7 +534,7 @@
                 "then": {
                   "required": [
                     "sources",
-                    "glyphs"
+                    "glyphCheck"
                   ],
                   "properties": {
                     "sources": {
@@ -412,7 +557,7 @@
                       },
                       {
                         "required": [
-                          "glyphs"
+                          "glyphCheck"
                         ]
                       },
                       {
@@ -444,6 +589,32 @@
                     ]
                   }
                 }
+              },
+              {
+                "$comment": "HIST-08: a Revision without text records neither variances nor correctionsSurveyed.",
+                "if": {
+                  "properties": {
+                    "status": {
+                      "const": "absent"
+                    }
+                  }
+                },
+                "then": {
+                  "not": {
+                    "anyOf": [
+                      {
+                        "required": [
+                          "variances"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "correctionsSurveyed"
+                        ]
+                      }
+                    ]
+                  }
+                }
               }
             ]
           },
@@ -457,8 +628,8 @@
                   "minLength": 1
                 },
                 "kind": {
-                  "type": "string",
-                  "minLength": 1
+                  "$comment": "HIST-09: identifiers of a Record belong in the registry, so a Revision only carries kind revision.",
+                  "const": "revision"
                 },
                 "value": {
                   "type": "string",
@@ -537,8 +708,17 @@
             },
             "then": {
               "not": {
-                "required": [
-                  "basedOn"
+                "anyOf": [
+                  {
+                    "required": [
+                      "basedOn"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "basis"
+                    ]
+                  }
                 ]
               }
             },
@@ -598,7 +778,7 @@
             }
           }
         ],
-        "$comment": "basis may accompany origin enactment (staged enforcement); validator checks HIST-05."
+        "$comment": "An origin has neither basedOn nor basis (HIST-04, HIST-05); the validator checks the references of basis and basedOn."
       },
       "minItems": 1
     },

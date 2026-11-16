@@ -1,20 +1,22 @@
 //! `loj-validator check` for the next specification (loj/v1alpha2 and the
 //! loj-history, loj-glyphs, loj-registry, loj-rebuild kinds). The JSON output
 //! is a report of `schemas/common/v1alpha1/report.schema.json`.
-use law_semantic::checks::{run, Input};
+use law_semantic::checks::{run_with_space, Input};
 use law_semantic::common::{Check, Report};
 use std::path::PathBuf;
 
 pub const USAGE: &str = "next specification (loj/v1alpha2 and history, glyphs, registry, rebuild):
   loj-validator check PATH [--level L0|L1|L3|L4]... [--category NAME]... [--check NAME]...
-                     [--format json|text] [--ast FILE]
+                     [--format json|text] [--ast FILE] [--registration-space SPACE] [--record ID]
   loj-validator check --registry DIR --repository DIR... [--level L4] [--category NAME]...
   loj-validator check BUNDLE --base COMMIT --head COMMIT        (change check, CHG-02/03)
   loj-validator check BUNDLE --registry DIR --reference REF     (reference resolution)
 
   PATH is law.yaml or its directory (package), a law repository (history.yaml),
   or a registry (records/). Categories: historyStructure, evidence (L3);
-  relationResolution, relationConsistency, timeConsistency (L4).
+  relationResolution, relationConsistency, timeConsistency, displayConsistency (L4).
+  --registration-space SPACE supplies the registry space ([a-z][a-z0-9-]*);
+  no default is inferred from space.yaml. --record ID returns that input Record's report.
   Checks: L0, L1, L3[/category], L4[/category], registry, rebuild, change, reference.
   L2, L3/sourceMatch and L4/clauseReference are reserved and cannot be selected.
   Without a selection, every check that applies to the input runs.";
@@ -24,6 +26,8 @@ pub struct Args {
     pub checks: Vec<Check>,
     pub json: bool,
     pub ast: Option<PathBuf>,
+    pub registration_space: Option<String>,
+    pub record: Option<String>,
 }
 
 /// Read the arguments of a next-specification check.
@@ -39,6 +43,8 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
     let mut categories: Vec<String> = Vec::new();
     let mut named = Vec::new();
     let mut registry = None;
+    let mut registration_space = None;
+    let mut record = None;
     let mut repositories = Vec::new();
     let (mut base, mut head, mut reference) = (None, None, None);
     let mut json = false;
@@ -74,6 +80,8 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
             "--category" => categories.extend(value.split(',').map(str::to_owned)),
             "--check" => named.extend(value.split(',').map(str::to_owned)),
             "--registry" => once(&mut registry, value)?,
+            "--record" => once(&mut record, value)?,
+            "--registration-space" => once(&mut registration_space, value)?,
             "--repository" => repositories.push(PathBuf::from(value)),
             "--base" => once(&mut base, value)?,
             "--head" => once(&mut head, value)?,
@@ -90,6 +98,12 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
             }
             _ => return Err(format!("unknown option: {name}")),
         }
+    }
+    if registration_space
+        .as_deref()
+        .is_some_and(|s| !law_semantic::common::valid_registration_space(s))
+    {
+        return Err("--registration-space must match [a-z][a-z0-9-]*".into());
     }
     let input = match (path, registry, base, head, reference) {
         (Some(bundle), None, Some(base), Some(head), None) if repositories.is_empty() => {
@@ -158,6 +172,8 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
         checks,
         json,
         ast,
+        registration_space,
+        record,
     })
 }
 
@@ -171,14 +187,42 @@ pub fn execute(args: &Args) -> (String, i32) {
                 out,
                 serde_json::to_vec_pretty(ast).expect("a JSON value serializes"),
             ) {
-                return (format!("error: cannot write AST: {e}"), 2);
+                return (
+                    if args.json {
+                        serde_json::json!({"error":{"kind":"output","message":format!("cannot write AST: {e}")}}).to_string()
+                    } else {
+                        format!("error: cannot write AST: {e}")
+                    },
+                    2,
+                );
             }
         }
         let mut report = r.report;
         report.select(&args.checks);
         report
     } else {
-        run(&args.input, &args.checks)
+        run_with_space(
+            &args.input,
+            &args.checks,
+            args.registration_space.as_deref(),
+        )
+    };
+    let report = if let Some(id) = &args.record {
+        match report.records.iter().find(|(record, _)| record == id) {
+            Some((_, record)) => record.clone(),
+            None => {
+                return (
+                    if args.json {
+                        serde_json::json!({"error":{"kind":"argument","message":format!("Record {id} is not among the checked inputs")}}).to_string()
+                    } else {
+                        format!("Record {id} is not among the checked inputs")
+                    },
+                    2,
+                )
+            }
+        }
+    } else {
+        report
     };
     let code = report.exit_code();
     if args.json {
@@ -195,7 +239,7 @@ pub fn execute(args: &Args) -> (String, i32) {
         let at = d.location.as_ref().map_or(String::new(), |l| {
             match (l["start"].as_u64(), l["end"].as_u64()) {
                 (Some(a), Some(b)) => format!(" {} [{a}..{b}]", l["path"].as_str().unwrap_or("")),
-                _ => format!(" {}", l["path"].as_str().unwrap_or("")),
+                _ => format!(" {}", l["file"].as_str().unwrap_or("")),
             }
         });
         s.push_str(&format!(

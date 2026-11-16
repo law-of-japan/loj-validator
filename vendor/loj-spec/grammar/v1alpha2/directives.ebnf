@@ -2,19 +2,20 @@
    Attribute order is free (DIR-01); the alternatives below list the permitted sets, not an order. *)
 marker = open | close ;
 open = "<!-- loj:", (paragraph | item | subitem | table | row | cell
-                    | "preamble" | "enact-statement"), " -->" ;
-paragraph = "paragraph", spaces, attrs(number_attr, [numbering_attr]) ;
-item = "item", spaces, number_attr ;
-subitem = "subitem", spaces, attrs(level_attr, number_attr) ;
-table = "table", spaces, number_attr ;
-row = "row", spaces, key_attr ;
-cell = "cell", [spaces, attrs([rowspan_attr], [colspan_attr])] ;
+                    | "preamble" | "enact-statement" | "toc"), " -->" ;
+paragraph = "paragraph", space, attrs(number_attr, [numbering_attr], [caption_attr]) ;
+item = "item", space, number_attr ;
+subitem = "subitem", space, attrs(level_attr, number_attr) ;
+table = "table", space, number_attr ;
+row = "row", space, key_attr ;
+cell = "cell", [space, (rowspan_attr | colspan_attr | attrs(rowspan_attr, colspan_attr))] ;
 close = "<!-- loj:end-", ("paragraph" | "item" | "subitem" | "table" | "row" | "cell"
-                         | "preamble" | "enact-statement"), " -->" ;
-(* attrs(a, b, ...) = the listed attributes in any order, each once, separated by spaces;
-   optional ones may be absent. *)
+                         | "preamble" | "enact-statement" | "toc"), " -->" ;
+(* attrs(a, b, ...) = the listed attributes in any order, each once, separated by one space;
+   optional ones may be absent. A cell without attributes is "<!-- loj:cell -->" (DIR-01). *)
 number_attr = "number=", number ;
 numbering_attr = "numbering=", ("explicit" | "implicit") ;
+caption_attr = "caption=present" ;   (* PARA-02: the only value; omit the attribute when there is no caption *)
 level_attr = "level=", (nonzero | "10") ;
 key_attr = "key=", crockford, crockford, crockford, crockford ;
 rowspan_attr = "rowspan=", span ;
@@ -26,4 +27,4 @@ nonzero = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
 digit = "0" | nonzero ;
 crockford = digit | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "j" | "k" | "m" | "n"
           | "p" | "q" | "r" | "s" | "t" | "v" | "w" | "x" | "y" | "z" ;
-spaces = " ", {" "} ;
+space = " " ;

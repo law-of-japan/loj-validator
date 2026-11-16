@@ -18,13 +18,14 @@ pub(crate) const EVIDENCE: Check = Check::EVIDENCE;
 pub(crate) fn load_history(repo: &Path, f: &mut Findings) -> Option<Value> {
     match load_yaml(&repo.join("history.yaml")) {
         Loaded::Unreadable(e) => {
-            f.error(
+            f.unprocessable(
                 HS,
-                "HIST-01",
-                HISTORY,
-                format!("history.yaml unreadable: {e}"),
-                "history.yaml",
-                "",
+                crate::common::Diagnostic::error(
+                    "HIST-01",
+                    HISTORY,
+                    format!("history.yaml unreadable: {e}"),
+                )
+                .at_pointer("history.yaml", ""),
             );
             f.incomplete.insert(HS);
             f.incomplete.insert(EVIDENCE);
@@ -70,14 +71,28 @@ pub fn check(repo: &Path, checks: &[Check]) -> Report {
         .and_then(|h| h["revisions"].as_array())
         .unwrap_or(&empty)
         .clone();
+    let mut paths = crate::common::documents::DocumentPaths::new(&repo.join("history.yaml")).ok();
     let record = h.as_ref().map(|h| h["record"]["id"].clone());
     for (i, r) in revisions.iter().enumerate() {
         let Some(id) = r["id"].as_str() else { continue };
         if !matches!(r["text"]["status"].as_str(), Some("complete" | "partial")) {
             continue;
         }
+        if !history::valid_revision_id(id) {
+            continue;
+        }
         let path = history::package_path(r);
-        let full = repo.join(&path);
+        let full = match paths
+            .as_mut()
+            .and_then(|paths| paths.resolve_yaml(&path).ok())
+        {
+            Some(full) => full,
+            None => {
+                f.incomplete.insert(HS);
+                f.incomplete.insert(EVIDENCE);
+                continue;
+            }
+        };
         if !full.is_file() {
             continue; // HIST-08
         }
@@ -110,8 +125,10 @@ pub fn check(repo: &Path, checks: &[Check]) -> Report {
             .unwrap_or_default();
         for mut d in pkg.report.diagnostics {
             if let Some(l) = d.location.as_mut() {
-                if let Some(p) = l["path"].as_str() {
-                    l["path"] = json!(format!("{prefix}/{p}"));
+                for key in ["path", "file"] {
+                    if let Some(p) = l[key].as_str() {
+                        l[key] = json!(format!("{prefix}/{p}"));
+                    }
                 }
             }
             f.push(Check::L1, d);
@@ -140,16 +157,18 @@ pub fn check(repo: &Path, checks: &[Check]) -> Report {
                     continue;
                 }
                 let Some(ast) = asts.get(id) else { continue };
+                let notes = format!("versions/{id}/glyphs.yaml");
                 glyphs::check(
                     repo,
                     id,
-                    r["text"]["glyphNotes"].as_str(),
+                    repo.join(&notes).is_file().then_some(notes.as_str()),
                     ast.as_ref(),
                     &sources,
                     &mut f,
                 );
             }
             scope_nodes(h, &asts, &mut f);
+            row_key_reuse(h, &asts, &mut f);
         }
     }
     if wants(Check::REBUILD) {
@@ -169,7 +188,99 @@ pub fn check(repo: &Path, checks: &[Check]) -> Report {
     }
     report.select(checks);
     report.diagnostics = f.items.into_iter().map(|(_, d)| d).collect();
+    if let Some(id) = record.and_then(|id| id.as_str().map(str::to_owned)) {
+        report.records.push((id, report.clone()));
+    }
     report
+}
+
+/// HIST-13: branch-local row lifetimes; skipped revisions do not delete rows.
+fn row_key_reuse(h: &Value, asts: &HashMap<String, Option<Value>>, f: &mut Findings) {
+    fn rows(ast: &Value) -> HashSet<String> {
+        let mut found = HashSet::new();
+        let mut pending = vec![&ast["root"]];
+        while let Some(node) = pending.pop() {
+            if node["kind"] == "Row" {
+                if let Some(id) = node["id"].as_str() {
+                    found.insert(id.to_owned());
+                }
+            }
+            pending.extend(history::list(&node["content"]));
+        }
+        found
+    }
+    enum Visit {
+        Enter(usize),
+        Exit(Vec<(String, Option<bool>)>),
+    }
+    let revisions = history::list(&h["revisions"]);
+    let indices: HashMap<&str, usize> = revisions
+        .iter()
+        .enumerate()
+        .filter_map(|(i, r)| r["id"].as_str().map(|id| (id, i)))
+        .collect();
+    let mut children: HashMap<usize, Vec<usize>> = HashMap::new();
+    let mut stack = Vec::new();
+    for (i, revision) in revisions.iter().enumerate() {
+        if let Some(parent) = revision["basedOn"].as_str().and_then(|id| indices.get(id)) {
+            children.entry(*parent).or_default().push(i);
+        } else {
+            stack.push(Visit::Enter(i));
+        }
+    }
+    let mut seen = HashSet::new();
+    // true = present at the previous comparable revision; false = deleted.
+    let mut state: HashMap<String, bool> = HashMap::new();
+    while let Some(visit) = stack.pop() {
+        let i = match visit {
+            Visit::Exit(changes) => {
+                for (key, old) in changes.into_iter().rev() {
+                    if let Some(old) = old {
+                        state.insert(key, old);
+                    } else {
+                        state.remove(&key);
+                    }
+                }
+                continue;
+            }
+            Visit::Enter(i) => i,
+        };
+        if !seen.insert(i) {
+            continue;
+        }
+        let revision = &revisions[i];
+        let mut changes = Vec::new();
+        if revision["status"] == "active" && revision["text"]["status"] == "complete" {
+            if let Some(Some(ast)) = revision["id"].as_str().and_then(|id| asts.get(id)) {
+                let keys = rows(ast);
+                for (key, present) in &mut state {
+                    if *present && !keys.contains(key) {
+                        changes.push((key.clone(), Some(true)));
+                        *present = false;
+                    }
+                }
+                for key in keys {
+                    if state.get(&key) == Some(&false) {
+                        f.error(
+                            HS,
+                            "HIST-13",
+                            HISTORY,
+                            format!("deleted table row key reused: {key}"),
+                            "history.yaml",
+                            &format!("/revisions/{i}"),
+                        );
+                    }
+                    if state.get(&key) != Some(&true) {
+                        changes.push((key.clone(), state.insert(key, true)));
+                    }
+                }
+            }
+        }
+        stack.push(Visit::Exit(changes));
+        if let Some(children) = children.get(&i) {
+            stack.extend(children.iter().rev().map(|i| Visit::Enter(*i)));
+        }
+    }
 }
 
 /// TYPE-07/08: Scope.nodes of a basis item exist in the package of the revision.
@@ -228,5 +339,39 @@ fn scope_nodes(h: &Value, asts: &HashMap<String, Option<Value>>, f: &mut Finding
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn row_lifetimes_follow_branches_and_skip_partial_snapshots() {
+        let revision = |id: &str, parent: Option<&str>, status: &str| json!({"id":id,"status":"active","basedOn":parent,"text":{"status":status}});
+        let history = json!({"revisions":[revision("a",None,"complete"),revision("b",Some("a"),"complete"),revision("c",Some("b"),"partial"),revision("d",Some("c"),"complete"),revision("e",Some("a"),"complete")]});
+        let rows = |present| {
+            Some(
+                json!({"root":{"kind":"Law","content":if present {vec![json!({"kind":"Row","id":"law/table/1/row/k3v9"})]} else {vec![]}}}),
+            )
+        };
+        let asts = HashMap::from([
+            ("a".into(), rows(true)),
+            ("b".into(), rows(false)),
+            ("c".into(), rows(true)),
+            ("d".into(), rows(true)),
+            ("e".into(), rows(true)),
+        ]);
+        let mut f = Findings::default();
+        row_key_reuse(&history, &asts, &mut f);
+        let findings: Vec<_> = f
+            .items
+            .iter()
+            .filter(|(_, d)| d.rule == "HIST-13")
+            .collect();
+        assert_eq!(findings.len(), 1);
+        assert_eq!(
+            findings[0].1.location.as_ref().unwrap()["pointer"],
+            "/revisions/3"
+        );
     }
 }

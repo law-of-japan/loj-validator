@@ -1,0 +1,152 @@
+schemaVersion: loj-history/v1alpha1
+record: {id: 19480720-law-178, label: 昭和二十三年法律第百七十八号}
+sources:
+  - id: src-kanpo-19480720
+    kind: promulgation
+    title: 官報 第6453号 昭和23年7月20日（国立国会図書館デジタルコレクション pid/2962986）
+    uri: https://dl.ndl.go.jp/pid/2962986
+    glyphPreservation: preserved
+  - id: src-egov
+    kind: egov
+    title: e-Gov法令検索 法令API v2（昭和二十三年法律第百七十八号、制定時の附則を含む）
+    uri: https://laws.e-gov.go.jp/law/323AC1000000178
+    glyphPreservation: normalized
+  - id: src-kanpo-19480928
+    kind: officialCorrection
+    title: 官報 第6512号 昭和23年9月28日 正誤（国立国会図書館デジタルコレクション pid/2963048）
+    uri: https://dl.ndl.go.jp/pid/2963048
+    glyphPreservation: preserved
+  - id: src-goshomei
+    kind: other
+    title: 国民の祝日に関する法律・御署名原本・昭和二十三年・法律第一七八号（国立公文書館 御31171100）
+    uri: https://www.digital.archives.go.jp/file/130738
+    glyphPreservation: preserved
+  - id: src-goshomei-s41-86
+    kind: promulgation
+    title: 国民の祝日に関する法律の一部を改正する法律・御署名原本・昭和四十一年・第四巻・法律第八十六号（国立公文書館 御42643100）
+    uri: https://www.digital.archives.go.jp/file/686000
+    glyphPreservation: preserved
+relations:
+  - id: rel-s41-86
+    type: amends
+    from: {id: https://github.com/law-of-japan/19660625-act-86, label: 昭和四十一年法律第八十六号}
+    promulgated:
+      state: date
+      value: "1966-06-25"
+      raw: 昭和四十一年六月二十五日
+      precision: day
+      evidence: [{source: src-goshomei-s41-86, locator: "1画像 公布文の日付"}]
+      verification: {state: unverified, reason: 官報の発行日と未照合（REB-05）}
+    evidence: [{source: src-goshomei-s41-86, locator: "本則"}]
+    verification: {state: confirmed}
+    status: active
+    items:
+      - id: i1
+        scope: {text: 第二条成人の日の項の次に建国記念の日の項を加える}
+        effective:
+          state: derived
+          rule: 公布の日から
+          base:
+            state: date
+            value: "1966-06-25"
+            raw: 昭和四十一年六月二十五日
+            precision: day
+            evidence: [{source: src-goshomei-s41-86, locator: "1画像 公布文の日付"}]
+            verification: {state: unverified, reason: 官報の発行日と未照合（REB-05）}
+          value: "1966-06-25"
+          raw: この法律は、公布の日から施行する
+          evidence: [{source: src-goshomei-s41-86, locator: 附則第一項}]
+          verification: {state: confirmed}
+        evidence: [{source: src-goshomei-s41-86, locator: 本則}]
+        verification: {state: confirmed}
+      - id: i2
+        scope: {text: 第二条こどもの日の項の次に敬老の日の項を加える}
+        effective:
+          state: derived
+          rule: 公布の日から
+          base:
+            state: date
+            value: "1966-06-25"
+            raw: 昭和四十一年六月二十五日
+            precision: day
+            evidence: [{source: src-goshomei-s41-86, locator: "1画像 公布文の日付"}]
+            verification: {state: unverified, reason: 官報の発行日と未照合（REB-05）}
+          value: "1966-06-25"
+          raw: この法律は、公布の日から施行する
+          evidence: [{source: src-goshomei-s41-86, locator: 附則第一項}]
+          verification: {state: confirmed}
+        evidence: [{source: src-goshomei-s41-86, locator: 本則}]
+        verification: {state: confirmed}
+      - id: i3
+        scope: {text: 第二条秋分の日の項の次に体育の日の項を加える}
+        effective:
+          state: derived
+          rule: 公布の日から
+          base:
+            state: date
+            value: "1966-06-25"
+            raw: 昭和四十一年六月二十五日
+            precision: day
+            evidence: [{source: src-goshomei-s41-86, locator: "1画像 公布文の日付"}]
+            verification: {state: unverified, reason: 官報の発行日と未照合（REB-05）}
+          value: "1966-06-25"
+          raw: この法律は、公布の日から施行する
+          evidence: [{source: src-goshomei-s41-86, locator: 附則第一項}]
+          verification: {state: confirmed}
+        evidence: [{source: src-goshomei-s41-86, locator: 本則}]
+        verification: {state: confirmed}
+revisions:
+  - id: 98mj5vgx
+    label: 制定
+    origin: enactment
+    effective:
+      state: derived
+      rule: 公布の日から
+      base:
+        state: date
+        value: "1948-07-20"
+        raw: 昭和二十三年七月二十日
+        precision: day
+        evidence: [{source: src-kanpo-19480720, locator: 1コマ 発行日}]
+        verification: {state: confirmed}
+      value: "1948-07-20"
+      raw: 公布の日からこれを施行する
+      evidence: [{source: src-kanpo-19480720, locator: 附則第一項}]
+      verification: {state: confirmed}
+    applicability: {state: unsurveyed}
+    text:
+      status: complete
+      sources:
+        - {source: src-kanpo-19480720, locator: 1コマ}
+        - {source: src-kanpo-19480928, locator: "2コマ 正誤（第二條八行「國民の」は「國の」）"}
+        - {source: src-goshomei, locator: "2・3画像（字体の確認、GLYPH-06の3a）"}
+      glyphCheck: unverified
+      glyphNotes: versions/98mj5vgx/glyphs.yaml
+    status: active
+  - id: zwgmz1rt
+    label: 19480720-law-178_19660625_19660625-act-86
+    basedOn: 98mj5vgx
+    basis: [{relation: rel-s41-86, items: [i1, i2, i3]}]
+    effective:
+      state: derived
+      rule: 公布の日から
+      base: {state: date, value: "1966-06-25", raw: 昭和四十一年六月二十五日, precision: day,
+             evidence: [{source: src-goshomei-s41-86, locator: "1画像 公布文の日付"}],
+             verification: {state: unverified, reason: 官報の発行日と未照合（REB-05）}}
+      value: "1966-06-25"
+      raw: この法律は、公布の日から施行する
+      evidence: [{source: src-goshomei-s41-86, locator: 附則第一項}]
+      verification: {state: confirmed}
+    applicability: {state: unsurveyed}
+    text:
+      status: complete
+      sources:
+        - {source: src-goshomei-s41-86, locator: 2画像 本則（改正の内容）}
+      glyphCheck: unverified
+      glyphNotes: versions/zwgmz1rt/glyphs.yaml
+      correctionsSurveyed: {state: unsurveyed, reason: 官報（昭和41年6月25日）を入手していない（REB-05）}
+    status: active
+coverage:
+  state: unconfirmed
+  knownGaps:
+    - {text: 昭和四十八年法律第十号以後の改正（旧リポジトリでは9件）を未収録}

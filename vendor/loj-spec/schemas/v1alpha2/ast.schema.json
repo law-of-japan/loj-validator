@@ -98,6 +98,7 @@
             "SupplementaryProvision",
             "AppendedMaterial",
             "EnactStatement",
+            "Toc",
             "Preamble",
             "Table",
             "Row",
@@ -169,11 +170,19 @@
         },
         "rowspan": {
           "type": "integer",
-          "minimum": 1
+          "minimum": 2
         },
         "colspan": {
           "type": "integer",
-          "minimum": 1
+          "minimum": 2
+        },
+        "caption": {
+          "type": "string",
+          "pattern": "^（[^\\r\\n]+）$",
+          "not": {
+            "pattern": "[\\r\\n]"
+          },
+          "description": "PARA-02: the caption line of a paragraph marked caption=present, as written (with the fullwidth parentheses, without the line ending). Present only on such paragraphs. The separate 'not' rejects a line ending even where '$' matches before a final newline (as in Python); JSON Schema has no end-of-string anchor, so do not remove it. The pattern does not check that the parentheses balance; that is the semantic check of PARA-02."
         }
       },
       "required": [
@@ -237,6 +246,7 @@
                   "SupplementaryProvision",
                   "AppendedMaterial",
                   "EnactStatement",
+                  "Toc",
                   "Preamble",
                   "Row"
                 ]
@@ -336,6 +346,7 @@
                   "Row",
                   "Cell",
                   "EnactStatement",
+                  "Toc",
                   "Preamble"
                 ]
               }
@@ -346,6 +357,23 @@
               "display": {
                 "const": ""
               }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "Paragraph"
+              }
+            }
+          },
+          "then": {},
+          "else": {
+            "not": {
+              "required": [
+                "caption"
+              ]
             }
           }
         },

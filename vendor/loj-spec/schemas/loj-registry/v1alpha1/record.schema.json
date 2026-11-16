@@ -74,7 +74,8 @@
         }
       ]
     },
-    "text": {
+    "collection": {
+      "description": "REG-02: the text collection state of the Record. Not the glyph note's ivd.collection (an IVD collection name).",
       "type": "object",
       "properties": {
         "state": {
@@ -564,7 +565,7 @@
     "id",
     "status",
     "identity",
-    "text",
+    "collection",
     "sources",
     "numbers",
     "externalIds"
@@ -573,7 +574,7 @@
     {
       "if": {
         "properties": {
-          "text": {
+          "collection": {
             "properties": {
               "state": {
                 "const": "collected"

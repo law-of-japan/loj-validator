@@ -97,7 +97,21 @@
         "path": "conformance/loj-history/v1alpha1/invalid/hist-005/repo"
       },
       "expected": "conformance/loj-history/v1alpha1/expected/hist-005.json",
-      "success": false
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-005/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "    label: 制定\n",
+              "new": "    label: 制定\n    current: true\n"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "hist-006",
@@ -113,7 +127,21 @@
         "path": "conformance/loj-history/v1alpha1/invalid/hist-006/repo"
       },
       "expected": "conformance/loj-history/v1alpha1/expected/hist-006.json",
-      "success": false
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-006/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "  - id: zwgmz1rt",
+              "new": "  - id: zwgmz1r"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "hist-007",
@@ -129,7 +157,20 @@
         "path": "conformance/loj-history/v1alpha1/invalid/hist-007/repo"
       },
       "expected": "conformance/loj-history/v1alpha1/expected/hist-007.json",
-      "success": false
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-007/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "      - id: i2\n",
+              "new": "      - id: i1\n"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "hist-008",
@@ -145,7 +186,20 @@
         "path": "conformance/loj-history/v1alpha1/invalid/hist-008/repo"
       },
       "expected": "conformance/loj-history/v1alpha1/expected/hist-008.json",
-      "success": false
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-008/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "items: [i1, i2, i3]",
+              "new": "items: [i1, i2, i4]"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "hist-009",
@@ -161,7 +215,20 @@
         "path": "conformance/loj-history/v1alpha1/invalid/hist-009/repo"
       },
       "expected": "conformance/loj-history/v1alpha1/expected/hist-009.json",
-      "success": false
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-009/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "basedOn: 98mj5vgx",
+              "new": "basedOn: 98mj5vgy"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "hist-010",
@@ -177,7 +244,21 @@
         "path": "conformance/loj-history/v1alpha1/invalid/hist-010/repo"
       },
       "expected": "conformance/loj-history/v1alpha1/expected/hist-010.json",
-      "success": false
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-010/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "      status: complete\n      sources:\n        - {source: src-goshomei-s41-86",
+              "new": "      status: absent\n      sources:\n        - {source: src-goshomei-s41-86"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "hist-011",
@@ -193,7 +274,20 @@
         "path": "conformance/loj-history/v1alpha1/invalid/hist-011/repo"
       },
       "expected": "conformance/loj-history/v1alpha1/expected/hist-011.json",
-      "success": false
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-011/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "versions/zwgmz1rt/law.yaml",
+              "old": "id: \"19480720-law-178\"",
+              "new": "id: \"19480720-law-179\""
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "hist-012",
@@ -209,13 +303,28 @@
         "path": "conformance/loj-history/v1alpha1/invalid/hist-012/repo"
       },
       "expected": "conformance/loj-history/v1alpha1/expected/hist-012.json",
-      "success": false
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-012/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "        raw: 昭和二十三年七月二十日\n",
+              "new": ""
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "hist-013",
       "title": "根拠のない確認済みの時点",
       "requirements": [
-        "TYPE-05"
+        "TYPE-05",
+        "TIME-06"
       ],
       "check": "L3",
       "category": "evidence",
@@ -225,7 +334,21 @@
         "path": "conformance/loj-history/v1alpha1/invalid/hist-013/repo"
       },
       "expected": "conformance/loj-history/v1alpha1/expected/hist-013.json",
-      "success": false
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-013/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "        evidence: [{source: src-kanpo-19480720, locator: 1コマ 発行日}]\n",
+              "new": "        evidence: []\n"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "hist-014",
@@ -241,7 +364,20 @@
         "path": "conformance/loj-history/v1alpha1/invalid/hist-014/repo"
       },
       "expected": "conformance/loj-history/v1alpha1/expected/hist-014.json",
-      "success": false
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-014/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-002/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "  - {type: repealed, relation: rel-repeal}",
+              "new": "  - {type: totallyRevised, relation: rel-repeal}"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "hist-015",
@@ -257,7 +393,1384 @@
         "path": "conformance/loj-history/v1alpha1/invalid/hist-015/repo"
       },
       "expected": "conformance/loj-history/v1alpha1/expected/hist-015.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-015/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-004/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "      value: \"2019-05-01\"\n      raw: 附則第十条及び第十一条の規定はこの法律の施行の日の翌日から施行する\n      evidence: [{source: src-egov-h29-63, locator: 附則第一条第一項ただし書}]\n      verification: {state: unverified, reason: 基礎の時点が未照合}\n    applicability",
+              "new": "      value: \"2019-05-03\"\n      raw: 附則第十条及び第十一条の規定はこの法律の施行の日の翌日から施行する\n      evidence: [{source: src-egov-h29-63, locator: 附則第一条第一項ただし書}]\n      verification: {state: unverified, reason: 基礎の時点が未照合}\n    applicability"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-016",
+      "title": "確定日であるderivedを基準とするderived（架空）",
+      "requirements": [
+        "TIME-03"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/valid/hist-016/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-016.json",
+      "success": true
+    },
+    {
+      "id": "hist-017",
+      "title": "確定日でない基準から計算したvalue",
+      "requirements": [
+        "TIME-03"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-017/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-017.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-017/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-004/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "value: \"2019-04-30\"\n            raw: 平成三十一年四月三十日\n            precision: day\n",
+              "new": "value: \"2019-04\"\n            raw: 平成三十一年四月\n            precision: month\n"
+            },
+            {
+              "file": "history.yaml",
+              "old": "value: \"2019-04-30\"\n        raw: 平成三十一年四月三十日\n        precision: day\n",
+              "new": "value: \"2019-04\"\n        raw: 平成三十一年四月\n        precision: month\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-018",
+      "title": "確定日の基準から計算したvalueの書き漏らし",
+      "requirements": [
+        "TIME-03"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-018/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-018.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-018/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-004/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "          value: \"2019-05-01\"\n",
+              "new": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-019",
+      "title": "Sourceのfixedに書く固定参照と外部の資料の固定（架空）",
+      "requirements": [
+        "FIXREF-01",
+        "TYPE-02"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/valid/hist-019/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-019.json",
+      "success": true
+    },
+    {
+      "id": "hist-020",
+      "title": "固定参照の短縮したcommit",
+      "requirements": [
+        "FIXREF-01",
+        "FIXREF-04"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-020/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-020.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-020/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-019/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "commit: f1162fe2cfefa04e9a0d656706e37977fb3d0731",
+              "new": "commit: f1162fe"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-021",
+      "title": "revisionのない固定参照",
+      "requirements": [
+        "FIXREF-01",
+        "FIXREF-03"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-021/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-021.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-021/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-019/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "      revision: b7k2m9qd\n",
+              "new": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-022",
+      "title": "LoJの中の資料を文字列で固定する",
+      "requirements": [
+        "FIXREF-01",
+        "TYPE-02"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-022/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-022.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-022/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-019/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "    fixed:\n      record: {id: 20990101-act-1, label: 架空法律第一号}\n      revision: b7k2m9qd\n      commit: f1162fe2cfefa04e9a0d656706e37977fb3d0731\n      node: 20990101-act-1/main/article/1/paragraph/1\n",
+              "new": "    fixed: loj:loj/20990101-act-1/b7k2m9qd@f1162fe2cfefa04e9a0d656706e37977fb3d0731\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-023",
+      "title": "既定と違う版パッケージのパス",
+      "requirements": [
+        "HIST-08"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-023/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-023.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-023/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "      glyphNotes: versions/zwgmz1rt/glyphs.yaml\n",
+              "new": "      package: versions/98mj5vgx/law.yaml\n      glyphNotes: versions/zwgmz1rt/glyphs.yaml\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-024",
+      "title": "撤回したRevisionを基礎状態とする有効なRevision",
+      "requirements": [
+        "HIST-04"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-024/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-024.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-024/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "      glyphNotes: versions/98mj5vgx/glyphs.yaml\n    status: active\n",
+              "new": "      glyphNotes: versions/98mj5vgx/glyphs.yaml\n    status: retracted\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-025",
+      "title": "撤回した関係を成立根拠とする有効なRevision",
+      "requirements": [
+        "HIST-05"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-025/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-025.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-025/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "    verification: {state: confirmed}\n    status: active\n",
+              "new": "    verification: {state: retracted, reason: 適合ケースのために撤回した}\n    status: retracted\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-026",
+      "title": "成立根拠を持つ起点",
+      "requirements": [
+        "HIST-05"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-026/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-026.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-026/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "    origin: enactment\n",
+              "new": "    origin: enactment\n    basis: [{enactment: {scope: {text: 全部}, evidence: [{source: src-kanpo-19480720, locator: 1コマ}]}}]\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-027",
+      "title": "施行時点より後の公布で遡及の根拠がない（架空）",
+      "requirements": [
+        "HIST-06",
+        "HIST-03"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/valid/hist-027/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-027.json",
+      "success": true,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/valid/hist-027/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-016/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "      value: \"2099-06-01\"\n      raw: 令和八十一年六月一日\n      precision: day\n      evidence: [{source: src-fictional, locator: 公布の日}]\n",
+              "new": "      value: \"2099-08-01\"\n      raw: 令和八十一年八月一日\n      precision: day\n      evidence: [{source: src-fictional, locator: 公布の日}]\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-028",
+      "title": "施行時点より後の公布で遡及の根拠がある（架空）",
+      "requirements": [
+        "HIST-06",
+        "HIST-03"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/valid/hist-028/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-028.json",
+      "success": true,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/valid/hist-028/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-016/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "      value: \"2099-06-01\"\n      raw: 令和八十一年六月一日\n      precision: day\n      evidence: [{source: src-fictional, locator: 公布の日}]\n",
+              "new": "      value: \"2099-08-01\"\n      raw: 令和八十一年八月一日\n      precision: day\n      evidence: [{source: src-fictional, locator: 公布の日}]\n"
+            },
+            {
+              "file": "history.yaml",
+              "old": "      - id: i1\n        scope: {text: 第一条}\n",
+              "new": "      - id: i1\n        scope: {text: 第一条}\n        retroactive:\n          raw: この法律は、令和八十一年七月一日から適用する\n          evidence: [{source: src-fictional, locator: 附則第二項}]\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-029",
+      "title": "版パッケージのL1が不合格のときのScopeのノード",
+      "requirements": [
+        "TYPE-07",
+        "TYPE-08",
+        "VAL-02",
+        "VAL-04",
+        "VAL-05"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-029/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-029.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-029/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "      - id: i1\n        scope: {text: 第二条成人の日の項の次に建国記念の日の項を加える}\n",
+              "new": "      - id: i1\n        scope:\n          text: 第二条成人の日の項の次に建国記念の日の項を加える\n          nodes: [19480720-law-178/main/article/2]\n"
+            },
+            {
+              "file": "versions/zwgmz1rt/main.md",
+              "old": "## 第三條",
+              "new": "## 三"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-030",
+      "title": "版に存在しないScopeのノード",
+      "requirements": [
+        "TYPE-07"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-030/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-030.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-030/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "      - id: i1\n        scope: {text: 第二条成人の日の項の次に建国記念の日の項を加える}\n",
+              "new": "      - id: i1\n        scope:\n          text: 第二条成人の日の項の次に建国記念の日の項を加える\n          nodes: [19480720-law-178/main/article/9]\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-031",
+      "title": "削った行のkeyを使わずに行を加える（架空）",
+      "requirements": [
+        "HIST-13",
+        "TABLE-02"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/valid/hist-031/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-031.json",
+      "success": true
+    },
+    {
+      "id": "hist-032",
+      "title": "削った行のkeyを後の版で再使用する（架空）",
+      "requirements": [
+        "HIST-13",
+        "TABLE-02"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-032/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-032.json",
       "success": false
+    },
+    {
+      "id": "hist-033",
+      "title": "本文が一部しかない版で行がなくても、削ったとみなさない（架空）",
+      "requirements": [
+        "HIST-13",
+        "HIST-08"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/valid/hist-033/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-033.json",
+      "success": true
+    },
+    {
+      "id": "hist-034",
+      "title": "撤回した関係を根拠とする効力の終了（架空）",
+      "requirements": [
+        "HIST-12"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-034/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-034.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-034/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-002/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "    verification: {state: unverified, reason: 官報と未照合}\n    status: active\n",
+              "new": "    verification: {state: unverified, reason: 適合ケースのための架空の撤回}\n    status: retracted\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-035",
+      "title": "内訳をすべて撤回した関係を根拠とする効力の終了（架空）",
+      "requirements": [
+        "HIST-12"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-035/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-035.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-035/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-002/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "\n        verification: {state: unverified, reason: 官報と未照合}\n",
+              "new": "\n        verification: {state: retracted, reason: 適合ケースのための架空の撤回}\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-036",
+      "title": "内訳の一部を撤回した関係を根拠とする効力の終了（架空）",
+      "requirements": [
+        "HIST-12",
+        "HIST-03"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/valid/hist-036/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-036.json",
+      "success": true,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/valid/hist-036/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-002/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "\n        verification: {state: unverified, reason: 官報と未照合}\ntermination:",
+              "new": "\n        verification: {state: unverified, reason: 官報と未照合}\n      - id: i2\n        scope: {text: 第一条}\n        effective:\n          state: date\n          value: \"1959-04-13\"\n          raw: 昭和三十四年四月十三日\n          precision: day\n          evidence: [{source: src-egov-s34-122, locator: 附則}]\n          verification: {state: unverified, reason: 官報と未照合}\n        evidence: [{source: src-egov-s34-122, locator: 第二条}]\n        verification: {state: retracted, reason: 適合ケースのための架空の撤回}\ntermination:"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-037",
+      "title": "登録空間を書いたRecordの参照と、版の外部識別子",
+      "requirements": [
+        "HIST-09",
+        "RID-04",
+        "TYPE-01",
+        "TYPE-03",
+        "TYPE-04"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/valid/hist-037/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-037.json",
+      "success": true,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/valid/hist-037/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "record: {id: 19480720-law-178, label:",
+              "new": "record: {id: 19480720-law-178, space: loj, label:"
+            },
+            {
+              "file": "history.yaml",
+              "old": "from: {id: 19660625-act-86, label:",
+              "new": "from: {id: 19660625-act-86, space: loj, label:"
+            },
+            {
+              "file": "history.yaml",
+              "old": "    status: active\ncoverage:",
+              "new": "    externalIds:\n      - issuer: egov\n        kind: revision\n        value: 323AC1000000178_19660625_341AC0000000086\n        evidence: [{source: src-egov, locator: 法令履歴}]\n        verification: {state: unverified, reason: 適合ケースのための形の例（e-Govと未照合）}\n    status: active\ncoverage:"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-038",
+      "title": "リポジトリの所在で指すRecord",
+      "requirements": [
+        "TYPE-01"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-038/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-038.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-038/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "from: {id: 19660625-act-86, label:",
+              "new": "from: {id: https://github.com/law-of-japan/19660625-act-86, label:"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-039",
+      "title": "ファイルの中で重複するSourceのid",
+      "requirements": [
+        "HIST-02"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-039/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-039.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-039/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "relations:\n",
+              "new": "  - id: src-goshomei\n    kind: other\n    title: 同じidの別の資料（適合ケース）\nrelations:\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-040",
+      "title": "同じファイルにないSourceを指すEvidence",
+      "requirements": [
+        "TYPE-03"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-040/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-040.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-040/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "{source: src-kanpo-19480720, locator: 附則第一項}",
+              "new": "{source: src-kanpo-19480721, locator: 附則第一項}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-041",
+      "title": "Verificationの未知の状態",
+      "requirements": [
+        "TYPE-04"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-041/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-041.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-041/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "    verification: {state: confirmed}\n    status: active\n    items:",
+              "new": "    verification: {state: checked}\n    status: active\n    items:"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-042",
+      "title": "原文のないScope",
+      "requirements": [
+        "TYPE-06"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-042/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-042.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-042/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "scope: {text: 第二条秋分の日の項の次に体育の日の項を加える}",
+              "new": "scope: {nodes: [19480720-law-178/main/article/2]}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-043",
+      "title": "精度と書式が合わない日付",
+      "requirements": [
+        "TIME-02"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-043/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-043.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-043/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "      raw: 昭和四十一年六月二十五日\n      precision: day\n",
+              "new": "      raw: 昭和四十一年六月二十五日\n      precision: month\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-044",
+      "title": "確定日でない基準から計算したvalue（pendingの基準）",
+      "requirements": [
+        "TIME-03"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-044/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-044.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-044/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "      base:\n        state: date\n        value: \"1948-07-20\"\n        raw: 昭和二十三年七月二十日\n        precision: day\n        evidence: [{source: src-kanpo-19480720, locator: 1コマ 発行日}]\n        verification: {state: confirmed}\n",
+              "new": "      base:\n        state: pending\n        raw: 別に政令で定める日\n        delegation: {raw: 別に政令で定める日, evidence: [{source: src-kanpo-19480720, locator: 附則第一項}]}\n        evidence: [{source: src-kanpo-19480720, locator: 附則第一項}]\n        verification: {state: unverified, reason: 適合ケースのための架空の変更}\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-045",
+      "title": "日の書式でないderivedのvalue",
+      "requirements": [
+        "TIME-03"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-045/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-045.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-045/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "      value: \"1948-07-20\"\n      raw: 公布の日からこれを施行する\n",
+              "new": "      value: \"1948-07\"\n      raw: 公布の日からこれを施行する\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-046",
+      "title": "版を対象としない外部識別子",
+      "requirements": [
+        "HIST-01",
+        "HIST-09"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-046/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-046.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-046/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "    status: active\ncoverage:",
+              "new": "    externalIds:\n      - issuer: egov\n        kind: record\n        value: 323AC1000000178_19660625_341AC0000000086\n        evidence: [{source: src-egov, locator: 法令履歴}]\n        verification: {state: unverified, reason: 適合ケースのための形の例（e-Govと未照合）}\n    status: active\ncoverage:"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-047",
+      "title": "自身のrevision_idのパスでない字体注記",
+      "requirements": [
+        "HIST-08"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-047/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-047.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-047/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "      glyphNotes: versions/zwgmz1rt/glyphs.yaml\n",
+              "new": "      glyphNotes: versions/98mj5vgx/glyphs.yaml\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-048",
+      "title": "本文のない版のディレクトリ",
+      "requirements": [
+        "HIST-08"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-048/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-048.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-048/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "    text:\n      status: complete\n      sources:\n        - {source: src-goshomei-s41-86, locator: 2画像 本則（改正の内容）}\n      glyphCheck: unverified\n      glyphNotes: versions/zwgmz1rt/glyphs.yaml\n      correctionsSurveyed: {state: unsurveyed, reason: 官報（昭和41年6月25日）を入手していない（REB-05）}\n",
+              "new": "    text:\n      status: absent\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-049",
+      "title": "同じ関係・同じ施行時点の二つの有効な版",
+      "requirements": [
+        "HIST-05"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-049/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-049.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-049/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "coverage:\n",
+              "new": "  - id: k3d8w2xn\n    label: 同じ関係と施行時点の二つ目の版（適合ケース）\n    basedOn: zwgmz1rt\n    basis: [{relation: rel-s41-86, items: [i1]}]\n    effective:\n      state: derived\n      rule: 公布の日から\n      base: {state: date, value: \"1966-06-25\", raw: 昭和四十一年六月二十五日, precision: day,\n             evidence: [{source: src-goshomei-s41-86, locator: \"1画像 公布文の日付\"}],\n             verification: {state: unverified, reason: 官報の発行日と未照合（REB-05）}}\n      value: \"1966-06-25\"\n      raw: この法律は、公布の日から施行する\n      evidence: [{source: src-goshomei-s41-86, locator: 附則第一項}]\n      verification: {state: confirmed}\n    applicability: {state: unsurveyed}\n    text:\n      status: absent\n    status: active\ncoverage:\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-050",
+      "title": "統合したRevisionを基礎状態とする有効なRevision",
+      "requirements": [
+        "HIST-04"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-050/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-050.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-050/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "      glyphNotes: versions/98mj5vgx/glyphs.yaml\n    status: active\n",
+              "new": "      glyphNotes: versions/98mj5vgx/glyphs.yaml\n    status: merged\n    replacedBy:\n      revisions: [zwgmz1rt]\n      evidence: [{source: src-goshomei-s41-86, locator: 本則}]\n      verification: {state: unverified, reason: 適合ケースのための架空の統合}\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-051",
+      "title": "撤回した内訳だけを参照する成立根拠",
+      "requirements": [
+        "HIST-05"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-051/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-051.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-051/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "        evidence: [{source: src-goshomei-s41-86, locator: 本則}]\n        verification: {state: confirmed}\n",
+              "new": "        evidence: [{source: src-goshomei-s41-86, locator: 本則}]\n        verification: {state: retracted, reason: 適合ケースのための架空の撤回}\n"
+            },
+            {
+              "file": "history.yaml",
+              "old": "        evidence: [{source: src-goshomei-s41-86, locator: 本則}]\n        verification: {state: confirmed}\n",
+              "new": "        evidence: [{source: src-goshomei-s41-86, locator: 本則}]\n        verification: {state: retracted, reason: 適合ケースのための架空の撤回}\n"
+            },
+            {
+              "file": "history.yaml",
+              "old": "        evidence: [{source: src-goshomei-s41-86, locator: 本則}]\n        verification: {state: confirmed}\n",
+              "new": "        evidence: [{source: src-goshomei-s41-86, locator: 本則}]\n        verification: {state: retracted, reason: 適合ケースのための架空の撤回}\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-052",
+      "title": "効力の終了の時点より後に施行される版（撤回した内訳の時点より前。警告）（架空）",
+      "requirements": [
+        "HIST-12",
+        "HIST-03",
+        "CONF-01"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/valid/hist-052/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-052.json",
+      "success": true,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/valid/hist-052/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-036/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "value: \"1960-04-01\"\n          raw: 昭和三十五年四月一日",
+              "new": "@LATE@"
+            },
+            {
+              "file": "history.yaml",
+              "old": "value: \"1959-04-13\"\n          raw: 昭和三十四年四月十三日",
+              "new": "value: \"1960-04-01\"\n          raw: 昭和三十五年四月一日"
+            },
+            {
+              "file": "history.yaml",
+              "old": "@LATE@",
+              "new": "value: \"1959-04-13\"\n          raw: 昭和三十四年四月十三日"
+            },
+            {
+              "file": "history.yaml",
+              "old": "    effective: {state: unknown, reason: 未調査}\n",
+              "new": "    effective:\n      state: date\n      value: \"1959-10-01\"\n      raw: 昭和三十四年十月一日\n      precision: day\n      evidence: [{source: src-egov-s34-122, locator: 附則}]\n      verification: {state: unverified, reason: 官報と未照合}\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-053",
+      "title": "撤回していない内訳が二つある廃止の関係（架空）",
+      "requirements": [
+        "HIST-03",
+        "HIST-12"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-053/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-053.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-053/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-036/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "verification: {state: retracted, reason: 適合ケースのための架空の撤回}",
+              "new": "verification: {state: unverified, reason: 官報と未照合}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-054",
+      "title": "本文のない版のディレクトリに残った字体注記を検査にかけない",
+      "requirements": [
+        "HIST-08",
+        "GLYPH-01"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/valid/hist-054/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-054.json",
+      "success": true,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/valid/hist-054/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "    text:\n      status: complete\n      sources:\n        - {source: src-goshomei-s41-86, locator: 2画像 本則（改正の内容）}\n      glyphCheck: unverified\n      glyphNotes: versions/zwgmz1rt/glyphs.yaml\n      correctionsSurveyed: {state: unsurveyed, reason: 官報（昭和41年6月25日）を入手していない（REB-05）}\n",
+              "new": "    text:\n      status: absent\n"
+            },
+            {
+              "file": "versions/zwgmz1rt/glyphs.yaml",
+              "old": "revision: zwgmz1rt",
+              "new": "revision: 98mj5vgx"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-055",
+      "title": "別の版の字体注記を指すglyphNotesで、指す先を自身の字体注記として読まない",
+      "requirements": [
+        "HIST-08",
+        "GLYPH-01"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/valid/hist-055/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-055.json",
+      "success": true,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/valid/hist-055/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "      glyphNotes: versions/zwgmz1rt/glyphs.yaml\n",
+              "new": "      glyphNotes: versions/98mj5vgx/glyphs.yaml\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-056",
+      "title": "適用の条件を調べていない版の条件",
+      "requirements": [
+        "HIST-07"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-056/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-056.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-056/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "    applicability: {state: unsurveyed}\n",
+              "new": "    applicability:\n      state: unsurveyed\n      conditions:\n        - scope: {text: 全部}\n          text: 架空の適用の条件\n          evidence: [{source: src-kanpo-19480720, locator: 附則第一項}]\n          verification: {state: unverified, reason: 適合ケースのための架空の変更}\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-057",
+      "title": "制定の起点が持つ全部改正の参照",
+      "requirements": [
+        "HIST-04"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-057/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-057.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-057/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "    origin: enactment\n",
+              "new": "    origin: enactment\n    totallyRevises: {record: {id: 20990101-law-5, label: 架空の旧法}, relation: rel-total}\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-058",
+      "title": "有効な版の統合先",
+      "requirements": [
+        "HIST-10"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-058/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-058.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-058/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "      glyphNotes: versions/98mj5vgx/glyphs.yaml\n    status: active\n",
+              "new": "      glyphNotes: versions/98mj5vgx/glyphs.yaml\n    status: active\n    replacedBy:\n      revisions: [zwgmz1rt]\n      evidence: [{source: src-kanpo-19480720, locator: 1コマ}]\n      verification: {state: unverified, reason: 適合ケースのための架空の変更}\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-059",
+      "title": "廃止の項目に写した根拠と確認状態",
+      "requirements": [
+        "HIST-12"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-059/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-059.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-059/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-002/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "  - {type: repealed, relation: rel-repeal}",
+              "new": "  - {type: repealed, relation: rel-repeal, evidence: [{source: src-egov-s34-122, locator: 第二条}], verification: {state: unverified, reason: 官報と未照合}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-060",
+      "title": "自身の規定による失効が持つ関係",
+      "requirements": [
+        "HIST-12"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-060/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-060.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-060/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-003/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "  - type: expired\n",
+              "new": "  - type: expired\n    relation: rel-repeal\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-061",
+      "title": "確定していない時点の確定の根拠",
+      "requirements": [
+        "TIME-01"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-061/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-061.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-061/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-003/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "      delegation: {raw: この法律の施行の日以前に皇室典範第四条の規定による皇位の継承があったとき, evidence: [{source: src-egov-h29-63, locator: 附則第二条}]}\n",
+              "new": "      delegation: {raw: この法律の施行の日以前に皇室典範第四条の規定による皇位の継承があったとき, evidence: [{source: src-egov-h29-63, locator: 附則第二条}]}\n      determinedBy: {record: {id: unregistered, label: 平成二十九年政令第三百二号}, evidence: [{source: src-egov-h29-302, locator: 本則}]}\n"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -4,10 +4,12 @@ use crate::common::findings::Findings;
 use crate::common::{load_yaml, Check, Class, Loaded, Report, COMMON};
 use crate::git::{Bundle, ExportError, GitError};
 use serde_json::{json, Map, Value};
+use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use std::path::Path;
 
 const CH: Check = Check::CHANGE;
+mod policy;
 const KINDS: &[&str] = &[
     "format",
     "correction",
@@ -20,6 +22,7 @@ const KINDS: &[&str] = &[
 ];
 
 /// The state of a record version at one commit.
+#[derive(Default)]
 pub(crate) struct Snapshot {
     pub history: Option<Value>,
     pub history_bytes: Option<Vec<u8>>,
@@ -27,10 +30,42 @@ pub(crate) struct Snapshot {
     pub asts: BTreeMap<String, Result<Value, String>>,
     /// revision_id -> package path.
     pub packages: BTreeMap<String, String>,
+    pub files: BTreeMap<String, [u8; 32]>,
+    pub documents: BTreeMap<String, Value>,
 }
 
 pub(crate) fn snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError> {
     let dir = b.export(commit)?;
+    let mut files = BTreeMap::new();
+    let mut documents = BTreeMap::new();
+    let mut pending = vec![dir.clone()];
+    while let Some(directory) = pending.pop() {
+        for entry in std::fs::read_dir(directory)
+            .map_err(|e| ExportError::Environment(GitError::Io(e.to_string())))?
+        {
+            let entry = entry.map_err(|e| ExportError::Environment(GitError::Io(e.to_string())))?;
+            let path = entry.path();
+            if path.is_dir() {
+                pending.push(path);
+            } else {
+                let bytes = std::fs::read(&path)
+                    .map_err(|e| ExportError::Environment(GitError::Io(e.to_string())))?;
+                let relative = path
+                    .strip_prefix(&dir)
+                    .expect("exported tree entry is inside its root")
+                    .to_string_lossy()
+                    .replace('\\', "/");
+                if relative.ends_with(".yaml") {
+                    if let Ok(text) = std::str::from_utf8(&bytes) {
+                        if let Ok(value) = crate::common::yaml::parse(text) {
+                            documents.insert(relative.clone(), value);
+                        }
+                    }
+                }
+                files.insert(relative, Sha256::digest(&bytes).into());
+            }
+        }
+    }
     // The export holds every blob byte for byte, so the raw manifest is read from
     // it rather than from git again. No file of that name (absent, or a directory
     // in the tree) is no manifest, a finding about the data; failing to look at or
@@ -48,7 +83,12 @@ pub(crate) fn snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError
         Err(e) => return Err(unreadable(e)),
     };
     let history = match load_yaml(&dir.join("history.yaml")) {
-        Loaded::Ok(v, _) => Some(v),
+        Loaded::Ok(v, _) if v["schemaVersion"] == crate::repository::HISTORY => Some(v),
+        _ if history_bytes.is_some() => {
+            return Err(ExportError::Tree(
+                "history manifest is unreadable or has an unsupported schemaVersion".into(),
+            ))
+        }
         _ => None,
     };
     let mut asts = BTreeMap::new();
@@ -63,11 +103,16 @@ pub(crate) fn snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError
         if !matches!(r["text"]["status"].as_str(), Some("complete" | "partial")) {
             continue;
         }
+        if !crate::repository::history::valid_revision_id(id) {
+            return Err(ExportError::Tree(
+                "invalid Revision ID cannot select a package".into(),
+            ));
+        }
         let path = crate::repository::history::package_path(r);
         let pkg = crate::v1alpha2::check(&dir.join(&path), &[Check::L0, Check::L1]);
         let ast = match pkg.ast {
+            _ if r["text"]["status"] == "partial" => Err("partial text".into()),
             Some(a) => Ok(a),
-            None if r["text"]["status"] == "partial" => Err("partial text".into()),
             None => Err("the package does not pass L1".into()),
         };
         asts.insert(id.to_owned(), ast);
@@ -78,29 +123,69 @@ pub(crate) fn snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError
         history_bytes,
         asts,
         packages,
+        files,
+        documents,
     })
 }
 
-/// `LoJ-Change` and `LoJ-Revisions` trailers of the last paragraph.
-fn trailers(message: &str) -> (Vec<String>, Option<Vec<String>>) {
-    let last = message
-        .trim_end()
-        .rsplit("\n\n")
-        .next()
-        .unwrap_or("")
-        .to_owned();
-    let mut kinds = Vec::new();
-    let mut revisions = None;
-    for line in last.lines() {
-        if let Some(v) = line.strip_prefix("LoJ-Change:") {
-            kinds.push(v.trim().to_owned());
-        } else if let Some(v) = line.strip_prefix("LoJ-Revisions:") {
-            revisions = Some(v.trim().split(", ").map(str::to_owned).collect());
+/// CHG-03: only a wholly valid final paragraph, excluding the first one.
+fn trailer_fields(message: &str) -> Vec<(&str, &str)> {
+    let mut paragraphs: Vec<Vec<&str>> = Vec::new();
+    let mut current = Vec::new();
+    for line in message
+        .split('\n')
+        .map(|line| line.strip_suffix('\r').unwrap_or(line))
+    {
+        if line.trim_matches([' ', '\t']).is_empty() {
+            if !current.is_empty() {
+                paragraphs.push(std::mem::take(&mut current));
+            }
+        } else {
+            current.push(line);
         }
     }
-    (kinds, revisions)
+    if !current.is_empty() {
+        paragraphs.push(current);
+    }
+    if paragraphs.len() < 2 {
+        return Vec::new();
+    }
+    let mut fields = Vec::new();
+    for line in paragraphs.last().into_iter().flatten() {
+        let Some((name, value)) = line.split_once(':') else {
+            return Vec::new();
+        };
+        if name.is_empty() || !name.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-') {
+            return Vec::new();
+        }
+        fields.push((name, value.trim_matches([' ', '\t'])));
+    }
+    fields
 }
 
+fn trailers(message: &str) -> (Vec<String>, Option<Vec<String>>) {
+    let fields = trailer_fields(message);
+    let kinds = fields
+        .iter()
+        .filter(|(name, _)| *name == "LoJ-Change")
+        .map(|(_, value)| (*value).into())
+        .collect();
+    let revisions: Vec<String> = fields
+        .iter()
+        .filter(|(name, _)| *name == "LoJ-Revisions")
+        .flat_map(|(_, value)| value.split(", ").map(str::to_owned))
+        .collect();
+    (kinds, (!revisions.is_empty()).then_some(revisions))
+}
+
+fn reviewed(message: &str) -> bool {
+    let fields = trailer_fields(message);
+    let values: Vec<_> = fields
+        .iter()
+        .filter(|(name, _)| *name == "LoJ-Reviewed")
+        .collect();
+    matches!(values.as_slice(), [(_, value)] if !value.is_empty())
+}
 /// End the check as incomplete (VAL-04), with `why` as the reason. The note
 /// carries CHG-02, the rule of the change check as a whole, whichever step (commit
 /// resolution, range, message) could not be completed: the spec gives no rule of
@@ -164,8 +249,19 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
     // A refused tree is cached as `None`, so it is exported and noted only once
     // even when the commit is both a parent and a child in the range.
     let mut cache: BTreeMap<String, Option<Snapshot>> = BTreeMap::new();
-    for (commit, parent) in commits {
+    for (commit, parents) in commits {
         let at = format!("commit {commit}");
+        if parents.len() > 1 {
+            f.error(
+                CH,
+                "CHG-03",
+                COMMON,
+                "merge commits are not permitted",
+                &at,
+                "",
+            );
+            continue;
+        }
         let message = match b.message(&commit) {
             Ok(Some(m)) => m,
             Ok(None) => {
@@ -186,26 +282,32 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
         let Some((kind, declared)) = declared_change(&commit, &at, &message, &mut f) else {
             continue;
         };
-        let Some(parent) = parent else {
-            f.note(
+        let parent = parents.first();
+        if parent.is_none() && kind != "revisionAdd" {
+            f.error(
                 CH,
-                Class::Undetermined,
-                "CHG-02",
+                "CHG-03",
                 COMMON,
-                format!("{commit} has no parent to compare"),
+                "first law commit must declare revisionAdd",
                 &at,
                 "",
             );
-            f.incomplete.insert(CH);
             continue;
-        };
-        for c in [&parent, &commit] {
+        }
+        for c in parent.into_iter().chain(std::iter::once(&commit)) {
             if let Err(why) = load_snapshot(b, c, &at, &mut cache, &mut f) {
                 return undetermined(f, report.target, why);
             }
         }
-        let (Some(Some(before)), Some(Some(after))) = (cache.get(&parent), cache.get(&commit))
-        else {
+        let empty = Snapshot::default();
+        let before = match parent {
+            Some(parent) => match cache.get(parent) {
+                Some(Some(snapshot)) => snapshot,
+                _ => continue,
+            },
+            None => &empty,
+        };
+        let Some(Some(after)) = cache.get(&commit) else {
             continue;
         };
         let change = Change {
@@ -213,6 +315,7 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
             at: &at,
             kind: &kind,
             declared: &declared,
+            reviewed: reviewed(&message),
         };
         change.compare(before, after, &mut f);
     }
@@ -287,6 +390,7 @@ struct Change<'a> {
     kind: &'a str,
     /// `LoJ-Revisions`.
     declared: &'a [String],
+    reviewed: bool,
 }
 
 impl Change<'_> {
@@ -297,31 +401,16 @@ impl Change<'_> {
     /// CHG-02 / CHG-03 / CHG-04: compare the states before and after the commit.
     fn compare(&self, before: &Snapshot, after: &Snapshot, f: &mut Findings) {
         let (commit, kind) = (self.commit, self.kind);
-        if matches!(
-            kind,
-            "correction" | "officialCorrection" | "restoration" | "revisionFix"
-        ) && self.declared.is_empty()
-        {
+        if kind == "migration" {
             self.error(
                 f,
-                "CHG-03",
-                format!("{commit}: {kind} must declare LoJ-Revisions"),
-            );
-        }
-        if kind == "migration" {
-            f.incomplete.insert(CH);
-            f.note(
-                CH,
-                Class::Undetermined,
                 "CHG-02",
-                COMMON,
-                "migration needs the normative AST mapping of the new version",
-                self.at,
-                "",
+                "this specification provides no normative AST migration mapping".into(),
             );
             return;
         }
         self.kept_asts(before, after, f);
+        policy::check(self, before, after, f);
         match kind {
             "format" if before.history_bytes != after.history_bytes => self.error(
                 f,
@@ -333,12 +422,17 @@ impl Change<'_> {
                 "CHG-02",
                 format!("{commit}: metadata changes the version packages"),
             ),
-            "revisionAdd" if after.asts.keys().all(|k| before.asts.contains_key(k)) => self.error(
-                f,
-                "CHG-02",
-                format!("{commit}: revisionAdd adds no version"),
-            ),
-            "revisionFix" => self.reused_ids(before, after, f),
+            "revisionAdd"
+                if policy::revision_ids(after)
+                    .iter()
+                    .all(|k| policy::revision_ids(before).contains(k)) =>
+            {
+                self.error(
+                    f,
+                    "CHG-02",
+                    format!("{commit}: revisionAdd adds no version"),
+                )
+            }
             _ => {}
         }
     }
@@ -379,6 +473,15 @@ impl Change<'_> {
                     }
                 }
                 (Err(e), _) | (_, Some(Err(e))) => {
+                    let prefix = format!("versions/{id}/");
+                    let changed = before.files.keys().chain(after.files.keys()).any(|path| {
+                        path.starts_with(&prefix)
+                            && !path.ends_with("/glyphs.yaml")
+                            && before.files.get(path) != after.files.get(path)
+                    });
+                    if kind == "format" && changed && !self.reviewed {
+                        self.error(f, "CHG-04", format!("{commit}: format changes uncomparable revision {id} without a review record"));
+                    }
                     f.incomplete.insert(CH);
                     f.note(
                         CH,
@@ -393,30 +496,6 @@ impl Change<'_> {
             }
         }
     }
-
-    /// CHG-02 (revisionFix): retracted, merged or split IDs are not reused.
-    fn reused_ids(&self, before: &Snapshot, after: &Snapshot, f: &mut Findings) {
-        let status = |s: &Snapshot, id: &str| {
-            s.history.as_ref().and_then(|h| {
-                h["revisions"]
-                    .as_array()?
-                    .iter()
-                    .find(|r| r["id"] == id)
-                    .map(|r| r["status"].clone())
-            })
-        };
-        for id in before.asts.keys() {
-            if status(before, id).is_some_and(|s| s != "active")
-                && status(after, id).is_some_and(|s| s == "active")
-            {
-                self.error(
-                    f,
-                    "CHG-02",
-                    format!("{}: revision ID {id} is reused", self.commit),
-                );
-            }
-        }
-    }
 }
 
 #[cfg(test)]
@@ -427,6 +506,40 @@ mod tests {
 
     fn result(r: &Report) -> ResultValue {
         r.results.iter().find(|(c, _)| *c == CH).unwrap().1
+    }
+
+    #[test]
+    fn trailer_grammar_is_independent_of_git_and_unicode_whitespace() {
+        for text in [
+            "Title\r\n \t\r\nLoJ-Change:\tformat \t\r\n\r\n",
+            "Title\n\nLoJ-Change:format",
+        ] {
+            assert_eq!(trailers(text).0, ["format"]);
+        }
+        for text in [
+            "LoJ-Change: format",
+            "Title\n\nLoJ-Change : format",
+            "Title\n\nLoJ-Change: format\nnot-a-trailer",
+            "Title\n\nLoJ-Change: format\n\nBody",
+            "Title\r\rLoJ-Change: format",
+            "Title\n　\nLoJ-Change: format",
+            "Title\n\nloj-change: format",
+        ] {
+            assert!(trailers(text).0.is_empty(), "{text:?}");
+        }
+        assert_eq!(
+            trailers("Title\n\nLoJ-Change:　format\u{a0}").0,
+            ["　format\u{a0}"]
+        );
+        assert!(reviewed("Title\n\nLoJ-Reviewed: person"));
+        assert!(reviewed("Title\n\nLoJ-Reviewed:　"));
+        for text in [
+            "Title\n\nLoJ-Reviewed:",
+            "Title\n\nLoJ-Reviewed: \t",
+            "Title\n\nLoJ-Reviewed: a\nLoJ-Reviewed: b",
+        ] {
+            assert!(!reviewed(text));
+        }
     }
 
     #[test]
@@ -481,6 +594,7 @@ mod tests {
             at: "commit c1",
             kind,
             declared: &declared,
+            reviewed: false,
         };
         // These kinds never change an AST, whatever they declare.
         for kind in ["format", "metadata", "revisionAdd"] {

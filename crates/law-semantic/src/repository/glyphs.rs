@@ -81,7 +81,22 @@ impl Texts {
 }
 
 fn compat(c: char) -> bool {
-    matches!(c as u32, 0xF900..=0xFAFF | 0x2F800..=0x2FA1F)
+    matches!(c as u32, 0xF900..=0xFA6D | 0xFA70..=0xFAD9 | 0x2F800..=0x2FA1D)
+        && !matches!(
+            c as u32,
+            0xFA0E
+                | 0xFA0F
+                | 0xFA11
+                | 0xFA13
+                | 0xFA14
+                | 0xFA1F
+                | 0xFA21
+                | 0xFA23
+                | 0xFA24
+                | 0xFA27
+                | 0xFA28
+                | 0xFA29
+        )
 }
 fn selector(c: char) -> bool {
     matches!(c as u32, 0xFE00..=0xFE0F | 0xE0100..=0xE01EF)
@@ -101,6 +116,19 @@ pub(crate) fn check(
     f: &mut Findings,
 ) {
     f.applicable.insert(EV);
+    // No glyph-note judgment is possible without the L1 node model.
+    let Some(ast) = ast else {
+        f.note(
+            EV,
+            crate::common::Class::Undetermined,
+            "GLYPH-11",
+            GLYPHS,
+            "glyph notes cannot be checked without an L1-valid package",
+            "history.yaml",
+            "/revisions",
+        );
+        return;
+    };
     let file = notes.unwrap_or("");
     let doc = notes.and_then(|n| load(repo, n, f));
     let entries = doc.as_ref().map_or(&[][..], |d| list(&d["notes"]));
@@ -108,10 +136,6 @@ pub(crate) fn check(
         document(d, entries, revision, file, sources, f);
     }
     // GLYPH-11 / VAL-02: notes address L1 node IDs; without a valid AST they are not judged.
-    let Some(ast) = ast else {
-        f.incomplete.insert(EV);
-        return;
-    };
     let texts = Texts::from_ast(ast);
     let covered = located(entries, &texts, file, f);
     unnoted(&texts, &covered, file, f);
@@ -131,13 +155,14 @@ fn load(repo: &Path, n: &str, f: &mut Findings) -> Option<Value> {
         }
         Loaded::Ok(v, _) => {
             if v["schemaVersion"] != GLYPHS {
-                f.error(
+                f.unprocessable(
                     EV,
-                    "GLYPH-01",
-                    GLYPHS,
-                    "unsupported schemaVersion",
-                    n,
-                    "/schemaVersion",
+                    crate::common::Diagnostic::error(
+                        "GLYPH-01",
+                        GLYPHS,
+                        "unsupported schemaVersion",
+                    )
+                    .at_pointer(n, "/schemaVersion"),
                 );
                 f.incomplete.insert(EV);
                 None
@@ -342,11 +367,26 @@ mod tests {
     use super::*;
     use serde_json::json;
 
+    #[test]
+    fn unicode_151_compatibility_boundaries() {
+        for code in [
+            0xfa0e, 0xfa0f, 0xfa11, 0xfa13, 0xfa14, 0xfa1f, 0xfa21, 0xfa23, 0xfa24, 0xfa27, 0xfa28,
+            0xfa29, 0xfa6e, 0xfa6f, 0xfada, 0xfaff, 0x2fa1e, 0x2fa1f,
+        ] {
+            assert!(!compat(char::from_u32(code).unwrap()), "{code:X}");
+        }
+        for code in [
+            0xf900, 0xfa0d, 0xfa10, 0xfa19, 0xfa6d, 0xfa70, 0xfad9, 0x2f800, 0x2fa1d,
+        ] {
+            assert!(compat(char::from_u32(code).unwrap()), "{code:X}");
+        }
+    }
+
     fn texts() -> Texts {
         Texts::from_ast(&json!({"root": {
             "kind": "Law", "id": "law", "display": "試験法",
             "content": [{"kind": "Paragraph", "id": "law/p", "display": "",
-                "content": [{"text": "〓と亞\u{fa11}の字"}]}],
+                "content": [{"text": "〓と亞\u{fa19}の字"}]}],
         }}))
     }
 
@@ -364,7 +404,7 @@ mod tests {
     fn notes_are_located_by_code_point_offset() {
         let notes = json!([
             {"node": "law/p", "offset": 0, "recorded": "〓"},
-            {"node": "law/p", "offset": 3, "recorded": "\u{fa11}"},
+            {"node": "law/p", "offset": 3, "recorded": "\u{fa19}"},
             {"node": "law", "field": "display", "offset": 0, "recorded": "試験"},
             // Wrong text, past the end, and an unknown node.
             {"node": "law/p", "offset": 1, "recorded": "亞"},
@@ -427,7 +467,7 @@ mod tests {
         let messages: Vec<_> = f.items.iter().map(|(_, d)| d.message.as_str()).collect();
         assert_eq!(
             messages,
-            ["U+FA11 at text offset 3 of law/p has no glyph note"]
+            ["U+FA19 at text offset 3 of law/p has no glyph note"]
         );
         assert_eq!(f.items[0].1.rule, "GLYPH-11");
     }
