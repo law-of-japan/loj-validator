@@ -155,7 +155,8 @@ const MAX_BUNDLE: u64 = 1024 * 1024 * 1024;
 const MAX_TOTAL: u64 = 128 * 1024 * 1024;
 const MAX_ENTRIES: usize = 100_000;
 
-/// The most output kept from one git command (a blob is at most MAX_FILE).
+/// The most output kept from one git command. Batch exports need MAX_TOTAL plus
+/// at most MAX_ENTRIES headers (under 100 bytes each), below this cap.
 const MAX_OUTPUT: u64 = 2 * MAX_TOTAL;
 
 /// The longest one git command may run before it is killed.
@@ -233,6 +234,7 @@ fn run_with_input(
     let written = writer
         .join()
         .map_err(|_| GitError::Io("git input thread panicked".into()))?;
+    // A failed git may close stdin early; preserve its failure rather than EPIPE.
     if status.success() {
         written.map_err(|e| GitError::Io(e.to_string()))?;
     }
@@ -610,44 +612,55 @@ impl Bundle {
             return Err(Environment(GitError::Failed(failure(&status, &stderr))));
         }
         remaining()?;
-        let mut batch = bytes.as_slice();
+        let blobs = batch_blobs(&bytes, &entries).map_err(Environment)?;
+        remaining()?;
         let out = temp("loj-tree").map_err(Environment)?;
         // Registered before writing, so a failure part-way still removes the tree.
         self.exports.borrow_mut().push(out.clone());
-        for (name, oid, size) in entries {
+        for ((name, _, _), blob) in entries.iter().zip(blobs) {
             remaining()?;
-            let invalid_blob = |reason| {
-                Environment(GitError::Blob {
-                    path: name.clone(),
-                    source: Box::new(GitError::Unexpected(reason)),
-                })
-            };
-            let end = batch
-                .iter()
-                .position(|b| *b == b'\n')
-                .ok_or_else(|| invalid_blob("missing batch header"))?;
-            if batch[..end] != *format!("{oid} blob {size}").as_bytes() {
-                return Err(invalid_blob("unexpected batch header"));
-            }
-            batch = &batch[end + 1..];
-            let size = usize::try_from(size).map_err(|_| Environment(GitError::OutputLimit))?;
-            if batch.get(size) != Some(&b'\n') {
-                return Err(invalid_blob("truncated batch blob"));
-            }
-            let (blob, rest) = batch.split_at(size);
-            batch = &rest[1..];
-            let path = out.join(&name);
+            let path = out.join(name);
             if let Some(p) = path.parent() {
                 std::fs::create_dir_all(p).map_err(|e| Environment(GitError::Io(e.to_string())))?;
             }
             std::fs::write(&path, blob).map_err(|e| Environment(GitError::Io(e.to_string())))?;
         }
         remaining()?;
-        if !batch.is_empty() {
-            return Err(Environment(GitError::Unexpected("trailing batch output")));
-        }
         Ok(out)
     }
+}
+
+/// Match every response to the ID and size checked by ls-tree before writing.
+fn batch_blobs<'a>(
+    mut batch: &'a [u8],
+    entries: &[(String, String, u64)],
+) -> Result<Vec<&'a [u8]>, GitError> {
+    let mut blobs = Vec::with_capacity(entries.len());
+    for (name, oid, size) in entries {
+        let invalid = |reason| GitError::Blob {
+            path: name.clone(),
+            source: Box::new(GitError::Unexpected(reason)),
+        };
+        let end = batch
+            .iter()
+            .position(|b| *b == b'\n')
+            .ok_or_else(|| invalid("missing batch header"))?;
+        if batch[..end] != *format!("{oid} blob {size}").as_bytes() {
+            return Err(invalid("unexpected batch header"));
+        }
+        batch = &batch[end + 1..];
+        let size = usize::try_from(*size).map_err(|_| GitError::OutputLimit)?;
+        if batch.get(size) != Some(&b'\n') {
+            return Err(invalid("truncated batch blob"));
+        }
+        let (blob, rest) = batch.split_at(size);
+        blobs.push(blob);
+        batch = &rest[1..];
+    }
+    if !batch.is_empty() {
+        return Err(GitError::Unexpected("trailing batch output"));
+    }
+    Ok(blobs)
 }
 
 /// Why a tree could not be exported.
@@ -879,6 +892,42 @@ pub(crate) mod tests {
         assert_eq!(std::fs::read(out.join("history.yaml")).unwrap(), b"x\n");
         drop(b);
         assert!(!out.exists(), "the export is removed with the bundle");
+    }
+
+    #[test]
+    fn batch_responses_must_match_the_checked_tree() {
+        let entries = vec![("a".into(), "abcd".into(), 2)];
+        assert_eq!(
+            batch_blobs(b"abcd blob 2\nx\n\n", &entries).unwrap(),
+            vec![b"x\n"]
+        );
+        for bad in [
+            b"abcd blob 2".as_slice(),
+            b"eeee blob 2\nx\n\n",
+            b"abcd tree 2\nx\n\n",
+            b"abcd blob 3\nx\n\n",
+            b"abcd missing\n",
+            b"abcd blob 2\nx\n",
+            b"abcd blob 2\nx\nx",
+            b"abcd blob 2\nx\n\ntrailing",
+        ] {
+            assert!(batch_blobs(bad, &entries).is_err(), "{bad:?}");
+        }
+        assert!(batch_blobs(b"", &[]).unwrap().is_empty());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn deadline_also_bounds_pipes_after_child_exit() {
+        let mut cmd = Command::new("sh");
+        cmd.args(["-c", "sleep 2 & exit 0"]);
+        let limit = std::time::Duration::from_millis(100);
+        let start = std::time::Instant::now();
+        assert_eq!(
+            run_with_input(cmd, limit, Vec::new()),
+            Err(GitError::Timeout(limit))
+        );
+        assert!(start.elapsed() < std::time::Duration::from_secs(1));
     }
 
     #[test]
