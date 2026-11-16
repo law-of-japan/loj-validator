@@ -32,7 +32,8 @@ pub(crate) struct Snapshot {
     pub packages: BTreeMap<String, String>,
     pub files: BTreeMap<String, [u8; 32]>,
     pub documents: BTreeMap<String, Value>,
-    /// Export retained by the bundle, for ASTs requested by later comparisons.
+    /// Export retained until Bundle is dropped. Deferred AST generation must
+    /// finish while that bundle is alive (the change-check cache is local to it).
     directory: std::path::PathBuf,
 }
 
@@ -675,7 +676,8 @@ mod tests {
             &std::fs::read(root.join("conformance/common/v1alpha1/manifest.json")).unwrap(),
         )
         .unwrap();
-        // Complete, invalid-L1, and partial packages all defer their AST work.
+        // These case IDs belong to the pinned specification; revisiting the pin
+        // also requires preserving these complete, invalid-L1, and partial inputs.
         for case_id in ["common-041", "common-048", "common-049"] {
             let case = manifest["cases"]
                 .as_array()
