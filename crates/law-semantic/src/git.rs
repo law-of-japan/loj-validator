@@ -149,9 +149,10 @@ fn windows_reserved(component: &str) -> bool {
 }
 
 const MAX_FILE: u64 = 16 * 1024 * 1024;
-/// The largest bundle file fetched. The tree budget below bounds what is exported;
-/// this bounds what the fetch can write, history included.
+/// The largest input bundle. This does not bound the fetch's peak disk use.
 const MAX_BUNDLE: u64 = 1024 * 1024 * 1024;
+/// The largest object store accepted after fetch, including packed history.
+const MAX_OBJECT_STORE: u64 = 1024 * 1024 * 1024;
 const MAX_TOTAL: u64 = 128 * 1024 * 1024;
 const MAX_ENTRIES: usize = 100_000;
 
@@ -166,10 +167,8 @@ const GIT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(120);
 type Output = (std::process::ExitStatus, Vec<u8>, Vec<u8>);
 
 /// Run `cmd` with closed stdin (use `run_with_input` to supply bytes), reading
-/// its output on separate threads so a full pipe never blocks
-/// it, and kill it if it runs longer than `limit`. Only the direct child is killed:
-/// this assumes plain git commands, which (with hooks disabled) start no process
-/// that would keep the pipes open after git exits.
+/// its output on separate threads so a full pipe never blocks it. On timeout,
+/// kill the process group on Unix, or the direct child on other platforms.
 fn run_with_timeout(cmd: Command, limit: std::time::Duration) -> Result<Output, GitError> {
     run_with_input(cmd, limit, Vec::new())
 }
@@ -182,6 +181,11 @@ fn run_with_input(
     use std::io::Read;
     use std::process::Stdio;
     let start = std::time::Instant::now();
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::CommandExt;
+        cmd.process_group(0);
+    }
     let mut child = cmd
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -213,19 +217,21 @@ fn run_with_input(
     let out = reader(child.stdout.take().map(|p| Box::new(p) as _));
     let err = reader(child.stderr.take().map(|p| Box::new(p) as _));
     let mut pause = std::time::Duration::from_millis(1);
-    let mut exited = None;
     let status = loop {
         if start.elapsed() >= limit {
-            let _ = child.kill();
-            let _ = child.wait();
+            terminate(&mut child)?;
             return Err(GitError::Timeout(limit));
         }
-        if exited.is_none() {
-            exited = child.try_wait().map_err(|e| GitError::Io(e.to_string()))?;
-        }
+        // Keep the group leader unreaped while descendants can hold pipes.
+        // Otherwise its PID could be reused before a later group kill.
         if out.is_finished() && err.is_finished() && writer.is_finished() {
-            if let Some(status) = exited {
-                break status;
+            match child.try_wait() {
+                Ok(Some(status)) => break status,
+                Ok(None) => {}
+                Err(error) => {
+                    terminate(&mut child)?;
+                    return Err(GitError::Io(error.to_string()));
+                }
             }
         }
         std::thread::sleep(pause.min(limit.saturating_sub(start.elapsed())));
@@ -244,6 +250,69 @@ fn run_with_input(
         return Err(GitError::OutputLimit);
     }
     Ok((status, stdout, stderr))
+}
+
+/// Kill descendants before reaping the direct child. ESRCH means the group has
+/// already exited; other signal failures must remain environment failures.
+fn terminate(child: &mut std::process::Child) -> Result<(), GitError> {
+    #[cfg(unix)]
+    let group_result = {
+        use nix::{
+            errno::Errno,
+            sys::signal::{killpg, Signal},
+            unistd::Pid,
+        };
+        let pid = i32::try_from(child.id()).map_err(|e| GitError::Io(e.to_string()))?;
+        match killpg(Pid::from_raw(pid), Signal::SIGKILL) {
+            Ok(()) | Err(Errno::ESRCH) => Ok(()),
+            Err(e) => Err(GitError::Io(format!("cannot kill git process group: {e}"))),
+        }
+    };
+    let _ = child.kill();
+    child.wait().map_err(|e| GitError::Io(e.to_string()))?;
+    #[cfg(unix)]
+    group_result?;
+    Ok(())
+}
+
+/// Check stored bytes, not decompressed object sizes or peak fetch disk usage.
+fn check_object_store(root: &Path, limit: u64) -> Result<(), GitError> {
+    let start = std::time::Instant::now();
+    let io = |e: std::io::Error| GitError::Io(e.to_string());
+    if !std::fs::symlink_metadata(root).map_err(io)?.is_dir() {
+        return Err(GitError::Io("object store is not a directory".into()));
+    }
+    // Keep iterators for directory depth, not a path for every stored object.
+    let mut pending = vec![std::fs::read_dir(root).map_err(io)?];
+    let mut total = 0u64;
+    while let Some(directory) = pending.last_mut() {
+        if start.elapsed() >= GIT_TIMEOUT {
+            return Err(GitError::Timeout(GIT_TIMEOUT));
+        }
+        let Some(entry) = directory.next() else {
+            pending.pop();
+            continue;
+        };
+        let path = entry.map_err(io)?.path();
+        let metadata = std::fs::symlink_metadata(&path).map_err(io)?;
+        if metadata.is_file() {
+            total = total
+                .checked_add(metadata.len())
+                .ok_or(GitError::OutputLimit)?;
+            if total > limit {
+                return Err(GitError::Bundle(format!(
+                    "imported object store is larger than {limit} bytes"
+                )));
+            }
+        } else if metadata.is_dir() {
+            pending.push(std::fs::read_dir(&path).map_err(io)?);
+        } else {
+            return Err(GitError::Io(
+                "object store contains a non-regular entry".into(),
+            ));
+        }
+    }
+    Ok(())
 }
 
 /// Why a git command that ran to the end failed.
@@ -342,6 +411,10 @@ fn git_path(path: PathBuf) -> PathBuf {
 impl Bundle {
     /// Fetch every branch of the bundle. `Err` means the input is not available.
     pub fn open(bundle: &Path) -> Result<Bundle, GitError> {
+        Self::open_with_store_limit(bundle, MAX_OBJECT_STORE)
+    }
+
+    fn open_with_store_limit(bundle: &Path, store_limit: u64) -> Result<Bundle, GitError> {
         let bundle = git_path(
             bundle
                 .canonicalize()
@@ -370,6 +443,7 @@ impl Bundle {
             &bundle.to_string_lossy(),
             "+refs/heads/*:refs/heads/*",
         ])?;
+        check_object_store(&b.dir.join("objects"), store_limit)?;
         Ok(b)
     }
     /// Run a git command that must succeed: its stdout, or `Err` when git failed.
@@ -889,6 +963,75 @@ pub(crate) mod tests {
         let head = b.branch("main").unwrap().unwrap();
         assert!(b.export(&head).is_err(), "{entries:?}");
         assert!(b.exports.borrow().is_empty(), "nothing was written");
+    }
+
+    #[test]
+    fn object_store_budget_counts_nested_files_and_io_failures() {
+        let s = Scratch::new();
+        let bundle = s.bundle(&[("100644", "blob", "a")]);
+        assert!(matches!(
+            Bundle::open_with_store_limit(&bundle, 0),
+            Err(GitError::Bundle(_))
+        ));
+        let root = s.0.join("store");
+        std::fs::create_dir_all(root.join("pack")).unwrap();
+        std::fs::write(root.join("loose"), b"abc").unwrap();
+        std::fs::write(root.join("pack/data.pack"), b"defg").unwrap();
+        assert_eq!(check_object_store(&root, 7), Ok(()));
+        assert!(matches!(
+            check_object_store(&root, 6),
+            Err(GitError::Bundle(_))
+        ));
+        assert!(matches!(
+            check_object_store(&root.join("absent"), 7),
+            Err(GitError::Io(_))
+        ));
+        #[cfg(unix)]
+        {
+            std::os::unix::fs::symlink(root.join("loose"), root.join("link")).unwrap();
+            assert!(matches!(
+                check_object_store(&root, 100),
+                Err(GitError::Io(_))
+            ));
+        }
+    }
+
+    #[test]
+    fn unwinding_removes_bundle_and_export() {
+        let s = Scratch::new();
+        let b = Bundle::open(&s.bundle(&[("100644", "blob", "a")])).unwrap();
+        let dir = b.dir.clone();
+        let out = b.export(&b.branch("main").unwrap().unwrap()).unwrap();
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(move || {
+            let _owned = b;
+            panic!("test unwind");
+        }));
+        assert!(result.is_err());
+        assert!(!dir.exists());
+        assert!(!out.exists());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn timeout_kills_grandchildren_even_after_parent_exit() {
+        let s = Scratch::new();
+        for (index, ending) in ["wait", "exit 0"].iter().enumerate() {
+            let ready = s.0.join(format!("ready-{index}"));
+            let survived = s.0.join(format!("survived-{index}"));
+            let mut cmd = Command::new("sh");
+            cmd.args([
+                "-c",
+                &format!("printf ready > \"$1\"; (sleep 2; printf survived > \"$2\") & {ending}"),
+                "sh",
+            ])
+            .arg(&ready)
+            .arg(&survived);
+            let limit = std::time::Duration::from_millis(500);
+            assert_eq!(run_with_timeout(cmd, limit), Err(GitError::Timeout(limit)));
+            assert!(ready.exists(), "the parent started before the deadline");
+            std::thread::sleep(std::time::Duration::from_millis(2200));
+            assert!(!survived.exists(), "a grandchild survived the timeout");
+        }
     }
 
     #[test]
