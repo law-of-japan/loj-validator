@@ -68,7 +68,9 @@ cannot be selected.
   reports, like the one for a base or head missing from the bundle, carry
   `target.repository`.
 - A bundle is untrusted. git runs isolated from the caller's environment, user and
-  system configuration and hooks, with `fsckObjects`, a 120 s timeout per command and
+  system configuration and hooks. Automatic maintenance and GC are disabled so
+  fetch cannot leave background repacking racing the object-store check. Git uses
+  `fsckObjects`, a 120 s timeout per command and
   a cap on kept output. Bundle files over 1 GiB are refused. After fetch, the
   stored file bytes under `objects/` (packs, indexes and loose objects) are
   checked against a separate 1 GiB limit, with its own 120 s traversal deadline
