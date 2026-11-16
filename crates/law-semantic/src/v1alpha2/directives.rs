@@ -65,10 +65,10 @@ fn span(v: &str) -> Result<u64, Invalid> {
     let n = v
         .parse::<u64>()
         .ok()
-        .filter(|n| n.to_string() == v && *n >= 1)
+        .filter(|n| n.to_string() == v)
         .ok_or_else(invalid)?;
-    if n == 1 {
-        // TABLE-03: the default 1 must not be written.
+    if n < 2 {
+        // TABLE-03: an explicit span is at least two, including no explicit default.
         return Err(Invalid {
             also: Some("TABLE-03"),
         });
@@ -257,6 +257,10 @@ mod tests {
         );
         assert_eq!(
             marker("<!-- loj:cell colspan=1 -->").err().unwrap().also,
+            Some("TABLE-03")
+        );
+        assert_eq!(
+            marker("<!-- loj:cell rowspan=0 -->").err().unwrap().also,
             Some("TABLE-03")
         );
     }

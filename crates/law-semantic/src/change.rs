@@ -409,6 +409,9 @@ impl Change<'_> {
             );
             return;
         }
+        if !policy::processable(self, before, f) || !policy::processable(self, after, f) {
+            return;
+        }
         self.kept_asts(before, after, f);
         policy::check(self, before, after, f);
         match kind {

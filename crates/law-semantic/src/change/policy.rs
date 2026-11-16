@@ -30,22 +30,53 @@ fn version_file(path: &str) -> Option<(&str, &str)> {
 }
 
 fn sources(value: &Value, out: &mut BTreeSet<String>) {
-    match value {
-        Value::Object(object) => {
-            if let Some(source) = object.get("source").and_then(Value::as_str) {
-                out.insert(source.into());
+    let mut pending = vec![value];
+    while let Some(value) = pending.pop() {
+        match value {
+            Value::Object(object) => {
+                if let Some(source) = object.get("source").and_then(Value::as_str) {
+                    out.insert(source.into());
+                }
+                pending.extend(object.values());
             }
-            for value in object.values() {
-                sources(value, out);
-            }
+            Value::Array(values) => pending.extend(values),
+            _ => {}
         }
-        Value::Array(values) => {
-            for value in values {
-                sources(value, out);
-            }
-        }
-        _ => {}
     }
+}
+
+/// Ambiguous IDs cannot be projected into maps for a change comparison. This
+/// is a missing comparison prerequisite, not a duplicate L3 conformance check.
+pub(super) fn processable(change: &Change<'_>, snapshot: &Snapshot, f: &mut Findings) -> bool {
+    let Some(history) = &snapshot.history else {
+        return true;
+    };
+    for field in ["revisions", "relations", "sources"] {
+        let Some(value) = history.get(field) else {
+            continue;
+        };
+        let mut seen = BTreeSet::new();
+        let valid = value.as_array().is_some_and(|values| {
+            values.iter().all(|v| {
+                v["id"]
+                    .as_str()
+                    .is_some_and(|id| !id.is_empty() && seen.insert(id))
+            })
+        });
+        if !valid {
+            f.note(
+                CH,
+                Class::Undetermined,
+                "CHG-02",
+                COMMON,
+                format!("cannot compare ambiguous or malformed {field} IDs"),
+                change.at,
+                "",
+            );
+            return false;
+        }
+    }
+    true
 }
 
 fn remove(value: &mut Value, keys: &[&str]) {
@@ -115,14 +146,17 @@ pub(super) fn check(change: &Change<'_>, before: &Snapshot, after: &Snapshot, f:
         let allowed = match change.kind {
             "format" => package,
             "metadata" => !package,
-            _ => match version {
-                Some((id, _)) => affected.contains(id),
-                None if path == "history.yaml" => true,
-                None if path == "rebuild.yaml" => {
-                    matches!(change.kind, "restoration" | "revisionAdd")
+            "correction" | "officialCorrection" | "restoration" | "revisionAdd" | "revisionFix" => {
+                match version {
+                    Some((id, _)) => affected.contains(id),
+                    None if path == "history.yaml" => true,
+                    None if path == "rebuild.yaml" => {
+                        matches!(change.kind, "restoration" | "revisionAdd")
+                    }
+                    _ => false,
                 }
-                _ => false,
-            },
+            }
+            _ => false,
         };
         if !allowed {
             change.error(f, "CHG-02", format!("{} cannot change {path}", change.kind));
@@ -457,6 +491,38 @@ mod tests {
             ..Snapshot::default()
         }
     }
+    #[test]
+    fn ambiguous_ids_are_incomplete_and_unknown_kinds_cannot_change_data() {
+        let change = Change {
+            commit: "c",
+            at: "c",
+            kind: "metadata",
+            declared: &[],
+            reviewed: false,
+        };
+        for entries in [
+            json!([{"id":"same"},{"id":"same"}]),
+            json!([{"id":false}]),
+            json!([{}]),
+            json!("not an array"),
+        ] {
+            let mut f = Findings::default();
+            assert!(!processable(
+                &change,
+                &snapshot(json!({"revisions":entries})),
+                &mut f
+            ));
+            assert_eq!(f.result(CH), crate::common::ResultValue::Incomplete);
+        }
+        let before = Snapshot::default();
+        let mut after = Snapshot::default();
+        after.files.insert("history.yaml".into(), [1; 32]);
+        assert!(inspect("future-kind", &before, &after).failed(CH));
+        after.files.clear();
+        after.files.insert("records/new.yaml".into(), [1; 32]);
+        assert!(inspect("revisionAdd", &before, &after).failed(CH));
+    }
+
     #[test]
     fn corrections_keep_unrelated_revision_metadata_and_allow_only_dependent_fields() {
         let h = json!({"revisions":[{"id":"b7k2m9qd","effective":"unchanged","text":{"sources":[{"source":"s"}],"glyphCheck":"pending"}}, {"id":"c7k2m9qd","text":{}}]});

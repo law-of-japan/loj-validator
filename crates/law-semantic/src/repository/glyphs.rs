@@ -131,6 +131,10 @@ pub(crate) fn check(
     };
     let file = notes.unwrap_or("");
     let doc = notes.and_then(|n| load(repo, n, f));
+    // Unreadable or unknown-version notes cannot prove that a glyph is unnoted.
+    if notes.is_some() && doc.is_none() {
+        return;
+    }
     let entries = doc.as_ref().map_or(&[][..], |d| list(&d["notes"]));
     if let Some(d) = &doc {
         document(d, entries, revision, file, sources, f);
@@ -366,6 +370,26 @@ fn unnoted(texts: &Texts, covered: &Covered, file: &str, f: &mut Findings) {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn unknown_notes_do_not_become_missing_glyph_violations() {
+        let root = std::env::temp_dir();
+        let name = format!("loj-unknown-glyphs-{}.yaml", std::process::id());
+        std::fs::write(root.join(&name), "schemaVersion: loj-glyphs/v999\n").unwrap();
+        let ast = json!({"root":{"kind":"Law","id":"law","content":[{"text":"〓"}]}});
+        let mut f = Findings::default();
+        check(
+            &root,
+            "b7k2m9qd",
+            Some(&name),
+            Some(&ast),
+            &HashSet::new(),
+            &mut f,
+        );
+        std::fs::remove_file(root.join(name)).unwrap();
+        assert_eq!(f.result(EV), crate::common::ResultValue::Incomplete);
+        assert!(!f.items.iter().any(|(_, d)| d.rule == "GLYPH-11"));
+    }
 
     #[test]
     fn unicode_151_compatibility_boundaries() {
