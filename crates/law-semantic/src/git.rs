@@ -279,14 +279,16 @@ fn terminate(child: &mut std::process::Child) -> Result<(), GitError> {
 /// Check stored bytes, not decompressed object sizes or peak fetch disk usage.
 fn check_object_store(root: &Path, limit: u64) -> Result<(), GitError> {
     let start = std::time::Instant::now();
-    let io = |e: std::io::Error| GitError::Io(e.to_string());
+    let io = |e: std::io::Error| {
+        GitError::Io(format!("cannot read object store {}: {e}", root.display()))
+    };
     if !std::fs::symlink_metadata(root).map_err(io)?.is_dir() {
         return Err(GitError::Io("object store is not a directory".into()));
     }
     // Keep iterators for directory depth, not a path for every stored object.
-    let mut pending = vec![std::fs::read_dir(root).map_err(io)?];
+    let mut pending = vec![(root.to_owned(), std::fs::read_dir(root).map_err(io)?)];
     let mut total = 0u64;
-    while let Some(directory) = pending.last_mut() {
+    while let Some((directory_path, directory)) = pending.last_mut() {
         if start.elapsed() >= GIT_TIMEOUT {
             return Err(GitError::Timeout(GIT_TIMEOUT));
         }
@@ -294,8 +296,20 @@ fn check_object_store(root: &Path, limit: u64) -> Result<(), GitError> {
             pending.pop();
             continue;
         };
-        let path = entry.map_err(io)?.path();
-        let metadata = std::fs::symlink_metadata(&path).map_err(io)?;
+        let path = entry
+            .map_err(|e| {
+                GitError::Io(format!(
+                    "cannot read object store directory {}: {e}",
+                    directory_path.display()
+                ))
+            })?
+            .path();
+        let metadata = std::fs::symlink_metadata(&path).map_err(|e| {
+            GitError::Io(format!(
+                "cannot inspect object store entry {}: {e}",
+                path.display()
+            ))
+        })?;
         if metadata.is_file() {
             total = total
                 .checked_add(metadata.len())
@@ -306,7 +320,13 @@ fn check_object_store(root: &Path, limit: u64) -> Result<(), GitError> {
                 )));
             }
         } else if metadata.is_dir() {
-            pending.push(std::fs::read_dir(&path).map_err(io)?);
+            let directory = std::fs::read_dir(&path).map_err(|e| {
+                GitError::Io(format!(
+                    "cannot list object store directory {}: {e}",
+                    path.display()
+                ))
+            })?;
+            pending.push((path, directory));
         } else {
             return Err(GitError::Io(
                 "object store contains a non-regular entry".into(),
@@ -489,6 +509,9 @@ impl Bundle {
         cmd.arg("-C")
             .arg(&self.dir)
             .args(["-c", "core.autocrlf=false", "-c", "core.safecrlf=false"])
+            // Fetch must not leave automatic maintenance rewriting the store
+            // while the post-fetch budget check walks it (or after Drop).
+            .args(["-c", "maintenance.auto=false", "-c", "gc.auto=0"])
             .args(["-c", &format!("core.hooksPath={NULL_DEVICE}")])
             .args(args)
             .env("GIT_CONFIG_NOSYSTEM", "1")
@@ -964,6 +987,68 @@ pub(crate) mod tests {
         let head = b.branch("main").unwrap().unwrap();
         assert!(b.export(&head).is_err(), "{entries:?}");
         assert!(b.exports.borrow().is_empty(), "nothing was written");
+    }
+
+    #[test]
+    fn fetch_does_not_start_automatic_object_repacking() {
+        let s = Scratch::new();
+        let bundle = s.bundle(&[("100644", "blob", "a")]);
+        let b = Bundle::open(&bundle).unwrap();
+        let pack_count = || {
+            std::fs::read_dir(b.dir.join("objects/pack"))
+                .unwrap()
+                .filter(|entry| {
+                    entry
+                        .as_ref()
+                        .unwrap()
+                        .path()
+                        .extension()
+                        .is_some_and(|ext| ext == "pack")
+                })
+                .count()
+        };
+        let before = pack_count();
+        // Force the automatic loose-object task to run synchronously after fetch
+        // unless the command wrapper disables automatic maintenance entirely.
+        for (key, value) in [
+            ("maintenance.autoDetach", "false"),
+            ("maintenance.gc.enabled", "false"),
+            ("maintenance.loose-objects.enabled", "true"),
+            ("maintenance.loose-objects.auto", "1"),
+            ("fetch.unpackLimit", "100"),
+        ] {
+            b.git(&["config", key, value]).unwrap();
+        }
+        for content in [b"loose-a".as_slice(), b"loose-b", b"loose-c"] {
+            let (status, _, _) = run_with_input(
+                b.command(&["hash-object", "-w", "--stdin"]),
+                GIT_TIMEOUT,
+                content.to_vec(),
+            )
+            .unwrap();
+            assert!(status.success());
+        }
+        b.git(&[
+            "fetch",
+            "--quiet",
+            &bundle.to_string_lossy(),
+            "+refs/heads/*:refs/heads/*",
+        ])
+        .unwrap();
+        assert_eq!(
+            pack_count(),
+            before,
+            "automatic maintenance repacked the loose objects"
+        );
+        // Positive control: an explicit task still packs the seeded objects, so
+        // the test cannot silently pass if Git changes its pack naming scheme.
+        b.git(&["maintenance", "run", "--task=loose-objects"])
+            .unwrap();
+        assert!(
+            pack_count() > before,
+            "the maintenance task must exercise repacking"
+        );
+        assert!(b.branch("main").unwrap().is_some());
     }
 
     #[test]
