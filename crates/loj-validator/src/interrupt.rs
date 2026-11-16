@@ -10,6 +10,8 @@ pub fn execute(args: &loj_validator::next::Args) -> (String, i32) {
     // cannot terminate cleanup or truncate the report.
     for signal in [signal_hook::consts::SIGINT, signal_hook::consts::SIGTERM] {
         if let Err(error) = signal_hook::flag::register(signal, flag.clone()) {
+            // Earlier registrations also remain until exit: no validation has
+            // started, and signals must not truncate this error report either.
             return incomplete(
                 args.json,
                 &format!("cannot install signal handler: {error}"),

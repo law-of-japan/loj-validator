@@ -13,6 +13,8 @@ thread_local! {
 /// restore the previous flag. Spawned threads do not inherit this scope.
 /// Git polls the flag before spawning and while waiting; other work may finish
 /// before cancellation is observed. Set the flag to true and never reset it.
+/// A failure to stop or reap git remains an environment error rather than a
+/// cancellation error; cancellation does not guarantee successful cleanup.
 pub fn with_flag<T>(flag: Arc<AtomicBool>, run: impl FnOnce() -> T) -> T {
     struct Restore(Option<Arc<AtomicBool>>);
     impl Drop for Restore {
