@@ -150,6 +150,8 @@ impl Snapshot {
             let Some(id) = revision["id"].as_str() else {
                 continue;
             };
+            // Leaving early is safe: the report is cancelled by
+            // `checks::run_with_space` before it is returned.
             if crate::cancellation::checkpoint() {
                 break;
             }

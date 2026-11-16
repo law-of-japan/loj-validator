@@ -132,6 +132,14 @@ fn signals_interrupt_large_checks_without_git() {
             &signal[1..]
         ));
         let _ = fs::remove_dir_all(&root);
+        // Removes the synthetic input even when an assertion fails.
+        struct Cleanup(std::path::PathBuf);
+        impl Drop for Cleanup {
+            fn drop(&mut self) {
+                let _ = fs::remove_dir_all(&self.0);
+            }
+        }
+        let _cleanup = Cleanup(root.clone());
         let repo = root.join("repo");
         let bin = root.join("bin");
         fs::create_dir_all(&bin).unwrap();
@@ -174,11 +182,15 @@ fn signals_interrupt_large_checks_without_git() {
             let output = child.wait_with_output().unwrap();
             panic!("the synthetic input finished before the signal: {output:?}");
         }
-        assert!(Command::new("kill")
+        let sent = Command::new("kill")
             .args([signal, &child.id().to_string()])
             .status()
-            .unwrap()
-            .success());
+            .is_ok_and(|status| status.success());
+        if !sent {
+            let _ = child.kill();
+            let _ = child.wait();
+            panic!("cannot send {signal}");
+        }
         let start = Instant::now();
         loop {
             if child.try_wait().unwrap().is_some() {
@@ -197,6 +209,5 @@ fn signals_interrupt_large_checks_without_git() {
         assert_eq!(report["error"]["kind"], "incomplete");
         assert_eq!(report["error"]["message"], "validation interrupted");
         assert!(!called.exists(), "git was called");
-        fs::remove_dir_all(root).unwrap();
     }
 }

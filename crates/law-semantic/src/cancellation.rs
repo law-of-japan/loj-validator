@@ -13,6 +13,11 @@
 //! check the flag once more before returning: when it is set, every selected
 //! result is `incomplete` and partial diagnostics, references and ASTs are
 //! discarded, so cancellation never yields `pass` or `fail` (VAL-04).
+//! The modules with checkpoints but no `finish` of their own (repository,
+//! registry, L4, rebuild, change) are private and reached only through
+//! `checks::run_with_space`. A flag set after the last checkpoint but before
+//! `finish` still cancels the report: completed results are then also
+//! reported as `incomplete`, which is the safe side.
 use crate::common::{Check, Class, Diagnostic, Report, ResultValue};
 use std::cell::RefCell;
 use std::sync::{

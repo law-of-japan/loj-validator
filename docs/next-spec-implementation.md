@@ -113,7 +113,9 @@ cannot be selected.
   selected result (and every Record report) is `incomplete`, partial
   diagnostics, references, resolutions and ASTs are discarded, and one
   undetermined VAL-04 diagnostic remains. Outside a scope checkpoints never
-  cancel, so results are unchanged. A cancelled `--ast` run writes no AST.
+  cancel, so results are unchanged. A flag set after the last checkpoint but
+  before that final check also cancels the report, even if every check had
+  completed. A cancelled `--ast` run writes no AST.
   After execute returns, the CLI checks the flag once: cancellation produces
   exit 3 and a JSON error with kind `incomplete`; later signals do not change
   the result. Registrations remain until exit, so repeated signals cannot
