@@ -226,12 +226,7 @@ mod tests {
             let text: String = (1..=articles)
                 .map(|i| {
                     format!(
-                        "# 第{}条
-<!-- loj:paragraph number=1 -->
-本文。
-<!-- loj:end-paragraph -->
-
-",
+                        "# 第{}条\n<!-- loj:paragraph number=1 -->\n本文。\n<!-- loj:end-paragraph -->\n\n",
                         kanji(i)
                     )
                 })

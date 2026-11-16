@@ -176,7 +176,9 @@ fn signals_interrupt_large_checks_without_git() {
             .stderr(Stdio::piped())
             .spawn()
             .unwrap();
-        // Signal handlers are installed before any input is read.
+        // `interrupt::execute` registers the handlers before it calls
+        // `next::execute`, so before any input is read. The full check takes
+        // far longer than this wait (200 packages of 2000 articles).
         std::thread::sleep(Duration::from_millis(1000));
         if child.try_wait().unwrap().is_some() {
             let output = child.wait_with_output().unwrap();

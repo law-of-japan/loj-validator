@@ -60,8 +60,7 @@ fn library_cancellation_without_git_is_incomplete_at_every_entry_point() {
     };
     let dir = Scratch::new();
     // A failing package: cancellation must not keep its violation either.
-    let bad = "# 第一条
-<!-- loj:unknown -->";
+    let bad = "# 第一条\n<!-- loj:unknown -->";
     let checked = package(&dir, bad);
     assert_eq!(checked.report.result(Check::L1), Some(ResultValue::Fail));
     let levels = [Check::L0, Check::L1];
@@ -83,10 +82,7 @@ fn library_cancellation_without_git_is_incomplete_at_every_entry_point() {
             run_with_space(&input, &checks, Some("alpha"))
         }));
     }
-    let good = "# 第一条
-<!-- loj:paragraph number=1 -->
-本文。
-<!-- loj:end-paragraph -->";
+    let good = "# 第一条\n<!-- loj:paragraph number=1 -->\n本文。\n<!-- loj:end-paragraph -->";
     assert_eq!(
         package(&dir, good).report.result(Check::L1),
         Some(ResultValue::Pass)
