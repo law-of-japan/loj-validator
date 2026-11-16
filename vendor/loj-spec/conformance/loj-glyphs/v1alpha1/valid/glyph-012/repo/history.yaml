@@ -1,0 +1,45 @@
+schemaVersion: loj-history/v1alpha1
+record: {id: 19660625-act-86, label: 昭和四十一年法律第八十六号}
+sources:
+  - id: src-goshomei-s41-86
+    kind: promulgation
+    title: 国民の祝日に関する法律の一部を改正する法律・御署名原本・昭和四十一年・第四巻・法律第八十六号（国立公文書館 御42643100）
+    uri: https://www.digital.archives.go.jp/file/686000
+    glyphPreservation: preserved
+  - id: src-shugiin
+    kind: other
+    title: 衆議院 制定法律 法律第八十六号（昭四一・六・二五）
+    uri: https://www.shugiin.go.jp/internet/itdb_housei.nsf/html/houritsu/05119660625086.htm
+relations: []
+revisions:
+  - id: p3x8k6dt
+    label: 制定
+    origin: enactment
+    effective:
+      state: derived
+      rule: 公布の日から
+      base:
+        state: date
+        value: "1966-06-25"
+        raw: 昭和四十一年六月二十五日
+        precision: day
+        evidence: [{source: src-goshomei-s41-86, locator: "1画像 公布文の日付"}]
+        verification: {state: unverified, reason: 官報の発行日と未照合（REB-05）}
+      value: "1966-06-25"
+      raw: この法律は、公布の日から施行する
+      evidence: [{source: src-goshomei-s41-86, locator: 附則第一項}]
+      verification: {state: confirmed}
+    applicability: {state: unsurveyed}
+    text:
+      status: complete
+      sources:
+        - {source: src-goshomei-s41-86, locator: "2画像 本則、3・4画像 附則"}
+        - {source: src-shugiin, locator: 全文}
+      glyphCheck: unverified
+      glyphNotes: versions/p3x8k6dt/glyphs.yaml
+      correctionsSurveyed: {state: unsurveyed, reason: 官報（昭和41年6月25日）を入手していない（REB-05）}
+    status: active
+coverage:
+  state: unconfirmed
+  knownGaps:
+    - {text: 制定の版だけを収録。この法律を改める法令の有無を調べていない}

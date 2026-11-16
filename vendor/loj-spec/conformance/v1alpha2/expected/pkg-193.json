@@ -1,0 +1,254 @@
+{
+  "ast": {
+    "schemaVersion": "loj/v1alpha2",
+    "law": {
+      "id": "20990101-act-1",
+      "title": "架空雲保管法（実在しないサンプル）",
+      "type": "act",
+      "number": "架空法律第一号",
+      "promulgatedAt": "2099-01-01",
+      "language": "ja"
+    },
+    "root": {
+      "kind": "Law",
+      "id": "20990101-act-1",
+      "number": null,
+      "display": "架空雲保管法（実在しないサンプル）",
+      "content": [
+        {
+          "kind": "MainProvision",
+          "id": "20990101-act-1/main",
+          "number": null,
+          "display": "",
+          "content": [
+            {
+              "kind": "Article",
+              "id": "20990101-act-1/main/article/1",
+              "number": "1",
+              "display": "第一条",
+              "content": [
+                {
+                  "kind": "Paragraph",
+                  "id": "20990101-act-1/main/article/1/paragraph/1",
+                  "number": "1",
+                  "display": "",
+                  "content": [
+                    {
+                      "text": "架空雨量法（架空法律第二号）の一部を次のように改正する。\n"
+                    },
+                    {
+                      "kind": "Amendment",
+                      "id": "20990101-act-1/main/article/1/paragraph/1/amendment/1",
+                      "number": "1",
+                      "display": "",
+                      "content": [
+                        {
+                          "text": "第三条に次の一項を加える。\n"
+                        },
+                        {
+                          "kind": "AmendmentContent",
+                          "id": "20990101-act-1/main/article/1/paragraph/1/amendment/1/content",
+                          "number": null,
+                          "display": "",
+                          "content": [
+                            {
+                              "kind": "Paragraph",
+                              "id": "20990101-act-1/main/article/1/paragraph/1/amendment/1/content/paragraph/3",
+                              "number": "3",
+                              "display": "３",
+                              "content": [
+                                {
+                                  "text": "３　雨量は、毎日記録する。\n"
+                                }
+                              ],
+                              "numbering": "explicit"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "Amendment",
+                      "id": "20990101-act-1/main/article/1/paragraph/1/amendment/2",
+                      "number": "2",
+                      "display": "",
+                      "content": [
+                        {
+                          "text": "第四条第一項に次の一号を加える。\n"
+                        },
+                        {
+                          "kind": "AmendmentContent",
+                          "id": "20990101-act-1/main/article/1/paragraph/1/amendment/2/content",
+                          "number": null,
+                          "display": "",
+                          "content": [
+                            {
+                              "kind": "Item",
+                              "id": "20990101-act-1/main/article/1/paragraph/1/amendment/2/content/item/3",
+                              "number": "3",
+                              "display": "三",
+                              "content": [
+                                {
+                                  "text": "三　雪\n"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "Amendment",
+                      "id": "20990101-act-1/main/article/1/paragraph/1/amendment/3",
+                      "number": "3",
+                      "display": "",
+                      "content": [
+                        {
+                          "text": "第四条第一項第一号に次のように加える。\n"
+                        },
+                        {
+                          "kind": "AmendmentContent",
+                          "id": "20990101-act-1/main/article/1/paragraph/1/amendment/3/content",
+                          "number": null,
+                          "display": "",
+                          "content": [
+                            {
+                              "kind": "Subitem",
+                              "id": "20990101-act-1/main/article/1/paragraph/1/amendment/3/content/subitem/1/3",
+                              "number": "3",
+                              "display": "ハ",
+                              "content": [
+                                {
+                                  "text": "ハ　霧雨\n"
+                                }
+                              ],
+                              "level": 1
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "Amendment",
+                      "id": "20990101-act-1/main/article/1/paragraph/1/amendment/4",
+                      "number": "4",
+                      "display": "",
+                      "content": [
+                        {
+                          "text": "第七条の見出しを次のように改める。\n"
+                        },
+                        {
+                          "kind": "AmendmentContent",
+                          "id": "20990101-act-1/main/article/1/paragraph/1/amendment/4/content",
+                          "number": null,
+                          "display": "",
+                          "content": [
+                            {
+                              "text": "（雨量の公表）\n"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "numbering": "explicit"
+                }
+              ],
+              "status": "active"
+            },
+            {
+              "kind": "Article",
+              "id": "20990101-act-1/main/article/2",
+              "number": "2",
+              "display": "第二条",
+              "content": [
+                {
+                  "kind": "Paragraph",
+                  "id": "20990101-act-1/main/article/2/paragraph/1",
+                  "number": "1",
+                  "display": "",
+                  "content": [
+                    {
+                      "text": "架空雪量法（架空法律第六号）の一部を次のように改正する。\n"
+                    },
+                    {
+                      "kind": "Amendment",
+                      "id": "20990101-act-1/main/article/2/paragraph/1/amendment/1",
+                      "number": "1",
+                      "display": "",
+                      "content": [
+                        {
+                          "text": "第五章の次に次の一章を加える。\n"
+                        },
+                        {
+                          "kind": "AmendmentContent",
+                          "id": "20990101-act-1/main/article/2/paragraph/1/amendment/1/content",
+                          "number": null,
+                          "display": "",
+                          "content": [
+                            {
+                              "kind": "Chapter",
+                              "id": "20990101-act-1/main/article/2/paragraph/1/amendment/1/content/chapter/6",
+                              "number": "6",
+                              "display": "第六章　雑則",
+                              "content": [
+                                {
+                                  "kind": "Article",
+                                  "id": "20990101-act-1/main/article/2/paragraph/1/amendment/1/content/article/2",
+                                  "number": "2",
+                                  "display": "第二条（報告）",
+                                  "content": [
+                                    {
+                                      "kind": "Paragraph",
+                                      "id": "20990101-act-1/main/article/2/paragraph/1/amendment/1/content/article/2/paragraph/1",
+                                      "number": "1",
+                                      "display": "",
+                                      "content": [
+                                        {
+                                          "text": "雪量は、毎年報告する。\n"
+                                        }
+                                      ],
+                                      "numbering": "explicit"
+                                    }
+                                  ],
+                                  "status": "active"
+                                },
+                                {
+                                  "kind": "Article",
+                                  "id": "20990101-act-1/main/article/2/paragraph/1/amendment/1/content/article/2-2",
+                                  "number": "2-2",
+                                  "display": "第二条の二（公表）",
+                                  "content": [
+                                    {
+                                      "kind": "Paragraph",
+                                      "id": "20990101-act-1/main/article/2/paragraph/1/amendment/1/content/article/2-2/paragraph/1",
+                                      "number": "1",
+                                      "display": "",
+                                      "content": [
+                                        {
+                                          "text": "報告は、公表する。\n"
+                                        }
+                                      ],
+                                      "numbering": "explicit"
+                                    }
+                                  ],
+                                  "status": "active"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "numbering": "explicit"
+                }
+              ],
+              "status": "active"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

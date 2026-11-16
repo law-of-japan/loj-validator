@@ -1,6 +1,6 @@
 # Next specification implementation (loj/v1alpha2 and the new kinds)
 
-Target: loj-spec commit `b200fdb13957c6d6c7f9805d59c78980abac093d`, vendored as
+Target: loj-spec commit `668f40059c631cac62775b8617916481512a4fd9`, vendored as
 `spec`, `schemas`, `conformance`, `grammar/v1alpha2` and `LICENSE` in `vendor/loj-spec` with `COMMIT` and
 `SHA256SUMS.json`. The v1alpha1 fixtures of `b704631` stay unchanged in
 `vendor/loj-spec-v1alpha1`; the v1alpha1 and legacy pipelines are unchanged.
@@ -10,7 +10,7 @@ Target: loj-spec commit `b200fdb13957c6d6c7f9805d59c78980abac093d`, vendored as
 | Module | Checks | Requirements |
 |---|---|---|
 | `common` | strict bytes, CORE-03 YAML, report, TimePoint arithmetic, schema-error mapping | CORE-03, VAL-04, VAL-07, TIME-02/03 |
-| `v1alpha2` | L0, L1 of one version package (built on the v1alpha1 pipeline) | BASIC, MAN, MD, HEAD, NUM, DIR, DISP, AST, SRC, ID, REF, PARA, TABLE, PRE, TOC |
+| `v1alpha2` | L0, L1 of one version package (built on the v1alpha1 pipeline) | BASIC, MAN, MD, HEAD, NUM, DIR, DISP, AST, SRC, ID, REF, PARA, TABLE, PRE, TOC, AMEND |
 | `repository` | L0/L1 of every version, L3 `historyStructure`, L3 `evidence` | HIST, REV, TIME, TYPE, GLYPH |
 | `registry` | registry check; Record resolution | REG, RID |
 | `xref` | L4 `relationResolution`, `relationConsistency`, `timeConsistency`, `displayConsistency` | XREF-01..03, XREF-05/06 |
@@ -163,10 +163,10 @@ or nothing passed.
 
 | Suite | Normative | Passed | Informative (not counted) |
 |---|---|---|---|
-| loj/v1alpha2 | 181 | 181 | 1 (pkg-026, L2) |
+| loj/v1alpha2 | 206 | 206 | 1 (pkg-026, L2) |
 | common/v1alpha1 | 49 | 49 | 0 |
 | loj-history/v1alpha1 | 61 | 61 | 0 |
-| loj-glyphs/v1alpha1 | 11 | 11 | 0 |
+| loj-glyphs/v1alpha1 | 12 | 12 | 0 |
 | loj-registry/v1alpha1 | 13 | 13 | 0 |
 | loj-rebuild/v1alpha1 | 5 | 5 | 0 |
 
@@ -174,11 +174,22 @@ Passing the fixed cases is a necessary condition only (CONF-02).
 
 ## Normative boundaries
 
-- There are 320 normative cases and one informative L2 case. `derivedFrom` and
+- There are 346 normative cases and one informative L2 case. `derivedFrom` and
   `rejectedBy` are audit metadata, never instructions to regenerate or skip inputs.
 - MD-04 emptiness uses the 25 Unicode 15.1 White_Space code points. Paragraph
   captions require `caption=present`; Toc placement and mixed number scripts are
   checked. TABLE-04 uses occupied intervals, not a grid proportional to span values.
+- PARA-03: paragraphs at main-scope document level are children of MainProvision;
+  after a classification without an article they belong to the classification
+  (DIR-02). Mixing, more than one main file in the paragraph form, and an empty
+  main provision are PARA-03; MAN-03's article-boundary check is skipped for the
+  paragraph form, and PRE/TOC placement also requires no main paragraph yet.
+- AMEND-01/02: an open `amendment-content` is a frame with its own classification
+  stack and current article. A heading whose innermost open container is the
+  content is read as a classification or article of that scope and closes no
+  marker; a supplement label there is HEAD-01. The amendment shape, its numbering,
+  the single group of a content, and an amendment inside a content are checked
+  on the finished tree (AMEND-01/02). The instruction text is never parsed.
 - HIST-13 tracks deleted row keys along each basedOn branch; partial, absent and
   invalid-L1 revisions are skipped without treating their rows as deletions.
   Glyph candidates come only from the revision's default path. The Unicode 15.1

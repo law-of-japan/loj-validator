@@ -1,0 +1,9 @@
+{
+  "diagnostics": [
+    {
+      "rule": "PARA-01",
+      "schemaVersion": "loj/v1alpha2",
+      "class": "error"
+    }
+  ]
+}

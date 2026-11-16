@@ -22,12 +22,14 @@ pub(super) enum Kind {
     Preamble,
     EnactStatement,
     Toc,
+    Amendment,
+    AmendmentContent,
 }
 
 impl Kind {
     /// Every kind. A test compares the names with the AST schema.
     #[cfg(test)]
-    pub(super) const ALL: [Kind; 19] = [
+    pub(super) const ALL: [Kind; 21] = [
         Kind::Law,
         Kind::MainProvision,
         Kind::SupplementaryProvision,
@@ -47,6 +49,8 @@ impl Kind {
         Kind::Preamble,
         Kind::EnactStatement,
         Kind::Toc,
+        Kind::Amendment,
+        Kind::AmendmentContent,
     ];
 
     /// The `kind` value in the AST.
@@ -71,6 +75,8 @@ impl Kind {
             Kind::Preamble => "Preamble",
             Kind::EnactStatement => "EnactStatement",
             Kind::Toc => "Toc",
+            Kind::Amendment => "Amendment",
+            Kind::AmendmentContent => "AmendmentContent",
         }
     }
 
@@ -86,12 +92,18 @@ impl Kind {
             "preamble" => Kind::Preamble,
             "enact-statement" => Kind::EnactStatement,
             "toc" => Kind::Toc,
+            "amendment" => Kind::Amendment,
+            "amendment-content" => Kind::AmendmentContent,
             _ => return None,
         })
     }
 
     /// The segment that names this kind in a logical ID (ID-01).
     pub(super) fn id_segment(self) -> String {
+        // AMEND-01: the content of an amendment is `{amendment}/content`.
+        if self == Kind::AmendmentContent {
+            return "content".to_owned();
+        }
         self.as_str().to_lowercase()
     }
 }
@@ -149,5 +161,11 @@ mod tests {
         assert_eq!(Kind::from_marker("article"), None);
         assert_eq!(Kind::Subsection.id_segment(), "subsection");
         assert_eq!(Kind::Paragraph.id_segment(), "paragraph");
+        assert_eq!(Kind::Amendment.id_segment(), "amendment");
+        assert_eq!(Kind::AmendmentContent.id_segment(), "content");
+        assert_eq!(
+            Kind::from_marker("amendment-content"),
+            Some(Kind::AmendmentContent)
+        );
     }
 }

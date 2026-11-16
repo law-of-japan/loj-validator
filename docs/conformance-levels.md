@@ -32,7 +32,7 @@ Markdown一般構文、法令用追加構文、意味制約のレベル配分は
 
 ## 既定の次期仕様との照合
 
-次期仕様は `b200fdb13957c6d6c7f9805d59c78980abac093d` に固定しています。
+次期仕様は `668f40059c631cac62775b8617916481512a4fd9` に固定しています。
 L0はファイル・Manifest、L1はMarkdown固有構造・番号・表示・ASTです。MD系列の違反はL1で扱います。
 L3はRecordごとの `historyStructure` と `evidence`、L4はRecordごとの
 `relationResolution`・`relationConsistency`・`timeConsistency`・`displayConsistency`を独立して報告します。
@@ -42,4 +42,4 @@ L2・L3/sourceMatch・L4/clauseReferenceは予約済みで、実装済みとは�
 違反はfail、違反がなく処理不能または判定不能ならincomplete、対象がなければnotApplicableです。
 警告・保留だけならpassになります。HIST-06/12の警告専用検査の判定不能は集計から除きます。
 結果の対象をcommitに固定できないディレクトリ入力は、特定の記録版への適合の主張には使えません。
-規範適合ケース320件の成功は必要条件であり、未知の入力に対する完全性や法的正確性を保証しません。
+規範適合ケース346件の成功は必要条件であり、未知の入力に対する完全性や法的正確性を保証しません。
