@@ -29,6 +29,53 @@ fn version_file(path: &str) -> Option<(&str, &str)> {
     path.strip_prefix("versions/")?.split_once('/')
 }
 
+/// CHG-01: the canonical data files, from the layouts of HIST-01 (a law
+/// repository) and REG-01 (a registry repository). Every other file of the
+/// canonical branch (CI configuration, generators, documents) is outside the
+/// canonical data and is not subject to any change kind's check.
+/// The two layouts are matched as a union, without telling the repository
+/// kinds apart, as CHG-01 lists them; revisit if the layouts come to differ.
+fn canonical(path: &str) -> bool {
+    matches!(path, "history.yaml" | "rebuild.yaml" | "space.yaml")
+        || path.starts_with("versions/")
+        || path.starts_with("records/")
+}
+
+/// CHG-02 `auxiliary`: the canonical data files are identical before and
+/// after: none is added, removed or renamed, and each keeps its bytes and its
+/// Git file mode. No AST is compared.
+/// `files` always lists the whole tree: an export over the input budget is
+/// refused as a whole (the check is then incomplete), never truncated.
+pub(super) fn auxiliary(
+    change: &Change<'_>,
+    before: &Snapshot,
+    after: &Snapshot,
+    f: &mut Findings,
+) {
+    let paths: BTreeSet<&String> = before
+        .files
+        .keys()
+        .chain(after.files.keys())
+        .filter(|path| canonical(path))
+        .collect();
+    for path in paths {
+        let problem = match (before.files.get(path), after.files.get(path)) {
+            (None, _) => "adds",
+            (_, None) => "removes",
+            (Some(a), Some(b)) if a != b => "changes",
+            _ if before.executable.contains(path) != after.executable.contains(path) => {
+                "changes the file mode of"
+            }
+            _ => continue,
+        };
+        change.error(
+            f,
+            "CHG-02",
+            format!("auxiliary {problem} canonical data file {path}"),
+        );
+    }
+}
+
 fn sources(value: &Value, out: &mut BTreeSet<String>) {
     let mut pending = vec![value];
     while let Some(value) = pending.pop() {
@@ -137,12 +184,9 @@ pub(super) fn check(change: &Change<'_>, before: &Snapshot, after: &Snapshot, f:
     for path in changed {
         let version = version_file(path);
         let package = version.is_some_and(|(_, file)| file != "glyphs.yaml");
-        let canonical = version.is_some()
-            || matches!(path.as_str(), "history.yaml" | "rebuild.yaml")
-            || path.starts_with("records/");
-        if !canonical {
-            // CHG-01 excludes generators, CI configuration and documentation:
-            // only the canonical data kinds are subject to change classification.
+        if !canonical(path) {
+            // CHG-01/CHG-02: files outside the canonical data may change in a
+            // commit of any kind and do not affect its check.
             continue;
         }
         let allowed = match change.kind {
@@ -163,8 +207,7 @@ pub(super) fn check(change: &Change<'_>, before: &Snapshot, after: &Snapshot, f:
         if !allowed {
             change.error(f, "CHG-02", format!("{} cannot change {path}", change.kind));
         }
-        if canonical
-            && path.ends_with(".yaml")
+        if path.ends_with(".yaml")
             && after.files.contains_key(path)
             && !after.documents.contains_key(path)
         {
@@ -643,6 +686,133 @@ mod tests {
         after.history = Some(json!({"revisions":[]}));
         assert!(inspect("revisionFix", &before, &after).failed(CH));
     }
+
+    fn auxiliary_findings(before: &Snapshot, after: &Snapshot) -> Findings {
+        let mut f = Findings::default();
+        let change = Change {
+            commit: "c",
+            at: "c",
+            kind: "auxiliary",
+            declared: &[],
+            reviewed: false,
+        };
+        auxiliary(&change, before, after, &mut f);
+        f
+    }
+
+    #[test]
+    fn auxiliary_keeps_every_canonical_file_by_bytes_and_mode() {
+        let mut before = Snapshot::default();
+        for path in [
+            "history.yaml",
+            "rebuild.yaml",
+            "space.yaml",
+            "versions/b7k2m9qd/main.md",
+            "versions/b7k2m9qd/README.md",
+            "records/a.yaml",
+            ".github/workflows/ci.yml",
+            "tools/gen.sh",
+        ] {
+            before.files.insert(path.into(), [0; 32]);
+        }
+        before.executable.insert("tools/gen.sh".into());
+        let base = || Snapshot {
+            files: before.files.clone(),
+            executable: before.executable.clone(),
+            ..Snapshot::default()
+        };
+        // Files outside the canonical data: bytes, mode, addition and removal.
+        let mut after = base();
+        after
+            .files
+            .insert(".github/workflows/ci.yml".into(), [1; 32]);
+        after.files.insert("docs/new.md".into(), [1; 32]);
+        after.files.remove("tools/gen.sh");
+        after.executable.clear();
+        assert!(!auxiliary_findings(&before, &after).failed(CH));
+        assert!(!auxiliary_findings(&before, &before).failed(CH));
+        for path in [
+            "history.yaml",
+            "rebuild.yaml",
+            "space.yaml",
+            "versions/b7k2m9qd/main.md",
+            "versions/b7k2m9qd/README.md",
+            "records/a.yaml",
+        ] {
+            let mut changed = base();
+            changed.files.insert(path.into(), [1; 32]);
+            assert!(auxiliary_findings(&before, &changed).failed(CH), "{path}");
+            let mut removed = base();
+            removed.files.remove(path);
+            assert!(auxiliary_findings(&before, &removed).failed(CH), "{path}");
+            let mut executable = base();
+            executable.executable.insert(path.into());
+            assert!(
+                auxiliary_findings(&before, &executable).failed(CH),
+                "{path}"
+            );
+            assert!(
+                auxiliary_findings(&executable, &before).failed(CH),
+                "{path}"
+            );
+        }
+        // A rename within the canonical data is an addition and a removal.
+        let mut renamed = base();
+        renamed.files.remove("records/a.yaml");
+        renamed.files.insert("records/b.yaml".into(), [0; 32]);
+        let f = auxiliary_findings(&before, &renamed);
+        assert_eq!(
+            f.items.iter().filter(|(_, d)| d.rule == "CHG-02").count(),
+            2
+        );
+        for path in ["versions/b7k2m9qd/new.md", "records/new.yaml", "space.yaml"] {
+            let mut added = Snapshot::default();
+            added.files.insert(path.into(), [0; 32]);
+            assert!(
+                auxiliary_findings(&Snapshot::default(), &added).failed(CH),
+                "{path}"
+            );
+        }
+        // Lookalike paths outside the canonical data.
+        let mut lookalike = base();
+        for path in [
+            "docs/history.yaml",
+            "versions.md",
+            "records.yaml",
+            "x/space.yaml",
+        ] {
+            lookalike.files.insert(path.into(), [1; 32]);
+        }
+        assert!(!auxiliary_findings(&before, &lookalike).failed(CH));
+    }
+
+    #[test]
+    fn space_manifest_is_canonical_data_for_the_other_kinds() {
+        let before = Snapshot::default();
+        let mut after = Snapshot::default();
+        after.files.insert("space.yaml".into(), [1; 32]);
+        assert!(inspect("format", &before, &after).failed(CH));
+        assert!(inspect("correction", &before, &after).failed(CH));
+        assert!(!inspect("metadata", &before, &after).failed(CH));
+        let mut ci = Snapshot::default();
+        ci.files.insert(".github/workflows/ci.yml".into(), [1; 32]);
+        assert!(!inspect("format", &before, &ci).failed(CH));
+    }
+
+    /// A file directly under `versions/` belongs to no version package but is
+    /// canonical data (CHG-01): only `metadata` may change it.
+    #[test]
+    fn file_directly_under_versions_is_canonical_non_package_data() {
+        let before = Snapshot::default();
+        let mut after = Snapshot::default();
+        after.files.insert("versions/README.md".into(), [1; 32]);
+        assert!(!inspect("metadata", &before, &after).failed(CH));
+        for kind in ["format", "correction", "restoration", "revisionAdd"] {
+            assert!(inspect(kind, &before, &after).failed(CH), "{kind}");
+        }
+        assert!(auxiliary_findings(&before, &after).failed(CH));
+    }
+
     #[test]
     fn untrusted_scalar_fields_do_not_panic() {
         for value in [json!(false), json!(1), json!("x"), json!(null)] {

@@ -2,6 +2,7 @@
 //! Blobs are read raw (no line-ending conversion), so byte positions hold.
 //! A bundle is untrusted input: tree entry names are checked before anything is
 //! written, and only regular files are exported.
+use std::collections::BTreeSet;
 use std::path::{Component, Path, PathBuf};
 use std::process::Command;
 
@@ -604,10 +605,19 @@ impl Bundle {
                 .unwrap_or_default(),
         ))
     }
+    /// [`Bundle::export_tree`] without the file modes.
+    #[cfg(test)]
+    pub fn export(&self, commit: &str) -> Result<PathBuf, ExportError> {
+        self.export_tree(commit).map(|(dir, _)| dir)
+    }
+
     /// Write the tree of `commit` to a fresh directory, byte for byte. Every entry
     /// name is checked before anything is written; symbolic links, submodules and
     /// non-UTF-8 names are refused with an `Err`, never followed or written.
-    pub fn export(&self, commit: &str) -> Result<PathBuf, ExportError> {
+    /// Returns the directory and the paths whose Git file mode is executable
+    /// (`100755`): the written files do not carry the mode on every file system,
+    /// so it is taken from the tree listing (CHG-02 compares it for `auxiliary`).
+    pub fn export_tree(&self, commit: &str) -> Result<(PathBuf, BTreeSet<String>), ExportError> {
         self.export_with_limit(commit, GIT_TIMEOUT)
     }
 
@@ -615,7 +625,7 @@ impl Bundle {
         &self,
         commit: &str,
         limit: std::time::Duration,
-    ) -> Result<PathBuf, ExportError> {
+    ) -> Result<(PathBuf, BTreeSet<String>), ExportError> {
         use ExportError::{Environment, Io, Tree};
         let environment = |error| match error {
             GitError::Cancelled => ExportError::Cancelled,
@@ -642,6 +652,7 @@ impl Bundle {
             return Err(Environment(GitError::Failed(failure(&status, &stderr))));
         }
         let mut entries = Vec::new();
+        let mut executable = BTreeSet::new();
         let mut total: u64 = 0;
         for entry in listing.split(|b| *b == 0).filter(|n| !n.is_empty()) {
             remaining()?;
@@ -689,6 +700,9 @@ impl Bundle {
                 .ok_or(Environment(GitError::Unexpected("missing object ID")))?;
             if !matches!(oid.len(), 40 | 64) || !oid.bytes().all(|b| b.is_ascii_hexdigit()) {
                 return Err(Environment(GitError::Unexpected("invalid object ID")));
+            }
+            if mode == "100755" {
+                executable.insert(name.to_owned());
             }
             entries.push((name.to_owned(), oid.to_owned(), size));
         }
@@ -741,7 +755,7 @@ impl Bundle {
             std::fs::write(&path, blob).map_err(|e| Io(e.to_string()))?;
         }
         remaining()?;
-        Ok(out)
+        Ok((out, executable))
     }
 }
 
@@ -1172,6 +1186,23 @@ pub(crate) mod tests {
         assert_eq!(std::fs::read(out.join("history.yaml")).unwrap(), b"x\n");
         drop(b);
         assert!(!out.exists(), "the export is removed with the bundle");
+    }
+
+    #[test]
+    fn export_reports_executable_modes_from_the_tree() {
+        let s = Scratch::new();
+        let path = s.bundle(&[
+            ("100644", "blob", "history.yaml"),
+            ("100755", "blob", "gen.sh"),
+            ("100755", "blob", "rebuild.yaml"),
+        ]);
+        let b = Bundle::open(&path).unwrap();
+        let (out, executable) = b.export_tree(&b.branch("main").unwrap().unwrap()).unwrap();
+        assert_eq!(std::fs::read(out.join("gen.sh")).unwrap(), b"x\n");
+        assert_eq!(
+            executable.into_iter().collect::<Vec<_>>(),
+            ["gen.sh", "rebuild.yaml"]
+        );
     }
 
     #[test]
