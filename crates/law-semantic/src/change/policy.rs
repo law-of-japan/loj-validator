@@ -42,6 +42,8 @@ fn canonical(path: &str) -> bool {
 /// CHG-02 `auxiliary`: the canonical data files are identical before and
 /// after: none is added, removed or renamed, and each keeps its bytes and its
 /// Git file mode. No AST is compared.
+/// `files` always lists the whole tree: an export over the input budget is
+/// refused as a whole (the check is then incomplete), never truncated.
 pub(super) fn auxiliary(
     change: &Change<'_>,
     before: &Snapshot,

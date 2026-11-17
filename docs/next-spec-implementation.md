@@ -213,6 +213,9 @@ Passing the fixed cases is a necessary condition only (CONF-02).
   and compares no AST, and so is never CHG-04 undetermined. A tree with any other
   mode (a symbolic link, a submodule) is still refused, which leaves the check
   incomplete.
+  An unreadable `history.yaml` (or an unsupported `schemaVersion`) also leaves an
+  `auxiliary` commit incomplete, although byte comparison alone could decide it
+  (tracked in law-of-japan/loj-validator#49).
 - `fixref::to_string_reference` and `to_structured` preserve identity fields;
   `check_structured` checks the auxiliary path without following it. Source.fixed
   structural validation belongs to its containing file; fetching remains outside
