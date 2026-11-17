@@ -26,7 +26,7 @@ class ValidationTests(unittest.TestCase):
         spec.parent.mkdir(parents=True)
         spec.write_text('b' * 40)
 
-    def run_checks(self, codes, stdout=b'{"results": []}'):
+    def run_checks(self, codes, stdout=b'{"results": [{"check": "L0", "result": "pass"}]}'):
         results = [subprocess.CompletedProcess([], code, stdout, b'diagnostic') for code in codes]
         with patch.object(validate_law, 'git', return_value='a' * 40), patch.object(validate_law.subprocess, 'run', side_effect=results) as run:
             status = validate_law.validate(self.repo, self.validator, self.output)
@@ -51,13 +51,73 @@ class ValidationTests(unittest.TestCase):
                 self.assertEqual(run.call_count, 4)
 
     def test_malformed_report_cannot_pass(self):
-        status, _ = self.run_checks([0] * 4, b'not JSON')
-        self.assertEqual(status, 1)
+        for code in (0, 1, 2, 3):
+            for stdout in (b'not JSON', b'[]', b'null', b'{}', b'{"results": []}'):
+                with self.subTest(code=code, stdout=stdout):
+                    status, _ = self.run_checks([code] * 4, stdout)
+                    self.assertEqual(status, 1)
 
     def test_package_cannot_masquerade_as_repository(self):
         (self.repo / 'history.yaml').unlink()
-        with self.assertRaisesRegex(ValueError, 'history.yaml'):
-            validate_law.validate(self.repo, self.validator, self.output)
+        self.assertEqual(validate_law.validate(self.repo, self.validator, self.output), 2)
+        self.assert_runner_error('configuration', 'history.yaml')
+
+    def assert_runner_error(self, kind, message):
+        summary = json.loads((self.output / 'summary.json').read_text())
+        self.assertEqual(summary[-1]['error']['kind'], kind)
+        self.assertIn(message, summary[-1]['error']['message'])
+
+    def test_invalid_base_is_rejected_before_git_or_provenance(self):
+        with patch.object(validate_law, 'git') as git:
+            self.assertEqual(validate_law.validate(self.repo, self.validator, self.output, 'main'), 2)
+            git.assert_not_called()
+        self.assertFalse((self.output / 'provenance.json').exists())
+        self.assert_runner_error('configuration', 'full commit SHA')
+
+    def test_equal_base_is_rejected_before_ancestry_check(self):
+        with patch.object(validate_law, 'git', return_value='a' * 40), patch.object(validate_law, 'git_run') as run:
+            self.assertEqual(validate_law.validate(self.repo, self.validator, self.output, 'a' * 40), 2)
+            run.assert_not_called()
+        self.assert_runner_error('configuration', 'precede')
+
+    def test_nonancestor_and_git_failure_are_distinct(self):
+        for code, expected, kind in [(1, 2, 'configuration'), (128, 3, 'incomplete')]:
+            with self.subTest(code=code), patch.object(validate_law, 'git', return_value='a' * 40), patch.object(validate_law, 'git_run', return_value=subprocess.CompletedProcess(['git'], code)):
+                self.assertEqual(validate_law.validate(self.repo, self.validator, self.output, 'b' * 40), expected)
+            self.assert_runner_error(kind, 'ancestor' if code == 1 else '128')
+
+    def test_existing_temporary_ref_is_preserved(self):
+        with patch.object(validate_law, 'git', return_value='a' * 40) as git, patch.object(validate_law, 'git_run', return_value=subprocess.CompletedProcess(['git'], 0)):
+            self.assertEqual(validate_law.validate(self.repo, self.validator, self.output, 'b' * 40), 2)
+            self.assertFalse(any('update-ref' in call.args for call in git.call_args_list))
+        self.assert_runner_error('configuration', 'already exists')
+
+    def test_missing_binary_is_incomplete(self):
+        for binary in (self.validator / 'target/release').iterdir():
+            binary.unlink()
+        with patch.object(validate_law, 'git', return_value='a' * 40):
+            self.assertEqual(validate_law.validate(self.repo, self.validator, self.output), 3)
+        self.assert_runner_error('incomplete', 'loj-validator')
+
+    def test_spawn_failure_preserves_other_checks(self):
+        results = [FileNotFoundError('binary disappeared')] + [subprocess.CompletedProcess([], 0, b'{"results": [{}]}', b'')] * 3
+        with patch.object(validate_law, 'git', return_value='a' * 40), patch.object(validate_law.subprocess, 'run', side_effect=results) as run:
+            self.assertEqual(validate_law.validate(self.repo, self.validator, self.output), 1)
+            self.assertEqual(run.call_count, 4)
+        summary = json.loads((self.output / 'summary.json').read_text())
+        self.assertEqual(summary[0]['exitCode'], 3)
+        self.assertEqual(summary[0]['error']['kind'], 'incomplete')
+
+    def test_git_environment_is_isolated(self):
+        with patch.dict(os.environ, {'GIT_DIR': 'untrusted', 'GIT_CONFIG_COUNT': '1'}), patch.object(validate_law.subprocess, 'run') as run:
+            validate_law.git_run(self.repo, 'rev-parse', 'HEAD')
+        env = run.call_args.kwargs['env']
+        self.assertNotIn('GIT_DIR', env)
+        self.assertNotIn('GIT_CONFIG_COUNT', env)
+        self.assertEqual(env['GIT_CONFIG_NOSYSTEM'], '1')
+        self.assertEqual(env['GIT_TERMINAL_PROMPT'], '0')
+        self.assertEqual(env['GIT_CONFIG_GLOBAL'], os.devnull)
+        self.assertIn(f'core.hooksPath={os.devnull}', run.call_args.args[0])
 
     def test_change_bundle_contains_detached_head_and_is_removed(self):
         subprocess.run(['git', 'init', str(self.repo)], check=True, capture_output=True)
@@ -89,7 +149,7 @@ class ValidationTests(unittest.TestCase):
                 self.assertIn(head + ' refs/heads/loj-ci-validation', refs)
                 self.assertEqual(command[command.index('--base') + 1], base)
                 self.assertEqual(command[command.index('--head') + 1], head)
-            return subprocess.CompletedProcess(command, 0, b'{}', b'')
+            return subprocess.CompletedProcess(command, 0, b'{"results": [{}]}', b'')
 
         with patch.object(validate_law, 'git', side_effect=git), patch.object(validate_law.subprocess, 'run', side_effect=run):
             self.assertEqual(validate_law.validate(self.repo, self.validator, self.output, base), 0)

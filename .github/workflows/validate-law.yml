@@ -29,8 +29,8 @@ jobs:
           VALIDATOR_REF: ${{ inputs.validator-ref }}
           CHANGE_BASE: ${{ inputs.change-base }}
         run: |
-          [[ "$VALIDATOR_REF" =~ ^[0-9a-f]{40}$ ]]
-          [[ -z "$CHANGE_BASE" || "$CHANGE_BASE" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$VALIDATOR_REF" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::validator-ref must be a full 40-character commit SHA"; exit 2; }
+          [[ -z "$CHANGE_BASE" || "$CHANGE_BASE" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::change-base must be empty or a full 40-character commit SHA"; exit 2; }
       - name: Check out law data
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
