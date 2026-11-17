@@ -1,6 +1,6 @@
 # Next specification implementation (loj/v1alpha2 and the new kinds)
 
-Target: loj-spec commit `668f40059c631cac62775b8617916481512a4fd9`, vendored as
+Target: loj-spec commit `d39fe52bd993146475370a4d313ad15cde8b6af6`, vendored as
 `spec`, `schemas`, `conformance`, `grammar/v1alpha2` and `LICENSE` in `vendor/loj-spec` with `COMMIT` and
 `SHA256SUMS.json`. The v1alpha1 fixtures of `b704631` stay unchanged in
 `vendor/loj-spec-v1alpha1`; the v1alpha1 and legacy pipelines are unchanged.
@@ -164,7 +164,7 @@ or nothing passed.
 | Suite | Normative | Passed | Informative (not counted) |
 |---|---|---|---|
 | loj/v1alpha2 | 206 | 206 | 1 (pkg-026, L2) |
-| common/v1alpha1 | 49 | 49 | 0 |
+| common/v1alpha1 | 55 | 55 | 0 |
 | loj-history/v1alpha1 | 61 | 61 | 0 |
 | loj-glyphs/v1alpha1 | 12 | 12 | 0 |
 | loj-registry/v1alpha1 | 13 | 13 | 0 |
@@ -174,7 +174,7 @@ Passing the fixed cases is a necessary condition only (CONF-02).
 
 ## Normative boundaries
 
-- There are 346 normative cases and one informative L2 case. `derivedFrom` and
+- There are 352 normative cases and one informative L2 case. `derivedFrom` and
   `rejectedBy` are audit metadata, never instructions to regenerate or skip inputs.
 - MD-04 emptiness uses the 25 Unicode 15.1 White_Space code points. Paragraph
   captions require `caption=present`; Toc placement and mixed number scripts are
@@ -206,6 +206,13 @@ Passing the fixed cases is a necessary condition only (CONF-02).
   CHG-04 reports each uncomparable AST, even when a format violation also exists.
   A review trailer removes only the automatic-format violation, not incompleteness.
   No normative migration mapping exists for this specification pair.
+  The canonical data files are `history.yaml`, `rebuild.yaml`, `space.yaml`,
+  `versions/**` and `records/**` (CHG-01); other files may change under any kind
+  and are not checked. `auxiliary` requires every canonical data file to keep its
+  path, bytes and Git file mode (`100644`/`100755`, from the tree listing), builds
+  and compares no AST, and so is never CHG-04 undetermined. A tree with any other
+  mode (a symbolic link, a submodule) is still refused, which leaves the check
+  incomplete.
 - `fixref::to_string_reference` and `to_structured` preserve identity fields;
   `check_structured` checks the auxiliary path without following it. Source.fixed
   structural validation belongs to its containing file; fetching remains outside

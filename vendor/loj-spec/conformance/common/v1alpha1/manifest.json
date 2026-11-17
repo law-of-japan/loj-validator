@@ -1181,6 +1181,123 @@
       },
       "expected": "conformance/common/v1alpha1/expected/common-049.json",
       "success": true
+    },
+    {
+      "id": "common-050",
+      "title": "CIの設定だけを加える正本のデータの外の変更",
+      "requirements": [
+        "CHG-01",
+        "CHG-02",
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-050/repo.bundle",
+        "base": "f1162fe2cfefa04e9a0d656706e37977fb3d0731",
+        "head": "69ef11f814bdf2b105dd9fa0fb3321b5760d26ed"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-050.json",
+      "success": true
+    },
+    {
+      "id": "common-051",
+      "title": "CIの設定の変更を含む記録訂正",
+      "requirements": [
+        "CHG-01",
+        "CHG-02"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-050/repo.bundle",
+        "base": "69ef11f814bdf2b105dd9fa0fb3321b5760d26ed",
+        "head": "bb385276c8c19df6976c8d80594d114d177b6cf9"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-051.json",
+      "success": true
+    },
+    {
+      "id": "common-052",
+      "title": "正本のデータの外の変更と宣言して、履歴マニフェストを変える",
+      "requirements": [
+        "CHG-02",
+        "CHG-01"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-052/repo.bundle",
+        "base": "bb385276c8c19df6976c8d80594d114d177b6cf9",
+        "head": "7c81a791a82aede5cdc8ee4c5452e0ad0680bf30"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-052.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-052/repo.bundle",
+          "from": "conformance/common/v1alpha1/valid/common-050/repo.bundle",
+          "edits": []
+        }
+      ]
+    },
+    {
+      "id": "common-053",
+      "title": "ASTを生成できない版を持つリポジトリにCIの設定を加える正本のデータの外の変更",
+      "requirements": [
+        "CHG-02",
+        "CHG-04",
+        "CHG-01"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-053/repo.bundle",
+        "base": "b4fb14ad30b1886f64ca1a04185e54c52d8a9588",
+        "head": "f753d8268af8a81abd595d8fc25b0ac294b24b96"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-053.json",
+      "success": true
+    },
+    {
+      "id": "common-054",
+      "title": "正本のデータの外の変更と宣言して、版のディレクトリにファイルを加える",
+      "requirements": [
+        "CHG-02",
+        "CHG-01"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-054/repo.bundle",
+        "base": "342736570869225d992c96fcdd63e4534a97ef74",
+        "head": "bc01429ce2fa20d58320849b004e5522f8ceb1f3"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-054.json",
+      "success": false
+    },
+    {
+      "id": "common-055",
+      "title": "宣言した版を書いた正本のデータの外の変更",
+      "requirements": [
+        "CHG-03",
+        "CHG-02"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-055/repo.bundle",
+        "base": "342736570869225d992c96fcdd63e4534a97ef74",
+        "head": "31a9351b7ce9349067cc689d22e58fb132b5534c"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-055.json",
+      "success": true
     }
   ]
 }

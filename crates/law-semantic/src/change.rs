@@ -19,6 +19,7 @@ const KINDS: &[&str] = &[
     "revisionAdd",
     "revisionFix",
     "migration",
+    "auxiliary",
 ];
 
 /// The state of a record version at one commit.
@@ -31,6 +32,9 @@ pub(crate) struct Snapshot {
     /// revision_id -> package path.
     pub packages: BTreeMap<String, String>,
     pub files: BTreeMap<String, [u8; 32]>,
+    /// Paths whose Git file mode is executable (`100755`); every other file is
+    /// `100644`, as the export refuses any other mode.
+    pub executable: std::collections::BTreeSet<String>,
     pub documents: BTreeMap<String, Value>,
     /// Export retained until Bundle is dropped. Deferred AST generation must
     /// finish while that bundle is alive (the change-check cache is local to it).
@@ -44,7 +48,7 @@ pub(crate) fn snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError
 }
 
 fn read_snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError> {
-    let dir = b.export(commit)?;
+    let (dir, executable) = b.export_tree(commit)?;
     let mut files = BTreeMap::new();
     let mut documents = BTreeMap::new();
     let mut pending = vec![dir.clone()];
@@ -125,6 +129,7 @@ fn read_snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError> {
         asts: BTreeMap::new(),
         packages,
         files,
+        executable,
         documents,
         directory: dir,
     })
@@ -474,6 +479,13 @@ impl Change<'_> {
             );
             return;
         }
+        if kind == "auxiliary" {
+            // CHG-02: only the canonical data files are compared, byte for byte
+            // and by mode. No AST is built or compared, so a version that cannot
+            // build one is not undetermined here (CHG-04).
+            policy::auxiliary(self, before, after, f);
+            return;
+        }
         if !policy::processable(self, before, f) || !policy::processable(self, after, f) {
             return;
         }
@@ -509,6 +521,7 @@ impl Change<'_> {
     fn must_keep(&self, id: &str) -> bool {
         match self.kind {
             "format" | "metadata" | "revisionAdd" => true,
+            "auxiliary" => false,
             _ => !self.declared.iter().any(|d| d == id),
         }
     }
