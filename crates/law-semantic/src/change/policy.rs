@@ -33,6 +33,8 @@ fn version_file(path: &str) -> Option<(&str, &str)> {
 /// repository) and REG-01 (a registry repository). Every other file of the
 /// canonical branch (CI configuration, generators, documents) is outside the
 /// canonical data and is not subject to any change kind's check.
+/// The two layouts are matched as a union, without telling the repository
+/// kinds apart, as CHG-01 lists them; revisit if the layouts come to differ.
 fn canonical(path: &str) -> bool {
     matches!(path, "history.yaml" | "rebuild.yaml" | "space.yaml")
         || path.starts_with("versions/")
