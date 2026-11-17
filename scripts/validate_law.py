@@ -10,6 +10,23 @@ import subprocess
 import sys
 import tempfile
 
+CHECK_TIMEOUT_SECONDS = 120
+MAX_REPORT_BYTES = 16 * 1024 * 1024
+
+
+def valid_report(report, exit_code):
+    if not isinstance(report, dict):
+        return False
+    if exit_code != 0 and isinstance(report.get('error'), dict):
+        return True
+    results = report.get('results')
+    return isinstance(results, list) and bool(results) and all(
+        isinstance(item, dict)
+        and isinstance(item.get('check'), str) and bool(item['check'])
+        and item.get('result') in ('pass', 'fail', 'incomplete', 'notApplicable')
+        for item in results
+    )
+
 
 def git_run(repository, *args, check=True):
     env = {key: value for key, value in os.environ.items() if not key.upper().startswith('GIT_')}
@@ -91,27 +108,36 @@ def _validate(repository, validator, output, change_base, scratch, summary):
         try:
             git(repository, 'bundle', 'create', str(bundle), ref)
         finally:
-            git(repository, 'update-ref', '-d', ref, head)
+            original_error = sys.exc_info()[1]
+            try:
+                git(repository, 'update-ref', '-d', ref, head)
+            except (OSError, subprocess.SubprocessError) as error:
+                if original_error is None:
+                    raise
+                print(f'incomplete: temporary ref cleanup also failed: {error}', file=sys.stderr)
         jobs.append(('change', [str(bundle), '--base', change_base, '--head', head]))
     for name, args in jobs:
         command = [str(executable), 'check', *args, '--format', 'json']
+        report_path = output / f'{name}.json'
         try:
-            result = subprocess.run(command, capture_output=True)
-        except OSError as error:
+            # Stream to disk; only bounded reports are subsequently parsed in memory.
+            with report_path.open('wb') as stdout, (output / f'{name}.stderr.txt').open('wb') as stderr:
+                result = subprocess.run(command, stdout=stdout, stderr=stderr, timeout=CHECK_TIMEOUT_SECONDS)
+        except (OSError, subprocess.TimeoutExpired) as error:
             message = str(error)
             write_json(output / f'{name}.json', {'error': {'kind': 'incomplete', 'message': message}})
             summary.append({'check': name, 'command': command, 'exitCode': 3, 'error': {'kind': 'incomplete', 'message': message}})
             print(f'{name}: incomplete: {message}', file=sys.stderr)
             continue
-        (output / f'{name}.json').write_bytes(result.stdout)
-        (output / f'{name}.stderr.txt').write_bytes(result.stderr)
         # A malformed or empty report is an execution failure, never a pass.
         try:
-            report = json.loads(result.stdout)
-            valid_json = isinstance(report, dict) and (
-                isinstance(report.get('results'), list) and bool(report['results'])
-                or result.returncode != 0 and isinstance(report.get('error'), dict)
-            )
+            if report_path.stat().st_size > MAX_REPORT_BYTES:
+                summary.append({'check': name, 'command': command, 'exitCode': 3,
+                                'validatorExitCode': result.returncode,
+                                'error': {'kind': 'incomplete', 'message': 'Report exceeds 16 MiB parsing limit'}})
+                print(f'{name}: incomplete: report exceeds parsing limit', file=sys.stderr)
+                continue
+            valid_json = valid_report(json.loads(report_path.read_bytes()), result.returncode)
         except (ValueError, UnicodeError):
             valid_json = False
         summary.append({'check': name, 'command': command, 'exitCode': result.returncode, 'validJson': valid_json})

@@ -27,8 +27,14 @@ class ValidationTests(unittest.TestCase):
         spec.write_text('b' * 40)
 
     def run_checks(self, codes, stdout=b'{"results": [{"check": "L0", "result": "pass"}]}'):
-        results = [subprocess.CompletedProcess([], code, stdout, b'diagnostic') for code in codes]
-        with patch.object(validate_law, 'git', return_value='a' * 40), patch.object(validate_law.subprocess, 'run', side_effect=results) as run:
+        codes = iter(codes)
+
+        def execute(command, **kwargs):
+            kwargs['stdout'].write(stdout)
+            kwargs['stderr'].write(b'diagnostic')
+            return subprocess.CompletedProcess(command, next(codes))
+
+        with patch.object(validate_law, 'git', return_value='a' * 40), patch.object(validate_law.subprocess, 'run', side_effect=execute) as run:
             status = validate_law.validate(self.repo, self.validator, self.output)
         return status, run
 
@@ -52,7 +58,7 @@ class ValidationTests(unittest.TestCase):
 
     def test_malformed_report_cannot_pass(self):
         for code in (0, 1, 2, 3):
-            for stdout in (b'not JSON', b'[]', b'null', b'{}', b'{"results": []}'):
+            for stdout in (b'not JSON', b'[]', b'null', b'{}', b'{"results": []}', b'{"results": [{}]}'):
                 with self.subTest(code=code, stdout=stdout):
                     status, _ = self.run_checks([code] * 4, stdout)
                     self.assertEqual(status, 1)
@@ -100,13 +106,33 @@ class ValidationTests(unittest.TestCase):
         self.assert_runner_error('incomplete', 'loj-validator')
 
     def test_spawn_failure_preserves_other_checks(self):
-        results = [FileNotFoundError('binary disappeared')] + [subprocess.CompletedProcess([], 0, b'{"results": [{}]}', b'')] * 3
-        with patch.object(validate_law, 'git', return_value='a' * 40), patch.object(validate_law.subprocess, 'run', side_effect=results) as run:
-            self.assertEqual(validate_law.validate(self.repo, self.validator, self.output), 1)
-            self.assertEqual(run.call_count, 4)
+        for error in (FileNotFoundError('binary disappeared'), subprocess.TimeoutExpired('validator', 120)):
+            with self.subTest(error=error), patch.object(validate_law, 'git', return_value='a' * 40), patch.object(validate_law.subprocess, 'run', side_effect=error) as run:
+                self.assertEqual(validate_law.validate(self.repo, self.validator, self.output), 1)
+                self.assertEqual(run.call_count, 4)
+            summary = json.loads((self.output / 'summary.json').read_text())
+            self.assertEqual(summary[0]['exitCode'], 3)
+            self.assertEqual(summary[0]['error']['kind'], 'incomplete')
+
+    def test_large_report_is_incomplete(self):
+        with patch.object(validate_law, 'MAX_REPORT_BYTES', 1):
+            self.assertEqual(self.run_checks([0] * 4)[0], 1)
         summary = json.loads((self.output / 'summary.json').read_text())
         self.assertEqual(summary[0]['exitCode'], 3)
-        self.assertEqual(summary[0]['error']['kind'], 'incomplete')
+        self.assertEqual(summary[0]['validatorExitCode'], 0)
+
+    def test_cleanup_failure_does_not_hide_bundle_failure(self):
+        def git(repo, *args):
+            if args[0] == 'bundle':
+                raise OSError('bundle failed')
+            if args[:2] == ('update-ref', '-d'):
+                raise OSError('cleanup failed')
+            return 'a' * 40
+
+        results = [subprocess.CompletedProcess(['git'], 0), subprocess.CompletedProcess(['git'], 1)]
+        with patch.object(validate_law, 'git', side_effect=git), patch.object(validate_law, 'git_run', side_effect=results):
+            self.assertEqual(validate_law.validate(self.repo, self.validator, self.output, 'b' * 40), 3)
+        self.assert_runner_error('incomplete', 'bundle failed')
 
     def test_git_environment_is_isolated(self):
         with patch.dict(os.environ, {'GIT_DIR': 'untrusted', 'GIT_CONFIG_COUNT': '1'}), patch.object(validate_law.subprocess, 'run') as run:
@@ -149,7 +175,8 @@ class ValidationTests(unittest.TestCase):
                 self.assertIn(head + ' refs/heads/loj-ci-validation', refs)
                 self.assertEqual(command[command.index('--base') + 1], base)
                 self.assertEqual(command[command.index('--head') + 1], head)
-            return subprocess.CompletedProcess(command, 0, b'{"results": [{}]}', b'')
+            kwargs['stdout'].write(b'{"results": [{"check": "L0", "result": "pass"}]}')
+            return subprocess.CompletedProcess(command, 0)
 
         with patch.object(validate_law, 'git', side_effect=git), patch.object(validate_law.subprocess, 'run', side_effect=run):
             self.assertEqual(validate_law.validate(self.repo, self.validator, self.output, base), 0)
