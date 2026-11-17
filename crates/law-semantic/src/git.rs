@@ -2,6 +2,7 @@
 //! Blobs are read raw (no line-ending conversion), so byte positions hold.
 //! A bundle is untrusted input: tree entry names are checked before anything is
 //! written, and only regular files are exported.
+use std::collections::BTreeSet;
 use std::path::{Component, Path, PathBuf};
 use std::process::Command;
 
@@ -616,10 +617,7 @@ impl Bundle {
     /// Returns the directory and the paths whose Git file mode is executable
     /// (`100755`): the written files do not carry the mode on every file system,
     /// so it is taken from the tree listing (CHG-02 compares it for `auxiliary`).
-    pub fn export_tree(
-        &self,
-        commit: &str,
-    ) -> Result<(PathBuf, std::collections::BTreeSet<String>), ExportError> {
+    pub fn export_tree(&self, commit: &str) -> Result<(PathBuf, BTreeSet<String>), ExportError> {
         self.export_with_limit(commit, GIT_TIMEOUT)
     }
 
@@ -627,7 +625,7 @@ impl Bundle {
         &self,
         commit: &str,
         limit: std::time::Duration,
-    ) -> Result<(PathBuf, std::collections::BTreeSet<String>), ExportError> {
+    ) -> Result<(PathBuf, BTreeSet<String>), ExportError> {
         use ExportError::{Environment, Io, Tree};
         let environment = |error| match error {
             GitError::Cancelled => ExportError::Cancelled,
@@ -654,7 +652,7 @@ impl Bundle {
             return Err(Environment(GitError::Failed(failure(&status, &stderr))));
         }
         let mut entries = Vec::new();
-        let mut executable = std::collections::BTreeSet::new();
+        let mut executable = BTreeSet::new();
         let mut total: u64 = 0;
         for entry in listing.split(|b| *b == 0).filter(|n| !n.is_empty()) {
             remaining()?;

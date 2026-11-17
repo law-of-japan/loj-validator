@@ -5,7 +5,7 @@ use crate::common::{load_yaml, Check, Class, Loaded, Report, COMMON};
 use crate::git::{Bundle, ExportError, GitError};
 use serde_json::{json, Map, Value};
 use sha2::{Digest, Sha256};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 const CH: Check = Check::CHANGE;
@@ -34,7 +34,7 @@ pub(crate) struct Snapshot {
     pub files: BTreeMap<String, [u8; 32]>,
     /// Paths whose Git file mode is executable (`100755`); every other file is
     /// `100644`, as the export refuses any other mode.
-    pub executable: std::collections::BTreeSet<String>,
+    pub executable: BTreeSet<String>,
     pub documents: BTreeMap<String, Value>,
     /// Export retained until Bundle is dropped. Deferred AST generation must
     /// finish while that bundle is alive (the change-check cache is local to it).
@@ -866,6 +866,48 @@ mod tests {
             .filter(|d| d.message.starts_with(&format!("{mid}:")))
             .count();
         assert_eq!(notes, 1, "{:?}", r.diagnostics);
+    }
+
+    /// CHG-02 `auxiliary`: the Git file mode reaches the snapshot from the tree,
+    /// so an executable bit on canonical data fails and one outside it passes.
+    #[test]
+    fn auxiliary_compares_file_modes_read_from_the_bundle() {
+        let s = Scratch::new();
+        let blob = s.run(&["hash-object", "-w", "--stdin"], Some(b"x\n"));
+        let tree = |rebuild: &str, generator: &str| {
+            let spec =
+                format!("{rebuild} blob {blob}\trebuild.yaml\n{generator} blob {blob}\tgen.sh\n");
+            s.run(&["mktree"], Some(spec.as_bytes()))
+        };
+        let msg = "m\n\nLoJ-Change: auxiliary\n";
+        let base = s.run(&["commit-tree", &tree("100644", "100644"), "-m", msg], None);
+        for (rebuild, generator, expected) in [
+            ("100644", "100755", ResultValue::Pass),
+            ("100755", "100644", ResultValue::Fail),
+        ] {
+            let head = s.run(
+                &[
+                    "commit-tree",
+                    &tree(rebuild, generator),
+                    "-p",
+                    &base,
+                    "-m",
+                    msg,
+                ],
+                None,
+            );
+            let r = check(&s.bundle_head(&head), &base, &head);
+            assert_eq!(result(&r), expected, "{:?}", r.diagnostics);
+            if expected == ResultValue::Fail {
+                assert!(
+                    r.diagnostics.iter().any(|d| d.rule == "CHG-02"
+                        && d.message
+                            .contains("file mode of canonical data file rebuild.yaml")),
+                    "{:?}",
+                    r.diagnostics
+                );
+            }
+        }
     }
 
     /// A directory named `history.yaml` is no manifest, not an unreadable one.
