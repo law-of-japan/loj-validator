@@ -684,6 +684,7 @@ mod tests {
         after.history = Some(json!({"revisions":[]}));
         assert!(inspect("revisionFix", &before, &after).failed(CH));
     }
+
     fn auxiliary_findings(before: &Snapshot, after: &Snapshot) -> Findings {
         let mut f = Findings::default();
         let change = Change {
@@ -794,6 +795,20 @@ mod tests {
         let mut ci = Snapshot::default();
         ci.files.insert(".github/workflows/ci.yml".into(), [1; 32]);
         assert!(!inspect("format", &before, &ci).failed(CH));
+    }
+
+    /// A file directly under `versions/` belongs to no version package but is
+    /// canonical data (CHG-01): only `metadata` may change it.
+    #[test]
+    fn file_directly_under_versions_is_canonical_non_package_data() {
+        let before = Snapshot::default();
+        let mut after = Snapshot::default();
+        after.files.insert("versions/README.md".into(), [1; 32]);
+        assert!(!inspect("metadata", &before, &after).failed(CH));
+        for kind in ["format", "correction", "restoration", "revisionAdd"] {
+            assert!(inspect(kind, &before, &after).failed(CH), "{kind}");
+        }
+        assert!(auxiliary_findings(&before, &after).failed(CH));
     }
 
     #[test]
