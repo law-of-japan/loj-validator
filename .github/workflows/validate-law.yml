@@ -1,0 +1,66 @@
+name: Validate law repository
+
+on:
+  workflow_call:
+    inputs:
+      validator-ref:
+        description: Full commit SHA of loj-validator (normally the same SHA as uses)
+        required: true
+        type: string
+      change-base:
+        description: Optional full base SHA for change checks (must be an ancestor of the checked commit)
+        default: ''
+        type: string
+      artifact-name:
+        description: Unique artifact name when calling this workflow more than once
+        default: law-validation
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Validate pinned inputs
+        env:
+          VALIDATOR_REF: ${{ inputs.validator-ref }}
+          CHANGE_BASE: ${{ inputs.change-base }}
+        run: |
+          [[ "$VALIDATOR_REF" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::validator-ref must be a full 40-character commit SHA"; exit 2; }
+          [[ -z "$CHANGE_BASE" || "$CHANGE_BASE" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::change-base must be empty or a full 40-character commit SHA"; exit 2; }
+      - name: Check out law data
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: law
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check out pinned validator
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: law-of-japan/loj-validator
+          ref: ${{ inputs.validator-ref }}
+          path: validator
+          persist-credentials: false
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: '1.88.0'
+      - name: Build pinned validator
+        working-directory: validator
+        run: cargo build --release --locked -p loj-validator
+      - name: Validate law data and save reports
+        env:
+          CHANGE_BASE: ${{ inputs.change-base }}
+        run: |
+          python3 validator/scripts/validate_law.py --repository law --validator validator --output reports --change-base "$CHANGE_BASE"
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: reports/
+          if-no-files-found: warn

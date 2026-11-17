@@ -10,6 +10,8 @@ L0〜L4の定義と現行仕様との対応は[適合レベル定義](docs/confo
 
 状態: 初期実装。crates.ioへは公開しない（全crateが `publish = false`）。
 
+法令リポジトリのPR・pushで検査する場合は、[再利用ワークフロー](docs/reusable-workflow.md)を利用できます。
+
 ## loj-spec v1alpha1（Manifest形式）
 
 `law.yaml`と列挙されたMarkdownを、固定仕様commit
