@@ -20,6 +20,11 @@ def valid_report(report, exit_code):
     if exit_code != 0 and isinstance(report.get('error'), dict):
         return True
     results = report.get('results')
+    if exit_code == 0 and isinstance(results, list):
+        if not any(isinstance(item, dict) and item.get('result') == 'pass' for item in results):
+            return False
+        if any(not isinstance(item, dict) or item.get('result') not in ('pass', 'notApplicable') for item in results):
+            return False
     return isinstance(results, list) and bool(results) and all(
         isinstance(item, dict)
         and isinstance(item.get('check'), str) and bool(item['check'])
@@ -51,8 +56,8 @@ def validate(repository, validator, output, change_base=''):
     summary = []
     try:
         output.mkdir(parents=True, exist_ok=True)
-        if change_base and not re.fullmatch('[0-9a-f]{40}', change_base):
-            raise ValueError('change-base must be a full commit SHA')
+        if change_base and (not re.fullmatch('[0-9a-f]{40}', change_base) or change_base == '0' * 40):
+            raise ValueError('change-base must be a full commit SHA other than the zero SHA')
         # Keep Git history outside the artifact directory even on interruption.
         with tempfile.TemporaryDirectory(prefix='loj-ci-') as scratch:
             status = _validate(repository, validator, output, change_base, Path(scratch), summary)

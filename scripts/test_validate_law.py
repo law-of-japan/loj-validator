@@ -74,11 +74,25 @@ class ValidationTests(unittest.TestCase):
         self.assertIn(message, summary[-1]['error']['message'])
 
     def test_invalid_base_is_rejected_before_git_or_provenance(self):
-        with patch.object(validate_law, 'git') as git:
-            self.assertEqual(validate_law.validate(self.repo, self.validator, self.output, 'main'), 2)
-            git.assert_not_called()
+        for base in ('main', '0' * 40):
+            with self.subTest(base=base), patch.object(validate_law, 'git') as git:
+                self.assertEqual(validate_law.validate(self.repo, self.validator, self.output, base), 2)
+                git.assert_not_called()
         self.assertFalse((self.output / 'provenance.json').exists())
         self.assert_runner_error('configuration', 'full commit SHA')
+
+    def test_zero_exit_cannot_override_negative_or_no_applicable_results(self):
+        for state in ('fail', 'incomplete', 'notApplicable'):
+            report = json.dumps({'results': [{'check': 'L0', 'result': state}]}).encode()
+            with self.subTest(state=state):
+                self.assertEqual(self.run_checks([0] * 4, report)[0], 1)
+        for state in ('fail', 'incomplete'):
+            self.assertFalse(validate_law.valid_report({'results': [
+                {'check': 'L0', 'result': 'pass'}, {'check': 'L1', 'result': state},
+            ]}, 0))
+        self.assertTrue(validate_law.valid_report({'results': [
+            {'check': 'L0', 'result': 'pass'}, {'check': 'L1', 'result': 'notApplicable'},
+        ]}, 0))
 
     def test_equal_base_is_rejected_before_ancestry_check(self):
         with patch.object(validate_law, 'git', return_value='a' * 40), patch.object(validate_law, 'git_run') as run:
