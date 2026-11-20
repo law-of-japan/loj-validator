@@ -388,6 +388,8 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
         };
         // CHG-02 `auxiliary` compares the files only, so it is decided even
         // when a history manifest cannot be used; every other kind reads it.
+        // `migration` stays undetermined here too, as when such a tree was
+        // refused before, rather than reaching its CHG-02 error in `compare`.
         if kind != "auxiliary" {
             let unusable: Vec<_> = [parent.map(|p| (p, before)), Some((&commit, after))]
                 .into_iter()
