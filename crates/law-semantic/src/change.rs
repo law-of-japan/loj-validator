@@ -36,13 +36,23 @@ pub(crate) struct Snapshot {
     /// `100644`, as the export refuses any other mode.
     pub executable: BTreeSet<String>,
     pub documents: BTreeMap<String, Value>,
+    /// Why the history manifest could not be used (unreadable, an unsupported
+    /// `schemaVersion`, an invalid Revision ID), if so. `history` and
+    /// `packages` are then empty, while the file lists are complete, which
+    /// is all `auxiliary` compares (CHG-02).
+    pub manifest_error: Option<String>,
     /// Export retained until Bundle is dropped. Deferred AST generation must
     /// finish while that bundle is alive (the change-check cache is local to it).
     directory: std::path::PathBuf,
 }
 
+/// A snapshot whose history manifest is usable; an unusable one is a refused
+/// tree (`ExportError::Tree`).
 pub(crate) fn snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError> {
     let mut snapshot = read_snapshot(b, commit)?;
+    if let Some(e) = snapshot.manifest_error.take() {
+        return Err(ExportError::Tree(e));
+    }
     snapshot.build_asts(|_| true);
     Ok(snapshot)
 }
@@ -95,12 +105,33 @@ fn read_snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError> {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
         Err(e) => return Err(unreadable(e)),
     };
+    let mut snapshot = Snapshot {
+        history: None,
+        history_bytes,
+        asts: BTreeMap::new(),
+        packages: BTreeMap::new(),
+        files,
+        executable,
+        documents,
+        manifest_error: None,
+        directory: dir,
+    };
+    match read_manifest(&snapshot.directory, snapshot.history_bytes.is_some()) {
+        Ok((history, packages)) => (snapshot.history, snapshot.packages) = (history, packages),
+        Err(e) => snapshot.manifest_error = Some(e),
+    }
+    Ok(snapshot)
+}
+
+type Packages = BTreeMap<String, String>;
+
+/// The history manifest of an exported tree and the package of each revision
+/// with text, or why the manifest cannot be used.
+fn read_manifest(dir: &Path, present: bool) -> Result<(Option<Value>, Packages), String> {
     let history = match load_yaml(&dir.join("history.yaml")) {
         Loaded::Ok(v, _) if v["schemaVersion"] == crate::repository::HISTORY => Some(v),
-        _ if history_bytes.is_some() => {
-            return Err(ExportError::Tree(
-                "history manifest is unreadable or has an unsupported schemaVersion".into(),
-            ))
+        _ if present => {
+            return Err("history manifest is unreadable or has an unsupported schemaVersion".into())
         }
         _ => None,
     };
@@ -116,23 +147,12 @@ fn read_snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError> {
             continue;
         }
         if !crate::repository::history::valid_revision_id(id) {
-            return Err(ExportError::Tree(
-                "invalid Revision ID cannot select a package".into(),
-            ));
+            return Err("invalid Revision ID cannot select a package".into());
         }
         let path = crate::repository::history::package_path(r);
         packages.insert(id.to_owned(), path);
     }
-    Ok(Snapshot {
-        history,
-        history_bytes,
-        asts: BTreeMap::new(),
-        packages,
-        files,
-        executable,
-        documents,
-        directory: dir,
-    })
+    Ok((history, packages))
 }
 
 impl Snapshot {
@@ -293,6 +313,8 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
     // A refused tree is cached as `None`, so it is exported and noted only once
     // even when the commit is both a parent and a child in the range.
     let mut cache: BTreeMap<String, Option<Snapshot>> = BTreeMap::new();
+    // Commits whose unusable history manifest has been noted, once each.
+    let mut noted: BTreeSet<String> = BTreeSet::new();
     for (commit, parents) in commits {
         if crate::cancellation::checkpoint() {
             return undetermined(f, report.target, GitError::Cancelled.to_string());
@@ -364,6 +386,26 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
         let Some(Some(after)) = cache.get(&commit) else {
             continue;
         };
+        // CHG-02 `auxiliary` compares the files only, so it is decided even
+        // when a history manifest cannot be used; every other kind reads it.
+        if kind != "auxiliary" {
+            let unusable: Vec<_> = parent
+                .into_iter()
+                .zip([before])
+                .chain([(&commit, after)])
+                .filter_map(|(c, s)| Some((c, s.manifest_error.as_ref()?)))
+                .collect();
+            for (c, e) in &unusable {
+                if noted.insert((*c).clone()) {
+                    f.incomplete.insert(CH);
+                    let why = format!("{c}: tree refused: {e}");
+                    f.note(CH, Class::Undetermined, "CHG-02", COMMON, why, &at, "");
+                }
+            }
+            if !unusable.is_empty() {
+                continue;
+            }
+        }
         change.compare(before, after, &mut f);
     }
     let mut r = f.into_report(&[CH]);
@@ -907,6 +949,74 @@ mod tests {
                     r.diagnostics
                 );
             }
+        }
+    }
+
+    /// CHG-02 `auxiliary` reads no history manifest: a commit is decided by
+    /// the bytes alone when `history.yaml` is unreadable, of an unknown
+    /// `schemaVersion` or names an invalid Revision ID, while every other kind
+    /// stays undetermined.
+    #[test]
+    fn auxiliary_decides_without_a_usable_history_manifest() {
+        let s = Scratch::new();
+        let tree = |history: &[u8], generator: &[u8]| {
+            let h = s.run(&["hash-object", "-w", "--stdin"], Some(history));
+            let g = s.run(&["hash-object", "-w", "--stdin"], Some(generator));
+            let spec = format!("100644 blob {h}\thistory.yaml\n100644 blob {g}\tgen.sh\n");
+            s.run(&["mktree"], Some(spec.as_bytes()))
+        };
+        let invalid_id = format!(
+            "schemaVersion: {}\nrevisions:\n- id: \"../x\"\n  text:\n    status: complete\n",
+            crate::repository::HISTORY
+        );
+        let unusable: [&[u8]; 3] = [
+            b"revisions: [\n",
+            b"schemaVersion: loj/unknown\n",
+            invalid_id.as_bytes(),
+        ];
+        for unreadable in unusable {
+            let base = s.run(
+                &["commit-tree", &tree(unreadable, b"a\n"), "-m", "base"],
+                None,
+            );
+            let commit = |tree: &str, kind: &str| {
+                let msg = format!("m\n\nLoJ-Change: {kind}\n");
+                s.run(&["commit-tree", tree, "-p", &base, "-m", &msg], None)
+            };
+            let kept = commit(&tree(unreadable, b"b\n"), "auxiliary");
+            let r = check(&s.bundle_head(&kept), &base, &kept);
+            assert_eq!(result(&r), ResultValue::Pass, "{:?}", r.diagnostics);
+            assert!(r.diagnostics.is_empty(), "{:?}", r.diagnostics);
+
+            let changed = commit(&tree(b"revisions: [x\n", b"a\n"), "auxiliary");
+            let r = check(&s.bundle_head(&changed), &base, &changed);
+            assert_eq!(result(&r), ResultValue::Fail, "{:?}", r.diagnostics);
+            let found: Vec<_> = r.diagnostics.iter().map(|d| d.rule.as_str()).collect();
+            assert_eq!(found, ["CHG-02"], "{:?}", r.diagnostics);
+            assert!(r.diagnostics[0]
+                .message
+                .contains("changes canonical data file history.yaml"));
+
+            // Other kinds read the manifest: undetermined, noted once per commit
+            // although `kept` is both a child and a parent here.
+            let msg = "m\n\nLoJ-Change: metadata\n";
+            let head_tree = tree(unreadable, b"c\n");
+            let head = s.run(&["commit-tree", &head_tree, "-p", &kept, "-m", msg], None);
+            let r = check(&s.bundle_head(&head), &base, &head);
+            assert_eq!(result(&r), ResultValue::Incomplete, "{:?}", r.diagnostics);
+            assert!(r.diagnostics.iter().all(|d| !d.is_error()));
+            for c in [&kept, &head] {
+                let notes = r
+                    .diagnostics
+                    .iter()
+                    .filter(|d| d.message.starts_with(&format!("{c}:")))
+                    .count();
+                assert_eq!(notes, 1, "{c}: {:?}", r.diagnostics);
+            }
+
+            // Outside the change check the manifest is still required.
+            let b = Bundle::open(&s.bundle_head(&kept)).unwrap();
+            assert!(matches!(snapshot(&b, &kept), Err(ExportError::Tree(_))));
         }
     }
 
