@@ -386,6 +386,12 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
         let Some(Some(after)) = cache.get(&commit) else {
             continue;
         };
+        // CHG-02: the file modes are read from the trees, so they are checked
+        // for every declared kind even when a history manifest cannot be used.
+        // `auxiliary` fails any mode change of canonical data in its own check.
+        if kind != "auxiliary" {
+            policy::modes(&change, before, after, &mut f);
+        }
         // CHG-02 `auxiliary` compares the files only, so it is decided even
         // when a history manifest cannot be used; every other kind reads it.
         // `migration` stays undetermined here too, as when such a tree was
@@ -947,6 +953,56 @@ mod tests {
                         && d.message
                             .contains("file mode of canonical data file rebuild.yaml")),
                     "{:?}",
+                    r.diagnostics
+                );
+            }
+        }
+    }
+
+    /// CHG-02: the file mode is read from the tree, so a canonical data file
+    /// made executable fails every kind, even when the history manifest cannot
+    /// be used and the rest of the commit stays undetermined.
+    #[test]
+    fn file_modes_fail_without_a_usable_history_manifest() {
+        let s = Scratch::new();
+        let blob = s.run(&["hash-object", "-w", "--stdin"], Some(b"x\n"));
+        let history = s.run(&["hash-object", "-w", "--stdin"], Some(b"revisions: [\n"));
+        let tree = |main: &str, generator: &str| {
+            let spec =
+                format!("100644 blob {history}\thistory.yaml\n{generator} blob {blob}\tgen.sh\n");
+            let package = format!("{main} blob {blob}\tmain.md\n");
+            let package = s.run(&["mktree"], Some(package.as_bytes()));
+            let version = format!("040000 tree {package}\tb7k2m9qd\n");
+            let version = s.run(&["mktree"], Some(version.as_bytes()));
+            let spec = format!("{spec}040000 tree {version}\tversions\n");
+            s.run(&["mktree"], Some(spec.as_bytes()))
+        };
+        let base = s.run(
+            &["commit-tree", &tree("100644", "100644"), "-m", "base"],
+            None,
+        );
+        for kind in ["format", "metadata", "correction", "migration"] {
+            let msg = format!("m\n\nLoJ-Change: {kind}\nLoJ-Revisions: b7k2m9qd\n");
+            let commit = |tree: &str| s.run(&["commit-tree", tree, "-p", &base, "-m", &msg], None);
+            let executable = commit(&tree("100755", "100644"));
+            let r = check(&s.bundle_head(&executable), &base, &executable);
+            assert_eq!(result(&r), ResultValue::Fail, "{kind} {:?}", r.diagnostics);
+            assert!(
+                r.diagnostics.iter().any(|d| d.rule == "CHG-02"
+                    && d.is_error()
+                    && d.message
+                        == "canonical data file versions/b7k2m9qd/main.md has mode 100755, not 100644"),
+                "{kind} {:?}",
+                r.diagnostics
+            );
+            if kind != "migration" {
+                // Outside the canonical data, the mode is not checked.
+                let tool = commit(&tree("100644", "100755"));
+                let r = check(&s.bundle_head(&tool), &base, &tool);
+                assert_eq!(
+                    result(&r),
+                    ResultValue::Incomplete,
+                    "{kind} {:?}",
                     r.diagnostics
                 );
             }

@@ -1298,6 +1298,64 @@
       },
       "expected": "conformance/common/v1alpha1/expected/common-055.json",
       "success": true
+    },
+    {
+      "id": "common-056",
+      "title": "書式変更で、版パッケージのファイルのモードを通常のファイルに戻す",
+      "requirements": [
+        "CHG-02"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-056/repo.bundle",
+        "base": "2630cc9830f28ec6083a93e3058824b95b696458",
+        "head": "061d95ff8ea75af594a4e3e360136f8bd33994c0"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-056.json",
+      "success": true
+    },
+    {
+      "id": "common-057",
+      "title": "書式変更で、版パッケージのファイルを実行可能にする",
+      "requirements": [
+        "CHG-02"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-057/repo.bundle",
+        "base": "342736570869225d992c96fcdd63e4534a97ef74",
+        "head": "2630cc9830f28ec6083a93e3058824b95b696458"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-057.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-057/repo.bundle",
+          "from": "conformance/common/v1alpha1/valid/common-056/repo.bundle",
+          "edits": []
+        }
+      ]
+    },
+    {
+      "id": "common-058",
+      "title": "属性の更新と宣言して、版パッケージのファイルのモードだけを変える",
+      "requirements": [
+        "CHG-02"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-058/repo.bundle",
+        "base": "2630cc9830f28ec6083a93e3058824b95b696458",
+        "head": "a5bb35379dbf32312187e73e45cf8fb4900ba7e9"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-058.json",
+      "success": false
     }
   ]
 }
