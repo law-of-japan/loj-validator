@@ -389,10 +389,9 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
         // CHG-02 `auxiliary` compares the files only, so it is decided even
         // when a history manifest cannot be used; every other kind reads it.
         if kind != "auxiliary" {
-            let unusable: Vec<_> = parent
+            let unusable: Vec<_> = [parent.map(|p| (p, before)), Some((&commit, after))]
                 .into_iter()
-                .zip([before])
-                .chain([(&commit, after)])
+                .flatten()
                 .filter_map(|(c, s)| Some((c, s.manifest_error.as_ref()?)))
                 .collect();
             for (c, e) in &unusable {
@@ -1017,6 +1016,47 @@ mod tests {
             // Outside the change check the manifest is still required.
             let b = Bundle::open(&s.bundle_head(&kept)).unwrap();
             assert!(matches!(snapshot(&b, &kept), Err(ExportError::Tree(_))));
+
+            // Either side alone being unusable leaves the other kinds undetermined.
+            let usable = format!(
+                "schemaVersion: {}\nrevisions: []\n",
+                crate::repository::HISTORY
+            );
+            let readable = s.run(
+                &[
+                    "commit-tree",
+                    &tree(usable.as_bytes(), b"a\n"),
+                    "-m",
+                    "base",
+                ],
+                None,
+            );
+            for (from, to) in [
+                (unreadable, usable.as_bytes()),
+                (usable.as_bytes(), unreadable),
+            ] {
+                let parent = if from == usable.as_bytes() {
+                    &readable
+                } else {
+                    &base
+                };
+                let child = s.run(
+                    &["commit-tree", &tree(to, b"d\n"), "-p", parent, "-m", msg],
+                    None,
+                );
+                let r = check(&s.bundle_head(&child), parent, &child);
+                assert_eq!(result(&r), ResultValue::Incomplete, "{:?}", r.diagnostics);
+                let side = if to == unreadable { &child } else { parent };
+                let found: Vec<_> = r
+                    .diagnostics
+                    .iter()
+                    .map(|d| (d.class, &d.message))
+                    .collect();
+                assert!(
+                    matches!(found.as_slice(), [(Class::Undetermined, m)] if m.starts_with(&format!("{side}:"))),
+                    "{found:?}"
+                );
+            }
         }
     }
 
@@ -1034,5 +1074,6 @@ mod tests {
         let head = b.branch("main").unwrap().unwrap();
         let snap = snapshot(&b, &head).unwrap();
         assert!(snap.history.is_none() && snap.history_bytes.is_none());
+        assert!(snap.manifest_error.is_none());
     }
 }
