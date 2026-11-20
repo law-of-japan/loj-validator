@@ -603,4 +603,23 @@ fn a_deleted_article_needs_a_blank_line_or_the_end_of_the_file() {
             );
         }
     }
+    // CRLF: the blank line is `\r\n`, and the finding covers the `削除` line
+    // in original bytes.
+    let crlf_active = active.replace('\n', "\r\n");
+    let ok = format!("# 第一条\r\n削除\r\n\r\n{crlf_active}");
+    assert_eq!(rules(&package(&dir, &ok)), Vec::<String>::new());
+    let bad = format!("# 第一条\r\n削除\r\n{crlf_active}");
+    let result = package(&dir, &bad);
+    assert_eq!(rules(&result), ["HEAD-04"]);
+    let start = bad.find("削除").unwrap();
+    let location = result.report.diagnostics[0].location.as_ref().unwrap();
+    assert_eq!(location["start"], start);
+    assert_eq!(location["end"], start + "削除\r\n".len());
+    // In an amendment content, `削除` right before the closing marker.
+    let content = "# 第一条\n<!-- loj:paragraph number=1 -->\n甲法の一部を次のように改正する。\n\
+<!-- loj:amendment number=1 -->\n第七条を次のように改める。\n<!-- loj:amendment-content -->\n# 第七条\n削除\n\
+<!-- loj:end-amendment-content -->\n<!-- loj:end-amendment -->\n<!-- loj:end-paragraph -->\n";
+    assert_eq!(rules(&package(&dir, content)), ["HEAD-04"]);
+    let blank = content.replace("削除\n<!--", "削除\n\n<!--");
+    assert_eq!(rules(&package(&dir, &blank)), Vec::<String>::new());
 }
