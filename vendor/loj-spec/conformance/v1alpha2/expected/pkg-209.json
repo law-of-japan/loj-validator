@@ -1,0 +1,9 @@
+{
+  "diagnostics": [
+    {
+      "rule": "LIST-01",
+      "schemaVersion": "loj/v1alpha2",
+      "class": "error"
+    }
+  ]
+}

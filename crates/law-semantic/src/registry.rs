@@ -376,6 +376,7 @@ fn check_record(rec: &Value, rel: &str, f: &mut Findings) {
             "/numbers",
         );
     }
+    let kinds = crate::repository::glyphs::source_kinds(&rec["sources"]);
     for (i, n) in numbers.iter().enumerate() {
         let p = format!("/numbers/{i}");
         if let Some(s) = n["supersedes"].as_str() {
@@ -414,6 +415,19 @@ fn check_record(rec: &Value, rel: &str, f: &mut Findings) {
                     "period.gregorian is not a range of existing dates",
                     rel,
                     &format!("{p}/structured/period"),
+                );
+            }
+        }
+        // GLYPH-05 in number claims: the evidence of a glyph read elsewhere.
+        for (j, g) in n["glyphs"].as_array().into_iter().flatten().enumerate() {
+            if !crate::repository::glyphs::other_source_evidence(g, &kinds) {
+                f.error(
+                    R,
+                    "GLYPH-05",
+                    crate::repository::GLYPHS,
+                    "an illegible glyph read in another source needs the promulgated text and a distinct non-draft source",
+                    rel,
+                    &format!("{p}/glyphs/{j}/evidence"),
                 );
             }
         }
@@ -468,6 +482,30 @@ mod tests {
             .iter()
             .map(|(_, d)| (d.rule.clone(), d.message.clone()))
             .collect()
+    }
+
+    /// GLYPH-05 applies to the glyphs of a number claim with the Sources of
+    /// its record.
+    #[test]
+    fn a_number_glyph_read_in_another_source_cites_the_promulgated_text() {
+        let rec = |second: &str| {
+            json!({
+                "sources": [{"id": "kanpo", "kind": "promulgation"}, {"id": "egov", "kind": "egov"}, {"id": "original", "kind": "other"}],
+                "numbers": [{"id": "n1", "decision": "adopted", "raw": "第一号",
+                    "glyphs": [{"kind": "illegible", "basis": "otherSource", "offset": 1, "recorded": "一",
+                        "evidence": [{"source": "kanpo"}, {"source": second}]}]}],
+            })
+        };
+        let rules = |second: &str| {
+            let mut f = Findings::default();
+            check_record(&rec(second), "records/x.yaml", &mut f);
+            f.items
+                .iter()
+                .map(|(_, d)| d.rule.clone())
+                .collect::<Vec<_>>()
+        };
+        assert!(rules("original").is_empty());
+        assert_eq!(rules("egov"), ["GLYPH-05"]);
     }
 
     #[test]

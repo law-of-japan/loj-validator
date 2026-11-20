@@ -1,6 +1,6 @@
 # Next specification implementation (loj/v1alpha2 and the new kinds)
 
-Target: loj-spec commit `d39fe52bd993146475370a4d313ad15cde8b6af6`, vendored as
+Target: loj-spec commit `df5a9ee925bc0c1bfb7054af5c88c9092becaf88`, vendored as
 `spec`, `schemas`, `conformance`, `grammar/v1alpha2` and `LICENSE` in `vendor/loj-spec` with `COMMIT` and
 `SHA256SUMS.json`. The v1alpha1 fixtures of `b704631` stay unchanged in
 `vendor/loj-spec-v1alpha1`; the v1alpha1 and legacy pipelines are unchanged.
@@ -47,6 +47,12 @@ cannot be selected.
   fabricated byte positions.
 - Glyph notes of a version whose package fails L1 are not judged: `evidence` is
   `incomplete` (GLYPH-11).
+- GLYPH-05: an `illegible` note (or number-claim glyph) with `basis: otherSource`
+  must cite two or more distinct Sources of its file: one of kind `promulgation` or
+  `officialCorrection`, and another not of kind `egov` or `index`. A Source that is
+  not in the file counts for neither (TYPE-03 reports it). Which locator shows the
+  illegible place, and whether the other Source is an original, are left to L3
+  source comparison.
 - L4 `notFetched` references make the category `incomplete`, never `fail`.
 - Registration space is explicit input (`run_with_space`, `--registration-space`).
   There is no implicit `loj` and `space.yaml` is ignored. Omitted-space RecordRefs
@@ -163,10 +169,10 @@ or nothing passed.
 
 | Suite | Normative | Passed | Informative (not counted) |
 |---|---|---|---|
-| loj/v1alpha2 | 206 | 206 | 1 (pkg-026, L2) |
+| loj/v1alpha2 | 215 | 215 | 1 (pkg-026, L2) |
 | common/v1alpha1 | 55 | 55 | 0 |
 | loj-history/v1alpha1 | 61 | 61 | 0 |
-| loj-glyphs/v1alpha1 | 12 | 12 | 0 |
+| loj-glyphs/v1alpha1 | 20 | 20 | 0 |
 | loj-registry/v1alpha1 | 13 | 13 | 0 |
 | loj-rebuild/v1alpha1 | 5 | 5 | 0 |
 
@@ -174,7 +180,7 @@ Passing the fixed cases is a necessary condition only (CONF-02).
 
 ## Normative boundaries
 
-- There are 352 normative cases and one informative L2 case. `derivedFrom` and
+- There are 369 normative cases and one informative L2 case. `derivedFrom` and
   `rejectedBy` are audit metadata, never instructions to regenerate or skip inputs.
 - MD-04 emptiness uses the 25 Unicode 15.1 White_Space code points. Paragraph
   captions require `caption=present`; Toc placement and mixed number scripts are
@@ -190,6 +196,13 @@ Passing the fixed cases is a necessary condition only (CONF-02).
   marker; a supplement label there is HEAD-01. The amendment shape, its numbering,
   the single group of a content, and an amendment inside a content are checked
   on the finished tree (AMEND-01/02). The instruction text is never parsed.
+- LIST-01/02: a `list` takes `number` only; a branch number is accepted by the
+  lexer and reported as LIST-01, since list numbers are the order 1..n among the
+  sibling lists. A list holds text only (a marker in it is a DIR-02 parent error),
+  has no display number (`display` is empty, a leading 一 stays text) and is
+  `{parent}/list/{number}`. A paragraph, item or subitem with both items or
+  subitems and lists is LIST-02, reported once at its first list; directly in an
+  amendment content the same mix is AMEND-02, where lists are a group of their own.
 - HIST-13 tracks deleted row keys along each basedOn branch; partial, absent and
   invalid-L1 revisions are skipped without treating their rows as deletions.
   Glyph candidates come only from the revision's default path. The Unicode 15.1

@@ -342,6 +342,257 @@
       },
       "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-012.json",
       "success": true
+    },
+    {
+      "id": "glyph-013",
+      "title": "官報の複製で読めず、ほかの原典資料で読めた字を本文に置く判読困難の注記",
+      "requirements": [
+        "GLYPH-02",
+        "GLYPH-03",
+        "GLYPH-05",
+        "GLYPH-06",
+        "GLYPH-07",
+        "GLYPH-10"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/valid/glyph-013/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-013.json",
+      "success": true,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/valid/glyph-013/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "versions/98mj5vgx/glyphs.yaml",
+              "old": "  - id: g15\n",
+              "new": "  - id: g20\n    node: 19480720-law-178/main/article/1/paragraph/1\n    offset: 3\n    recorded: \"平和\"\n    kind: illegible\n    basis: otherSource\n    evidence: [{source: src-kanpo-19480720, locator: \"1コマ 第一條（汚れ）\"}, {source: src-goshomei, locator: \"第一條\"}]\n    verification: {state: confirmed, reason: \"官報の画像では汚れで読めず、御署名原本で読めた。「平」は右端だけが見え、御署名原本の字と合う\"}\n  - id: g21\n    node: 19480720-law-178/main/article/2/paragraph/1/table/1/row/b6gr/cell/1\n    offset: 1\n    recorded: \"〓\"\n    kind: illegible\n    evidence: [{source: src-kanpo-19480720, locator: \"1コマ 第二條 元日の項\"}]\n    verification: {state: unverified, reason: \"ほかの原典資料を確かめていない\"}\n  - id: g15\n"
+            },
+            {
+              "file": "versions/98mj5vgx/main.md",
+              "old": "元日\n",
+              "new": "元〓\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "glyph-014",
+      "title": "判読困難の字を下書きの資料の字で置く",
+      "requirements": [
+        "GLYPH-05"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-014/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-014.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-014/repo",
+          "from": "conformance/loj-glyphs/v1alpha1/valid/glyph-013/repo",
+          "edits": [
+            {
+              "file": "versions/98mj5vgx/glyphs.yaml",
+              "old": "    kind: illegible\n    basis: otherSource\n",
+              "new": "    kind: illegible\n    basis: provisional\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "glyph-015",
+      "title": "ほかの原典資料で読めたとして〓を置く",
+      "requirements": [
+        "GLYPH-05"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-015/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-015.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-015/repo",
+          "from": "conformance/loj-glyphs/v1alpha1/valid/glyph-013/repo",
+          "edits": [
+            {
+              "file": "versions/98mj5vgx/glyphs.yaml",
+              "old": "    recorded: \"平和\"\n    kind: illegible\n",
+              "new": "    recorded: \"〓〓\"\n    kind: illegible\n"
+            },
+            {
+              "file": "versions/98mj5vgx/main.md",
+              "old": "自由と平和を",
+              "new": "自由と〓〓を"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "glyph-016",
+      "title": "ほかの原典資料で読めた字の根拠が一件だけ",
+      "requirements": [
+        "GLYPH-05"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-016/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-016.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-016/repo",
+          "from": "conformance/loj-glyphs/v1alpha1/valid/glyph-013/repo",
+          "edits": [
+            {
+              "file": "versions/98mj5vgx/glyphs.yaml",
+              "old": "{source: src-kanpo-19480720, locator: \"1コマ 第一條（汚れ）\"}, {source: src-goshomei, locator: \"第一條\"}",
+              "new": "{source: src-goshomei, locator: \"第一條\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "glyph-017",
+      "title": "ほかの原典資料で読めた字の根拠が同じ資料だけ",
+      "requirements": [
+        "GLYPH-05"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-017/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-017.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-017/repo",
+          "from": "conformance/loj-glyphs/v1alpha1/valid/glyph-013/repo",
+          "edits": [
+            {
+              "file": "versions/98mj5vgx/glyphs.yaml",
+              "old": "{source: src-kanpo-19480720, locator: \"1コマ 第一條（汚れ）\"}, {source: src-goshomei, locator: \"第一條\"}",
+              "new": "{source: src-kanpo-19480720, locator: \"1コマ 第一條（汚れ）\"}, {source: src-kanpo-19480720, locator: \"1コマ 第一條\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "glyph-018",
+      "title": "ほかの原典資料で読めた字の根拠に公布された本文がない",
+      "requirements": [
+        "GLYPH-05"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-018/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-018.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-018/repo",
+          "from": "conformance/loj-glyphs/v1alpha1/valid/glyph-013/repo",
+          "edits": [
+            {
+              "file": "versions/98mj5vgx/glyphs.yaml",
+              "old": "{source: src-kanpo-19480720, locator: \"1コマ 第一條（汚れ）\"}, {source: src-goshomei, locator: \"第一條\"}",
+              "new": "{source: src-egov, locator: \"第一条\"}, {source: src-goshomei, locator: \"第一條\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "glyph-019",
+      "title": "字の決め方のない判読困難の注記で〓でない字を置く",
+      "requirements": [
+        "GLYPH-05"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-019/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-019.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-019/repo",
+          "from": "conformance/loj-glyphs/v1alpha1/valid/glyph-013/repo",
+          "edits": [
+            {
+              "file": "versions/98mj5vgx/glyphs.yaml",
+              "old": "    kind: illegible\n    basis: otherSource\n",
+              "new": "    kind: illegible\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "glyph-020",
+      "title": "ほかの原典資料で読めた字の根拠が下書きの資料",
+      "requirements": [
+        "GLYPH-05"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-020/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-020.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-020/repo",
+          "from": "conformance/loj-glyphs/v1alpha1/valid/glyph-013/repo",
+          "edits": [
+            {
+              "file": "versions/98mj5vgx/glyphs.yaml",
+              "old": "{source: src-kanpo-19480720, locator: \"1コマ 第一條（汚れ）\"}, {source: src-goshomei, locator: \"第一條\"}",
+              "new": "{source: src-kanpo-19480720, locator: \"1コマ 第一條（汚れ）\"}, {source: src-egov, locator: \"第一条\"}"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

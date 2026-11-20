@@ -16,6 +16,7 @@ pub(super) enum Kind {
     Paragraph,
     Item,
     Subitem,
+    List,
     Table,
     Row,
     Cell,
@@ -29,7 +30,7 @@ pub(super) enum Kind {
 impl Kind {
     /// Every kind. A test compares the names with the AST schema.
     #[cfg(test)]
-    pub(super) const ALL: [Kind; 21] = [
+    pub(super) const ALL: [Kind; 22] = [
         Kind::Law,
         Kind::MainProvision,
         Kind::SupplementaryProvision,
@@ -43,6 +44,7 @@ impl Kind {
         Kind::Paragraph,
         Kind::Item,
         Kind::Subitem,
+        Kind::List,
         Kind::Table,
         Kind::Row,
         Kind::Cell,
@@ -69,6 +71,7 @@ impl Kind {
             Kind::Paragraph => "Paragraph",
             Kind::Item => "Item",
             Kind::Subitem => "Subitem",
+            Kind::List => "List",
             Kind::Table => "Table",
             Kind::Row => "Row",
             Kind::Cell => "Cell",
@@ -86,6 +89,7 @@ impl Kind {
             "paragraph" => Kind::Paragraph,
             "item" => Kind::Item,
             "subitem" => Kind::Subitem,
+            "list" => Kind::List,
             "table" => Kind::Table,
             "row" => Kind::Row,
             "cell" => Kind::Cell,
@@ -162,6 +166,8 @@ mod tests {
         assert_eq!(Kind::Subsection.id_segment(), "subsection");
         assert_eq!(Kind::Paragraph.id_segment(), "paragraph");
         assert_eq!(Kind::Amendment.id_segment(), "amendment");
+        assert_eq!(Kind::from_marker("list"), Some(Kind::List));
+        assert_eq!(Kind::List.id_segment(), "list");
         assert_eq!(Kind::AmendmentContent.id_segment(), "content");
         assert_eq!(
             Kind::from_marker("amendment-content"),

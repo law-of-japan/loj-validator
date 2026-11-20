@@ -27,6 +27,10 @@ pub(super) enum Container {
         number: String,
         level: usize,
     },
+    /// LIST-01: one line of an unnumbered enumeration.
+    List {
+        number: String,
+    },
     Table {
         number: String,
     },
@@ -51,6 +55,7 @@ impl Container {
             Container::Paragraph { .. } => Kind::Paragraph,
             Container::Item { .. } => Kind::Item,
             Container::Subitem { .. } => Kind::Subitem,
+            Container::List { .. } => Kind::List,
             Container::Table { .. } => Kind::Table,
             Container::Row { .. } => Kind::Row,
             Container::Cell { .. } => Kind::Cell,
@@ -103,7 +108,7 @@ pub(super) fn marker(s: &str) -> Result<Marker, Invalid> {
     let kind = Kind::from_marker(words.next().ok_or_else(invalid)?).ok_or_else(invalid)?;
     let allowed: &[&str] = match kind {
         Kind::Paragraph => &["number", "numbering", "caption"],
-        Kind::Item | Kind::Table | Kind::Amendment => &["number"],
+        Kind::Item | Kind::List | Kind::Table | Kind::Amendment => &["number"],
         Kind::Subitem => &["number", "level"],
         Kind::Row => &["key"],
         Kind::Cell => &["rowspan", "colspan"],
@@ -173,6 +178,7 @@ pub(super) fn marker(s: &str) -> Result<Marker, Invalid> {
             caption,
         }),
         Kind::Item => Marker::Open(Container::Item { number: number? }),
+        Kind::List => Marker::Open(Container::List { number: number? }),
         Kind::Table => Marker::Open(Container::Table { number: number? }),
         Kind::Subitem => Marker::Open(Container::Subitem {
             number: number?,
@@ -230,6 +236,7 @@ mod tests {
         for bad in [
             "<!-- loj:item -->",
             "<!-- loj:table -->",
+            "<!-- loj:list -->",
             "<!-- loj:subitem number=1 -->",
             "<!-- loj:subitem level=1 -->",
         ] {
@@ -238,6 +245,16 @@ mod tests {
         assert!(marker("<!-- loj:row -->").is_err_and(|e| e.also == Some("TABLE-02")));
         assert!(marker("<!-- loj:subitem number=1 level=2 -->").is_ok());
         assert!(marker("<!-- loj:cell -->").is_ok());
+        // LIST-01, not DIR-01, refuses a branch number of a list.
+        assert!(matches!(
+            marker("<!-- loj:list number=2-1 -->"),
+            Ok(Marker::Open(Container::List { number })) if number == "2-1"
+        ));
+        assert!(matches!(
+            marker("<!-- loj:end-list -->"),
+            Ok(Marker::Close(Kind::List))
+        ));
+        assert!(marker("<!-- loj:list number=1 level=1 -->").is_err());
         assert!(marker("<!-- loj:cell colspan=2 rowspan=10 -->").is_ok());
         assert!(marker("<!-- loj:enact-statement -->").is_ok());
         assert!(matches!(

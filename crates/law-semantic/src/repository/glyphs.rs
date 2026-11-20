@@ -7,6 +7,65 @@ use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
+/// Source ID -> Source `kind` (empty when absent) of the file that holds the
+/// Sources the notes point to; `None` when the ID is listed with two kinds.
+pub(crate) type SourceKinds = HashMap<String, Option<String>>;
+
+/// The kinds of the `sources` of a history manifest or registry record. An ID
+/// listed with two different kinds is still a Source (TYPE-03) but has no
+/// kind, so the order of the duplicates cannot decide GLYPH-05.
+pub(crate) fn source_kinds(sources: &Value) -> SourceKinds {
+    let mut kinds = SourceKinds::new();
+    for s in list(sources) {
+        let Some(id) = s["id"].as_str() else { continue };
+        let kind = s["kind"].as_str().unwrap_or("").to_owned();
+        kinds
+            .entry(id.to_owned())
+            .and_modify(|k| {
+                if k.as_ref() != Some(&kind) {
+                    *k = None;
+                }
+            })
+            .or_insert(Some(kind));
+    }
+    kinds
+}
+
+/// Whether a note satisfies this part of GLYPH-05 (`true` for a note it does
+/// not concern): an `illegible` note with `basis: otherSource` points to two or
+/// more distinct Sources (by ID; citing one twice counts once): one of the
+/// promulgated text (`promulgation` or `officialCorrection`) and another that
+/// is not of kind `egov` or `index`. Any other note satisfies this. Sources
+/// that are not in `kinds` (TYPE-03 reports them) or have no single kind count
+/// for neither.
+///
+/// A Source without `kind` (a schema error, TYPE-02) is not excluded as a
+/// draft: only `egov` and `index` are named by the rule.
+///
+/// A promulgated Source is itself not a draft, so the pair exists exactly when
+/// one promulgated Source and two distinct non-draft Sources are cited. This
+/// is linear in the evidence, whose length only the file size bounds.
+pub(crate) fn other_source_evidence(note: &Value, kinds: &SourceKinds) -> bool {
+    if note["kind"] != "illegible" || note["basis"] != "otherSource" {
+        return true;
+    }
+    let mut promulgated = false;
+    let mut non_draft = HashSet::new();
+    for s in list(&note["evidence"])
+        .iter()
+        .filter_map(|e| e["source"].as_str())
+    {
+        let Some(Some(kind)) = kinds.get(s) else {
+            continue;
+        };
+        if !matches!(kind.as_str(), "egov" | "index") {
+            non_draft.insert(s);
+            promulgated |= matches!(kind.as_str(), "promulgation" | "officialCorrection");
+        }
+    }
+    promulgated && non_draft.len() >= 2
+}
+
 pub const SCHEMA: &str =
     include_str!("../../../../vendor/loj-spec/schemas/loj-glyphs/v1alpha1/glyphs.schema.json");
 
@@ -112,7 +171,7 @@ pub(crate) fn check(
     revision: &str,
     notes: Option<&str>,
     ast: Option<&Value>,
-    sources: &HashSet<String>,
+    sources: &SourceKinds,
     f: &mut Findings,
 ) {
     f.applicable.insert(EV);
@@ -185,7 +244,7 @@ fn document(
     list: &[Value],
     revision: &str,
     file: &str,
-    sources: &HashSet<String>,
+    sources: &SourceKinds,
     f: &mut Findings,
 ) {
     if d["revision"].as_str().is_some_and(|r| r != revision) {
@@ -215,7 +274,7 @@ fn document(
         }
         for (j, e) in n["evidence"].as_array().into_iter().flatten().enumerate() {
             if let Some(s) = e["source"].as_str() {
-                if !sources.contains(s) {
+                if !sources.contains_key(s) {
                     f.error(
                         EV,
                         "TYPE-03",
@@ -226,6 +285,16 @@ fn document(
                     );
                 }
             }
+        }
+        if !other_source_evidence(n, sources) {
+            f.error(
+                EV,
+                "GLYPH-05",
+                GLYPHS,
+                "an illegible note read in another source needs the promulgated text and a distinct non-draft source",
+                file,
+                &format!("{p}/evidence"),
+            );
         }
         if n["kind"] == "ambiguous" && n["recorded"] != "〓" {
             let has = n["candidates"]
@@ -383,12 +452,81 @@ mod tests {
             "b7k2m9qd",
             Some(&name),
             Some(&ast),
-            &HashSet::new(),
+            &SourceKinds::new(),
             &mut f,
         );
         std::fs::remove_file(root.join(name)).unwrap();
         assert_eq!(f.result(EV), crate::common::ResultValue::Incomplete);
         assert!(!f.items.iter().any(|(_, d)| d.rule == "GLYPH-11"));
+    }
+
+    /// GLYPH-05: `illegible` with `basis: otherSource` cites the promulgated
+    /// text and a distinct Source that is not a draft.
+    #[test]
+    fn a_glyph_read_in_another_source_cites_two_kinds_of_sources() {
+        let kinds: SourceKinds = [
+            ("kanpo", "promulgation"),
+            ("seigo", "officialCorrection"),
+            ("kanpo2", "promulgation"),
+            ("original", "other"),
+            ("egov", "egov"),
+            ("index", "index"),
+            ("plain", ""),
+        ]
+        .into_iter()
+        .map(|(a, b)| (a.to_owned(), Some(b.to_owned())))
+        .collect();
+        let note = |sources: &[&str]| {
+            let evidence: Vec<_> = sources.iter().map(|s| json!({"source": s})).collect();
+            json!({"kind": "illegible", "basis": "otherSource", "evidence": evidence})
+        };
+        for ok in [
+            &["kanpo", "original"][..],
+            &["original", "seigo"],
+            &["kanpo", "kanpo2"],
+            &["kanpo", "plain"],
+            &["egov", "kanpo", "original"],
+            &["kanpo", "original", "original"],
+        ] {
+            assert!(other_source_evidence(&note(ok), &kinds), "{ok:?}");
+        }
+        for bad in [
+            &["kanpo", "kanpo"][..],
+            &["kanpo", "kanpo", "egov"],
+            &["kanpo", "egov"],
+            &["kanpo", "index"],
+            &["original", "egov"],
+            &["kanpo", "unknown"],
+            &["kanpo"],
+            &[],
+        ] {
+            assert!(!other_source_evidence(&note(bad), &kinds), "{bad:?}");
+        }
+        // Other notes are not subject to it.
+        for other in [
+            json!({"kind": "illegible", "evidence": []}),
+            json!({"kind": "illegible", "basis": "undetermined", "evidence": []}),
+            json!({"kind": "ambiguous", "basis": "otherSource", "evidence": []}),
+        ] {
+            assert!(other_source_evidence(&other, &kinds), "{other}");
+        }
+    }
+
+    #[test]
+    fn a_source_listed_with_two_kinds_counts_for_neither() {
+        let kinds = source_kinds(&json!([
+            {"id": "kanpo", "kind": "promulgation"},
+            {"id": "x", "kind": "egov"},
+            {"id": "x", "kind": "other"},
+            {"id": "y", "kind": "other"},
+            {"id": "y", "kind": "other"},
+        ]));
+        assert_eq!(kinds.len(), 3);
+        assert_eq!(kinds["x"], None);
+        assert_eq!(kinds["y"].as_deref(), Some("other"));
+        let note = json!({"kind": "illegible", "basis": "otherSource",
+            "evidence": [{"source": "kanpo"}, {"source": "x"}]});
+        assert!(!other_source_evidence(&note, &kinds));
     }
 
     #[test]

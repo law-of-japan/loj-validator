@@ -1,0 +1,245 @@
+{
+  "ast": {
+    "schemaVersion": "loj/v1alpha2",
+    "law": {
+      "id": "20990101-act-1",
+      "title": "架空雲保管法（実在しないサンプル）",
+      "type": "act",
+      "number": "架空法律第一号",
+      "promulgatedAt": "2099-01-01",
+      "language": "ja"
+    },
+    "root": {
+      "kind": "Law",
+      "id": "20990101-act-1",
+      "number": null,
+      "display": "架空雲保管法（実在しないサンプル）",
+      "content": [
+        {
+          "kind": "MainProvision",
+          "id": "20990101-act-1/main",
+          "number": null,
+          "display": "",
+          "content": [
+            {
+              "kind": "Article",
+              "id": "20990101-act-1/main/article/1",
+              "number": "1",
+              "display": "第一条",
+              "content": [
+                {
+                  "kind": "Paragraph",
+                  "id": "20990101-act-1/main/article/1/paragraph/1",
+                  "number": "1",
+                  "display": "",
+                  "content": [
+                    {
+                      "text": "架空雲省に大臣官房及び左の三局を置く。\n"
+                    },
+                    {
+                      "kind": "List",
+                      "id": "20990101-act-1/main/article/1/paragraph/1/list/1",
+                      "number": "1",
+                      "display": "",
+                      "content": [
+                        {
+                          "text": "白雲局\n"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "List",
+                      "id": "20990101-act-1/main/article/1/paragraph/1/list/2",
+                      "number": "2",
+                      "display": "",
+                      "content": [
+                        {
+                          "text": "雨雲局\n"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "List",
+                      "id": "20990101-act-1/main/article/1/paragraph/1/list/3",
+                      "number": "3",
+                      "display": "",
+                      "content": [
+                        {
+                          "text": "雪雲局\n"
+                        }
+                      ]
+                    }
+                  ],
+                  "numbering": "explicit"
+                }
+              ],
+              "status": "active"
+            },
+            {
+              "kind": "Article",
+              "id": "20990101-act-1/main/article/2",
+              "number": "2",
+              "display": "第二条",
+              "content": [
+                {
+                  "kind": "Paragraph",
+                  "id": "20990101-act-1/main/article/2/paragraph/1",
+                  "number": "1",
+                  "display": "",
+                  "content": [
+                    {
+                      "text": "白雲局においては、左の事務を掌る。\n"
+                    },
+                    {
+                      "kind": "Item",
+                      "id": "20990101-act-1/main/article/2/paragraph/1/item/1",
+                      "number": "1",
+                      "display": "一",
+                      "content": [
+                        {
+                          "text": "一　白雲の保管に関すること。\n"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "Item",
+                      "id": "20990101-act-1/main/article/2/paragraph/1/item/2",
+                      "number": "2",
+                      "display": "二",
+                      "content": [
+                        {
+                          "text": "二　左に掲げる倉庫の管理に関すること。\n"
+                        },
+                        {
+                          "kind": "List",
+                          "id": "20990101-act-1/main/article/2/paragraph/1/item/2/list/1",
+                          "number": "1",
+                          "display": "",
+                          "content": [
+                            {
+                              "text": "一号倉庫\n"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "List",
+                          "id": "20990101-act-1/main/article/2/paragraph/1/item/2/list/2",
+                          "number": "2",
+                          "display": "",
+                          "content": [
+                            {
+                              "text": "二号倉庫\n"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "numbering": "explicit"
+                }
+              ],
+              "status": "active"
+            },
+            {
+              "kind": "Article",
+              "id": "20990101-act-1/main/article/3",
+              "number": "3",
+              "display": "第三条",
+              "content": [
+                {
+                  "kind": "Paragraph",
+                  "id": "20990101-act-1/main/article/3/paragraph/1",
+                  "number": "1",
+                  "display": "",
+                  "content": [
+                    {
+                      "text": "左の命令は、これを廃止する。\n"
+                    },
+                    {
+                      "kind": "List",
+                      "id": "20990101-act-1/main/article/3/paragraph/1/list/1",
+                      "number": "1",
+                      "display": "",
+                      "content": [
+                        {
+                          "text": "一　架空雲取締規則（架空省令第一号）\n"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "List",
+                      "id": "20990101-act-1/main/article/3/paragraph/1/list/2",
+                      "number": "2",
+                      "display": "",
+                      "content": [
+                        {
+                          "text": "一　架空霧取締規則（架空省令第二号）\n"
+                        }
+                      ]
+                    },
+                    {
+                      "text": "前に掲げる命令の廃止前にした行為の処罰については、なお従前の例による。\n"
+                    }
+                  ],
+                  "numbering": "explicit"
+                }
+              ],
+              "status": "active"
+            },
+            {
+              "kind": "Article",
+              "id": "20990101-act-1/main/article/4",
+              "number": "4",
+              "display": "第四条",
+              "content": [
+                {
+                  "kind": "Paragraph",
+                  "id": "20990101-act-1/main/article/4/paragraph/1",
+                  "number": "1",
+                  "display": "",
+                  "content": [
+                    {
+                      "text": "架空雨量法（架空法律第二号）の一部を次のように改正する。\n"
+                    },
+                    {
+                      "kind": "Amendment",
+                      "id": "20990101-act-1/main/article/4/paragraph/1/amendment/1",
+                      "number": "1",
+                      "display": "",
+                      "content": [
+                        {
+                          "text": "第三条中雨局の下に次のように加える。\n"
+                        },
+                        {
+                          "kind": "AmendmentContent",
+                          "id": "20990101-act-1/main/article/4/paragraph/1/amendment/1/content",
+                          "number": null,
+                          "display": "",
+                          "content": [
+                            {
+                              "kind": "List",
+                              "id": "20990101-act-1/main/article/4/paragraph/1/amendment/1/content/list/1",
+                              "number": "1",
+                              "display": "",
+                              "content": [
+                                {
+                                  "text": "霧局\n"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "numbering": "explicit"
+                }
+              ],
+              "status": "active"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
