@@ -9,12 +9,14 @@ pub const USAGE: &str = "next specification (loj/v1alpha2 and history, glyphs, r
   loj-validator check PATH [--level L0|L1|L3|L4]... [--category NAME]... [--check NAME]...
                      [--format json|text] [--ast FILE] [--registration-space SPACE] [--record ID]
   loj-validator check --registry DIR --repository DIR... [--level L4] [--category NAME]...
-  loj-validator check BUNDLE --base COMMIT --head COMMIT        (change check, CHG-02/03)
+  loj-validator check BUNDLE [--base COMMIT] --head COMMIT      (change check, CHG-02/03)
   loj-validator check BUNDLE --registry DIR --reference REF     (reference resolution)
 
   PATH is law.yaml or its directory (package), a law repository (history.yaml),
   or a registry (records/). Categories: historyStructure, evidence (L3);
   relationResolution, relationConsistency, timeConsistency, displayConsistency (L4).
+  Without --base, the change check covers every commit reachable from --head,
+  from the first commit (the commit without a parent) on.
   --registration-space SPACE supplies the registry space ([a-z][a-z0-9-]*);
   no default is inferred from space.yaml. --record ID selects a repository/records report.
   --ast is package-only; --registration-space requires a registry input.
@@ -113,7 +115,7 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
         return Err("--registration-space must match [a-z][a-z0-9-]*".into());
     }
     let input = match (path, registry, base, head, reference) {
-        (Some(bundle), None, Some(base), Some(head), None) if repositories.is_empty() => {
+        (Some(bundle), None, base, Some(head), None) if repositories.is_empty() => {
             Input::Change { bundle, base, head }
         }
         (Some(bundle), Some(registry), None, None, Some(reference)) if repositories.is_empty() => {

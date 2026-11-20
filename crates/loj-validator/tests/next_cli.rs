@@ -133,6 +133,38 @@ fn change_and_reference() {
     ]);
     assert_eq!(code, 1, "{r}");
     assert_eq!(r["results"][0]["check"], "change");
+    // Without --base, the history is checked from the first commit (common-059).
+    let head = |id: &str| {
+        let case = manifest["cases"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| c["id"] == id)
+            .unwrap();
+        assert!(case["input"].get("base").is_none());
+        format!("--head={}", case["input"]["head"].as_str().unwrap())
+    };
+    let (code, r) = json(&[
+        "check",
+        &format!("{c}/valid/common-004/repo.bundle"),
+        &head("common-059"),
+    ]);
+    assert_eq!(code, 0, "{r}");
+    assert_eq!(r["results"][0]["result"], "pass");
+    let (code, r) = json(&[
+        "check",
+        &format!("{c}/invalid/common-060/repo.bundle"),
+        &head("common-060"),
+    ]);
+    assert_eq!(code, 1, "{r}");
+    assert_eq!(r["diagnostics"][0]["rule"], "CHG-03");
+    // --base alone is still not an input.
+    let (code, _) = json(&[
+        "check",
+        &format!("{c}/valid/common-004/repo.bundle"),
+        "--base=HEAD",
+    ]);
+    assert_eq!(code, 2);
     let (code, r) = json(&[
         "check",
         &format!("{c}/valid/common-004/repo.bundle"),
