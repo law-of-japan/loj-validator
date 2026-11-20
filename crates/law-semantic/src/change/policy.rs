@@ -134,6 +134,28 @@ fn remove(value: &mut Value, keys: &[&str]) {
     }
 }
 
+/// CHG-02: whether a commit of this kind may change the canonical data file
+/// `path`; `affected` are its declared (or, for `revisionAdd`, added) versions.
+fn may_change(change: &Change<'_>, affected: &BTreeSet<String>, path: &str) -> bool {
+    let version = version_file(path);
+    let package = version.is_some_and(|(_, file)| file != "glyphs.yaml");
+    match change.kind {
+        "format" => package,
+        "metadata" => !package,
+        "correction" | "officialCorrection" | "restoration" | "revisionAdd" | "revisionFix" => {
+            match version {
+                Some((id, _)) => affected.contains(id),
+                None if path == "history.yaml" => true,
+                None if path == "rebuild.yaml" => {
+                    matches!(change.kind, "restoration" | "revisionAdd")
+                }
+                _ => false,
+            }
+        }
+        _ => false,
+    }
+}
+
 pub(super) fn check(change: &Change<'_>, before: &Snapshot, after: &Snapshot, f: &mut Findings) {
     let old_ids = revision_ids(before);
     let new_ids = revision_ids(after);
@@ -182,29 +204,12 @@ pub(super) fn check(change: &Change<'_>, before: &Snapshot, after: &Snapshot, f:
         .filter(|path| before.files.get(*path) != after.files.get(*path))
         .collect();
     for path in changed {
-        let version = version_file(path);
-        let package = version.is_some_and(|(_, file)| file != "glyphs.yaml");
         if !canonical(path) {
             // CHG-01/CHG-02: files outside the canonical data may change in a
             // commit of any kind and do not affect its check.
             continue;
         }
-        let allowed = match change.kind {
-            "format" => package,
-            "metadata" => !package,
-            "correction" | "officialCorrection" | "restoration" | "revisionAdd" | "revisionFix" => {
-                match version {
-                    Some((id, _)) => affected.contains(id),
-                    None if path == "history.yaml" => true,
-                    None if path == "rebuild.yaml" => {
-                        matches!(change.kind, "restoration" | "revisionAdd")
-                    }
-                    _ => false,
-                }
-            }
-            _ => false,
-        };
-        if !allowed {
+        if !may_change(change, &affected, path) {
             change.error(f, "CHG-02", format!("{} cannot change {path}", change.kind));
         }
         if path.ends_with(".yaml")
@@ -217,6 +222,31 @@ pub(super) fn check(change: &Change<'_>, before: &Snapshot, after: &Snapshot, f:
                 "CHG-02",
                 COMMON,
                 format!("cannot inspect changed YAML {path}"),
+                change.at,
+                "",
+            );
+        }
+    }
+    // CHG-02 names the Git file mode for `auxiliary` only: whether a mode
+    // change is within another kind's range is not specified. A canonical file
+    // that the kind may not change, kept byte for byte with only its mode
+    // changed, is therefore neither passed nor failed (law-of-japan/loj-validator#50).
+    for path in before.executable.symmetric_difference(&after.executable) {
+        if canonical(path)
+            && before.files.contains_key(path)
+            && after.files.get(path) == before.files.get(path)
+            && !may_change(change, &affected, path)
+        {
+            f.incomplete.insert(CH);
+            f.note(
+                CH,
+                Class::Undetermined,
+                "CHG-02",
+                COMMON,
+                format!(
+                    "{} changes only the file mode of {path}; the specification does not say whether this kind may",
+                    change.kind
+                ),
                 change.at,
                 "",
             );
@@ -797,6 +827,49 @@ mod tests {
         let mut ci = Snapshot::default();
         ci.files.insert(".github/workflows/ci.yml".into(), [1; 32]);
         assert!(!inspect("format", &before, &ci).failed(CH));
+    }
+
+    /// CHG-02 does not say whether a mode change is within the range of a kind
+    /// other than `auxiliary`: a mode-only change to a file the kind may not
+    /// change is undetermined, one to a file it may change is no finding.
+    #[test]
+    fn mode_only_change_outside_the_range_is_undetermined() {
+        let package = "versions/b7k2m9qd/main.md";
+        for (kind, path, outside) in [
+            ("metadata", package, true),
+            ("format", "history.yaml", true),
+            ("correction", "versions/c7k2m9qd/main.md", true),
+            ("format", package, false),
+            ("metadata", "history.yaml", false),
+            ("correction", package, false),
+            ("metadata", ".github/gen.sh", false),
+            ("correction", "rebuild.yaml", true),
+            ("restoration", "rebuild.yaml", false),
+            ("revisionAdd", "versions/c7k2m9qd/main.md", true),
+            ("revisionFix", package, false),
+        ] {
+            let mut before = Snapshot::default();
+            before.files.insert(path.into(), [1; 32]);
+            let mut after = Snapshot {
+                files: before.files.clone(),
+                ..Snapshot::default()
+            };
+            after.executable.insert(path.into());
+            let f = inspect(kind, &before, &after);
+            // `correction` fails here for its missing history, never for the file.
+            let about_path: Vec<_> = f
+                .items
+                .iter()
+                .map(|(_, d)| d)
+                .filter(|d| d.message.contains(path))
+                .collect();
+            assert!(about_path.iter().all(|d| !d.is_error()), "{kind} {path}");
+            let undetermined = about_path
+                .iter()
+                .any(|d| d.rule == "CHG-02" && d.class == Class::Undetermined);
+            assert_eq!(undetermined, outside, "{kind} {path}");
+            assert_eq!(f.incomplete.contains(&CH), outside, "{kind} {path}");
+        }
     }
 
     /// A file directly under `versions/` belongs to no version package but is
