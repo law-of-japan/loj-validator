@@ -213,6 +213,11 @@ Passing the fixed cases is a necessary condition only (CONF-02).
   and compares no AST, and so is never CHG-04 undetermined. A tree with any other
   mode (a symbolic link, a submodule) is still refused, which leaves the check
   incomplete.
+  CHG-02 names the file mode for `auxiliary` only. For the other kinds, a
+  canonical data file that the kind may not change, kept byte for byte with only
+  its mode changed, is reported undetermined (CHG-02), since the specification does
+  not say whether that is within the kind's range; a mode change to a file the
+  kind may change is no finding (law-of-japan/loj-validator#50).
   `auxiliary` reads no history manifest either: a commit is decided by the bytes
   even when `history.yaml` is unreadable, has an unsupported `schemaVersion` or an
   invalid Revision ID. Every other kind reads the manifest, so such a commit (as
