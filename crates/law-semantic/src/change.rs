@@ -1305,6 +1305,39 @@ LoJ-Change: format
         assert_eq!(at_of(&r, &merge), 1, "{:?}", r.diagnostics);
     }
 
+    /// A refused parent with two children is noted once, although both
+    /// children compare with it and its cache entry is dropped after the last.
+    #[test]
+    fn a_refused_parent_of_two_children_is_noted_once() {
+        let s = Scratch::new();
+        let blob = s.run(&["hash-object", "-w", "--stdin"], Some(b""));
+        let tree = |name: &str| {
+            let spec = format!("100644 blob {blob}\t{name}\n");
+            s.run(&["mktree"], Some(spec.as_bytes()))
+        };
+        let (good, bad) = (tree("history.yaml"), tree("a:b"));
+        let commit = |tree: &str, parents: &[&str], msg: &str| {
+            let mut args = vec!["commit-tree", tree];
+            for p in parents {
+                args.extend(["-p", p]);
+            }
+            args.extend(["-m", msg]);
+            s.run(&args, None)
+        };
+        let root = commit(&bad, &[], "root\n\nLoJ-Change: revisionAdd\n");
+        let left = commit(&good, &[&root], "left\n\nLoJ-Change: metadata\n");
+        let right = commit(&good, &[&root], "right\n\nLoJ-Change: metadata\n");
+        let merge = commit(&good, &[&left, &right], "m\n\nLoJ-Change: format\n");
+        let r = check(&s.bundle_head(&merge), None, &merge);
+        assert_eq!(result(&r), ResultValue::Fail, "{:?}", r.diagnostics);
+        let notes = r
+            .diagnostics
+            .iter()
+            .filter(|d| d.message.starts_with(&format!("{root}: tree refused")))
+            .count();
+        assert_eq!(notes, 1, "{:?}", r.diagnostics);
+    }
+
     /// The errors reported at `commit` (the change check's `location.file`).
     fn at_of(r: &Report, commit: &str) -> usize {
         let file = format!("commit {commit}");
