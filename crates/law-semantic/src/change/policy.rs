@@ -231,10 +231,10 @@ pub(super) fn check(change: &Change<'_>, before: &Snapshot, after: &Snapshot, f:
     // change is within another kind's range is not specified. A canonical file
     // that the kind may not change, kept byte for byte with only its mode
     // changed, is therefore neither passed nor failed (law-of-japan/loj-validator#50).
-    for path in before.files.keys() {
+    for path in before.executable.symmetric_difference(&after.executable) {
         if canonical(path)
+            && before.files.contains_key(path)
             && after.files.get(path) == before.files.get(path)
-            && before.executable.contains(path) != after.executable.contains(path)
             && !may_change(change, &affected, path)
         {
             f.incomplete.insert(CH);
@@ -843,6 +843,10 @@ mod tests {
             ("metadata", "history.yaml", false),
             ("correction", package, false),
             ("metadata", ".github/gen.sh", false),
+            ("correction", "rebuild.yaml", true),
+            ("restoration", "rebuild.yaml", false),
+            ("revisionAdd", "versions/c7k2m9qd/main.md", true),
+            ("revisionFix", package, false),
         ] {
             let mut before = Snapshot::default();
             before.files.insert(path.into(), [1; 32]);
