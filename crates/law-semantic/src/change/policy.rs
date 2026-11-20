@@ -161,6 +161,7 @@ fn may_change(change: &Change<'_>, affected: &BTreeSet<String>, path: &str) -> b
 /// not checked, so one wrong mode does not fail every later commit; a commit
 /// without a parent changes every file. The export refuses any mode other than
 /// `100644` and `100755`, so only `100755` is found here.
+/// `executable` lists files of the tree only, so a removed file is never seen.
 pub(super) fn modes(change: &Change<'_>, before: &Snapshot, after: &Snapshot, f: &mut Findings) {
     for path in &after.executable {
         if canonical(path)

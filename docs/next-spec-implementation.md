@@ -235,8 +235,9 @@ Passing the fixed cases is a necessary condition only (CONF-02).
   path, bytes and Git file mode (`100644`/`100755`, from the tree listing), builds
   and compares no AST, and so is never CHG-04 undetermined. A tree with any other
   mode (a symbolic link `120000`, a submodule `160000`) is still refused, which
-  leaves the check incomplete: CHG-02 fails such a canonical data file, but the
-  limits on bundle trees are not relaxed to read it.
+  leaves the check incomplete: the specification fails such a canonical data file
+  under CHG-02, but this checker reports no CHG-02 failure for it, as the limits
+  on bundle trees are not relaxed to read it.
   A change of the Git file mode alone is a change of the file for every kind:
   outside the kind's range it is CHG-02, inside it no finding (so `format` may
   turn a package file back to `100644`). Every kind other than `auxiliary` (whose
