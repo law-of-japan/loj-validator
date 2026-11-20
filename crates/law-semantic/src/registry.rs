@@ -376,6 +376,7 @@ fn check_record(rec: &Value, rel: &str, f: &mut Findings) {
             "/numbers",
         );
     }
+    let kinds = crate::repository::glyphs::source_kinds(&rec["sources"]);
     for (i, n) in numbers.iter().enumerate() {
         let p = format!("/numbers/{i}");
         if let Some(s) = n["supersedes"].as_str() {
@@ -418,7 +419,6 @@ fn check_record(rec: &Value, rel: &str, f: &mut Findings) {
             }
         }
         // GLYPH-05 in number claims: the evidence of a glyph read elsewhere.
-        let kinds = crate::repository::glyphs::source_kinds(&rec["sources"]);
         for (j, g) in n["glyphs"].as_array().into_iter().flatten().enumerate() {
             if !crate::repository::glyphs::other_source_evidence(g, &kinds) {
                 f.error(
