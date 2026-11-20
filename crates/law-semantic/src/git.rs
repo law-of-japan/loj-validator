@@ -563,18 +563,24 @@ impl Bundle {
             .probe(&["merge-base", "--is-ancestor", a, b])?
             .is_some())
     }
-    /// Commits of `base..head`, oldest first, each with its first parent. Both must
-    /// be resolved commits (callers pass the hashes `commit` returned); an invalid
-    /// revision is an `Err`, like a git failure.
-    pub fn range(&self, base: &str, head: &str) -> Result<Vec<(String, Vec<String>)>, GitError> {
-        revision(base)?;
+    /// Commits of `base..head`, oldest first, each with its parents; without
+    /// `base`, every commit reachable from `head`, from the commits without a
+    /// parent on. Both must be resolved commits (callers pass the hashes
+    /// `commit` returned); an invalid revision is an `Err`, like a git failure.
+    pub fn range(
+        &self,
+        base: Option<&str>,
+        head: &str,
+    ) -> Result<Vec<(String, Vec<String>)>, GitError> {
+        if let Some(base) = base {
+            revision(base)?;
+        }
         revision(head)?;
-        let list = self.git(&[
-            "rev-list",
-            "--reverse",
-            "--parents",
-            &format!("{base}..{head}"),
-        ])?;
+        let range = match base {
+            Some(base) => format!("{base}..{head}"),
+            None => head.to_owned(),
+        };
+        let list = self.git(&["rev-list", "--reverse", "--parents", &range])?;
         let list = String::from_utf8(list)
             .map_err(|_| GitError::Unexpected("git printed a non-UTF-8 commit list"))?;
         Ok(list
@@ -1387,7 +1393,7 @@ pub(crate) mod tests {
         let head = b.branch("main").unwrap().unwrap();
         for result in [
             b.is_ancestor("--all", &head).err(),
-            b.range("--all", &head).err(),
+            b.range(Some("--all"), &head).err(),
             b.message("--all").err(),
         ] {
             assert_eq!(result, Some(GitError::Revision("--all".into())));
@@ -1469,7 +1475,7 @@ pub(crate) mod tests {
         assert!(revision(&head).is_ok());
         assert_eq!(b.commit("--all"), Ok(None));
         assert!(b.is_ancestor("--all", &head).is_err());
-        assert!(b.range("--all", &head).is_err());
+        assert!(b.range(Some("--all"), &head).is_err());
         assert!(b.message("--all").is_err());
         assert!(b.export("--all").is_err());
     }
@@ -1580,6 +1586,6 @@ pub(crate) mod tests {
         let err = b.message(&head).unwrap_err();
         assert!(matches!(err, GitError::Failed(_)), "{err}");
         assert!(err.to_string().starts_with("git failed"), "{err}");
-        assert!(b.range(&head, &head).is_err());
+        assert!(b.range(Some(&head), &head).is_err());
     }
 }

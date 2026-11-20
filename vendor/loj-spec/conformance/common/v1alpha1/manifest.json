@@ -1356,6 +1356,55 @@
       },
       "expected": "conformance/common/v1alpha1/expected/common-058.json",
       "success": false
+    },
+    {
+      "id": "common-059",
+      "title": "法令リポジトリの最初のcommitで、制定時の版を加える",
+      "requirements": [
+        "CHG-02",
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-004/repo.bundle",
+        "head": "f1162fe2cfefa04e9a0d656706e37977fb3d0731"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-059.json",
+      "success": true
+    },
+    {
+      "id": "common-060",
+      "title": "法令リポジトリの最初のcommitを、書式変更と宣言する",
+      "requirements": [
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-060/repo.bundle",
+        "head": "f98343386623faddb67f90382405ab2eae4ee0b7"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-060.json",
+      "success": false
+    },
+    {
+      "id": "common-061",
+      "title": "法令リポジトリの最初のcommitで、版パッケージのファイルを実行可能にして置く",
+      "requirements": [
+        "CHG-02"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-061/repo.bundle",
+        "head": "d26d08066cb069ae0f353fec51b476031a96c4b7"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-061.json",
+      "success": false
     }
   ]
 }

@@ -262,7 +262,10 @@ fn undetermined(mut f: Findings, target: Map<String, Value>, why: String) -> Rep
     r
 }
 
-pub fn check(bundle: &Path, base: &str, head: &str) -> Report {
+/// The change check (CHG-02, CHG-03) of the commits after `base` up to `head`,
+/// or, without `base`, of every commit reachable from `head` from the first
+/// commit on; a commit without a parent is compared with no record before it.
+pub fn check(bundle: &Path, base: Option<&str>, head: &str) -> Report {
     let mut f = Findings::default();
     let mut report = Report::default();
     let b = match Bundle::open(bundle) {
@@ -295,9 +298,16 @@ pub fn check(bundle: &Path, base: &str, head: &str) -> Report {
 /// (VAL-04) at the first failure, so a broken git is not noted (or waited for)
 /// once per commit. A tree refused for its content (an unsafe name, the input
 /// budget) is noted for that commit and the check goes on.
-fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, head: &str) -> Report {
-    let (base, head) = match (b.commit(base), b.commit(head)) {
-        (Ok(Some(base)), Ok(Some(head))) => (base, head),
+fn check_bundle(
+    b: &Bundle,
+    mut f: Findings,
+    mut report: Report,
+    base: Option<&str>,
+    head: &str,
+) -> Report {
+    let base = base.map(|base| b.commit(base)).transpose();
+    let (base, head) = match (base, b.commit(head)) {
+        (Ok(base @ (None | Some(Some(_)))), Ok(Some(head))) => (base.flatten(), head),
         (Err(e), _) | (_, Err(e)) => return undetermined(f, report.target, e.to_string()),
         _ => {
             let why = "base or head commit is not in the bundle".into();
@@ -306,7 +316,7 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
     };
     report.target.insert("commit".into(), json!(head));
     f.applicable.insert(CH);
-    let commits = match b.range(&base, &head) {
+    let commits = match b.range(base.as_deref(), &head) {
         Ok(c) => c,
         Err(e) => return undetermined(f, report.target, e.to_string()),
     };
@@ -315,105 +325,131 @@ fn check_bundle(b: &Bundle, mut f: Findings, mut report: Report, base: &str, hea
     let mut cache: BTreeMap<String, Option<Snapshot>> = BTreeMap::new();
     // Commits whose unusable history manifest has been noted, once each.
     let mut noted: BTreeSet<String> = BTreeSet::new();
+    // How many commits of the list compare with each commit as their parent:
+    // a snapshot is dropped from the cache after its last such comparison, so
+    // a check of the whole history does not keep every snapshot in memory.
+    let mut uses: BTreeMap<String, usize> = BTreeMap::new();
+    for (_, parents) in &commits {
+        if let [parent] = parents.as_slice() {
+            *uses.entry(parent.clone()).or_default() += 1;
+        }
+    }
     for (commit, parents) in commits {
         if crate::cancellation::checkpoint() {
             return undetermined(f, report.target, GitError::Cancelled.to_string());
         }
-        let at = format!("commit {commit}");
-        if parents.len() > 1 {
-            f.error(
-                CH,
-                "CHG-03",
-                COMMON,
-                "merge commits are not permitted",
-                &at,
-                "",
-            );
-            continue;
-        }
-        let message = match b.message(&commit) {
-            Ok(Some(m)) => m,
-            Ok(None) => {
+        let last_use = match parents.as_slice() {
+            [parent] => uses.get_mut(parent).is_some_and(|n| {
+                *n -= 1;
+                *n == 0
+            }),
+            _ => false,
+        };
+        'commit: {
+            let at = format!("commit {commit}");
+            if parents.len() > 1 {
                 f.error(
                     CH,
                     "CHG-03",
                     COMMON,
-                    format!("{commit}: the commit message is not UTF-8"),
+                    "merge commits are not permitted",
                     &at,
                     "",
                 );
-                // Without a readable message the change kind is unknown, so the
-                // commit's trees are not compared (as for a missing LoJ-Change).
-                continue;
+                break 'commit;
             }
-            Err(e) => return undetermined(f, report.target, format!("{commit}: {e}")),
-        };
-        let Some((kind, declared)) = declared_change(&commit, &at, &message, &mut f) else {
-            continue;
-        };
-        let parent = parents.first();
-        if parent.is_none() && kind != "revisionAdd" {
-            f.error(
-                CH,
-                "CHG-03",
-                COMMON,
-                "first law commit must declare revisionAdd",
-                &at,
-                "",
-            );
-            continue;
-        }
-        let change = Change {
-            commit: &commit,
-            at: &at,
-            kind: &kind,
-            declared: &declared,
-            reviewed: reviewed(&message),
-        };
-        for c in parent.into_iter().chain(std::iter::once(&commit)) {
-            if let Err(why) = load_snapshot(b, c, &change, &mut cache, &mut f) {
-                return undetermined(f, report.target, why);
+            let message = match b.message(&commit) {
+                Ok(Some(m)) => m,
+                Ok(None) => {
+                    f.error(
+                        CH,
+                        "CHG-03",
+                        COMMON,
+                        format!("{commit}: the commit message is not UTF-8"),
+                        &at,
+                        "",
+                    );
+                    // Without a readable message the change kind is unknown, so the
+                    // commit's trees are not compared (as for a missing LoJ-Change).
+                    break 'commit;
+                }
+                Err(e) => return undetermined(f, report.target, format!("{commit}: {e}")),
+            };
+            let Some((kind, declared)) = declared_change(&commit, &at, &message, &mut f) else {
+                break 'commit;
+            };
+            let parent = parents.first();
+            if parent.is_none() && kind != "revisionAdd" {
+                f.error(
+                    CH,
+                    "CHG-03",
+                    COMMON,
+                    "first law commit must declare revisionAdd",
+                    &at,
+                    "",
+                );
+                break 'commit;
             }
-        }
-        let empty = Snapshot::default();
-        let before = match parent {
-            Some(parent) => match cache.get(parent) {
-                Some(Some(snapshot)) => snapshot,
-                _ => continue,
-            },
-            None => &empty,
-        };
-        let Some(Some(after)) = cache.get(&commit) else {
-            continue;
-        };
-        // CHG-02: the file modes are read from the trees, so they are checked
-        // for every declared kind even when a history manifest cannot be used.
-        // `auxiliary` fails any mode change of canonical data in its own check.
-        if kind != "auxiliary" {
-            policy::modes(&change, before, after, &mut f);
-        }
-        // CHG-02 `auxiliary` compares the files only, so it is decided even
-        // when a history manifest cannot be used; every other kind reads it.
-        // `migration` stays undetermined here too, as when such a tree was
-        // refused before, rather than reaching its CHG-02 error in `compare`.
-        if kind != "auxiliary" {
-            let unusable: Vec<_> = [parent.map(|p| (p, before)), Some((&commit, after))]
-                .into_iter()
-                .flatten()
-                .filter_map(|(c, s)| Some((c, s.manifest_error.as_ref()?)))
-                .collect();
-            for (c, e) in &unusable {
-                if noted.insert((*c).clone()) {
-                    f.incomplete.insert(CH);
-                    let why = format!("{c}: tree refused: {e}");
-                    f.note(CH, Class::Undetermined, "CHG-02", COMMON, why, &at, "");
+            let change = Change {
+                commit: &commit,
+                at: &at,
+                kind: &kind,
+                declared: &declared,
+                reviewed: reviewed(&message),
+            };
+            for c in parent.into_iter().chain(std::iter::once(&commit)) {
+                if let Err(why) = load_snapshot(b, c, &change, &mut cache, &mut f) {
+                    return undetermined(f, report.target, why);
                 }
             }
-            if !unusable.is_empty() {
-                continue;
+            let empty = Snapshot::default();
+            let before = match parent {
+                Some(parent) => match cache.get(parent) {
+                    Some(Some(snapshot)) => snapshot,
+                    _ => break 'commit,
+                },
+                None => &empty,
+            };
+            let Some(Some(after)) = cache.get(&commit) else {
+                break 'commit;
+            };
+            // CHG-02: the file modes are read from the trees, so they are checked
+            // for every declared kind even when a history manifest cannot be used.
+            // `auxiliary` fails any mode change of canonical data in its own check.
+            if kind != "auxiliary" {
+                policy::modes(&change, before, after, &mut f);
             }
+            // CHG-02 `auxiliary` compares the files only, so it is decided even
+            // when a history manifest cannot be used; every other kind reads it.
+            // `migration` stays undetermined here too, as when such a tree was
+            // refused before, rather than reaching its CHG-02 error in `compare`.
+            if kind != "auxiliary" {
+                let unusable: Vec<_> = [parent.map(|p| (p, before)), Some((&commit, after))]
+                    .into_iter()
+                    .flatten()
+                    .filter_map(|(c, s)| Some((c, s.manifest_error.as_ref()?)))
+                    .collect();
+                for (c, e) in &unusable {
+                    if noted.insert((*c).clone()) {
+                        f.incomplete.insert(CH);
+                        let why = format!("{c}: tree refused: {e}");
+                        f.note(CH, Class::Undetermined, "CHG-02", COMMON, why, &at, "");
+                    }
+                }
+                if !unusable.is_empty() {
+                    break 'commit;
+                }
+            }
+            change.compare(before, after, &mut f);
         }
-        change.compare(before, after, &mut f);
+        if last_use {
+            cache.remove(&parents[0]);
+        }
+        // A commit that no later commit compares with (the head, or one whose
+        // child is a merge commit) is not needed again either.
+        if !uses.contains_key(&commit) {
+            cache.remove(&commit);
+        }
     }
     let mut r = f.into_report(&[CH]);
     r.target = report.target;
@@ -737,7 +773,7 @@ mod tests {
             b"base\n",
             b"Change\n\nLoJ-Change: migration\nLoJ-Revisions:\nLoJ-Revisions:\n",
         ]);
-        let report = check(&path, &commits[0], &commits[1]);
+        let report = check(&path, Some(&commits[0]), &commits[1]);
         assert_eq!(result(&report), ResultValue::Fail);
         assert_eq!(report.diagnostics.len(), 1);
         assert_eq!(report.diagnostics[0].rule, "CHG-03");
@@ -835,7 +871,7 @@ mod tests {
     fn non_utf8_message_is_a_chg03_error() {
         let s = Scratch::new();
         let (path, c) = s.chain(&[b"base\n", b"bad \xff\xfe\n"]);
-        let r = check(&path, &c[0], &c[1]);
+        let r = check(&path, Some(&c[0]), &c[1]);
         assert_eq!(result(&r), ResultValue::Fail);
         assert!(
             r.diagnostics
@@ -876,7 +912,13 @@ mod tests {
         let (path, c) = s.chain(&[b"base\n", b"head\n\nLoJ-Change: metadata\n"]);
         let b = Bundle::open(&path).unwrap();
         b.break_for_test();
-        let r = check_bundle(&b, Findings::default(), Report::default(), &c[0], &c[1]);
+        let r = check_bundle(
+            &b,
+            Findings::default(),
+            Report::default(),
+            Some(&c[0]),
+            &c[1],
+        );
         assert_eq!(result(&r), ResultValue::Incomplete);
         assert!(
             r.diagnostics.iter().all(|d| !d.is_error()),
@@ -907,7 +949,7 @@ mod tests {
         let base = s.run(&["commit-tree", &good, "-m", msg], None);
         let mid = s.run(&["commit-tree", &bad, "-p", &base, "-m", msg], None);
         let head = s.run(&["commit-tree", &good, "-p", &mid, "-m", msg], None);
-        let r = check(&s.bundle_head(&head), &base, &head);
+        let r = check(&s.bundle_head(&head), Some(&base), &head);
         assert_eq!(result(&r), ResultValue::Incomplete, "{:?}", r.diagnostics);
         let notes = r
             .diagnostics
@@ -945,7 +987,7 @@ mod tests {
                 ],
                 None,
             );
-            let r = check(&s.bundle_head(&head), &base, &head);
+            let r = check(&s.bundle_head(&head), Some(&base), &head);
             assert_eq!(result(&r), expected, "{:?}", r.diagnostics);
             if expected == ResultValue::Fail {
                 assert!(
@@ -985,7 +1027,7 @@ mod tests {
             let msg = format!("m\n\nLoJ-Change: {kind}\nLoJ-Revisions: b7k2m9qd\n");
             let commit = |tree: &str| s.run(&["commit-tree", tree, "-p", &base, "-m", &msg], None);
             let executable = commit(&tree("100755", "100644"));
-            let r = check(&s.bundle_head(&executable), &base, &executable);
+            let r = check(&s.bundle_head(&executable), Some(&base), &executable);
             assert_eq!(result(&r), ResultValue::Fail, "{kind} {:?}", r.diagnostics);
             assert!(
                 r.diagnostics.iter().any(|d| d.rule == "CHG-02"
@@ -998,7 +1040,7 @@ mod tests {
             if kind != "migration" {
                 // Outside the canonical data, the mode is not checked.
                 let tool = commit(&tree("100644", "100755"));
-                let r = check(&s.bundle_head(&tool), &base, &tool);
+                let r = check(&s.bundle_head(&tool), Some(&base), &tool);
                 assert_eq!(
                     result(&r),
                     ResultValue::Incomplete,
@@ -1041,12 +1083,12 @@ mod tests {
                 s.run(&["commit-tree", tree, "-p", &base, "-m", &msg], None)
             };
             let kept = commit(&tree(unreadable, b"b\n"), "auxiliary");
-            let r = check(&s.bundle_head(&kept), &base, &kept);
+            let r = check(&s.bundle_head(&kept), Some(&base), &kept);
             assert_eq!(result(&r), ResultValue::Pass, "{:?}", r.diagnostics);
             assert!(r.diagnostics.is_empty(), "{:?}", r.diagnostics);
 
             let changed = commit(&tree(b"revisions: [x\n", b"a\n"), "auxiliary");
-            let r = check(&s.bundle_head(&changed), &base, &changed);
+            let r = check(&s.bundle_head(&changed), Some(&base), &changed);
             assert_eq!(result(&r), ResultValue::Fail, "{:?}", r.diagnostics);
             let found: Vec<_> = r.diagnostics.iter().map(|d| d.rule.as_str()).collect();
             assert_eq!(found, ["CHG-02"], "{:?}", r.diagnostics);
@@ -1059,7 +1101,7 @@ mod tests {
             let msg = "m\n\nLoJ-Change: metadata\n";
             let head_tree = tree(unreadable, b"c\n");
             let head = s.run(&["commit-tree", &head_tree, "-p", &kept, "-m", msg], None);
-            let r = check(&s.bundle_head(&head), &base, &head);
+            let r = check(&s.bundle_head(&head), Some(&base), &head);
             assert_eq!(result(&r), ResultValue::Incomplete, "{:?}", r.diagnostics);
             assert!(r.diagnostics.iter().all(|d| !d.is_error()));
             for c in [&kept, &head] {
@@ -1102,7 +1144,7 @@ mod tests {
                     &["commit-tree", &tree(to, b"d\n"), "-p", parent, "-m", msg],
                     None,
                 );
-                let r = check(&s.bundle_head(&child), parent, &child);
+                let r = check(&s.bundle_head(&child), Some(parent), &child);
                 assert_eq!(result(&r), ResultValue::Incomplete, "{:?}", r.diagnostics);
                 let side = if to == unreadable { &child } else { parent };
                 let found: Vec<_> = r
@@ -1133,5 +1175,207 @@ mod tests {
         let snap = snapshot(&b, &head).unwrap();
         assert!(snap.history.is_none() && snap.history_bytes.is_none());
         assert!(snap.manifest_error.is_none());
+    }
+
+    /// Without `base`, every commit reachable from `head` is checked from the
+    /// commits without a parent on. In a history with two roots, the merge
+    /// commit joining them and each root that does not declare `revisionAdd`
+    /// fail CHG-03 without being compared, so no CHG-02 finding (not even the
+    /// mode of the executable file) is reported.
+    #[test]
+    fn without_base_the_whole_history_from_each_root_is_checked() {
+        let s = Scratch::new();
+        let blob = s.run(&["hash-object", "-w", "--stdin"], Some(b""));
+        let tree = |mode: &str| {
+            let spec = format!("{mode} blob {blob}\thistory.yaml\n");
+            s.run(&["mktree"], Some(spec.as_bytes()))
+        };
+        let (plain, executable) = (tree("100644"), tree("100755"));
+        let commit = |tree: &str, parents: &[&str], msg: &str| {
+            let mut args = vec!["commit-tree", tree];
+            for p in parents {
+                args.extend(["-p", p]);
+            }
+            args.extend(["-m", msg]);
+            s.run(&args, None)
+        };
+        let first = commit(&plain, &[], "first\n\nLoJ-Change: format\n");
+        let other = commit(&executable, &[], "other\n\nLoJ-Change: metadata\n");
+        let merge = commit(&plain, &[&first, &other], "m\n\nLoJ-Change: format\n");
+        let r = check(&s.bundle_head(&merge), None, &merge);
+        assert_eq!(result(&r), ResultValue::Fail, "{:?}", r.diagnostics);
+        let errors: Vec<_> = r
+            .diagnostics
+            .iter()
+            .filter(|d| d.is_error())
+            .map(|d| (d.rule.as_str(), d.message.as_str()))
+            .collect();
+        assert!(
+            errors.iter().all(|(rule, _)| *rule == "CHG-03"),
+            "{errors:?}"
+        );
+        assert!(
+            errors.contains(&("CHG-03", "merge commits are not permitted")),
+            "{errors:?}"
+        );
+        assert_eq!(
+            errors
+                .iter()
+                .filter(|e| e.1 == "first law commit must declare revisionAdd")
+                .count(),
+            2,
+            "{errors:?}"
+        );
+        let at = |c: &str| at_of(&r, c);
+        assert_eq!(
+            (at(&first), at(&other), at(&merge)),
+            (1, 1, 1),
+            "{errors:?}"
+        );
+        // With `base`, the commits up to it are not checked.
+        let r = check(&s.bundle_head(&merge), Some(&first), &merge);
+        assert_eq!(at_of(&r, &first), 0, "{:?}", r.diagnostics);
+        assert_eq!(at_of(&r, &other), 1, "{:?}", r.diagnostics);
+    }
+
+    /// A commit with two children is compared with each of them, although its
+    /// snapshot is dropped from the cache after its last comparison.
+    #[test]
+    fn a_parent_of_two_children_is_compared_with_each() {
+        let s = Scratch::new();
+        let blob = s.run(&["hash-object", "-w", "--stdin"], Some(b""));
+        let tree = |mode: &str| {
+            let spec = format!(
+                "{mode} blob {blob}	history.yaml
+"
+            );
+            s.run(&["mktree"], Some(spec.as_bytes()))
+        };
+        let (plain, executable) = (tree("100644"), tree("100755"));
+        let commit = |tree: &str, parents: &[&str], msg: &str| {
+            let mut args = vec!["commit-tree", tree];
+            for p in parents {
+                args.extend(["-p", p]);
+            }
+            args.extend(["-m", msg]);
+            s.run(&args, None)
+        };
+        let root = commit(
+            &plain,
+            &[],
+            "root
+
+LoJ-Change: revisionAdd
+",
+        );
+        let left = commit(
+            &executable,
+            &[&root],
+            "left
+
+LoJ-Change: metadata
+",
+        );
+        let right = commit(
+            &executable,
+            &[&root],
+            "right
+
+LoJ-Change: metadata
+",
+        );
+        let merge = commit(
+            &plain,
+            &[&left, &right],
+            "m
+
+LoJ-Change: format
+",
+        );
+        let r = check(&s.bundle_head(&merge), None, &merge);
+        let mode = |c: &str| {
+            r.diagnostics.iter().any(|d| {
+                d.rule == "CHG-02"
+                    && d.message.contains("has mode 100755")
+                    && d.location.as_ref().and_then(|l| l.get("file"))
+                        == Some(&json!(format!("commit {c}")))
+            })
+        };
+        assert!(mode(&left) && mode(&right), "{:?}", r.diagnostics);
+        assert_eq!(at_of(&r, &merge), 1, "{:?}", r.diagnostics);
+    }
+
+    /// A refused parent with two children is noted once, although both
+    /// children compare with it and its cache entry is dropped after the last.
+    #[test]
+    fn a_refused_parent_of_two_children_is_noted_once() {
+        let s = Scratch::new();
+        let blob = s.run(&["hash-object", "-w", "--stdin"], Some(b""));
+        let tree = |name: &str| {
+            let spec = format!("100644 blob {blob}\t{name}\n");
+            s.run(&["mktree"], Some(spec.as_bytes()))
+        };
+        let (good, bad) = (tree("history.yaml"), tree("a:b"));
+        let commit = |tree: &str, parents: &[&str], msg: &str| {
+            let mut args = vec!["commit-tree", tree];
+            for p in parents {
+                args.extend(["-p", p]);
+            }
+            args.extend(["-m", msg]);
+            s.run(&args, None)
+        };
+        let root = commit(&bad, &[], "root\n\nLoJ-Change: revisionAdd\n");
+        let left = commit(&good, &[&root], "left\n\nLoJ-Change: metadata\n");
+        let right = commit(&good, &[&root], "right\n\nLoJ-Change: metadata\n");
+        let merge = commit(&good, &[&left, &right], "m\n\nLoJ-Change: format\n");
+        let r = check(&s.bundle_head(&merge), None, &merge);
+        assert_eq!(result(&r), ResultValue::Fail, "{:?}", r.diagnostics);
+        let notes = r
+            .diagnostics
+            .iter()
+            .filter(|d| d.message.starts_with(&format!("{root}: tree refused")))
+            .count();
+        assert_eq!(notes, 1, "{:?}", r.diagnostics);
+    }
+
+    /// The errors reported at `commit` (the change check's `location.file`).
+    fn at_of(r: &Report, commit: &str) -> usize {
+        let file = format!("commit {commit}");
+        r.diagnostics
+            .iter()
+            .filter(|d| {
+                d.is_error()
+                    && d.location
+                        .as_ref()
+                        .and_then(|l| l.get("file"))
+                        .and_then(Value::as_str)
+                        == Some(file.as_str())
+            })
+            .count()
+    }
+
+    /// Without `base`, a lone first commit is compared with no record before
+    /// it: `revisionAdd` of an executable canonical data file fails CHG-02.
+    #[test]
+    fn without_base_a_first_commit_is_checked_against_no_record() {
+        let s = Scratch::new();
+        let blob = s.run(&["hash-object", "-w", "--stdin"], Some(b""));
+        let spec = format!("100755 blob {blob}\thistory.yaml\n");
+        let tree = s.run(&["mktree"], Some(spec.as_bytes()));
+        let msg = "first\n\nLoJ-Change: revisionAdd\n";
+        let first = s.run(&["commit-tree", &tree, "-m", msg], None);
+        let r = check(&s.bundle_head(&first), None, &first);
+        assert_eq!(result(&r), ResultValue::Fail, "{:?}", r.diagnostics);
+        assert!(
+            r.diagnostics
+                .iter()
+                .any(|d| d.rule == "CHG-02" && d.message.contains("has mode 100755")),
+            "{:?}",
+            r.diagnostics
+        );
+        assert_eq!(r.target["commit"], first);
+        // A `base` missing from the bundle stays undetermined.
+        let r = check(&s.bundle_head(&first), Some(&"0".repeat(40)), &first);
+        assert_eq!(result(&r), ResultValue::Incomplete, "{:?}", r.diagnostics);
     }
 }

@@ -16,10 +16,12 @@ pub enum Input {
         registry: PathBuf,
         repositories: Vec<PathBuf>,
     },
-    /// Two commits of a law repository in a `git bundle` (CHG-02, CHG-03).
+    /// Commits of a law repository in a `git bundle` (CHG-02, CHG-03): those
+    /// after `base` up to `head`, or, without `base`, every commit reachable
+    /// from `head`, from the first commit (the commit without a parent) on.
     Change {
         bundle: PathBuf,
-        base: String,
+        base: Option<String>,
         head: String,
     },
     /// A fixed or Revision reference resolved against a bundle and the registry.
@@ -87,7 +89,7 @@ pub fn run_with_space(input: &Input, checks: &[Check], space: Option<&str>) -> R
             registry,
             repositories,
         } => crate::xref::check_with_space(registry, repositories, checks, space),
-        Input::Change { bundle, base, head } => crate::change::check(bundle, base, head),
+        Input::Change { bundle, base, head } => crate::change::check(bundle, base.as_deref(), head),
         Input::Reference {
             bundle,
             registry,

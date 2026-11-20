@@ -118,7 +118,8 @@ fn run(case: &Value, checks: &[Check]) -> Actual {
             report: law_semantic::checks::run_with_space(
                 &law_semantic::checks::Input::Change {
                     bundle: root.join(input["bundle"].as_str().unwrap()),
-                    base: input["base"].as_str().unwrap().into(),
+                    // `base` is omitted for a check from the first commit.
+                    base: input["base"].as_str().map(Into::into),
                     head: input["head"].as_str().unwrap().into(),
                 },
                 checks,
