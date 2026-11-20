@@ -33,25 +33,33 @@ pub(crate) fn source_kinds(sources: &Value) -> SourceKinds {
 
 /// GLYPH-05: an `illegible` note with `basis: otherSource` points to two or
 /// more distinct Sources (by ID; citing one twice counts once): one of the
-/// promulgated text (`promulgation` or
-/// `officialCorrection`) and another that is not of kind `egov` or `index`.
-/// Any other note satisfies this. Sources that are not in `kinds` (TYPE-03
-/// reports them) or have no single kind count for neither.
+/// promulgated text (`promulgation` or `officialCorrection`) and another that
+/// is not of kind `egov` or `index`. Any other note satisfies this. Sources
+/// that are not in `kinds` (TYPE-03 reports them) or have no single kind count
+/// for neither.
+///
+/// A promulgated Source is itself not a draft, so the pair exists exactly when
+/// one promulgated Source and two distinct non-draft Sources are cited. This
+/// is linear in the evidence, whose length only the file size bounds.
 pub(crate) fn other_source_evidence(note: &Value, kinds: &SourceKinds) -> bool {
     if note["kind"] != "illegible" || note["basis"] != "otherSource" {
         return true;
     }
-    let cited: Vec<(&str, &str)> = list(&note["evidence"])
+    let mut promulgated = false;
+    let mut non_draft = HashSet::new();
+    for s in list(&note["evidence"])
         .iter()
         .filter_map(|e| e["source"].as_str())
-        .filter_map(|s| Some((s, kinds.get(s)?.as_deref()?)))
-        .collect();
-    cited.iter().any(|(a, ka)| {
-        matches!(*ka, "promulgation" | "officialCorrection")
-            && cited
-                .iter()
-                .any(|(b, kb)| a != b && !matches!(*kb, "egov" | "index"))
-    })
+    {
+        let Some(Some(kind)) = kinds.get(s) else {
+            continue;
+        };
+        if !matches!(kind.as_str(), "egov" | "index") {
+            non_draft.insert(s);
+            promulgated |= matches!(kind.as_str(), "promulgation" | "officialCorrection");
+        }
+    }
+    promulgated && non_draft.len() >= 2
 }
 
 pub const SCHEMA: &str =
