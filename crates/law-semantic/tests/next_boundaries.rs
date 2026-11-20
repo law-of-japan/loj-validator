@@ -275,7 +275,7 @@ fn amendment_contents_keep_their_own_article_context() {
     // article context leaks into the next content or into the amending law.
     let text = "# 第一条\n<!-- loj:paragraph number=1 -->\n甲法の一部を次のように改正する。\n\
 <!-- loj:amendment number=1 -->\n第四条及び第五条を次のように改める。\n<!-- loj:amendment-content -->\n\
-# 第四条\n削除\n# 第五条（記録）\n<!-- loj:paragraph number=1 -->\n記録する。\n<!-- loj:end-paragraph -->\n\
+# 第四条\n削除\n\n# 第五条（記録）\n<!-- loj:paragraph number=1 -->\n記録する。\n<!-- loj:end-paragraph -->\n\
 <!-- loj:end-amendment-content -->\n<!-- loj:end-amendment -->\n\
 <!-- loj:amendment number=2 -->\n第六条に次の一項を加える。\n<!-- loj:amendment-content -->\n\
 <!-- loj:paragraph number=2 -->\n２　公表する。\n<!-- loj:end-paragraph -->\n\
@@ -507,4 +507,100 @@ fn an_amendment_content_may_be_a_group_of_lists() {
         rules(&package(&dir, &content(&format!("{lists}{table}")))),
         ["AMEND-02"]
     );
+}
+
+/// AMEND-01 `instruction=implicit` boundaries beyond pkg-217..222.
+#[test]
+fn amendments_without_instruction_text_hold_one_content_only() {
+    let dir = Scratch::new();
+    let implicit = |n: usize, article: &str| {
+        format!("<!-- loj:amendment number={n} instruction=implicit -->\n<!-- loj:amendment-content -->\n# {article}\n削除\n\n<!-- loj:end-amendment-content -->\n<!-- loj:end-amendment -->\n")
+    };
+    let explicit = "<!-- loj:amendment number=1 -->\n第六條を次のように改める。\n<!-- loj:amendment-content -->\n# 第六條\n削除\n\n<!-- loj:end-amendment-content -->\n<!-- loj:end-amendment -->\n";
+    let paragraph = |body: &str| {
+        format!("# 第一条\n<!-- loj:paragraph number=1 -->\n甲法の一部を次のように改正する。\n{body}<!-- loj:end-paragraph -->\n")
+    };
+    // Instruction text between two implicit amendments separates them; an
+    // implicit amendment may follow one with instruction text directly.
+    let text = paragraph(&format!(
+        "{}第八條を削る。\n{}",
+        implicit(1, "第七條"),
+        implicit(2, "第九條")
+    ));
+    let result = package(&dir, &text);
+    assert_eq!(
+        rules(&result),
+        Vec::<String>::new(),
+        "{:?}",
+        result.report.diagnostics
+    );
+    let ast = result.ast.unwrap().to_string();
+    assert!(ast.contains("\"instruction\":\"implicit\""), "{ast}");
+    let text = paragraph(&format!("{explicit}{}", implicit(2, "第七條")));
+    let result = package(&dir, &text);
+    assert_eq!(
+        rules(&result),
+        Vec::<String>::new(),
+        "{:?}",
+        result.report.diagnostics
+    );
+    let ast = result.ast.unwrap().to_string();
+    assert!(ast.contains("\"instruction\":\"explicit\""), "{ast}");
+
+    // Only blank text between two implicit amendments: the second fails.
+    let text = paragraph(&format!(
+        "{}\n{}",
+        implicit(1, "第七條"),
+        implicit(2, "第九條")
+    ));
+    assert_eq!(rules(&package(&dir, &text)), ["AMEND-01"]);
+    // A blank line before the content, and text after it, are AMEND-01.
+    let blank_before = implicit(1, "第七條").replacen(
+        " -->\n<!-- loj:amendment-content",
+        " -->\n\n<!-- loj:amendment-content",
+        1,
+    );
+    assert_eq!(
+        rules(&package(&dir, &paragraph(&blank_before))),
+        ["AMEND-01"]
+    );
+    let text_after = implicit(1, "第七條").replace(
+        "<!-- loj:end-amendment -->",
+        "附記\n<!-- loj:end-amendment -->",
+    );
+    assert_eq!(rules(&package(&dir, &paragraph(&text_after))), ["AMEND-01"]);
+    // An amendment with instruction text keeps requiring it.
+    let no_instruction = explicit.replace("第六條を次のように改める。\n", "");
+    assert_eq!(
+        rules(&package(&dir, &paragraph(&no_instruction))),
+        ["AMEND-01"]
+    );
+}
+
+/// HEAD-04: `削除` is followed by a blank line or the end of the file, at the
+/// document level as in an amendment content.
+#[test]
+fn a_deleted_article_needs_a_blank_line_or_the_end_of_the_file() {
+    let dir = Scratch::new();
+    let active = "# 第二条\n<!-- loj:paragraph number=1 -->\n本文。\n<!-- loj:end-paragraph -->\n";
+    for (text, expected) in [
+        (format!("# 第一条\n削除\n\n{active}"), Vec::<&str>::new()),
+        ("# 第一条\n削除\n".to_owned(), vec![]),
+        ("# 第一条\n削除".to_owned(), vec![]),
+        (format!("# 第一条\n削除\n{active}"), vec!["HEAD-04"]),
+    ] {
+        let result = package(&dir, &text);
+        assert_eq!(
+            rules(&result),
+            expected,
+            "{text:?}: {:?}",
+            result.report.diagnostics
+        );
+        if let Some(ast) = result.ast {
+            assert!(
+                ast.to_string().contains("\"status\":\"deleted\""),
+                "{text:?}"
+            );
+        }
+    }
 }

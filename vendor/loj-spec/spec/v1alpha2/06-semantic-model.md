@@ -3,7 +3,7 @@
 ## AST-01 意味ASTの形
 
 - 規範のJSON表現は[AST Schema](../../schemas/v1alpha2/ast.schema.json)による。`schemaVersion`、Manifestと同じ`law`、`root`を持つ。
-- ノードは`kind`、`id`、`number`、`display`、`content`を持つ。Articleは`status`を、Subitemは`level`を、Paragraphは`numbering`を、Rowは`key`を持つ。Amendmentは`number`を、Cellは`rowspan`・`colspan`を（[TABLE-03](09-structures.md)）、Paragraphは`caption`を（[PARA-02](09-structures.md)）持てる。ほかのフィールドを持ってはならない（MUST NOT）。
+- ノードは`kind`、`id`、`number`、`display`、`content`を持つ。Articleは`status`を、Subitemは`level`を、Paragraphは`numbering`を、Rowは`key`を、Amendmentは`instruction`（`explicit`／`implicit`。[AMEND-01](09-structures.md)）を持つ。Amendmentは`number`を、Cellは`rowspan`・`colspan`を（[TABLE-03](09-structures.md)）、Paragraphは`caption`を（[PARA-02](09-structures.md)）持てる。ほかのフィールドを持ってはならない（MUST NOT）。
 - `number`は正規の番号の文字列とする。番号を持たないLaw、MainProvision、SupplementaryProvision、AppendedMaterial、AmendmentContent、EnactStatement、Toc、Preamble、Rowは`null`とする。Amendmentの`number`は、同じ親の中の改正規定の順序とする（[AMEND-01](09-structures.md)）。Listの`number`は、同じ親の中の列記の順序とする（[LIST-01](09-structures.md)）。Cellの`number`は行の中での位置（1始まり）とする。
 - `display`は次のとおりとする。Lawは`law.title`、MainProvisionは空文字列、SupplementaryProvisionは附則の見出しの原文のラベル（HEAD-03）、AppendedMaterialは宣言した`title`。List、Table、Row、Cell、Amendment、AmendmentContent、EnactStatement、Toc、Preambleは空文字列。
 - `content`は、textのオブジェクトまたは子ノードの、順序のある配列でなければならない（MUST）。textは原文のMarkdownであり、HTMLにした結果ではない。
@@ -20,7 +20,7 @@
   | Paragraph | Item 0以上、List 0以上、Table 0以上、Amendment 0以上、text 1以上。ItemとListの両方は持たない（[LIST-02](09-structures.md)） |
   | Item | level=1のSubitem 0以上、List 0以上、Table 0以上、Amendment 0以上、text 1以上。SubitemとListの両方は持たない（LIST-02） |
   | Subitem | 次のlevelのSubitem 0以上、List 0以上、Table 0以上、Amendment 0以上、text 1以上（level 10は子のSubitemを持たない）。SubitemとListの両方は持たない（LIST-02） |
-  | Amendment | text 1以上、その後にAmendmentContent ちょうど1。この順（[AMEND-01](09-structures.md)） |
+  | Amendment | text 1以上、その後にAmendmentContent ちょうど1。この順。`instruction`が`implicit`のものは、AmendmentContent ちょうど1だけ（[AMEND-01](09-structures.md)） |
   | AmendmentContent | rank 1〜5の分類・Articleの群、Paragraphの群、Itemの群、同じlevelのSubitemの群、Listの群、Tableの群のどれか一つ（計1以上）、またはtext ちょうど1（[AMEND-02](09-structures.md)）。改正内容の中のParagraph・Item・SubitemはAmendmentを子に持たない |
   | Table | Row 1以上 |
   | Row | Cell 1以上 |

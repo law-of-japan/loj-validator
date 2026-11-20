@@ -1,6 +1,6 @@
 # Next specification implementation (loj/v1alpha2 and the new kinds)
 
-Target: loj-spec commit `df5a9ee925bc0c1bfb7054af5c88c9092becaf88`, vendored as
+Target: loj-spec commit `ec5ade100ec408fa08ab4572db0e86d38ab7db68`, vendored as
 `spec`, `schemas`, `conformance`, `grammar/v1alpha2` and `LICENSE` in `vendor/loj-spec` with `COMMIT` and
 `SHA256SUMS.json`. The v1alpha1 fixtures of `b704631` stay unchanged in
 `vendor/loj-spec-v1alpha1`; the v1alpha1 and legacy pipelines are unchanged.
@@ -169,7 +169,7 @@ or nothing passed.
 
 | Suite | Normative | Passed | Informative (not counted) |
 |---|---|---|---|
-| loj/v1alpha2 | 215 | 215 | 1 (pkg-026, L2) |
+| loj/v1alpha2 | 221 | 221 | 1 (pkg-026, L2) |
 | common/v1alpha1 | 55 | 55 | 0 |
 | loj-history/v1alpha1 | 61 | 61 | 0 |
 | loj-glyphs/v1alpha1 | 20 | 20 | 0 |
@@ -180,7 +180,7 @@ Passing the fixed cases is a necessary condition only (CONF-02).
 
 ## Normative boundaries
 
-- There are 369 normative cases and one informative L2 case. `derivedFrom` and
+- There are 375 normative cases and one informative L2 case. `derivedFrom` and
   `rejectedBy` are audit metadata, never instructions to regenerate or skip inputs.
 - MD-04 emptiness uses the 25 Unicode 15.1 White_Space code points. Paragraph
   captions require `caption=present`; Toc placement and mixed number scripts are
@@ -196,6 +196,16 @@ Passing the fixed cases is a necessary condition only (CONF-02).
   marker; a supplement label there is HEAD-01. The amendment shape, its numbering,
   the single group of a content, and an amendment inside a content are checked
   on the finished tree (AMEND-01/02). The instruction text is never parsed.
+- AMEND-01 `instruction=implicit`: `implicit` is the only value of the
+  attribute (`explicit` is a DIR-01 error); every Amendment of the AST carries
+  `instruction`, `explicit` when the attribute is omitted. An implicit amendment
+  holds exactly one content and no text before it, not even a blank line, and
+  only blank text after it. One that follows another implicit amendment of the
+  same parent with only blank parent text between them is AMEND-01; other
+  children between them do not separate them, as only parent text does.
+- HEAD-04: `削除` is followed by a blank line or the end of the file. When the
+  next line is a heading or a closing marker (in an amendment content as at the
+  document level), the article is still deleted and HEAD-04 is reported.
 - LIST-01/02: a `list` takes `number` only; a branch number is accepted by the
   lexer and reported as LIST-01, since list numbers are the order 1..n among the
   sibling lists. A list holds text only (a marker in it is a DIR-02 parent error),

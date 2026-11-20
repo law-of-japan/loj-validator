@@ -41,9 +41,11 @@ pub(super) enum Container {
         rowspan: Option<u64>,
         colspan: Option<u64>,
     },
-    /// AMEND-01: an amendment with content.
+    /// AMEND-01: an amendment with content; `implicit` when it has no
+    /// instruction text (`instruction=implicit`).
     Amendment {
         number: String,
+        implicit: bool,
     },
     /// AMEND-01/02: the content of an amendment.
     AmendmentContent,
@@ -108,7 +110,8 @@ pub(super) fn marker(s: &str) -> Result<Marker, Invalid> {
     let kind = Kind::from_marker(words.next().ok_or_else(invalid)?).ok_or_else(invalid)?;
     let allowed: &[&str] = match kind {
         Kind::Paragraph => &["number", "numbering", "caption"],
-        Kind::Item | Kind::List | Kind::Table | Kind::Amendment => &["number"],
+        Kind::Item | Kind::List | Kind::Table => &["number"],
+        Kind::Amendment => &["number", "instruction"],
         Kind::Subitem => &["number", "level"],
         Kind::Row => &["key"],
         Kind::Cell => &["rowspan", "colspan"],
@@ -117,6 +120,7 @@ pub(super) fn marker(s: &str) -> Result<Marker, Invalid> {
     let (mut num, mut level, mut numbering, mut key) = (None, None, None, None);
     let (mut rowspan, mut colspan) = (None, None);
     let mut caption = false;
+    let mut instruction_implicit = false;
     let mut error: Option<Invalid> = None;
     let mut seen = std::collections::HashSet::new();
     for word in words {
@@ -127,6 +131,9 @@ pub(super) fn marker(s: &str) -> Result<Marker, Invalid> {
         match k {
             "caption" if v == "present" => caption = true,
             "caption" => return Err(invalid()),
+            // AMEND-01: `implicit` is the only value; `explicit` is never written.
+            "instruction" if v == "implicit" => instruction_implicit = true,
+            "instruction" => return Err(invalid()),
             "number" => num = Some(number(v, &['-'], Digits::Ascii).ok_or_else(invalid)?),
             "level" => {
                 let n = v.parse::<usize>().ok().ok_or_else(invalid)?;
@@ -190,7 +197,10 @@ pub(super) fn marker(s: &str) -> Result<Marker, Invalid> {
             })?,
         }),
         Kind::Cell => Marker::Open(Container::Cell { rowspan, colspan }),
-        Kind::Amendment => Marker::Open(Container::Amendment { number: number? }),
+        Kind::Amendment => Marker::Open(Container::Amendment {
+            number: number?,
+            implicit: instruction_implicit,
+        }),
         Kind::AmendmentContent => Marker::Open(Container::AmendmentContent),
         // `Kind::from_marker` returns no other kind.
         _ => return Err(invalid()),
@@ -259,7 +269,11 @@ mod tests {
         assert!(marker("<!-- loj:enact-statement -->").is_ok());
         assert!(matches!(
             marker("<!-- loj:amendment number=2 -->"),
-            Ok(Marker::Open(Container::Amendment { number })) if number == "2"
+            Ok(Marker::Open(Container::Amendment { number, implicit: false })) if number == "2"
+        ));
+        assert!(matches!(
+            marker("<!-- loj:amendment instruction=implicit number=1 -->"),
+            Ok(Marker::Open(Container::Amendment { implicit: true, .. }))
         ));
         assert!(matches!(
             marker("<!-- loj:amendment-content -->"),
@@ -271,6 +285,11 @@ mod tests {
         ));
         for bad in [
             "<!-- loj:amendment -->",
+            "<!-- loj:amendment instruction=implicit -->",
+            "<!-- loj:amendment number=1 instruction=explicit -->",
+            "<!-- loj:amendment number=1 instruction=Implicit -->",
+            "<!-- loj:amendment number=1 instruction=implicit instruction=implicit -->",
+            "<!-- loj:item number=1 instruction=implicit -->",
             "<!-- loj:amendment-content number=1 -->",
         ] {
             assert!(marker(bad).is_err(), "{bad}");
