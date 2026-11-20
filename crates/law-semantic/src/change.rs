@@ -1156,6 +1156,8 @@ mod tests {
     /// commit joining them (CHG-03), and each root is checked as a first
     /// commit: one that does not declare `revisionAdd` is reported under CHG-03
     /// alone, without the CHG-02 mode check of its executable file.
+    /// The merge commit is not compared with its parents either (CHG-03), so
+    /// no CHG-02 finding can come from it; every error below is CHG-03.
     #[test]
     fn without_base_the_whole_history_from_each_root_is_checked() {
         let s = Scratch::new();
@@ -1212,14 +1214,18 @@ mod tests {
         assert_eq!(at_of(&r, &other), 1, "{:?}", r.diagnostics);
     }
 
+    /// The errors reported at `commit` (the change check's `location.file`).
     fn at_of(r: &Report, commit: &str) -> usize {
+        let file = format!("commit {commit}");
         r.diagnostics
             .iter()
             .filter(|d| {
                 d.is_error()
                     && d.location
                         .as_ref()
-                        .is_some_and(|l| l.to_string().contains(commit))
+                        .and_then(|l| l.get("file"))
+                        .and_then(Value::as_str)
+                        == Some(file.as_str())
             })
             .count()
     }
