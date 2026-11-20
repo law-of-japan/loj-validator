@@ -246,6 +246,8 @@ Passing the fixed cases is a necessary condition only (CONF-02).
   every file. The mode is read from the tree, so this holds even when the history
   manifest cannot be used. A file the commit leaves untouched is not checked, and
   commits that CHG-03 fails without comparison are not checked either.
+  A file made `100755` outside the kind's range is reported twice (CHG-02), once
+  for the range and once for the mode, as the specification names each.
   `auxiliary` reads no history manifest either: a commit is decided by the bytes
   even when `history.yaml` is unreadable, has an unsupported `schemaVersion` or an
   invalid Revision ID. Every other kind reads the manifest, so such a commit (as
