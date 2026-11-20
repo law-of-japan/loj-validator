@@ -158,13 +158,14 @@ fn change_and_reference() {
     ]);
     assert_eq!(code, 1, "{r}");
     assert_eq!(r["diagnostics"][0]["rule"], "CHG-03");
-    // --base alone is still not an input.
-    let (code, _) = json(&[
+    // --base alone is still not an input; the error is one JSON object.
+    let (code, r) = json(&[
         "check",
         &format!("{c}/valid/common-004/repo.bundle"),
         "--base=HEAD",
     ]);
-    assert_eq!(code, 2);
+    assert_eq!(code, 2, "{r}");
+    assert_eq!(r["errors"][0]["kind"], "usage", "{r}");
     let (code, r) = json(&[
         "check",
         &format!("{c}/valid/common-004/repo.bundle"),

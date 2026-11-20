@@ -325,105 +325,131 @@ fn check_bundle(
     let mut cache: BTreeMap<String, Option<Snapshot>> = BTreeMap::new();
     // Commits whose unusable history manifest has been noted, once each.
     let mut noted: BTreeSet<String> = BTreeSet::new();
+    // How many commits of the list compare with each commit as their parent:
+    // a snapshot is dropped from the cache after its last such comparison, so
+    // a check of the whole history does not keep every snapshot in memory.
+    let mut uses: BTreeMap<String, usize> = BTreeMap::new();
+    for (_, parents) in &commits {
+        if let [parent] = parents.as_slice() {
+            *uses.entry(parent.clone()).or_default() += 1;
+        }
+    }
     for (commit, parents) in commits {
         if crate::cancellation::checkpoint() {
             return undetermined(f, report.target, GitError::Cancelled.to_string());
         }
-        let at = format!("commit {commit}");
-        if parents.len() > 1 {
-            f.error(
-                CH,
-                "CHG-03",
-                COMMON,
-                "merge commits are not permitted",
-                &at,
-                "",
-            );
-            continue;
-        }
-        let message = match b.message(&commit) {
-            Ok(Some(m)) => m,
-            Ok(None) => {
+        let last_use = match parents.as_slice() {
+            [parent] => uses.get_mut(parent).is_some_and(|n| {
+                *n -= 1;
+                *n == 0
+            }),
+            _ => false,
+        };
+        'commit: {
+            let at = format!("commit {commit}");
+            if parents.len() > 1 {
                 f.error(
                     CH,
                     "CHG-03",
                     COMMON,
-                    format!("{commit}: the commit message is not UTF-8"),
+                    "merge commits are not permitted",
                     &at,
                     "",
                 );
-                // Without a readable message the change kind is unknown, so the
-                // commit's trees are not compared (as for a missing LoJ-Change).
-                continue;
+                break 'commit;
             }
-            Err(e) => return undetermined(f, report.target, format!("{commit}: {e}")),
-        };
-        let Some((kind, declared)) = declared_change(&commit, &at, &message, &mut f) else {
-            continue;
-        };
-        let parent = parents.first();
-        if parent.is_none() && kind != "revisionAdd" {
-            f.error(
-                CH,
-                "CHG-03",
-                COMMON,
-                "first law commit must declare revisionAdd",
-                &at,
-                "",
-            );
-            continue;
-        }
-        let change = Change {
-            commit: &commit,
-            at: &at,
-            kind: &kind,
-            declared: &declared,
-            reviewed: reviewed(&message),
-        };
-        for c in parent.into_iter().chain(std::iter::once(&commit)) {
-            if let Err(why) = load_snapshot(b, c, &change, &mut cache, &mut f) {
-                return undetermined(f, report.target, why);
+            let message = match b.message(&commit) {
+                Ok(Some(m)) => m,
+                Ok(None) => {
+                    f.error(
+                        CH,
+                        "CHG-03",
+                        COMMON,
+                        format!("{commit}: the commit message is not UTF-8"),
+                        &at,
+                        "",
+                    );
+                    // Without a readable message the change kind is unknown, so the
+                    // commit's trees are not compared (as for a missing LoJ-Change).
+                    break 'commit;
+                }
+                Err(e) => return undetermined(f, report.target, format!("{commit}: {e}")),
+            };
+            let Some((kind, declared)) = declared_change(&commit, &at, &message, &mut f) else {
+                break 'commit;
+            };
+            let parent = parents.first();
+            if parent.is_none() && kind != "revisionAdd" {
+                f.error(
+                    CH,
+                    "CHG-03",
+                    COMMON,
+                    "first law commit must declare revisionAdd",
+                    &at,
+                    "",
+                );
+                break 'commit;
             }
-        }
-        let empty = Snapshot::default();
-        let before = match parent {
-            Some(parent) => match cache.get(parent) {
-                Some(Some(snapshot)) => snapshot,
-                _ => continue,
-            },
-            None => &empty,
-        };
-        let Some(Some(after)) = cache.get(&commit) else {
-            continue;
-        };
-        // CHG-02: the file modes are read from the trees, so they are checked
-        // for every declared kind even when a history manifest cannot be used.
-        // `auxiliary` fails any mode change of canonical data in its own check.
-        if kind != "auxiliary" {
-            policy::modes(&change, before, after, &mut f);
-        }
-        // CHG-02 `auxiliary` compares the files only, so it is decided even
-        // when a history manifest cannot be used; every other kind reads it.
-        // `migration` stays undetermined here too, as when such a tree was
-        // refused before, rather than reaching its CHG-02 error in `compare`.
-        if kind != "auxiliary" {
-            let unusable: Vec<_> = [parent.map(|p| (p, before)), Some((&commit, after))]
-                .into_iter()
-                .flatten()
-                .filter_map(|(c, s)| Some((c, s.manifest_error.as_ref()?)))
-                .collect();
-            for (c, e) in &unusable {
-                if noted.insert((*c).clone()) {
-                    f.incomplete.insert(CH);
-                    let why = format!("{c}: tree refused: {e}");
-                    f.note(CH, Class::Undetermined, "CHG-02", COMMON, why, &at, "");
+            let change = Change {
+                commit: &commit,
+                at: &at,
+                kind: &kind,
+                declared: &declared,
+                reviewed: reviewed(&message),
+            };
+            for c in parent.into_iter().chain(std::iter::once(&commit)) {
+                if let Err(why) = load_snapshot(b, c, &change, &mut cache, &mut f) {
+                    return undetermined(f, report.target, why);
                 }
             }
-            if !unusable.is_empty() {
-                continue;
+            let empty = Snapshot::default();
+            let before = match parent {
+                Some(parent) => match cache.get(parent) {
+                    Some(Some(snapshot)) => snapshot,
+                    _ => break 'commit,
+                },
+                None => &empty,
+            };
+            let Some(Some(after)) = cache.get(&commit) else {
+                break 'commit;
+            };
+            // CHG-02: the file modes are read from the trees, so they are checked
+            // for every declared kind even when a history manifest cannot be used.
+            // `auxiliary` fails any mode change of canonical data in its own check.
+            if kind != "auxiliary" {
+                policy::modes(&change, before, after, &mut f);
             }
+            // CHG-02 `auxiliary` compares the files only, so it is decided even
+            // when a history manifest cannot be used; every other kind reads it.
+            // `migration` stays undetermined here too, as when such a tree was
+            // refused before, rather than reaching its CHG-02 error in `compare`.
+            if kind != "auxiliary" {
+                let unusable: Vec<_> = [parent.map(|p| (p, before)), Some((&commit, after))]
+                    .into_iter()
+                    .flatten()
+                    .filter_map(|(c, s)| Some((c, s.manifest_error.as_ref()?)))
+                    .collect();
+                for (c, e) in &unusable {
+                    if noted.insert((*c).clone()) {
+                        f.incomplete.insert(CH);
+                        let why = format!("{c}: tree refused: {e}");
+                        f.note(CH, Class::Undetermined, "CHG-02", COMMON, why, &at, "");
+                    }
+                }
+                if !unusable.is_empty() {
+                    break 'commit;
+                }
+            }
+            change.compare(before, after, &mut f);
         }
-        change.compare(before, after, &mut f);
+        if last_use {
+            cache.remove(&parents[0]);
+        }
+        // A commit that no later commit compares with (the head, or one whose
+        // child is a merge commit) is not needed again either.
+        if !uses.contains_key(&commit) {
+            cache.remove(&commit);
+        }
     }
     let mut r = f.into_report(&[CH]);
     r.target = report.target;
@@ -1152,12 +1178,10 @@ mod tests {
     }
 
     /// Without `base`, every commit reachable from `head` is checked from the
-    /// commits without a parent on. A history with two roots has a merge
-    /// commit joining them (CHG-03), and each root is checked as a first
-    /// commit: one that does not declare `revisionAdd` is reported under CHG-03
-    /// alone, without the CHG-02 mode check of its executable file.
-    /// The merge commit is not compared with its parents either (CHG-03), so
-    /// no CHG-02 finding can come from it; every error below is CHG-03.
+    /// commits without a parent on. In a history with two roots, the merge
+    /// commit joining them and each root that does not declare `revisionAdd`
+    /// fail CHG-03 without being compared, so no CHG-02 finding (not even the
+    /// mode of the executable file) is reported.
     #[test]
     fn without_base_the_whole_history_from_each_root_is_checked() {
         let s = Scratch::new();
@@ -1212,6 +1236,73 @@ mod tests {
         let r = check(&s.bundle_head(&merge), Some(&first), &merge);
         assert_eq!(at_of(&r, &first), 0, "{:?}", r.diagnostics);
         assert_eq!(at_of(&r, &other), 1, "{:?}", r.diagnostics);
+    }
+
+    /// A commit with two children is compared with each of them, although its
+    /// snapshot is dropped from the cache after its last comparison.
+    #[test]
+    fn a_parent_of_two_children_is_compared_with_each() {
+        let s = Scratch::new();
+        let blob = s.run(&["hash-object", "-w", "--stdin"], Some(b""));
+        let tree = |mode: &str| {
+            let spec = format!(
+                "{mode} blob {blob}	history.yaml
+"
+            );
+            s.run(&["mktree"], Some(spec.as_bytes()))
+        };
+        let (plain, executable) = (tree("100644"), tree("100755"));
+        let commit = |tree: &str, parents: &[&str], msg: &str| {
+            let mut args = vec!["commit-tree", tree];
+            for p in parents {
+                args.extend(["-p", p]);
+            }
+            args.extend(["-m", msg]);
+            s.run(&args, None)
+        };
+        let root = commit(
+            &plain,
+            &[],
+            "root
+
+LoJ-Change: revisionAdd
+",
+        );
+        let left = commit(
+            &executable,
+            &[&root],
+            "left
+
+LoJ-Change: metadata
+",
+        );
+        let right = commit(
+            &executable,
+            &[&root],
+            "right
+
+LoJ-Change: metadata
+",
+        );
+        let merge = commit(
+            &plain,
+            &[&left, &right],
+            "m
+
+LoJ-Change: format
+",
+        );
+        let r = check(&s.bundle_head(&merge), None, &merge);
+        let mode = |c: &str| {
+            r.diagnostics.iter().any(|d| {
+                d.rule == "CHG-02"
+                    && d.message.contains("has mode 100755")
+                    && d.location.as_ref().and_then(|l| l.get("file"))
+                        == Some(&json!(format!("commit {c}")))
+            })
+        };
+        assert!(mode(&left) && mode(&right), "{:?}", r.diagnostics);
+        assert_eq!(at_of(&r, &merge), 1, "{:?}", r.diagnostics);
     }
 
     /// The errors reported at `commit` (the change check's `location.file`).
