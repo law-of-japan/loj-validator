@@ -3361,6 +3361,153 @@
       },
       "expected": "conformance/v1alpha2/expected/pkg-207.json",
       "success": false
+    },
+    {
+      "id": "pkg-208",
+      "title": "列記（項の列記、号の中の列記、行の頭に「一」を置く列記と柱書の続き、改正内容の列記）",
+      "requirements": [
+        "LIST-01",
+        "LIST-02",
+        "DISP-01",
+        "ID-01",
+        "AST-01",
+        "AMEND-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-208/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-208.json",
+      "success": true
+    },
+    {
+      "id": "pkg-209",
+      "title": "列記の番号が連番でない",
+      "requirements": [
+        "LIST-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-209/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-209.json",
+      "success": false
+    },
+    {
+      "id": "pkg-210",
+      "title": "申告のない号と列記の混在",
+      "requirements": [
+        "LIST-02",
+        "BASIC-03"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-210/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-210.json",
+      "success": false
+    },
+    {
+      "id": "pkg-211",
+      "title": "申告のない細分と列記の混在",
+      "requirements": [
+        "LIST-02",
+        "BASIC-03"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-211/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-211.json",
+      "success": false
+    },
+    {
+      "id": "pkg-212",
+      "title": "申告した号と列記の混在（L1の診断はBASIC-03だけ）",
+      "requirements": [
+        "BASIC-03",
+        "LIST-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-212/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-212.json",
+      "success": false
+    },
+    {
+      "id": "pkg-213",
+      "title": "列記の中の列記",
+      "requirements": [
+        "DIR-02",
+        "LIST-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-213/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-213.json",
+      "success": false
+    },
+    {
+      "id": "pkg-214",
+      "title": "空の列記",
+      "requirements": [
+        "DIR-02",
+        "LIST-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-214/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-214.json",
+      "success": false
+    },
+    {
+      "id": "pkg-215",
+      "title": "numberのない列記のマーカー",
+      "requirements": [
+        "DIR-01",
+        "LIST-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-215/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-215.json",
+      "success": false
+    },
+    {
+      "id": "pkg-216",
+      "title": "列記と号を混ぜた改正内容",
+      "requirements": [
+        "AMEND-02",
+        "LIST-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-216/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-216.json",
+      "success": false
     }
   ]
 }

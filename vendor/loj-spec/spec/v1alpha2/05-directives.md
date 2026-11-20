@@ -10,6 +10,7 @@
   | `paragraph` | `number` | `numbering`（`explicit`／`implicit`）、`caption`（`present`） | [PARA-01](09-structures.md)、[PARA-02](09-structures.md) |
   | `item` | `number` | — | |
   | `subitem` | `level`、`number` | — | |
+  | `list` | `number` | — | [LIST-01](09-structures.md) |
   | `table` | `number` | — | [TABLE-01](09-structures.md) |
   | `row` | `key` | — | [TABLE-02](09-structures.md) |
   | `cell` | — | `rowspan`、`colspan` | [TABLE-03](09-structures.md) |
@@ -44,6 +45,7 @@
   | `paragraph` | Article、直接の項の形式のSupplementaryProvision、MainProvision（本則の形式と混在の扱いは[PARA-03](09-structures.md)）、またはAmendmentContent |
   | `item` | Paragraph、またはAmendmentContent |
   | `subitem` | `level=1`はItem、`level=n`は`level=n-1`のSubitem（`level`は1〜10、飛び越し不可）。AmendmentContentの直下では任意の`level`（[AMEND-02](09-structures.md)） |
+  | `list` | Paragraph、Item、Subitem、AmendmentContent（号・細分との混在の扱いは[LIST-02](09-structures.md)） |
   | `table` | Paragraph、Item、Subitem、AmendmentContent |
   | `amendment` | Paragraph、Item、Subitem（改正内容の中の項・号・細分に置くことの禁止は[AMEND-02](09-structures.md)による） |
   | `amendment-content` | Amendment |
@@ -52,7 +54,7 @@
   | `enact-statement`、`toc`、`preamble` | なし（文書の直下。位置は[PRE-01](09-structures.md)・[PRE-02](09-structures.md)・[TOC-01](09-structures.md)） |
 
 - 兄弟の同じ種類・同じlevelの`number`は一意とする。
-- Paragraph、Item、Subitem、Cell、Preamble、EnactStatement、Tocは、子を除く自身の本文に、空白以外の文字を持たなければならない（MUST）。空白の字は[MD-04](03-markdown.md)による。コメントだけでも空でない原文となるが、法的な内容の有無は判定しない。表のセルの空の欄の書き方は[TABLE-03](09-structures.md)による。
+- Paragraph、Item、Subitem、List、Cell、Preamble、EnactStatement、Tocは、子を除く自身の本文に、空白以外の文字を持たなければならない（MUST）。空白の字は[MD-04](03-markdown.md)による。コメントだけでも空でない原文となるが、法的な内容の有無は判定しない。表のセルの空の欄の書き方は[TABLE-03](09-structures.md)による。
 - Tableは1つ以上のRowを、Rowは1つ以上のCellを持たなければならない（MUST）。TableとRowの直下に、空白だけの行以外の本文を置いてはならない（MUST NOT）。
 
 ## DISP-01 表示番号
@@ -82,4 +84,4 @@
 - 第1項でも、認識できる数字のtokenで始まれば検査する。番号を意図しない数字で紛らわしい場合は、原典の確認を要し、自動で修正しない。
 - 原典で番号のない第1項の本文が、数字のtoken（例: 「２　…」）で始まる場合は、本版では表せない。`numbering=implicit`は項が一つの親や、ほかの項に番号がある親では使えない（PARA-01）。未対応の構造として`unsupportedFeatures`に申告する（BASIC-03）。
 - `numbering=implicit`の項には表示番号を置かない。検査を行わず、`display`は空文字列とする（[PARA-01](09-structures.md)）。
-- Table、Row、Cell、Amendment、AmendmentContent、Preamble、EnactStatement、Tocの`display`は空文字列とする。
+- List、Table、Row、Cell、Amendment、AmendmentContent、Preamble、EnactStatement、Tocの`display`は空文字列とする。Listは表示番号を持たず、検査を行わない（[LIST-01](09-structures.md)）。

@@ -95,6 +95,7 @@
             "Paragraph",
             "Item",
             "Subitem",
+            "List",
             "SupplementaryProvision",
             "AppendedMaterial",
             "EnactStatement",
@@ -345,6 +346,7 @@
             "properties": {
               "kind": {
                 "enum": [
+                  "List",
                   "Table",
                   "Row",
                   "Cell",

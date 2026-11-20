@@ -574,7 +574,8 @@ fn valid_parent(open: &Container, p: &Node) -> bool {
         Container::Subitem { .. } if p.kind == Kind::AmendmentContent => true,
         Container::Subitem { level: 1, .. } => p.kind == Kind::Item,
         Container::Subitem { level, .. } => p.kind == Kind::Subitem && p.level + 1 == *level,
-        Container::Table { .. } => matches!(
+        // LIST-01: a list holds text only, so a list in a list is a parent error.
+        Container::List { .. } | Container::Table { .. } => matches!(
             p.kind,
             Kind::Paragraph | Kind::Item | Kind::Subitem | Kind::AmendmentContent
         ),
@@ -1366,6 +1367,7 @@ impl<'a> Builder<'a> {
             Container::AmendmentContent => (kind.id_segment(), None),
             Container::Paragraph { number, .. }
             | Container::Item { number }
+            | Container::List { number }
             | Container::Table { number }
             | Container::Amendment { number } => (
                 format!("{}/{number}", kind.id_segment()),
@@ -1394,6 +1396,7 @@ impl<'a> Builder<'a> {
                 node.colspan = colspan;
             }
             Container::Item { .. }
+            | Container::List { .. }
             | Container::Table { .. }
             | Container::Amendment { .. }
             | Container::AmendmentContent => {}
@@ -1599,6 +1602,40 @@ fn structure(
             }
         }
     }
+    // LIST-01: list numbers are the order 1..n within the parent, so a branch
+    // number is never one.
+    for (k, j) in n.children(nodes, Kind::List).enumerate() {
+        let l = &nodes[j];
+        if l.number.as_deref() != Some(&(k + 1).to_string()) {
+            ctx.diag(
+                "LIST-01",
+                "List numbers are the order 1..n within the parent",
+                &l.path,
+                l.span.start,
+                l.span.end,
+            );
+        }
+    }
+    // LIST-02: a paragraph, item or subitem has items or subitems, or lists,
+    // not both. In an amendment content the mix is AMEND-02 instead.
+    if matches!(n.kind, Kind::Paragraph | Kind::Item | Kind::Subitem) {
+        let numbered = n
+            .content
+            .iter()
+            .any(|c| matches!(c, Content::Node(j) if matches!(nodes[*j].kind, Kind::Item | Kind::Subitem)));
+        if numbered {
+            if let Some(l) = n.children(nodes, Kind::List).next() {
+                let l = &nodes[l];
+                ctx.diag(
+                    "LIST-02",
+                    "Items or subitems and lists cannot share a parent",
+                    &l.path,
+                    l.span.start,
+                    l.span.end,
+                );
+            }
+        }
+    }
     // TABLE-01: table numbers are the order 1..n within the parent.
     for (k, j) in n.children(nodes, Kind::Table).enumerate() {
         let t = &nodes[j];
@@ -1687,6 +1724,7 @@ fn amendment_shape(nodes: &[Node], i: usize, ctx: &mut Context) {
                 || one(&|c| c.kind == Kind::Paragraph)
                 || one(&|c| c.kind == Kind::Item)
                 || one(&|c| c.kind == Kind::Table)
+                || one(&|c| c.kind == Kind::List)
                 || (one(&|c| c.kind == Kind::Subitem)
                     && children
                         .first()

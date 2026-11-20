@@ -412,3 +412,99 @@ fn deeply_nested_amendments_are_incomplete_not_a_crash() {
         Some(ResultValue::Incomplete)
     );
 }
+
+/// LIST-01/02 boundaries beyond pkg-208..216.
+#[test]
+fn lists_are_numbered_in_order_and_kept_apart_from_items() {
+    let dir = Scratch::new();
+    let list = |n: &str, text: &str| {
+        format!("<!-- loj:list number={n} -->\n{text}\n<!-- loj:end-list -->\n")
+    };
+    let paragraph = |body: &str| {
+        format!("# 第一条\n<!-- loj:paragraph number=1 -->\n左の局を置く。\n{body}<!-- loj:end-paragraph -->\n")
+    };
+    // Lists beside a table in one parent; the order counts lists only, and
+    // the text after the last list resumes the parent.
+    let table = "<!-- loj:table number=1 -->\n<!-- loj:row key=k3v9 -->\n<!-- loj:cell -->\n欄\n<!-- loj:end-cell -->\n<!-- loj:end-row -->\n<!-- loj:end-table -->\n";
+    let text = paragraph(&format!(
+        "{}{table}{}続き。\n",
+        list("1", "一　雲局"),
+        list("2", "雨局")
+    ));
+    let result = package(&dir, &text);
+    assert_eq!(
+        rules(&result),
+        Vec::<String>::new(),
+        "{:?}",
+        result.report.diagnostics
+    );
+    let ast = result.ast.unwrap();
+    let p = &ast["root"]["content"][0]["content"][0]["content"][0];
+    let first = &p["content"][1];
+    assert_eq!(first["kind"], "List");
+    assert_eq!(first["id"], "synthetic/main/article/1/paragraph/1/list/1");
+    assert_eq!(first["display"], "");
+    assert_eq!(first["number"], "1");
+    // The leading 一 is text, not a display number.
+    assert_eq!(first["content"], json!([{"text": "一　雲局\n"}]));
+    assert_eq!(
+        p["content"].as_array().unwrap().last().unwrap(),
+        &json!({"text": "続き。\n"})
+    );
+
+    // A branch number, a gap and a start other than 1 break the order.
+    for numbers in [["1", "1-2"], ["1", "3"], ["2", "3"]] {
+        let text = paragraph(&format!(
+            "{}{}",
+            list(numbers[0], "雲局"),
+            list(numbers[1], "雨局")
+        ));
+        let found = rules(&package(&dir, &text));
+        assert!(
+            !found.is_empty() && found.iter().all(|r| r == "LIST-01"),
+            "{numbers:?}: {found:?}"
+        );
+    }
+    // Items and lists in one paragraph are LIST-02.
+    let item = "<!-- loj:item number=1 -->\n一　雲\n<!-- loj:end-item -->\n";
+    let text = paragraph(&format!("{item}{}", list("1", "雨局")));
+    assert_eq!(rules(&package(&dir, &text)), ["LIST-02"]);
+    // A list directly under an article is a parent error (in a list: pkg-213).
+    let text = format!("# 第一条\n{}", list("1", "雲局"));
+    assert!(rules(&package(&dir, &text)).contains(&"DIR-02".to_owned()));
+    // A heading inside a list leaves it unclosed.
+    let text = paragraph("<!-- loj:list number=1 -->\n雲局\n# 第二条\n");
+    let found = rules(&package(&dir, &text));
+    assert!(found.contains(&"MD-03".to_owned()), "{found:?}");
+}
+
+/// AMEND-02: lists are a group of an amendment content of their own.
+#[test]
+fn an_amendment_content_may_be_a_group_of_lists() {
+    let dir = Scratch::new();
+    let content = |body: &str| {
+        format!(
+            "# 第一条\n<!-- loj:paragraph number=1 -->\n甲法の一部を次のように改正する。\n\
+<!-- loj:amendment number=1 -->\n第三条に次の局を加える。\n<!-- loj:amendment-content -->\n{body}\
+<!-- loj:end-amendment-content -->\n<!-- loj:end-amendment -->\n<!-- loj:end-paragraph -->\n"
+        )
+    };
+    let lists = "<!-- loj:list number=1 -->\n雪局\n<!-- loj:end-list -->\n<!-- loj:list number=2 -->\n霧局\n<!-- loj:end-list -->\n";
+    let result = package(&dir, &content(lists));
+    assert_eq!(
+        rules(&result),
+        Vec::<String>::new(),
+        "{:?}",
+        result.report.diagnostics
+    );
+    assert!(result
+        .ast
+        .unwrap()
+        .to_string()
+        .contains("\"synthetic/main/article/1/paragraph/1/amendment/1/content/list/2\""));
+    let table = "<!-- loj:table number=1 -->\n<!-- loj:row key=k3v9 -->\n<!-- loj:cell -->\n欄\n<!-- loj:end-cell -->\n<!-- loj:end-row -->\n<!-- loj:end-table -->\n";
+    assert_eq!(
+        rules(&package(&dir, &content(&format!("{lists}{table}")))),
+        ["AMEND-02"]
+    );
+}

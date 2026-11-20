@@ -417,6 +417,28 @@ fn check_record(rec: &Value, rel: &str, f: &mut Findings) {
                 );
             }
         }
+        // GLYPH-05 in number claims: the evidence of a glyph read elsewhere.
+        let kinds: crate::repository::glyphs::SourceKinds = rec["sources"]
+            .as_array()
+            .unwrap_or(&empty)
+            .iter()
+            .filter_map(|s| {
+                let kind = s["kind"].as_str().unwrap_or("").to_owned();
+                s["id"].as_str().map(|id| (id.to_owned(), kind))
+            })
+            .collect();
+        for (j, g) in n["glyphs"].as_array().into_iter().flatten().enumerate() {
+            if !crate::repository::glyphs::other_source_evidence(g, &kinds) {
+                f.error(
+                    R,
+                    "GLYPH-05",
+                    crate::repository::GLYPHS,
+                    "an illegible glyph read in another source needs the promulgated text and a distinct non-draft source",
+                    rel,
+                    &format!("{p}/glyphs/{j}/evidence"),
+                );
+            }
+        }
         // GLYPH-04 in number claims: offset into raw.
         if let Some(raw) = n["raw"].as_str() {
             let raw: Vec<char> = raw.chars().collect();
@@ -468,6 +490,30 @@ mod tests {
             .iter()
             .map(|(_, d)| (d.rule.clone(), d.message.clone()))
             .collect()
+    }
+
+    /// GLYPH-05 applies to the glyphs of a number claim with the Sources of
+    /// its record.
+    #[test]
+    fn a_number_glyph_read_in_another_source_cites_the_promulgated_text() {
+        let rec = |second: &str| {
+            json!({
+                "sources": [{"id": "kanpo", "kind": "promulgation"}, {"id": "egov", "kind": "egov"}, {"id": "original", "kind": "other"}],
+                "numbers": [{"id": "n1", "decision": "adopted", "raw": "第一号",
+                    "glyphs": [{"kind": "illegible", "basis": "otherSource", "offset": 1, "recorded": "一",
+                        "evidence": [{"source": "kanpo"}, {"source": second}]}]}],
+            })
+        };
+        let rules = |second: &str| {
+            let mut f = Findings::default();
+            check_record(&rec(second), "records/x.yaml", &mut f);
+            f.items
+                .iter()
+                .map(|(_, d)| d.rule.clone())
+                .collect::<Vec<_>>()
+        };
+        assert!(rules("original").is_empty());
+        assert_eq!(rules("egov"), ["GLYPH-05"]);
     }
 
     #[test]

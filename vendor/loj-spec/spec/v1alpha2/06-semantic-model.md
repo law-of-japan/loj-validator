@@ -4,8 +4,8 @@
 
 - 規範のJSON表現は[AST Schema](../../schemas/v1alpha2/ast.schema.json)による。`schemaVersion`、Manifestと同じ`law`、`root`を持つ。
 - ノードは`kind`、`id`、`number`、`display`、`content`を持つ。Articleは`status`を、Subitemは`level`を、Paragraphは`numbering`を、Rowは`key`を持つ。Amendmentは`number`を、Cellは`rowspan`・`colspan`を（[TABLE-03](09-structures.md)）、Paragraphは`caption`を（[PARA-02](09-structures.md)）持てる。ほかのフィールドを持ってはならない（MUST NOT）。
-- `number`は正規の番号の文字列とする。番号を持たないLaw、MainProvision、SupplementaryProvision、AppendedMaterial、AmendmentContent、EnactStatement、Toc、Preamble、Rowは`null`とする。Amendmentの`number`は、同じ親の中の改正規定の順序とする（[AMEND-01](09-structures.md)）。Cellの`number`は行の中での位置（1始まり）とする。
-- `display`は次のとおりとする。Lawは`law.title`、MainProvisionは空文字列、SupplementaryProvisionは附則の見出しの原文のラベル（HEAD-03）、AppendedMaterialは宣言した`title`。Table、Row、Cell、Amendment、AmendmentContent、EnactStatement、Toc、Preambleは空文字列。
+- `number`は正規の番号の文字列とする。番号を持たないLaw、MainProvision、SupplementaryProvision、AppendedMaterial、AmendmentContent、EnactStatement、Toc、Preamble、Rowは`null`とする。Amendmentの`number`は、同じ親の中の改正規定の順序とする（[AMEND-01](09-structures.md)）。Listの`number`は、同じ親の中の列記の順序とする（[LIST-01](09-structures.md)）。Cellの`number`は行の中での位置（1始まり）とする。
+- `display`は次のとおりとする。Lawは`law.title`、MainProvisionは空文字列、SupplementaryProvisionは附則の見出しの原文のラベル（HEAD-03）、AppendedMaterialは宣言した`title`。List、Table、Row、Cell、Amendment、AmendmentContent、EnactStatement、Toc、Preambleは空文字列。
 - `content`は、textのオブジェクトまたは子ノードの、順序のある配列でなければならない（MUST）。textは原文のMarkdownであり、HTMLにした結果ではない。
 - 親と子は次のとおりとする。
 
@@ -17,18 +17,19 @@
   | Article（active） | Paragraph 1以上 |
   | Article（deleted） | 子なし、本文なし |
   | SupplementaryProvision | 分類・Articleの群、またはParagraphの群のどちらか、計1以上 |
-  | Paragraph | Item 0以上、Table 0以上、Amendment 0以上、text 1以上 |
-  | Item | level=1のSubitem 0以上、Table 0以上、Amendment 0以上、text 1以上 |
-  | Subitem | 次のlevelのSubitem 0以上、Table 0以上、Amendment 0以上、text 1以上（level 10は子のSubitemを持たない） |
+  | Paragraph | Item 0以上、List 0以上、Table 0以上、Amendment 0以上、text 1以上。ItemとListの両方は持たない（[LIST-02](09-structures.md)） |
+  | Item | level=1のSubitem 0以上、List 0以上、Table 0以上、Amendment 0以上、text 1以上。SubitemとListの両方は持たない（LIST-02） |
+  | Subitem | 次のlevelのSubitem 0以上、List 0以上、Table 0以上、Amendment 0以上、text 1以上（level 10は子のSubitemを持たない）。SubitemとListの両方は持たない（LIST-02） |
   | Amendment | text 1以上、その後にAmendmentContent ちょうど1。この順（[AMEND-01](09-structures.md)） |
-  | AmendmentContent | rank 1〜5の分類・Articleの群、Paragraphの群、Itemの群、同じlevelのSubitemの群、Tableの群のどれか一つ（計1以上）、またはtext ちょうど1（[AMEND-02](09-structures.md)）。改正内容の中のParagraph・Item・SubitemはAmendmentを子に持たない |
+  | AmendmentContent | rank 1〜5の分類・Articleの群、Paragraphの群、Itemの群、同じlevelのSubitemの群、Listの群、Tableの群のどれか一つ（計1以上）、またはtext ちょうど1（[AMEND-02](09-structures.md)）。改正内容の中のParagraph・Item・SubitemはAmendmentを子に持たない |
   | Table | Row 1以上 |
   | Row | Cell 1以上 |
+  | List | text ちょうど1（[LIST-01](09-structures.md)） |
   | Cell | text ちょうど1 |
   | EnactStatement、Toc、Preamble | text ちょうど1 |
   | AppendedMaterial | text 1以上、意味の子なし |
 
-- textを許すのは、Paragraph、Item、Subitem、Cell、Amendment、AmendmentContent、EnactStatement、Toc、Preamble、AppendedMaterialだけである。
+- textを許すのは、Paragraph、Item、Subitem、List、Cell、Amendment、AmendmentContent、EnactStatement、Toc、Preamble、AppendedMaterialだけである。
 - 子の前後に本文を許し、出現の順を保持しなければならない（MUST）。連続するtextは結合して一つの要素とし、空文字列のtextを作らない。
 - 本文の区間は、開始のマーカーの行末の直後から、次の子の開始行の行頭、または終了のマーカーの行頭までとする。子の終了行の行末の直後から、親の本文を再開する。空行を保持し、本文の末尾の改行も保持する。構造の外の区切りの空行は、意味ASTに含めない。
 - ASTのフィールドの順は意味を持たず、配列の順は意味を持つ。
@@ -44,7 +45,7 @@
 
 - 本要件は、意味ASTと診断の位置を定める。位置はASTと診断の一部であり、実装が元の入力を保持するか（[SRC-02](#src-02-元の入力の保持)）によらない。
 - 位置は`{path, start, end}`で、元のファイルのUTF-8のバイト数による半開区間[start, end)とする。CRLFは2バイト、日本語は実際のUTF-8の長さとする。境界でUnicodeの文字を分断しない。UTF-16のコード単位の数を位置にしてはならない（MUST NOT）。`path`は、`law.yaml`のあるディレクトリからの相対パスで、`documents[].path`と同じ表記とする（`law.yaml`自身は`law.yaml`）。
-- 合成したLaw・MainProvisionは、空の位置の列を持つ。分類・条は見出しの行（行末を含む）を、明示のコンテナ（項・号・細分・表・行・セル・改正規定・改正内容・前文・制定文・目次）は開始行の行頭から終了行の行末までを、附則・附属資料のscopeは最初の見出しの行を位置とする。本文の片は、文字列と一致する位置を持ち、複数のファイルにわたる場合は位置の列を持つ。
+- 合成したLaw・MainProvisionは、空の位置の列を持つ。分類・条は見出しの行（行末を含む）を、明示のコンテナ（項・号・細分・列記・表・行・セル・改正規定・改正内容・前文・制定文・目次）は開始行の行頭から終了行の行末までを、附則・附属資料のscopeは最初の見出しの行を位置とする。本文の片は、文字列と一致する位置を持ち、複数のファイルにわたる場合は位置の列を持つ。
 - 行・列の表示は任意であり、バイト位置の代わりにならない。
 - 次の違反の診断の位置は、次のとおりとしなければならない（MUST）。
   - 未閉鎖は、開始のマーカーの行。対応しない終了は、その終了のマーカーの行。属性の不正（属性の重複を含む）は、そのマーカーの行。

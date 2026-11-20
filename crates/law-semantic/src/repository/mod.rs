@@ -148,11 +148,14 @@ pub fn check(repo: &Path, checks: &[Check]) -> Report {
     if let Some(h) = &h {
         if l3 {
             history::check(h, repo, &mut f);
-            let sources: HashSet<String> = h["sources"]
+            let sources: glyphs::SourceKinds = h["sources"]
                 .as_array()
                 .unwrap_or(&empty)
                 .iter()
-                .filter_map(|s| s["id"].as_str().map(str::to_owned))
+                .filter_map(|s| {
+                    let kind = s["kind"].as_str().unwrap_or("").to_owned();
+                    s["id"].as_str().map(|id| (id.to_owned(), kind))
+                })
                 .collect();
             for r in &revisions {
                 if crate::cancellation::checkpoint() {

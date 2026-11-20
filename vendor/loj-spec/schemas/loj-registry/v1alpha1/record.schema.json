@@ -370,7 +370,6 @@
                     "properties": {
                       "kind": {
                         "enum": [
-                          "illegible",
                           "unencodable",
                           "literal"
                         ]
@@ -381,6 +380,53 @@
                     "properties": {
                       "recorded": {
                         "const": "〓"
+                      }
+                    }
+                  }
+                },
+                {
+                  "$comment": "GLYPH-05: illegible takes basis otherSource or undetermined (omitted = undetermined). Without otherSource the recorded text is 〓. With otherSource it has no 〓 and two or more evidence entries; that they point to distinct Sources, one of kind promulgation or officialCorrection and another not of kind egov or index, is checked by the validator.",
+                  "if": {
+                    "properties": {
+                      "kind": {
+                        "const": "illegible"
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "basis": {
+                        "enum": [
+                          "otherSource",
+                          "undetermined"
+                        ]
+                      }
+                    },
+                    "if": {
+                      "properties": {
+                        "basis": {
+                          "const": "otherSource"
+                        }
+                      },
+                      "required": [
+                        "basis"
+                      ]
+                    },
+                    "then": {
+                      "properties": {
+                        "recorded": {
+                          "pattern": "^[^〓]+$"
+                        },
+                        "evidence": {
+                          "minItems": 2
+                        }
+                      }
+                    },
+                    "else": {
+                      "properties": {
+                        "recorded": {
+                          "const": "〓"
+                        }
                       }
                     }
                   }

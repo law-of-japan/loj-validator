@@ -1,16 +1,17 @@
 (* ISO-style EBNF for loj/v1alpha2 markers. Applied only in MD-01 eligible regions; no line ending here.
    Attribute order is free (DIR-01); the alternatives below list the permitted sets, not an order. *)
 marker = open | close ;
-open = "<!-- loj:", (paragraph | item | subitem | table | row | cell | amendment
+open = "<!-- loj:", (paragraph | item | subitem | list | table | row | cell | amendment
                     | "amendment-content" | "preamble" | "enact-statement" | "toc"), " -->" ;
 paragraph = "paragraph", space, attrs(number_attr, [numbering_attr], [caption_attr]) ;
 item = "item", space, number_attr ;
+list = "list", space, number_attr ;   (* LIST-01: the order among sibling lists; no display number *)
 subitem = "subitem", space, attrs(level_attr, number_attr) ;
 table = "table", space, number_attr ;
 row = "row", space, key_attr ;
 cell = "cell", [space, (rowspan_attr | colspan_attr | attrs(rowspan_attr, colspan_attr))] ;
 amendment = "amendment", space, number_attr ;   (* AMEND-01; "amendment-content" has no attributes *)
-close = "<!-- loj:end-", ("paragraph" | "item" | "subitem" | "table" | "row" | "cell" | "amendment"
+close = "<!-- loj:end-", ("paragraph" | "item" | "subitem" | "list" | "table" | "row" | "cell" | "amendment"
                          | "amendment-content" | "preamble" | "enact-statement" | "toc"), " -->" ;
 (* attrs(a, b, ...) = the listed attributes in any order, each once, separated by one space;
    optional ones may be absent. A cell without attributes is "<!-- loj:cell -->" (DIR-01). *)

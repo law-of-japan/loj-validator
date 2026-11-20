@@ -7,12 +7,13 @@
 - 分類は、親のIDに`/{kindの小文字}/{number}`を加える（Subsectionは`subsection`）。条だけは分類を飛ばし、scopeのIDに`/article/{number}`を加えなければならない（MUST）。改正内容の中の分類・条では、改正内容がscopeである（[AMEND-02](09-structures.md)）。
 - 改正規定は親のIDに`/amendment/{number}`を、改正内容は改正規定のIDに`/content`を加える。
 - 項・号は親のIDに`/paragraph/{number}`、`/item/{number}`を、細分は`/subitem/{level}/{number}`を加える。枝番号のハイフンは番号の一部である。無番号の項も、属性の`number`から同じ形で導く。
+- 列記は親のIDに`/list/{number}`を加える（[LIST-01](09-structures.md)）。`number`は属性の値であり、IDは本文に番号を足さずに導く。
 - 表は親のIDに`/table/{number}`を、行は表のIDに`/row/{key}`を、セルは行のIDに`/cell/{c}`（`c`は行の中での位置、1始まり）を加える。
 - IDに、ファイル名、見出しのHレベル、バイト位置、出現の順序を含めてはならない（MUST NOT）。例外はセルの行の中での位置だけである。
 
 項の形式の本則（[PARA-03](09-structures.md)）の項は、本則のscopeのIDに`/paragraph/{number}`を加える。条のIDを挟まない。
 
-例: `20990101-act-1/main/article/2-3/paragraph/1/item/2/subitem/1/1`、`20990101-act-1/main/paragraph/2`、`20990101-act-1/main/paragraph/1/amendment/2/content/article/5/paragraph/1`、`19480720-law-178/main/article/2/paragraph/1/table/1/row/b6gr/cell/3`。
+例: `20990101-act-1/main/article/2-3/paragraph/1/item/2/subitem/1/1`、`20990101-act-1/main/paragraph/2`、`20990101-act-1/main/article/3/paragraph/1/list/2`、`20990101-act-1/main/paragraph/1/amendment/2/content/article/5/paragraph/1`、`19480720-law-178/main/article/2/paragraph/1/table/1/row/b6gr/cell/3`。
 
 ## ID-02 IDの安定性
 
