@@ -938,6 +938,14 @@ mod tests {
             modes_findings("format", &regular, &executable),
             [report(package)]
         );
+        // Made executable outside the range: both the range and the mode are
+        // CHG-02 and both are reported, as the specification names each.
+        let mut f = inspect("metadata", &regular, &executable);
+        assert_eq!(f.items.len(), 1);
+        let mode = modes_findings("metadata", &regular, &executable);
+        f.items
+            .retain(|(_, d)| d.message == format!("metadata cannot change {package}"));
+        assert_eq!((f.items.len(), mode), (1, vec![report(package)]));
         // Back to 100644, and a file outside the canonical data.
         assert!(modes_findings("format", &executable, &regular).is_empty());
         let tool = snapshot(&[("tools/gen.sh", 1)], &["tools/gen.sh"]);
