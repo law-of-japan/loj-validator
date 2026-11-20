@@ -32,7 +32,8 @@ pub(crate) fn source_kinds(sources: &Value) -> SourceKinds {
 }
 
 /// GLYPH-05: an `illegible` note with `basis: otherSource` points to two or
-/// more distinct Sources: one of the promulgated text (`promulgation` or
+/// more distinct Sources (by ID; citing one twice counts once): one of the
+/// promulgated text (`promulgation` or
 /// `officialCorrection`) and another that is not of kind `egov` or `index`.
 /// Any other note satisfies this. Sources that are not in `kinds` (TYPE-03
 /// reports them) or have no single kind count for neither.
