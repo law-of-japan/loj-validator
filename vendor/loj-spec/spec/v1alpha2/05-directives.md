@@ -17,7 +17,7 @@
   | `enact-statement` | — | — | [PRE-02](09-structures.md) |
   | `preamble` | — | — | [PRE-01](09-structures.md) |
   | `toc` | — | — | [TOC-01](09-structures.md) |
-  | `amendment` | `number` | — | [AMEND-01](09-structures.md) |
+  | `amendment` | `number` | `instruction`（`implicit`） | [AMEND-01](09-structures.md) |
   | `amendment-content` | — | — | [AMEND-01](09-structures.md)、[AMEND-02](09-structures.md) |
 
 - `<!--`の直後、マーカーの名前と最初の属性の間、属性の間、最後の属性（属性がなければ名前）と`-->`の間には、ASCII空白をちょうど1個置く。タブ、改行、引用符、2個以上の連続した空白、末尾の空白を禁止する。属性の順は任意とする。

@@ -1,0 +1,230 @@
+{
+  "ast": {
+    "schemaVersion": "loj/v1alpha2",
+    "law": {
+      "id": "20990101-act-1",
+      "title": "架空雲保管法（実在しないサンプル）",
+      "type": "act",
+      "number": "架空法律第一号",
+      "promulgatedAt": "2099-01-01",
+      "language": "ja"
+    },
+    "root": {
+      "kind": "Law",
+      "id": "20990101-act-1",
+      "number": null,
+      "display": "架空雲保管法（実在しないサンプル）",
+      "content": [
+        {
+          "kind": "MainProvision",
+          "id": "20990101-act-1/main",
+          "number": null,
+          "display": "",
+          "content": [
+            {
+              "kind": "Article",
+              "id": "20990101-act-1/main/article/14",
+              "number": "14",
+              "display": "第十四條",
+              "content": [
+                {
+                  "kind": "Paragraph",
+                  "id": "20990101-act-1/main/article/14/paragraph/1",
+                  "number": "1",
+                  "display": "",
+                  "content": [
+                    {
+                      "text": "架空雲官制（架空勅令第一号）の一部を次のように改正する。\n第一條中「、白雲」を削る。\n第三條中「五局」を「三局」に改め、「雨雲局\n雪雲局」を削る。\n"
+                    },
+                    {
+                      "kind": "Amendment",
+                      "id": "20990101-act-1/main/article/14/paragraph/1/amendment/1",
+                      "number": "1",
+                      "display": "",
+                      "content": [
+                        {
+                          "text": "第五條を次のように改める。\n"
+                        },
+                        {
+                          "kind": "AmendmentContent",
+                          "id": "20990101-act-1/main/article/14/paragraph/1/amendment/1/content",
+                          "number": null,
+                          "display": "",
+                          "content": [
+                            {
+                              "kind": "Article",
+                              "id": "20990101-act-1/main/article/14/paragraph/1/amendment/1/content/article/5",
+                              "number": "5",
+                              "display": "第五條",
+                              "content": [
+                                {
+                                  "kind": "Paragraph",
+                                  "id": "20990101-act-1/main/article/14/paragraph/1/amendment/1/content/article/5/paragraph/1",
+                                  "number": "1",
+                                  "display": "",
+                                  "content": [
+                                    {
+                                      "text": "架空雲省に、大臣官房及び三局を置く。\n"
+                                    }
+                                  ],
+                                  "numbering": "explicit"
+                                }
+                              ],
+                              "status": "active"
+                            }
+                          ]
+                        }
+                      ],
+                      "instruction": "explicit"
+                    },
+                    {
+                      "kind": "Amendment",
+                      "id": "20990101-act-1/main/article/14/paragraph/1/amendment/2",
+                      "number": "2",
+                      "display": "",
+                      "content": [
+                        {
+                          "kind": "AmendmentContent",
+                          "id": "20990101-act-1/main/article/14/paragraph/1/amendment/2/content",
+                          "number": null,
+                          "display": "",
+                          "content": [
+                            {
+                              "kind": "Article",
+                              "id": "20990101-act-1/main/article/14/paragraph/1/amendment/2/content/article/7",
+                              "number": "7",
+                              "display": "第七條",
+                              "content": [],
+                              "status": "deleted"
+                            }
+                          ]
+                        }
+                      ],
+                      "instruction": "implicit"
+                    },
+                    {
+                      "text": "第七條ノ二及び第七條ノ三を削る。\n"
+                    },
+                    {
+                      "kind": "Amendment",
+                      "id": "20990101-act-1/main/article/14/paragraph/1/amendment/3",
+                      "number": "3",
+                      "display": "",
+                      "content": [
+                        {
+                          "kind": "AmendmentContent",
+                          "id": "20990101-act-1/main/article/14/paragraph/1/amendment/3/content",
+                          "number": null,
+                          "display": "",
+                          "content": [
+                            {
+                              "kind": "Article",
+                              "id": "20990101-act-1/main/article/14/paragraph/1/amendment/3/content/article/23",
+                              "number": "23",
+                              "display": "第二十三條",
+                              "content": [],
+                              "status": "deleted"
+                            }
+                          ]
+                        }
+                      ],
+                      "instruction": "implicit"
+                    }
+                  ],
+                  "numbering": "explicit"
+                }
+              ],
+              "status": "active"
+            },
+            {
+              "kind": "Article",
+              "id": "20990101-act-1/main/article/15",
+              "number": "15",
+              "display": "第十五條",
+              "content": [
+                {
+                  "kind": "Paragraph",
+                  "id": "20990101-act-1/main/article/15/paragraph/1",
+                  "number": "1",
+                  "display": "",
+                  "content": [
+                    {
+                      "text": "架空雨量法（架空法律第二号）の一部を次のように改正する。\n"
+                    },
+                    {
+                      "kind": "Amendment",
+                      "id": "20990101-act-1/main/article/15/paragraph/1/amendment/1",
+                      "number": "1",
+                      "display": "",
+                      "content": [
+                        {
+                          "kind": "AmendmentContent",
+                          "id": "20990101-act-1/main/article/15/paragraph/1/amendment/1/content",
+                          "number": null,
+                          "display": "",
+                          "content": [
+                            {
+                              "kind": "Article",
+                              "id": "20990101-act-1/main/article/15/paragraph/1/amendment/1/content/article/10-2",
+                              "number": "10-2",
+                              "display": "第十條の二",
+                              "content": [
+                                {
+                                  "kind": "Paragraph",
+                                  "id": "20990101-act-1/main/article/15/paragraph/1/amendment/1/content/article/10-2/paragraph/1",
+                                  "number": "1",
+                                  "display": "",
+                                  "content": [
+                                    {
+                                      "text": "白雲局長は、雨量の記録について、必要な援助を与える。\n"
+                                    }
+                                  ],
+                                  "numbering": "implicit"
+                                },
+                                {
+                                  "kind": "Paragraph",
+                                  "id": "20990101-act-1/main/article/15/paragraph/1/amendment/1/content/article/10-2/paragraph/2",
+                                  "number": "2",
+                                  "display": "",
+                                  "content": [
+                                    {
+                                      "text": "白雲局長は、記録を閲覧せしめることができる。\n"
+                                    }
+                                  ],
+                                  "numbering": "implicit"
+                                },
+                                {
+                                  "kind": "Paragraph",
+                                  "id": "20990101-act-1/main/article/15/paragraph/1/amendment/1/content/article/10-2/paragraph/3",
+                                  "number": "3",
+                                  "display": "",
+                                  "content": [
+                                    {
+                                      "text": "第十一條の規定は、白雲局長について準用する。\n"
+                                    }
+                                  ],
+                                  "numbering": "implicit"
+                                }
+                              ],
+                              "status": "active"
+                            }
+                          ]
+                        }
+                      ],
+                      "instruction": "implicit"
+                    },
+                    {
+                      "text": "第十二條第一号中「第十條」を「第十條、第十條の二」に改める。\n"
+                    }
+                  ],
+                  "numbering": "explicit"
+                }
+              ],
+              "status": "active"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

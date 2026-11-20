@@ -295,6 +295,10 @@ fn export(nodes: &[Node], index: usize) -> Value {
                 v["caption"] = json!(caption);
             }
         }
+        // AMEND-01: `explicit` stands for an omitted `instruction`.
+        Kind::Amendment => {
+            v["instruction"] = json!(if n.implicit { "implicit" } else { "explicit" })
+        }
         Kind::Row => v["key"] = json!(n.key),
         Kind::Cell => {
             if let Some(r) = n.rowspan {
@@ -1369,7 +1373,7 @@ impl<'a> Builder<'a> {
             | Container::Item { number }
             | Container::List { number }
             | Container::Table { number }
-            | Container::Amendment { number } => (
+            | Container::Amendment { number, .. } => (
                 format!("{}/{number}", kind.id_segment()),
                 Some(number.clone()),
             ),
@@ -1395,10 +1399,11 @@ impl<'a> Builder<'a> {
                 node.rowspan = rowspan;
                 node.colspan = colspan;
             }
+            // AMEND-01: an amendment without instruction text.
+            Container::Amendment { implicit, .. } => node.implicit = implicit,
             Container::Item { .. }
             | Container::List { .. }
             | Container::Table { .. }
-            | Container::Amendment { .. }
             | Container::AmendmentContent => {}
         }
         let i = add(&mut self.nodes, parent, node, ctx, &mut self.ids);
@@ -1686,15 +1691,42 @@ fn amendment_shape(nodes: &[Node], i: usize, ctx: &mut Context) {
             );
         }
     }
+    // AMEND-01: an amendment without instruction text never follows another
+    // one in its parent with only blank parent text between them.
+    let mut previous_implicit = false;
+    for c in &n.content {
+        match c {
+            Content::Node(j) if nodes[*j].kind == Kind::Amendment => {
+                let a = &nodes[*j];
+                if a.implicit && previous_implicit {
+                    ctx.diag(
+                        "AMEND-01",
+                        "An amendment without instruction text cannot directly follow another",
+                        &a.path,
+                        a.span.start,
+                        a.span.end,
+                    );
+                }
+                previous_implicit = a.implicit;
+            }
+            Content::Text(..) if !blank(c) => previous_implicit = false,
+            _ => {}
+        }
+    }
     match n.kind {
         Kind::Amendment => {
             let contents = n.children(nodes, Kind::AmendmentContent).count();
             let position = n.content.iter().position(|c| matches!(c, Content::Node(_)));
-            let instruction = position.is_some_and(|p| {
-                n.content[..p]
+            let before = position.map_or(&n.content[..], |p| &n.content[..p]);
+            // With instruction text: some non-blank text first. Without it
+            // (`instruction=implicit`): no text at all, not even a blank line.
+            let instruction = if n.implicit {
+                position.is_some() && before.is_empty()
+            } else {
+                before
                     .iter()
                     .any(|c| matches!(c, Content::Text(..)) && !blank(c))
-            });
+            };
             let after = position.map_or(&[][..], |p| &n.content[p + 1..]);
             if contents != 1 || !instruction || !after.iter().all(blank) {
                 ctx.diag(
@@ -1769,12 +1801,24 @@ fn outside(
         let n = &mut nodes[i];
         let mut lines = s.split_inclusive('\n');
         let first = lines.next().unwrap_or("");
+        let second = lines.next();
         if span.start == n.span.end
             && bare(first) == "削除"
-            && lines.next().is_none_or(|l| bare(l).is_empty())
+            && second.is_none_or(|l| bare(l).is_empty())
             && s[first.len()..].trim_matches(white_space).is_empty()
         {
             n.deleted = true;
+            // HEAD-04: `削除` is followed by a blank line or the end of the
+            // file, also before a heading or a closing marker of a content.
+            if second.is_none() && span.end != source.len() {
+                ctx.diag(
+                    "HEAD-04",
+                    "削除 must be followed by a blank line or the end of the file",
+                    path,
+                    span.start,
+                    span.end,
+                );
+            }
             return;
         }
     }

@@ -167,6 +167,12 @@
             "implicit"
           ]
         },
+        "instruction": {
+          "enum": [
+            "explicit",
+            "implicit"
+          ]
+        },
         "key": {
           "type": "string",
           "pattern": "^[0-9a-hjkmnp-tv-z]{4}$"
@@ -400,6 +406,27 @@
               "display": {
                 "const": ""
               }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "Amendment"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "instruction"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "instruction"
+              ]
             }
           }
         }

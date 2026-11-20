@@ -65,7 +65,8 @@
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "instruction": "explicit"
                     },
                     {
                       "kind": "Amendment",
@@ -95,7 +96,8 @@
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "instruction": "explicit"
                     },
                     {
                       "kind": "Amendment",
@@ -126,7 +128,8 @@
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "instruction": "explicit"
                     },
                     {
                       "kind": "Amendment",
@@ -148,7 +151,8 @@
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "instruction": "explicit"
                     }
                   ],
                   "numbering": "explicit"
@@ -238,7 +242,8 @@
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "instruction": "explicit"
                     }
                   ],
                   "numbering": "explicit"

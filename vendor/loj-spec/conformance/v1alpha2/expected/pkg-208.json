@@ -229,7 +229,8 @@
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "instruction": "explicit"
                     }
                   ],
                   "numbering": "explicit"
