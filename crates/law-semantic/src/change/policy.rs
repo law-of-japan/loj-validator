@@ -156,6 +156,27 @@ fn may_change(change: &Change<'_>, affected: &BTreeSet<String>, path: &str) -> b
     }
 }
 
+/// CHG-02: a canonical data file that the commit adds or changes (by bytes or
+/// by mode) has Git file mode `100644`. Files the commit leaves untouched are
+/// not checked, so one wrong mode does not fail every later commit; a commit
+/// without a parent changes every file. The export refuses any mode other than
+/// `100644` and `100755`, so only `100755` is found here.
+/// `executable` lists files of the tree only, so a removed file is never seen.
+pub(super) fn modes(change: &Change<'_>, before: &Snapshot, after: &Snapshot, f: &mut Findings) {
+    for path in &after.executable {
+        if canonical(path)
+            && (before.files.get(path) != after.files.get(path)
+                || !before.executable.contains(path))
+        {
+            change.error(
+                f,
+                "CHG-02",
+                format!("canonical data file {path} has mode 100755, not 100644"),
+            );
+        }
+    }
+}
+
 pub(super) fn check(change: &Change<'_>, before: &Snapshot, after: &Snapshot, f: &mut Findings) {
     let old_ids = revision_ids(before);
     let new_ids = revision_ids(after);
@@ -201,7 +222,10 @@ pub(super) fn check(change: &Change<'_>, before: &Snapshot, after: &Snapshot, f:
         .files
         .keys()
         .chain(after.files.keys())
-        .filter(|path| before.files.get(*path) != after.files.get(*path))
+        .filter(|path| {
+            before.files.get(*path) != after.files.get(*path)
+                || before.executable.contains(*path) != after.executable.contains(*path)
+        })
         .collect();
     for path in changed {
         if !canonical(path) {
@@ -212,7 +236,9 @@ pub(super) fn check(change: &Change<'_>, before: &Snapshot, after: &Snapshot, f:
         if !may_change(change, &affected, path) {
             change.error(f, "CHG-02", format!("{} cannot change {path}", change.kind));
         }
+        // A mode-only change keeps the bytes, so there is nothing new to inspect.
         if path.ends_with(".yaml")
+            && before.files.get(path) != after.files.get(path)
             && after.files.contains_key(path)
             && !after.documents.contains_key(path)
         {
@@ -222,31 +248,6 @@ pub(super) fn check(change: &Change<'_>, before: &Snapshot, after: &Snapshot, f:
                 "CHG-02",
                 COMMON,
                 format!("cannot inspect changed YAML {path}"),
-                change.at,
-                "",
-            );
-        }
-    }
-    // CHG-02 names the Git file mode for `auxiliary` only: whether a mode
-    // change is within another kind's range is not specified. A canonical file
-    // that the kind may not change, kept byte for byte with only its mode
-    // changed, is therefore neither passed nor failed (law-of-japan/loj-validator#50).
-    for path in before.executable.symmetric_difference(&after.executable) {
-        if canonical(path)
-            && before.files.contains_key(path)
-            && after.files.get(path) == before.files.get(path)
-            && !may_change(change, &affected, path)
-        {
-            f.incomplete.insert(CH);
-            f.note(
-                CH,
-                Class::Undetermined,
-                "CHG-02",
-                COMMON,
-                format!(
-                    "{} changes only the file mode of {path}; the specification does not say whether this kind may",
-                    change.kind
-                ),
                 change.at,
                 "",
             );
@@ -829,11 +830,11 @@ mod tests {
         assert!(!inspect("format", &before, &ci).failed(CH));
     }
 
-    /// CHG-02 does not say whether a mode change is within the range of a kind
-    /// other than `auxiliary`: a mode-only change to a file the kind may not
-    /// change is undetermined, one to a file it may change is no finding.
+    /// CHG-02: changing only the Git file mode changes the file, so a kind
+    /// fails for a mode-only change to a file outside its range and passes one
+    /// to a file inside it, in either direction (law-of-japan/loj-validator#57).
     #[test]
-    fn mode_only_change_outside_the_range_is_undetermined() {
+    fn mode_only_change_is_a_change_of_the_file() {
         let package = "versions/b7k2m9qd/main.md";
         for (kind, path, outside) in [
             ("metadata", package, true),
@@ -848,28 +849,108 @@ mod tests {
             ("revisionAdd", "versions/c7k2m9qd/main.md", true),
             ("revisionFix", package, false),
         ] {
-            let mut before = Snapshot::default();
-            before.files.insert(path.into(), [1; 32]);
-            let mut after = Snapshot {
-                files: before.files.clone(),
-                ..Snapshot::default()
-            };
-            after.executable.insert(path.into());
-            let f = inspect(kind, &before, &after);
-            // `correction` fails here for its missing history, never for the file.
-            let about_path: Vec<_> = f
-                .items
-                .iter()
-                .map(|(_, d)| d)
-                .filter(|d| d.message.contains(path))
-                .collect();
-            assert!(about_path.iter().all(|d| !d.is_error()), "{kind} {path}");
-            let undetermined = about_path
-                .iter()
-                .any(|d| d.rule == "CHG-02" && d.class == Class::Undetermined);
-            assert_eq!(undetermined, outside, "{kind} {path}");
-            assert_eq!(f.incomplete.contains(&CH), outside, "{kind} {path}");
+            for to_executable in [true, false] {
+                let mut before = Snapshot::default();
+                before.files.insert(path.into(), [1; 32]);
+                let mut after = Snapshot {
+                    files: before.files.clone(),
+                    ..Snapshot::default()
+                };
+                if to_executable {
+                    after.executable.insert(path.into());
+                } else {
+                    before.executable.insert(path.into());
+                }
+                let f = inspect(kind, &before, &after);
+                // `correction` fails here for its missing history, never for the file.
+                let about_path: Vec<_> = f
+                    .items
+                    .iter()
+                    .map(|(_, d)| d)
+                    .filter(|d| d.message.contains(path))
+                    .collect();
+                assert!(
+                    about_path
+                        .iter()
+                        .all(|d| d.rule == "CHG-02" && d.is_error()),
+                    "{kind} {path}"
+                );
+                assert_eq!(!about_path.is_empty(), outside, "{kind} {path}");
+                assert!(!f.incomplete.contains(&CH), "{kind} {path}");
+            }
         }
+    }
+
+    fn modes_findings(kind: &str, before: &Snapshot, after: &Snapshot) -> Vec<String> {
+        let mut f = Findings::default();
+        let change = Change {
+            commit: "c",
+            at: "c",
+            kind,
+            declared: &["b7k2m9qd".into()],
+            reviewed: false,
+        };
+        modes(&change, before, after, &mut f);
+        assert!(f
+            .items
+            .iter()
+            .all(|(_, d)| d.rule == "CHG-02" && d.is_error()));
+        f.items.into_iter().map(|(_, d)| d.message).collect()
+    }
+
+    /// CHG-02: only a canonical data file that the commit adds or changes must
+    /// be `100644`; one left untouched with a wrong mode is not reported again.
+    #[test]
+    fn file_modes_are_checked_for_added_or_changed_canonical_files_only() {
+        let package = "versions/b7k2m9qd/main.md";
+        let files = |paths: &[(&str, u8)]| {
+            paths
+                .iter()
+                .map(|(p, b)| ((*p).to_owned(), [*b; 32]))
+                .collect::<BTreeMap<_, _>>()
+        };
+        let snapshot = |paths: &[(&str, u8)], executable: &[&str]| Snapshot {
+            files: files(paths),
+            executable: executable.iter().map(|p| (*p).to_owned()).collect(),
+            ..Snapshot::default()
+        };
+        let report = |path: &str| format!("canonical data file {path} has mode 100755, not 100644");
+        // A commit without a parent: every canonical file is added.
+        let first = snapshot(
+            &[(package, 1), ("history.yaml", 1), ("tools/gen.sh", 1)],
+            &[package, "history.yaml", "tools/gen.sh"],
+        );
+        assert_eq!(
+            modes_findings("revisionAdd", &Snapshot::default(), &first),
+            [report("history.yaml"), report(package)]
+        );
+        // Untouched, wrong already: no finding.
+        assert!(modes_findings("metadata", &first, &first).is_empty());
+        // Bytes changed, the mode kept at 100755: reported for the change.
+        let edited = snapshot(
+            &[(package, 2), ("history.yaml", 1)],
+            &[package, "history.yaml"],
+        );
+        assert_eq!(modes_findings("format", &first, &edited), [report(package)]);
+        // Made executable, inside the range of the kind.
+        let regular = snapshot(&[(package, 1)], &[]);
+        let executable = snapshot(&[(package, 1)], &[package]);
+        assert_eq!(
+            modes_findings("format", &regular, &executable),
+            [report(package)]
+        );
+        // Made executable outside the range: both the range and the mode are
+        // CHG-02 and both are reported, as the specification names each.
+        let mut f = inspect("metadata", &regular, &executable);
+        assert_eq!(f.items.len(), 1);
+        let mode = modes_findings("metadata", &regular, &executable);
+        f.items
+            .retain(|(_, d)| d.message == format!("metadata cannot change {package}"));
+        assert_eq!((f.items.len(), mode), (1, vec![report(package)]));
+        // Back to 100644, and a file outside the canonical data.
+        assert!(modes_findings("format", &executable, &regular).is_empty());
+        let tool = snapshot(&[("tools/gen.sh", 1)], &["tools/gen.sh"]);
+        assert!(modes_findings("metadata", &Snapshot::default(), &tool).is_empty());
     }
 
     /// A file directly under `versions/` belongs to no version package but is

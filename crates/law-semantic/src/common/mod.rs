@@ -18,7 +18,7 @@ pub mod yaml;
 pub use report::{Check, Class, Diagnostic, Report, ResultValue};
 
 /// loj-spec commit of the vendored next specification.
-pub const SPEC_COMMIT: &str = "ec5ade100ec408fa08ab4572db0e86d38ab7db68";
+pub const SPEC_COMMIT: &str = "2f62274086381ddafc6d9d0315bb87f88f24456a";
 /// Rule namespace of the common requirements.
 pub const COMMON: &str = "common/v1alpha1";
 /// Per-file read limit; larger inputs are reported as incomplete.

@@ -1,6 +1,6 @@
 # Next specification implementation (loj/v1alpha2 and the new kinds)
 
-Target: loj-spec commit `ec5ade100ec408fa08ab4572db0e86d38ab7db68`, vendored as
+Target: loj-spec commit `2f62274086381ddafc6d9d0315bb87f88f24456a`, vendored as
 `spec`, `schemas`, `conformance`, `grammar/v1alpha2` and `LICENSE` in `vendor/loj-spec` with `COMMIT` and
 `SHA256SUMS.json`. The v1alpha1 fixtures of `b704631` stay unchanged in
 `vendor/loj-spec-v1alpha1`; the v1alpha1 and legacy pipelines are unchanged.
@@ -170,7 +170,7 @@ or nothing passed.
 | Suite | Normative | Passed | Informative (not counted) |
 |---|---|---|---|
 | loj/v1alpha2 | 221 | 221 | 1 (pkg-026, L2) |
-| common/v1alpha1 | 55 | 55 | 0 |
+| common/v1alpha1 | 58 | 58 | 0 |
 | loj-history/v1alpha1 | 61 | 61 | 0 |
 | loj-glyphs/v1alpha1 | 20 | 20 | 0 |
 | loj-registry/v1alpha1 | 13 | 13 | 0 |
@@ -180,7 +180,7 @@ Passing the fixed cases is a necessary condition only (CONF-02).
 
 ## Normative boundaries
 
-- There are 375 normative cases and one informative L2 case. `derivedFrom` and
+- There are 378 normative cases and one informative L2 case. `derivedFrom` and
   `rejectedBy` are audit metadata, never instructions to regenerate or skip inputs.
 - MD-04 emptiness uses the 25 Unicode 15.1 White_Space code points. Paragraph
   captions require `caption=present`; Toc placement and mixed number scripts are
@@ -234,13 +234,21 @@ Passing the fixed cases is a necessary condition only (CONF-02).
   and are not checked. `auxiliary` requires every canonical data file to keep its
   path, bytes and Git file mode (`100644`/`100755`, from the tree listing), builds
   and compares no AST, and so is never CHG-04 undetermined. A tree with any other
-  mode (a symbolic link, a submodule) is still refused, which leaves the check
-  incomplete.
-  CHG-02 names the file mode for `auxiliary` only. For the other kinds, a
-  canonical data file that the kind may not change, kept byte for byte with only
-  its mode changed, is reported undetermined (CHG-02), since the specification does
-  not say whether that is within the kind's range; a mode change to a file the
-  kind may change is no finding (law-of-japan/loj-validator#50).
+  mode (a symbolic link `120000`, a submodule `160000`) is still refused, which
+  leaves the check incomplete: the specification fails such a canonical data file
+  under CHG-02, but this checker reports no CHG-02 failure for it, as the limits
+  on bundle trees are not relaxed to read it.
+  A change of the Git file mode alone is a change of the file for every kind:
+  outside the kind's range it is CHG-02, inside it no finding (so `format` may
+  turn a package file back to `100644`). Every kind other than `auxiliary` (whose
+  own comparison already fails any mode change of canonical data) also requires
+  each canonical data file the commit adds or changes, by bytes or by mode, to be
+  `100644`, and reports a `100755` one as CHG-02; a commit without a parent adds
+  every file. The mode is read from the tree, so this holds even when the history
+  manifest cannot be used. A file the commit leaves untouched is not checked, and
+  commits that CHG-03 fails without comparison are not checked either.
+  A file made `100755` outside the kind's range is reported twice (CHG-02), once
+  for the range and once for the mode, as the specification names each.
   `auxiliary` reads no history manifest either: a commit is decided by the bytes
   even when `history.yaml` is unreadable, has an unsupported `schemaVersion` or an
   invalid Revision ID. Every other kind reads the manifest, so such a commit (as
