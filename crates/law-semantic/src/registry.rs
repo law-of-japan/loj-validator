@@ -418,15 +418,7 @@ fn check_record(rec: &Value, rel: &str, f: &mut Findings) {
             }
         }
         // GLYPH-05 in number claims: the evidence of a glyph read elsewhere.
-        let kinds: crate::repository::glyphs::SourceKinds = rec["sources"]
-            .as_array()
-            .unwrap_or(&empty)
-            .iter()
-            .filter_map(|s| {
-                let kind = s["kind"].as_str().unwrap_or("").to_owned();
-                s["id"].as_str().map(|id| (id.to_owned(), kind))
-            })
-            .collect();
+        let kinds = crate::repository::glyphs::source_kinds(&rec["sources"]);
         for (j, g) in n["glyphs"].as_array().into_iter().flatten().enumerate() {
             if !crate::repository::glyphs::other_source_evidence(g, &kinds) {
                 f.error(

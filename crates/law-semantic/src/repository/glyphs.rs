@@ -5,16 +5,37 @@ use crate::common::findings::{common_type_rule, Findings};
 use crate::common::{load_yaml, Check, Loaded, COMMON};
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
+use std::path::Path;
 
 /// Source ID -> Source `kind` (empty when absent) of the file that holds the
-/// Sources the notes point to.
-pub(crate) type SourceKinds = HashMap<String, String>;
+/// Sources the notes point to; `None` when the ID is listed with two kinds.
+pub(crate) type SourceKinds = HashMap<String, Option<String>>;
+
+/// The kinds of the `sources` of a history manifest or registry record. An ID
+/// listed with two different kinds is still a Source (TYPE-03) but has no
+/// kind, so the order of the duplicates cannot decide GLYPH-05.
+pub(crate) fn source_kinds(sources: &Value) -> SourceKinds {
+    let mut kinds = SourceKinds::new();
+    for s in list(sources) {
+        let Some(id) = s["id"].as_str() else { continue };
+        let kind = s["kind"].as_str().unwrap_or("").to_owned();
+        kinds
+            .entry(id.to_owned())
+            .and_modify(|k| {
+                if k.as_ref() != Some(&kind) {
+                    *k = None;
+                }
+            })
+            .or_insert(Some(kind));
+    }
+    kinds
+}
 
 /// GLYPH-05: an `illegible` note with `basis: otherSource` points to two or
 /// more distinct Sources: one of the promulgated text (`promulgation` or
 /// `officialCorrection`) and another that is not of kind `egov` or `index`.
-/// Any other note satisfies this. Sources that are not in `kinds` count for
-/// neither (TYPE-03 reports them).
+/// Any other note satisfies this. Sources that are not in `kinds` (TYPE-03
+/// reports them) or have no single kind count for neither.
 pub(crate) fn other_source_evidence(note: &Value, kinds: &SourceKinds) -> bool {
     if note["kind"] != "illegible" || note["basis"] != "otherSource" {
         return true;
@@ -22,7 +43,7 @@ pub(crate) fn other_source_evidence(note: &Value, kinds: &SourceKinds) -> bool {
     let cited: Vec<(&str, &str)> = list(&note["evidence"])
         .iter()
         .filter_map(|e| e["source"].as_str())
-        .filter_map(|s| kinds.get(s).map(|k| (s, k.as_str())))
+        .filter_map(|s| Some((s, kinds.get(s)?.as_deref()?)))
         .collect();
     cited.iter().any(|(a, ka)| {
         matches!(*ka, "promulgation" | "officialCorrection")
@@ -31,7 +52,6 @@ pub(crate) fn other_source_evidence(note: &Value, kinds: &SourceKinds) -> bool {
                 .any(|(b, kb)| a != b && !matches!(*kb, "egov" | "index"))
     })
 }
-use std::path::Path;
 
 pub const SCHEMA: &str =
     include_str!("../../../../vendor/loj-spec/schemas/loj-glyphs/v1alpha1/glyphs.schema.json");
@@ -441,7 +461,7 @@ mod tests {
             ("plain", ""),
         ]
         .into_iter()
-        .map(|(a, b)| (a.to_owned(), b.to_owned()))
+        .map(|(a, b)| (a.to_owned(), Some(b.to_owned())))
         .collect();
         let note = |sources: &[&str]| {
             let evidence: Vec<_> = sources.iter().map(|s| json!({"source": s})).collect();
@@ -453,11 +473,13 @@ mod tests {
             &["kanpo", "kanpo2"],
             &["kanpo", "plain"],
             &["egov", "kanpo", "original"],
+            &["kanpo", "original", "original"],
         ] {
             assert!(other_source_evidence(&note(ok), &kinds), "{ok:?}");
         }
         for bad in [
             &["kanpo", "kanpo"][..],
+            &["kanpo", "kanpo", "egov"],
             &["kanpo", "egov"],
             &["kanpo", "index"],
             &["original", "egov"],
@@ -475,6 +497,23 @@ mod tests {
         ] {
             assert!(other_source_evidence(&other, &kinds), "{other}");
         }
+    }
+
+    #[test]
+    fn a_source_listed_with_two_kinds_counts_for_neither() {
+        let kinds = source_kinds(&json!([
+            {"id": "kanpo", "kind": "promulgation"},
+            {"id": "x", "kind": "egov"},
+            {"id": "x", "kind": "other"},
+            {"id": "y", "kind": "other"},
+            {"id": "y", "kind": "other"},
+        ]));
+        assert_eq!(kinds.len(), 3);
+        assert_eq!(kinds["x"], None);
+        assert_eq!(kinds["y"].as_deref(), Some("other"));
+        let note = json!({"kind": "illegible", "basis": "otherSource",
+            "evidence": [{"source": "kanpo"}, {"source": "x"}]});
+        assert!(!other_source_evidence(&note, &kinds));
     }
 
     #[test]
