@@ -82,9 +82,14 @@ cannot be selected.
   (the file mode included). A history with two or more roots joins them in a merge
   commit, which is a CHG-03 error; each root is checked as a first commit.
   A snapshot is dropped from memory after the last commit compared with it.
-  The number of commits checked has no limit of its own yet (issue #61): the
-  bundle, object, tree and per-command limits apply, and cancellation stops the
-  check between commits.
+  At most 10,000 commits are checked: `rev-list` lists at most one more
+  (`--max-count`), and with more the check is incomplete ("more than 10000
+  commits to check", CHG-02 undetermined) before any commit is checked. The
+  check as a whole runs for at most 3600 s, measured before each commit: past it,
+  the check stops there as incomplete ("the change check ran longer than 3600 s")
+  and keeps the findings made so far, so an earlier error still fails it. The
+  commit being checked when the time passes finishes first (each git command has
+  its own 120 s timeout). Cancellation also stops the check between commits.
 - A bundle is untrusted. git runs isolated from the caller's environment, user and
   system configuration and hooks. Automatic maintenance and GC are disabled so
   fetch cannot leave background repacking racing the object-store check. Git uses
