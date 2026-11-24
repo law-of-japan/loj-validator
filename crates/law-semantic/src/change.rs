@@ -340,15 +340,15 @@ fn check_bundle(
     report.target.insert("commit".into(), json!(head));
     f.applicable.insert(CH);
     let commits = match b.range(base.as_deref(), &head, limits.commits) {
-        Ok(c) => c,
+        Ok(Some(c)) => c,
+        // Past the limit, no commit is checked: a check of only some commits
+        // would say nothing about the rest.
+        Ok(None) => {
+            let why = format!("more than {} commits to check", limits.commits);
+            return undetermined(f, report.target, why);
+        }
         Err(e) => return undetermined(f, report.target, e.to_string()),
     };
-    // Past the limit, no commit is checked: a check of only some commits would
-    // say nothing about the rest.
-    if commits.len() > limits.commits {
-        let why = format!("more than {} commits to check", limits.commits);
-        return undetermined(f, report.target, why);
-    }
     // A refused tree is cached as `None`, so it is exported and noted only once
     // even when the commit is both a parent and a child in the range.
     let mut cache: BTreeMap<String, Option<Snapshot>> = BTreeMap::new();
