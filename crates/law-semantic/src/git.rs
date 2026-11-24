@@ -563,7 +563,7 @@ impl Bundle {
             .probe(&["merge-base", "--is-ancestor", a, b])?
             .is_some())
     }
-    /// Commits of `base..head`, oldest first, each with its parents; without
+    /// Commits of `base..head`, parents before children, each with its parents; without
     /// `base`, every commit reachable from `head`, from the commits without a
     /// parent on. Both must be resolved commits (callers pass the hashes
     /// `commit` returned); an invalid revision is an `Err`, like a git failure.
@@ -580,7 +580,10 @@ impl Bundle {
             Some(base) => format!("{base}..{head}"),
             None => head.to_owned(),
         };
-        let list = self.git(&["rev-list", "--reverse", "--parents", &range])?;
+        // `--topo-order` lists every parent before its children whatever the
+        // commit dates, so a snapshot dropped after its last child is never
+        // needed again.
+        let list = self.git(&["rev-list", "--topo-order", "--reverse", "--parents", &range])?;
         let list = String::from_utf8(list)
             .map_err(|_| GitError::Unexpected("git printed a non-UTF-8 commit list"))?;
         Ok(list

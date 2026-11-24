@@ -73,14 +73,18 @@ cannot be selected.
   (its change kind is unknown, as with a missing `LoJ-Change`). These
   reports, like the one for a base or head missing from the bundle, carry
   `target.repository`.
-- The change check covers the commits of `base..head`, oldest first, each
-  compared with its parent. Without `base` (CLI: no `--base`; conformance: an
+- The change check covers the commits of `base..head`, each parent before its
+  children (`git rev-list --topo-order --reverse`), each compared with its parent. Without `base` (CLI: no `--base`; conformance: an
   input without `base`, common-059..061) it covers every commit reachable from
   `head` (`git rev-list <head>`), from the commits without a parent on. A commit
   without a parent is compared with no record before it and must declare
   `revisionAdd`; otherwise it is a CHG-03 error and gets no CHG-02 or CHG-04 check
   (the file mode included). A history with two or more roots joins them in a merge
   commit, which is a CHG-03 error; each root is checked as a first commit.
+  A snapshot is dropped from memory after the last commit compared with it.
+  The number of commits checked has no limit of its own yet (issue #61): the
+  bundle, object, tree and per-command limits apply, and cancellation stops the
+  check between commits.
 - A bundle is untrusted. git runs isolated from the caller's environment, user and
   system configuration and hooks. Automatic maintenance and GC are disabled so
   fetch cannot leave background repacking racing the object-store check. Git uses
