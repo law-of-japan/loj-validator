@@ -323,6 +323,11 @@ pub(crate) fn recorded_at(
 ) -> Option<std::ops::Range<usize>> {
     let start = usize::try_from(offset).ok()?;
     let range = start..start.checked_add(recorded.len())?;
+    let splits_crlf =
+        |i: usize| i > 0 && text.get(i - 1) == Some(&'\r') && text.get(i) == Some(&'\n');
+    if splits_crlf(range.start) || splits_crlf(range.end) {
+        return None;
+    }
     (text.get(range.clone()) == Some(recorded)).then_some(range)
 }
 

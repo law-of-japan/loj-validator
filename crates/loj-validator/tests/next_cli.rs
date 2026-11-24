@@ -158,6 +158,23 @@ fn change_and_reference() {
     ]);
     assert_eq!(code, 1, "{r}");
     assert_eq!(r["diagnostics"][0]["rule"], "CHG-03");
+    // A README-only root still uses the explicitly selected repository layout.
+    for (layout, expected_code) in [("registry", 0), ("law", 1), ("unknown", 2)] {
+        let (code, report) = json(&[
+            "check",
+            &format!("{c}/valid/common-064/repo.bundle"),
+            &head("common-064"),
+            &format!("--repository-kind={layout}"),
+        ]);
+        assert_eq!(code, expected_code, "{report}");
+    }
+    let (code, report) = json(&[
+        "check",
+        &format!("{c}/valid/common-064/repo.bundle"),
+        "--repository-kind=registry",
+    ]);
+    assert_eq!(code, 2, "{report}");
+    assert_eq!(report["errors"][0]["kind"], "usage");
     // --base alone is still not an input; the error is one JSON object.
     let (code, r) = json(&[
         "check",

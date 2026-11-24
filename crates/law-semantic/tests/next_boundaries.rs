@@ -15,6 +15,7 @@ fn library_git_cancellation_is_incomplete_not_a_violation() {
         b"synthetic bundle; cancellation precedes git",
     );
     let input = Input::Change {
+        repository: law_semantic::checks::RepositoryKind::Law,
         bundle: scratch.0.join("input.bundle"),
         base: Some("aaaa".into()),
         head: "bbbb".into(),

@@ -1,0 +1,121 @@
+{
+  "ast": {
+    "schemaVersion": "loj/v1alpha2",
+    "law": {
+      "id": "20990101-act-1",
+      "title": "架空雲保管法（実在しないサンプル）",
+      "type": "act",
+      "number": "架空法律第一号",
+      "promulgatedAt": "2099-01-01",
+      "language": "ja"
+    },
+    "root": {
+      "kind": "Law",
+      "id": "20990101-act-1",
+      "number": null,
+      "display": "架空雲保管法（実在しないサンプル）",
+      "content": [
+        {
+          "kind": "MainProvision",
+          "id": "20990101-act-1/main",
+          "number": null,
+          "display": "",
+          "content": [
+            {
+              "kind": "Paragraph",
+              "id": "20990101-act-1/main/paragraph/1",
+              "number": "1",
+              "display": "",
+              "content": [
+                {
+                  "text": "架空雲税令（架空勅令第二号）の一部を次のように改正する。\n"
+                },
+                {
+                  "kind": "Amendment",
+                  "id": "20990101-act-1/main/paragraph/1/amendment/1",
+                  "number": "1",
+                  "display": "",
+                  "content": [
+                    {
+                      "kind": "AmendmentContent",
+                      "id": "20990101-act-1/main/paragraph/1/amendment/1/content",
+                      "number": null,
+                      "display": "",
+                      "content": [
+                        {
+                          "kind": "Article",
+                          "id": "20990101-act-1/main/paragraph/1/amendment/1/content/article/2",
+                          "number": "2",
+                          "display": "第二條",
+                          "content": [],
+                          "status": "deleted"
+                        }
+                      ]
+                    }
+                  ],
+                  "instruction": "implicit"
+                },
+                {
+                  "text": "第三條中「大臣」を「各省各廳ノ長」に改める。\n第四條中「所管大臣」を「各省各廳ノ長」に改める。\n第五條中「各省大臣」を「各省各廳ノ長」に改める。\n"
+                },
+                {
+                  "kind": "Amendment",
+                  "id": "20990101-act-1/main/paragraph/1/amendment/2",
+                  "number": "2",
+                  "display": "",
+                  "content": [
+                    {
+                      "kind": "AmendmentContent",
+                      "id": "20990101-act-1/main/paragraph/1/amendment/2/content",
+                      "number": null,
+                      "display": "",
+                      "content": [
+                        {
+                          "kind": "Article",
+                          "id": "20990101-act-1/main/paragraph/1/amendment/2/content/article/6",
+                          "number": "6",
+                          "display": "第六條",
+                          "content": [],
+                          "status": "deleted"
+                        },
+                        {
+                          "kind": "Article",
+                          "id": "20990101-act-1/main/paragraph/1/amendment/2/content/article/8",
+                          "number": "8",
+                          "display": "第八條",
+                          "content": [],
+                          "status": "deleted"
+                        },
+                        {
+                          "kind": "Article",
+                          "id": "20990101-act-1/main/paragraph/1/amendment/2/content/article/9",
+                          "number": "9",
+                          "display": "第九條",
+                          "content": [],
+                          "status": "deleted"
+                        },
+                        {
+                          "kind": "Article",
+                          "id": "20990101-act-1/main/paragraph/1/amendment/2/content/article/10",
+                          "number": "10",
+                          "display": "第十條",
+                          "content": [],
+                          "status": "deleted"
+                        }
+                      ]
+                    }
+                  ],
+                  "instruction": "implicit"
+                },
+                {
+                  "text": "第十一條第二項中「當該官廳」を「各省各廳ノ長」に改める。\n"
+                }
+              ],
+              "numbering": "explicit"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "ast": {
+    "schemaVersion": "loj/v1alpha2",
+    "law": {
+      "id": "20990101-act-1",
+      "title": "架空雲保管法（実在しないサンプル）",
+      "type": "act",
+      "number": "架空法律第一号",
+      "promulgatedAt": "2099-01-01",
+      "language": "ja"
+    },
+    "root": {
+      "kind": "Law",
+      "id": "20990101-act-1",
+      "number": null,
+      "display": "架空雲保管法（実在しないサンプル）",
+      "content": [
+        {
+          "kind": "MainProvision",
+          "id": "20990101-act-1/main",
+          "number": null,
+          "display": "",
+          "content": [
+            {
+              "kind": "Paragraph",
+              "id": "20990101-act-1/main/paragraph/1",
+              "number": "1",
+              "display": "",
+              "content": [
+                {
+                  "text": "架空雲省官制（架空勅令第三号）の一部を次のように改正する。\n第三條中「七局」を「八局」に、「總務局」を「總務局\n勞務局」に、「貯金保險局」を「貯金局」に改める。\n"
+                }
+              ],
+              "numbering": "explicit"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

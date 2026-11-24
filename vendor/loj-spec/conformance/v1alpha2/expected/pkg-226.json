@@ -1,0 +1,169 @@
+{
+  "ast": {
+    "schemaVersion": "loj/v1alpha2",
+    "law": {
+      "id": "20990101-act-1",
+      "title": "架空雲保管法（実在しないサンプル）",
+      "type": "act",
+      "number": "架空法律第一号",
+      "promulgatedAt": "2099-01-01",
+      "language": "ja"
+    },
+    "root": {
+      "kind": "Law",
+      "id": "20990101-act-1",
+      "number": null,
+      "display": "架空雲保管法（実在しないサンプル）",
+      "content": [
+        {
+          "kind": "MainProvision",
+          "id": "20990101-act-1/main",
+          "number": null,
+          "display": "",
+          "content": [
+            {
+              "kind": "Article",
+              "id": "20990101-act-1/main/article/1",
+              "number": "1",
+              "display": "第一条",
+              "content": [
+                {
+                  "kind": "Paragraph",
+                  "id": "20990101-act-1/main/article/1/paragraph/1",
+                  "number": "1",
+                  "display": "",
+                  "content": [
+                    {
+                      "text": "この法律は、雲の保管について定める。\n"
+                    }
+                  ],
+                  "numbering": "explicit"
+                }
+              ],
+              "status": "active"
+            },
+            {
+              "kind": "Article",
+              "id": "20990101-act-1/main/article/2:4",
+              "number": "2:4",
+              "display": "第二条から第四条まで",
+              "content": [],
+              "status": "deleted"
+            },
+            {
+              "kind": "Article",
+              "id": "20990101-act-1/main/article/5:6",
+              "number": "5:6",
+              "display": "第五条及び第六条",
+              "content": [],
+              "status": "deleted"
+            },
+            {
+              "kind": "Article",
+              "id": "20990101-act-1/main/article/7",
+              "number": "7",
+              "display": "第七条",
+              "content": [
+                {
+                  "kind": "Paragraph",
+                  "id": "20990101-act-1/main/article/7/paragraph/1",
+                  "number": "1",
+                  "display": "",
+                  "content": [
+                    {
+                      "text": "架空雲刑法（架空法律第三号）の一部を次のように改正する。\n第八十八條中「乃至第八十六條」を「及ヒ第八十二條」に改める。\n"
+                    },
+                    {
+                      "kind": "Amendment",
+                      "id": "20990101-act-1/main/article/7/paragraph/1/amendment/1",
+                      "number": "1",
+                      "display": "",
+                      "content": [
+                        {
+                          "kind": "AmendmentContent",
+                          "id": "20990101-act-1/main/article/7/paragraph/1/amendment/1/content",
+                          "number": null,
+                          "display": "",
+                          "content": [
+                            {
+                              "kind": "Article",
+                              "id": "20990101-act-1/main/article/7/paragraph/1/amendment/1/content/article/89",
+                              "number": "89",
+                              "display": "第八十九條",
+                              "content": [],
+                              "status": "deleted"
+                            },
+                            {
+                              "kind": "Article",
+                              "id": "20990101-act-1/main/article/7/paragraph/1/amendment/1/content/article/90:91",
+                              "number": "90:91",
+                              "display": "第九十條及ヒ第九十一條",
+                              "content": [],
+                              "status": "deleted"
+                            }
+                          ]
+                        }
+                      ],
+                      "instruction": "implicit"
+                    },
+                    {
+                      "text": "第百五條中「之ヲ罰セス」を「其刑ヲ免除スルコトヲ得」に改める。\n"
+                    },
+                    {
+                      "kind": "Amendment",
+                      "id": "20990101-act-1/main/article/7/paragraph/1/amendment/2",
+                      "number": "2",
+                      "display": "",
+                      "content": [
+                        {
+                          "kind": "AmendmentContent",
+                          "id": "20990101-act-1/main/article/7/paragraph/1/amendment/2/content",
+                          "number": null,
+                          "display": "",
+                          "content": [
+                            {
+                              "kind": "Article",
+                              "id": "20990101-act-1/main/article/7/paragraph/1/amendment/2/content/article/112-2:112-5",
+                              "number": "112-2:112-5",
+                              "display": "第百十二條ノ二乃至第百十二條ノ五",
+                              "content": [],
+                              "status": "deleted"
+                            }
+                          ]
+                        }
+                      ],
+                      "instruction": "implicit"
+                    }
+                  ],
+                  "numbering": "explicit"
+                }
+              ],
+              "status": "active"
+            },
+            {
+              "kind": "Article",
+              "id": "20990101-act-1/main/article/8",
+              "number": "8",
+              "display": "第八条",
+              "content": [
+                {
+                  "kind": "Paragraph",
+                  "id": "20990101-act-1/main/article/8/paragraph/1",
+                  "number": "1",
+                  "display": "",
+                  "content": [
+                    {
+                      "text": "雲の保管の記録は、保管所に備える。\n"
+                    }
+                  ],
+                  "numbering": "explicit"
+                }
+              ],
+              "status": "active"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

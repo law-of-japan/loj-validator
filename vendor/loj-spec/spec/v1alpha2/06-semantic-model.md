@@ -4,7 +4,7 @@
 
 - 規範のJSON表現は[AST Schema](../../schemas/v1alpha2/ast.schema.json)による。`schemaVersion`、Manifestと同じ`law`、`root`を持つ。
 - ノードは`kind`、`id`、`number`、`display`、`content`を持つ。Articleは`status`を、Subitemは`level`を、Paragraphは`numbering`を、Rowは`key`を、Amendmentは`instruction`（`explicit`／`implicit`。[AMEND-01](09-structures.md)）を持つ。Amendmentは`number`を、Cellは`rowspan`・`colspan`を（[TABLE-03](09-structures.md)）、Paragraphは`caption`を（[PARA-02](09-structures.md)）持てる。ほかのフィールドを持ってはならない（MUST NOT）。
-- `number`は正規の番号の文字列とする。番号を持たないLaw、MainProvision、SupplementaryProvision、AppendedMaterial、AmendmentContent、EnactStatement、Toc、Preamble、Rowは`null`とする。Amendmentの`number`は、同じ親の中の改正規定の順序とする（[AMEND-01](09-structures.md)）。Listの`number`は、同じ親の中の列記の順序とする（[LIST-01](09-structures.md)）。Cellの`number`は行の中での位置（1始まり）とする。
+- `number`は正規の番号の文字列とする。範囲のラベルの削除条のArticleは、範囲の番号（[HEAD-04](04-headings.md)）とする。番号を持たないLaw、MainProvision、SupplementaryProvision、AppendedMaterial、AmendmentContent、EnactStatement、Toc、Preamble、Rowは`null`とする。Amendmentの`number`は、同じ親の中の改正規定の順序とする（[AMEND-01](09-structures.md)）。Listの`number`は、同じ親の中の列記の順序とする（[LIST-01](09-structures.md)）。Cellの`number`は行の中での位置（1始まり）とする。
 - `display`は次のとおりとする。Lawは`law.title`、MainProvisionは空文字列、SupplementaryProvisionは附則の見出しの原文のラベル（HEAD-03）、AppendedMaterialは宣言した`title`。List、Table、Row、Cell、Amendment、AmendmentContent、EnactStatement、Toc、Preambleは空文字列。
 - `content`は、textのオブジェクトまたは子ノードの、順序のある配列でなければならない（MUST）。textは原文のMarkdownであり、HTMLにした結果ではない。
 - 親と子は次のとおりとする。
@@ -31,7 +31,7 @@
 
 - textを許すのは、Paragraph、Item、Subitem、List、Cell、Amendment、AmendmentContent、EnactStatement、Toc、Preamble、AppendedMaterialだけである。
 - 子の前後に本文を許し、出現の順を保持しなければならない（MUST）。連続するtextは結合して一つの要素とし、空文字列のtextを作らない。
-- 本文の区間は、開始のマーカーの行末の直後から、次の子の開始行の行頭、または終了のマーカーの行頭までとする。子の終了行の行末の直後から、親の本文を再開する。空行を保持し、本文の末尾の改行も保持する。構造の外の区切りの空行は、意味ASTに含めない。
+- 本文の区間は、開始のマーカーの行末の直後から、次の子の開始行の行頭、または終了のマーカーの行頭までとする。子の終了行の行末の直後から、親の本文を再開する。空行を保持し、本文の末尾の改行も保持する。本文の行の終端は、元の入力のまま（LFまたはCRLF。[BASIC-02](01-overview.md)）とし、正規化しない。構造の外の区切りの空行は、意味ASTに含めない。
 - ASTのフィールドの順は意味を持たず、配列の順は意味を持つ。
 
 ## AST-02 意味の検査

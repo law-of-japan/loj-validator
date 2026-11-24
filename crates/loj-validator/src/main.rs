@@ -17,6 +17,7 @@ v1alpha1: loj-validator check DIR|law.yaml --profile v1alpha1 [--level L0|L1]
 Legacy default profile may also be selected with --profile legacy.
 Without --profile, --structure-schema or a .md input, check uses the next
 specification (loj/v1alpha2); see below. Registry inputs accept --registration-space SPACE;
+Bundle change checks accept --repository-kind law|registry (default law).
 L4 includes displayConsistency. Use --record ID for one input Record's report.
 exit codes: 0 passed, 1 validation failure, 2 tool/configuration error, 3 incomplete
 Unix next-spec checks: SIGINT/SIGTERM request cleanup and exit 3 (incomplete).";

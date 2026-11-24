@@ -3608,6 +3608,165 @@
       },
       "expected": "conformance/v1alpha2/expected/pkg-222.json",
       "success": false
+    },
+    {
+      "id": "pkg-223",
+      "title": "項の形式の改正法の本則の、指示の文のない削除条の形だけの改正規定（昭和二十二年法律第百七十四号の形）",
+      "requirements": [
+        "AMEND-01",
+        "AMEND-02",
+        "HEAD-04",
+        "PARA-03",
+        "ID-01",
+        "AST-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-223/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-223.json",
+      "success": true
+    },
+    {
+      "id": "pkg-224",
+      "title": "条ごとの、指示の文のない条の全文の改正規定と、無番号の項からなる附則（昭和二十二年法律第百七十三号の形）",
+      "requirements": [
+        "AMEND-01",
+        "AMEND-02",
+        "PARA-01",
+        "ID-01",
+        "AST-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-224/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-224.json",
+      "success": true
+    },
+    {
+      "id": "pkg-225",
+      "title": "指示の文のない削除条の形の改正規定と、続けて掲げた四つの削除条を一つにした改正内容（昭和二十二年政令第四十五号の形）",
+      "requirements": [
+        "AMEND-01",
+        "AMEND-02",
+        "HEAD-04",
+        "PARA-03",
+        "ID-01",
+        "AST-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-225/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-225.json",
+      "success": true
+    },
+    {
+      "id": "pkg-226",
+      "title": "範囲のラベルの削除条（本則の「から…まで」「及び」、改正内容の「及ヒ」と枝番号の「乃至」）",
+      "requirements": [
+        "HEAD-01",
+        "HEAD-02",
+        "HEAD-04",
+        "AMEND-02",
+        "ID-01",
+        "AST-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-226/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-226.json",
+      "success": true
+    },
+    {
+      "id": "pkg-227",
+      "title": "範囲のラベルの条に項を置く（削除条でない）",
+      "requirements": [
+        "HEAD-04"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-227/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-227.json",
+      "success": false
+    },
+    {
+      "id": "pkg-228",
+      "title": "範囲のラベルの始めの条が終わりの条より後",
+      "requirements": [
+        "HEAD-04"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-228/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-228.json",
+      "success": false
+    },
+    {
+      "id": "pkg-229",
+      "title": "範囲の削除条の範囲に番号が含まれる条",
+      "requirements": [
+        "HEAD-02",
+        "HEAD-04"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-229/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-229.json",
+      "success": false
+    },
+    {
+      "id": "pkg-230",
+      "title": "「から」の後に「まで」を欠く条をまとめたラベル",
+      "requirements": [
+        "HEAD-01",
+        "HEAD-04"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-230/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-230.json",
+      "success": false
+    },
+    {
+      "id": "pkg-231",
+      "title": "二行割りで組んだ引いた字句の行の区切りを本文の改行として書いた改正の指示（昭和二十二年勅令第百四十三号の形）",
+      "requirements": [
+        "MD-04",
+        "PARA-03",
+        "AMEND-03",
+        "AST-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-231/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-231.json",
+      "success": true
     }
   ]
 }

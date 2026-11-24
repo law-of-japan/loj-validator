@@ -1,0 +1,24 @@
+schemaVersion: loj-glyphs/v1alpha1
+revision: q7v3n2xc
+notes:
+  - id: g1
+    node: 20990101-imp-1/main/article/1/paragraph/1
+    offset: 44
+    recorded: "\n"
+    kind: spacing
+    evidence: [{source: src-fiction, locator: "第一條 二行割りの「總務局／勞務局」"}]
+    verification: {state: unverified, reason: "二行割りの区切りが、改正後の官制で一行ずつ掲げる名称の区切りか、組版かを決められない。改正前の官制を確かめていない"}
+  - id: g2
+    node: 20990101-imp-1/main/article/2/paragraph/1
+    offset: 14
+    recorded: "\r\n"
+    kind: spacing
+    evidence: [{source: src-fiction, locator: "第二條 二行割りの「雨雲局／雪雲局」"}]
+    verification: {state: unverified, reason: "二行割りの区切りが、改正後の官制で一行ずつ掲げる名称の区切りか、組版かを決められない。改正前の官制を確かめていない"}
+  - id: g3
+    node: 20990101-imp-1/main/article/3/paragraph/1
+    offset: 28
+    recorded: ""
+    kind: spacing
+    evidence: [{source: src-fiction, locator: "第三條 二行割りの「白雲課長／黒雲課長」"}]
+    verification: {state: unverified, reason: "二行割りの区切りが、改正後の官制で一行ずつ掲げる名称の区切りか、組版かを決められない。改正前の官制を確かめていない。二つの行をつないで書いた"}

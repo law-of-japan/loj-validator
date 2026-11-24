@@ -1405,6 +1405,58 @@
       },
       "expected": "conformance/common/v1alpha1/expected/common-061.json",
       "success": false
+    },
+    {
+      "id": "common-062",
+      "title": "登録台帳のリポジトリの最初のcommitで、Recordを登録する",
+      "requirements": [
+        "CHG-02",
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-062/repo.bundle",
+        "head": "43a71b1c84063a173a88da86cd011a6f7418bd7f",
+        "repository": "registry"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-062.json",
+      "success": true
+    },
+    {
+      "id": "common-063",
+      "title": "登録台帳のリポジトリの最初のcommitを、状態の追加と宣言する",
+      "requirements": [
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-063/repo.bundle",
+        "head": "4932674ca7e7c47f8e240b7b3d8af94ebf6807ea",
+        "repository": "registry"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-063.json",
+      "success": false
+    },
+    {
+      "id": "common-064",
+      "title": "登録台帳のリポジトリの最初のcommitで、正本のデータのファイルを置かずに説明だけを置く",
+      "requirements": [
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-064/repo.bundle",
+        "head": "54803c6c79c3284a37bcdfb59a4b58953d0c6084",
+        "repository": "registry"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-064.json",
+      "success": true
     }
   ]
 }

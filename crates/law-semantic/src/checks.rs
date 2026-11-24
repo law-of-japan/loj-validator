@@ -2,6 +2,24 @@
 use crate::common::{Check, Report};
 use std::path::{Path, PathBuf};
 
+/// CHG-01/03 repository layout supplied by the caller.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RepositoryKind {
+    Law,
+    Registry,
+}
+
+impl RepositoryKind {
+    pub(crate) fn canonical(self, path: &str) -> bool {
+        match self {
+            Self::Law => {
+                matches!(path, "history.yaml" | "rebuild.yaml") || path.starts_with("versions/")
+            }
+            Self::Registry => path == "space.yaml" || path.starts_with("records/"),
+        }
+    }
+}
+
 /// Inputs of docs/implementation-guide.md「検査と入力」 (conformance input kinds).
 #[derive(Clone, Debug)]
 pub enum Input {
@@ -16,10 +34,11 @@ pub enum Input {
         registry: PathBuf,
         repositories: Vec<PathBuf>,
     },
-    /// Commits of a law repository in a `git bundle` (CHG-02, CHG-03): those
+    /// Commits of a law or registry repository in a `git bundle` (CHG-02, CHG-03): those
     /// after `base` up to `head`, or, without `base`, every commit reachable
     /// from `head`, from the first commit (the commit without a parent) on.
     Change {
+        repository: RepositoryKind,
         bundle: PathBuf,
         base: Option<String>,
         head: String,
@@ -89,7 +108,12 @@ pub fn run_with_space(input: &Input, checks: &[Check], space: Option<&str>) -> R
             registry,
             repositories,
         } => crate::xref::check_with_space(registry, repositories, checks, space),
-        Input::Change { bundle, base, head } => crate::change::check(bundle, base.as_deref(), head),
+        Input::Change {
+            bundle,
+            base,
+            head,
+            repository,
+        } => crate::change::check_repository(bundle, base.as_deref(), head, *repository),
         Input::Reference {
             bundle,
             registry,

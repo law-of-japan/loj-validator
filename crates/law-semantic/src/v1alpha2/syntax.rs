@@ -156,6 +156,38 @@ static HEADING: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"^第([^編章節款目条條]+)([編章節款目条條])((?:[のノ][^のノ 　（）]+)*)(.*)$")
         .expect("constant regex")
 });
+/// Split a deleted-article label without interpreting words inside captions.
+fn range_endpoints(label: &str) -> Option<(&str, &str)> {
+    for connector in ["及び", "及ヒ", "乃至", "から"] {
+        if let Some((start, end)) = label.split_once(connector) {
+            let end = if connector == "から" {
+                end.strip_suffix("まで")?
+            } else {
+                end
+            };
+            return Some((start, end));
+        }
+    }
+    None
+}
+
+fn bare_article(label: &str) -> Option<String> {
+    let c = HEADING.captures(label)?;
+    if !matches!(&c[2], "条" | "條") || !c[4].is_empty() {
+        return None;
+    }
+    number(&format!("{}{}", &c[1], &c[3]), SEPARATORS, Digits::Any)
+}
+
+/// Canonical components have no leading zeroes, so length then lexical order
+/// compares each component numerically.
+fn compare_numbers(left: &str, right: &str) -> std::cmp::Ordering {
+    fn components(number: &str) -> impl Iterator<Item = (usize, &str)> {
+        number.split('-').map(|n| (n.len(), n))
+    }
+    components(left).cmp(components(right))
+}
+
 /// A byte range of one source file.
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct Position {
@@ -1081,6 +1113,8 @@ impl<'a> Builder<'a> {
         ctx: &mut Context,
     ) {
         let path = doc.path;
+        let range =
+            range_endpoints(label).and_then(|(a, b)| Some((bare_article(a)?, bare_article(b)?)));
         let Some(c) = HEADING.captures(label) else {
             ctx.diag(
                 "HEAD-01",
@@ -1091,7 +1125,20 @@ impl<'a> Builder<'a> {
             );
             return;
         };
+        // The single-heading pattern can consume another article in its
+        // branch suffix. A malformed compound label is a HEAD-01 finding.
+        if range.is_none() && matches!(&c[2], "条" | "條") && c[3].contains('第') {
+            ctx.diag(
+                "HEAD-01",
+                "Unrecognized article range",
+                path,
+                span.start,
+                span.end,
+            );
+            return;
+        }
         let num = number(&format!("{}{}", &c[1], &c[3]), SEPARATORS, Digits::Any);
+        let num = range.as_ref().map(|(a, b)| format!("{a}:{b}")).or(num);
         let Some(num) = num else {
             ctx.diag(
                 "NUM-01",
@@ -1110,7 +1157,7 @@ impl<'a> Builder<'a> {
             "目" => (Kind::Division, 5),
             _ => (Kind::Article, ARTICLE_RANK),
         };
-        if !tail_ok(rank, &c[4]) {
+        if range.is_none() && !tail_ok(rank, &c[4]) {
             ctx.diag(
                 "HEAD-01",
                 "Invalid heading title or caption",
@@ -1135,6 +1182,17 @@ impl<'a> Builder<'a> {
         } else {
             parent
         };
+        if let Some((start, end)) = &range {
+            if !compare_numbers(start, end).is_lt() {
+                ctx.diag(
+                    "HEAD-04",
+                    "Article range endpoints must increase",
+                    path,
+                    span.start,
+                    span.end,
+                );
+            }
+        }
         let mut node = Node::new(
             kind,
             format!("{}/{}/{}", self.nodes[id_parent].id, kind.id_segment(), num),
@@ -1425,6 +1483,7 @@ impl<'a> Builder<'a> {
         ctx: &mut Context,
     ) -> Value {
         let nodes = &self.nodes;
+        check_article_overlaps(nodes, ctx);
         for i in 0..nodes.len() {
             if crate::cancellation::checkpoint() {
                 ctx.incomplete = true;
@@ -1449,6 +1508,50 @@ impl<'a> Builder<'a> {
             }
         }
         json!({"schemaVersion":super::SCHEMA_VERSION,"law":manifest["law"],"root":export(nodes,0)})
+    }
+}
+
+/// Sort by scope and numeric start so a single sweep detects overlaps,
+/// including branches within a range, without expanding the range.
+fn check_article_overlaps(nodes: &[Node], ctx: &mut Context) {
+    if !nodes
+        .iter()
+        .any(|n| n.kind == Kind::Article && n.number.as_deref().is_some_and(|v| v.contains(':')))
+    {
+        return;
+    }
+    let mut intervals = Vec::new();
+    for node in nodes.iter().filter(|n| n.kind == Kind::Article) {
+        let Some(number) = node.number.as_deref() else {
+            continue;
+        };
+        let (start, end) = number.split_once(':').unwrap_or((number, number));
+        let scope = node.id.rsplit_once('/').map(|(scope, _)| scope);
+        intervals.push((scope, start, end, node));
+    }
+    intervals.sort_by(|a, b| a.0.cmp(&b.0).then_with(|| compare_numbers(a.1, b.1)));
+    let mut sorted = intervals.into_iter();
+    let Some(mut furthest) = sorted.next() else {
+        return;
+    };
+    for current in sorted {
+        let (scope, start, end, node) = current;
+        if scope == furthest.0 && !compare_numbers(start, furthest.2).is_gt() {
+            // Equal IDs are diagnosed when the node is inserted.
+            if node.id != furthest.3.id {
+                ctx.diag(
+                    "HEAD-02",
+                    "Overlapping scoped article numbers",
+                    &node.path,
+                    node.span.start,
+                    node.span.end,
+                );
+            }
+            if !compare_numbers(end, furthest.2).is_gt() {
+                continue;
+            }
+        }
+        furthest = current;
     }
 }
 
@@ -1503,7 +1606,16 @@ fn structure(
             subitem_style = Some(style);
         }
     }
-    if n.kind == Kind::Article && !n.deleted && n.content.is_empty() {
+    if n.kind == Kind::Article && !n.deleted && n.number.as_deref().is_some_and(|n| n.contains(':'))
+    {
+        ctx.diag(
+            "HEAD-04",
+            "An article range must be deleted",
+            &n.path,
+            n.span.start,
+            n.span.end,
+        );
+    } else if n.kind == Kind::Article && !n.deleted && n.content.is_empty() {
         ctx.diag(
             "HEAD-04",
             "Active article requires a paragraph",
@@ -1925,6 +2037,60 @@ mod tests {
         }
         for no in ["附属書", "附x則", "則", "附則　抄", "第一条"] {
             assert!(matches!(supplement_label(no), Supplement::No), "{no:?}");
+        }
+    }
+
+    #[test]
+    fn malformed_article_ranges_are_unrecognized_headings() {
+        let manifest = json!({"law":{"id":"law","title":"例"}});
+        for label in [
+            "第一条から第三条まで及び第五条",
+            "第一条乃至第三条余分",
+            "第一条の二から第三条",
+            "第一条の二乃至第三条まで",
+        ] {
+            let documents = [(
+                "main.md".into(),
+                format!("# {label}\n削除\n"),
+                "main".into(),
+            )];
+            let mut ctx = Context::default();
+            build(&manifest, &documents, &mut ctx);
+            assert!(
+                ctx.diagnostics.iter().any(|(_, d)| d.rule == "HEAD-01"),
+                "{label}"
+            );
+        }
+    }
+
+    #[test]
+    fn article_ranges_compare_numeric_branches_within_their_own_scope() {
+        let article = |scope: &str, number: &str| {
+            Node::new(
+                Kind::Article,
+                format!("{scope}/art/{number}"),
+                Some(number.to_owned()),
+                String::new(),
+                "main.md",
+                0..1,
+            )
+        };
+        let mut nodes = vec![
+            article("main", "10-2"),
+            article("main", "9-2:10"),
+            article("supplement", "9-2"),
+            article("main", "9-1"),
+        ];
+        let mut ctx = Context::default();
+        check_article_overlaps(&nodes, &mut ctx);
+        assert!(ctx.diagnostics.is_empty());
+        for number in ["9-2-1:9-3", "9-2:9-4", "10", "10:10-1"] {
+            nodes.push(article("main", number));
+            check_article_overlaps(&nodes, &mut ctx);
+            assert_eq!(ctx.diagnostics.len(), 1, "{number}");
+            assert_eq!(ctx.diagnostics[0].1.rule, "HEAD-02");
+            ctx.diagnostics.clear();
+            nodes.pop();
         }
     }
 
