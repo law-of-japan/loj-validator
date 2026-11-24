@@ -15,12 +15,28 @@ Target: loj-spec commit `bd7718aaec3a92421c1ffcd987693ba69fc0777e`, vendored as
 | `registry` | registry check; Record resolution | REG, RID |
 | `xref` | L4 `relationResolution`, `relationConsistency`, `timeConsistency`, `displayConsistency` | XREF-01..03, XREF-05/06 |
 | `rebuild` | rebuild report check | REBR |
-| `change` | change check over `git bundle` commits | CHG-02..04 |
+| `change` | commit range traversal, snapshot acquisition (`change/snapshots`), declarations and snapshot comparisons (`change/policy`) | CHG-02..04 |
 | `fixref` | Record, fixed and Revision references; structured conversion | FIXREF-02..07 |
 | `checks` | input kinds and dispatch (`Input`, `run`, `run_with_space`) | |
 
 Reserved checks (L2, L3 `sourceMatch`, L4 `clauseReference`) are not implemented and
 cannot be selected.
+
+### Dependencies across checks
+
+The repository checker loads history and packages. It passes history, ASTs and
+its findings accumulator to the rebuild checker, which loads the rebuild
+document and checks it against those inputs. Both sets of findings belong to
+one repository report. The registry loader and its Record resolution are
+reused by xref (which loads repository histories) and fixref (which reads a
+commit snapshot). Each caller constructs the report for its own checks.
+
+Fixref and the change range walker need the same exported tree but differ in
+when they need ASTs. `change/snapshots` owns acquisition and lazy construction,
+while the range walker chooses commits and the policy decides which revisions
+must keep their ASTs. These boundaries fit within law-semantic. The other
+checks already consume the relevant loaded inputs or resolution operations,
+so this migration introduces no further shared layer.
 
 ## Results
 

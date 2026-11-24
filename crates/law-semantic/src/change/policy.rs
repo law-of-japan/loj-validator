@@ -1,4 +1,4 @@
-//! CHG-02 file and metadata boundaries, independent of AST equality.
+//! Change declarations and comparisons of acquired snapshots (CHG-02 through CHG-04).
 use super::{Change, Findings, Snapshot, CH, COMMON};
 use crate::common::Class;
 use crate::repository::history::list;
@@ -559,6 +559,231 @@ fn registry_ids(change: &Change<'_>, before: &Snapshot, after: &Snapshot, f: &mu
                         crate::registry::REGISTRY,
                         format!("retired registry identifier reused in {path}"),
                         change.at,
+                        "",
+                    );
+                }
+            }
+        }
+    }
+}
+
+pub(super) const KINDS: &[&str] = &[
+    "format",
+    "correction",
+    "officialCorrection",
+    "restoration",
+    "metadata",
+    "revisionAdd",
+    "revisionFix",
+    "migration",
+    "auxiliary",
+];
+
+/// CHG-03: only a wholly valid final paragraph, excluding the first one.
+fn trailer_fields(message: &str) -> Vec<(&str, &str)> {
+    let mut paragraphs: Vec<Vec<&str>> = Vec::new();
+    let mut current = Vec::new();
+    for line in message
+        .split('\n')
+        .map(|line| line.strip_suffix('\r').unwrap_or(line))
+    {
+        if line.trim_matches([' ', '\t']).is_empty() {
+            if !current.is_empty() {
+                paragraphs.push(std::mem::take(&mut current));
+            }
+        } else {
+            current.push(line);
+        }
+    }
+    if !current.is_empty() {
+        paragraphs.push(current);
+    }
+    if paragraphs.len() < 2 {
+        return Vec::new();
+    }
+    let mut fields = Vec::new();
+    for line in paragraphs.last().into_iter().flatten() {
+        let Some((name, value)) = line.split_once(':') else {
+            return Vec::new();
+        };
+        if name.is_empty() || !name.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-') {
+            return Vec::new();
+        }
+        fields.push((name, value.trim_matches([' ', '\t'])));
+    }
+    fields
+}
+
+pub(super) fn trailers(message: &str) -> (Vec<String>, Vec<String>) {
+    let fields = trailer_fields(message);
+    let kinds = fields
+        .iter()
+        .filter(|(name, _)| *name == "LoJ-Change")
+        .map(|(_, value)| (*value).into())
+        .collect();
+    let revisions: Vec<String> = fields
+        .iter()
+        .filter(|(name, _)| *name == "LoJ-Revisions")
+        .map(|(_, value)| (*value).into())
+        .collect();
+    (kinds, revisions)
+}
+
+pub(super) fn reviewed(message: &str) -> bool {
+    let fields = trailer_fields(message);
+    let values: Vec<_> = fields
+        .iter()
+        .filter(|(name, _)| *name == "LoJ-Reviewed")
+        .collect();
+    matches!(values.as_slice(), [(_, value)] if !value.is_empty())
+}
+
+/// CHG-03: the commit declares exactly one known `LoJ-Change`. Returns the
+/// kind and the `LoJ-Revisions`, or `None` when the declarations are invalid
+/// and the trees must not be compared. Revision trailer lines are not combined.
+pub(super) fn declared_change(
+    commit: &str,
+    at: &str,
+    message: &str,
+    f: &mut Findings,
+) -> Option<(String, Vec<String>)> {
+    let (kinds, revisions) = trailers(message);
+    if revisions.len() > 1 {
+        f.error(
+            CH,
+            "CHG-03",
+            COMMON,
+            format!("{commit} declares more than one LoJ-Revisions"),
+            at,
+            "",
+        );
+        return None;
+    }
+    let problem = match kinds.as_slice() {
+        [k] if KINDS.contains(&k.as_str()) => {
+            let declared = revisions
+                .first()
+                .map(|value| value.split(", ").map(str::to_owned).collect())
+                .unwrap_or_default();
+            return Some((k.clone(), declared));
+        }
+        [] => format!("{commit} declares no LoJ-Change"),
+        [k] => format!("{commit}: unknown change kind {k}"),
+        _ => format!("{commit} declares more than one LoJ-Change"),
+    };
+    f.error(CH, "CHG-03", COMMON, problem, at, "");
+    None
+}
+
+impl Change<'_> {
+    fn error(&self, f: &mut Findings, rule: &str, message: String) {
+        f.error(CH, rule, COMMON, message, self.at, "");
+    }
+
+    /// CHG-02 / CHG-03 / CHG-04: compare the states before and after the commit.
+    pub(super) fn compare(&self, before: &Snapshot, after: &Snapshot, f: &mut Findings) {
+        let (commit, kind) = (self.commit, self.kind);
+        if kind == "migration" {
+            self.error(
+                f,
+                "CHG-02",
+                "this specification provides no normative AST migration mapping".into(),
+            );
+            return;
+        }
+        if kind == "auxiliary" {
+            // CHG-02: only the canonical data files are compared, byte for byte
+            // and by mode. No AST is built or compared, so a version that cannot
+            // build one is not undetermined here (CHG-04).
+            auxiliary(self, before, after, f);
+            return;
+        }
+        if !processable(self, before, f) || !processable(self, after, f) {
+            return;
+        }
+        self.kept_asts(before, after, f);
+        check(self, before, after, f);
+        match kind {
+            "format" if before.history_bytes != after.history_bytes => self.error(
+                f,
+                "CHG-02",
+                format!("{commit}: format changes history.yaml"),
+            ),
+            "metadata" if before.packages != after.packages => self.error(
+                f,
+                "CHG-02",
+                format!("{commit}: metadata changes the version packages"),
+            ),
+            "revisionAdd"
+                if !self.initial
+                    && revision_ids(after)
+                        .iter()
+                        .all(|k| revision_ids(before).contains(k)) =>
+            {
+                self.error(
+                    f,
+                    "CHG-02",
+                    format!("{commit}: revisionAdd adds no version"),
+                )
+            }
+            _ => {}
+        }
+    }
+
+    /// Whether the AST of revision `id` must stay identical under this change.
+    pub(super) fn must_keep(&self, id: &str) -> bool {
+        match self.kind {
+            "format" | "metadata" | "revisionAdd" => true,
+            "auxiliary" => false,
+            _ => !self.declared.iter().any(|d| d == id),
+        }
+    }
+
+    /// CHG-02: the ASTs that the change must keep are identical. CHG-04: an AST
+    /// that cannot be built is never compared as equal.
+    fn kept_asts(&self, before: &Snapshot, after: &Snapshot, f: &mut Findings) {
+        let (commit, kind) = (self.commit, self.kind);
+        for (id, old) in &before.asts {
+            if !self.must_keep(id) {
+                continue;
+            }
+            match (old, after.asts.get(id)) {
+                (Ok(a), Some(Ok(b))) => {
+                    if a != b {
+                        self.error(
+                            f,
+                            "CHG-02",
+                            format!("{commit}: {kind} changes the AST of revision {id}"),
+                        );
+                    }
+                }
+                (_, None) => {
+                    if kind != "revisionFix" || !self.declared.contains(id) {
+                        self.error(
+                            f,
+                            "CHG-02",
+                            format!("{commit}: {kind} removes revision {id}"),
+                        );
+                    }
+                }
+                (Err(e), _) | (_, Some(Err(e))) => {
+                    let prefix = format!("versions/{id}/");
+                    let changed = before.files.keys().chain(after.files.keys()).any(|path| {
+                        path.starts_with(&prefix)
+                            && !path.ends_with("/glyphs.yaml")
+                            && before.files.get(path) != after.files.get(path)
+                    });
+                    if kind == "format" && changed && !self.reviewed {
+                        self.error(f, "CHG-04", format!("{commit}: format changes uncomparable revision {id} without a review record"));
+                    }
+                    f.incomplete.insert(CH);
+                    f.note(
+                        CH,
+                        Class::Undetermined,
+                        "CHG-04",
+                        COMMON,
+                        format!("{commit}: revision {id} not compared: {e}"),
+                        self.at,
                         "",
                     );
                 }
