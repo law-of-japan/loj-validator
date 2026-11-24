@@ -217,7 +217,7 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
 #[must_use]
 pub fn execute(args: &Args) -> (String, i32) {
     let report: Report = if let (Some(out), Input::Package(p)) = (&args.ast, &args.input) {
-        let r = law_semantic::v1alpha2::check(p, &args.checks);
+        let r = law_semantic::checks::run_package(p, &args.checks);
         if let Some(ast) = &r.ast {
             if let Err(e) = std::fs::write(
                 out,
@@ -233,9 +233,7 @@ pub fn execute(args: &Args) -> (String, i32) {
                 );
             }
         }
-        let mut report = r.report;
-        report.select(&args.checks);
-        report
+        r.report
     } else {
         run_with_space(
             &args.input,

@@ -101,7 +101,7 @@ pub fn run(input: &Input, checks: &[Check]) -> Report {
 #[must_use]
 pub fn run_with_space(input: &Input, checks: &[Check], space: Option<&str>) -> Report {
     let mut report = match input {
-        Input::Package(p) => crate::v1alpha2::check(p, checks).report,
+        Input::Package(p) => return run_package(p, checks).report,
         Input::Repository(p) => crate::repository::check(p, checks),
         Input::Registry(p) => crate::registry::check_with_space(p, space),
         Input::Records {
@@ -120,13 +120,50 @@ pub fn run_with_space(input: &Input, checks: &[Check], space: Option<&str>) -> R
             reference,
         } => crate::fixref::check_with_space(bundle, registry, reference, space),
     };
-    // A cancelled check holds partial results only (see `cancellation`).
     crate::cancellation::finish(&mut report, checks);
+    select_results(&mut report, checks);
+    report
+}
+
+/// Run package checks and retain AST and source data alongside the selected report.
+#[must_use]
+pub fn run_package(path: &Path, checks: &[Check]) -> crate::v1alpha2::PackageCheck {
+    let mut package = crate::v1alpha2::check(path, checks);
+    // Package cancellation finalizes the report and drops AST/source data together.
+    select_results(&mut package.report, checks);
+    package
+}
+
+fn select_results(report: &mut Report, checks: &[Check]) {
     for c in checks {
         if report.result(*c).is_none() {
             report.set(*c, crate::common::ResultValue::NotApplicable);
         }
     }
     report.select(checks);
-    report
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn cancelled_package_checks_finalize_every_selected_result() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../vendor/loj-spec/conformance/v1alpha2/valid/pkg-110");
+        let checks = [Check::L0, Check::L1];
+        let (package, _) =
+            crate::cancellation::test_hook::run(Some(1), || run_package(&path, &checks));
+        assert_eq!(package.report.exit_code(), 3);
+        assert!(package.ast.is_none());
+        assert!(package.positions.is_empty());
+        assert!(package.source_map.is_empty());
+        assert!(package.sources.is_empty());
+        for check in checks {
+            assert_eq!(
+                package.report.result(check),
+                Some(crate::common::ResultValue::Incomplete)
+            );
+        }
+    }
 }
