@@ -1,0 +1,15 @@
+(* ISO-style EBNF. Applied only in MD-01 eligible regions; no line ending here. *)
+marker = open | close ;
+open = "<!-- loj:", (paragraph | item | subitem), " -->" ;
+paragraph = "paragraph", spaces, number_attr ;
+item = "item", spaces, number_attr ;
+subitem = "subitem", spaces,
+          ((level_attr, spaces, number_attr) | (number_attr, spaces, level_attr)) ;
+close = "<!-- loj:end-", ("paragraph" | "item" | "subitem"), " -->" ;
+number_attr = "number=", number ;
+level_attr = "level=", (nonzero | "10") ;
+number = component, {"-", component} ;
+component = nonzero, [digit, [digit, [digit]]] ;
+nonzero = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+digit = "0" | nonzero ;
+spaces = " ", {" "} ;

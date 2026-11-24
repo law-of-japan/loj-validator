@@ -1,9 +1,14 @@
 (* Applies to HEAD-01 document-level ATX lines of loj/v1alpha2 only, except paragraph_caption.
    No trailing EOL here. *)
-heading = hashes, " ", (group | article | supplement) ;
+heading = hashes, " ", (group | article | article_range | supplement) ;
 hashes = "#", ["#", ["#", ["#", ["#", ["#"]]]]] ;
 group = "第", numeral, ("編" | "章" | "節" | "款" | "目"), branches, gap, title ;
 article = "第", numeral, ("条" | "條"), branches, ["（", caption, "）"] ;
+article_range = article_number, ("及び" | "及ヒ" | "乃至"), article_number
+              | article_number, "から", article_number, "まで" ;
+    (* HEAD-04: only as the label of a deleted article; the start precedes the end in number order.
+       Both are semantic constraints, not productions. No caption, no spaces. *)
+article_number = "第", numeral, ("条" | "條"), branches ;
 supplement = "附", {"　"}, "則" ;     (* HEAD-03: zero or more U+3000 between the two characters *)
 branches = {("の" | "ノ"), numeral} ;  (* NUM-01 *)
 gap = " " | "　" ;

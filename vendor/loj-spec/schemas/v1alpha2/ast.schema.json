@@ -116,7 +116,7 @@
           "anyOf": [
             {
               "type": "string",
-              "pattern": "^[1-9][0-9]{0,3}(-[1-9][0-9]{0,3})*$"
+              "pattern": "^[1-9][0-9]{0,3}(-[1-9][0-9]{0,3})*(:[1-9][0-9]{0,3}(-[1-9][0-9]{0,3})*)?$"
             },
             {
               "type": "null"
@@ -274,7 +274,7 @@
             "properties": {
               "number": {
                 "type": "string",
-                "pattern": "^[1-9][0-9]{0,3}(-[1-9][0-9]{0,3})*$"
+                "pattern": "^[1-9][0-9]{0,3}(-[1-9][0-9]{0,3})*(:[1-9][0-9]{0,3}(-[1-9][0-9]{0,3})*)?$"
               }
             }
           }
@@ -427,6 +427,30 @@
               "required": [
                 "instruction"
               ]
+            }
+          }
+        },
+        {
+          "$comment": "HEAD-04: only a deleted article with a range label has a range number (start:end). That the start precedes the end is the semantic check of HEAD-04.",
+          "if": {
+            "properties": {
+              "number": {
+                "type": "string",
+                "pattern": ":"
+              }
+            },
+            "required": [
+              "number"
+            ]
+          },
+          "then": {
+            "properties": {
+              "kind": {
+                "const": "Article"
+              },
+              "status": {
+                "const": "deleted"
+              }
             }
           }
         }

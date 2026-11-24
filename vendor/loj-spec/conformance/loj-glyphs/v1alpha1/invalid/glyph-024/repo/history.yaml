@@ -1,0 +1,24 @@
+schemaVersion: loj-history/v1alpha1
+record: {id: 20990101-imp-1, label: 架空勅令第一号}
+sources:
+  - {id: src-fiction, kind: other, title: 架空の原典}
+relations: []
+revisions:
+  - id: q7v3n2xc
+    label: 制定
+    origin: enactment
+    effective:
+      state: date
+      value: "2099-01-01"
+      raw: 二千九十九年一月一日
+      precision: day
+      evidence: [{source: src-fiction, locator: 附則}]
+      verification: {state: confirmed}
+    applicability: {state: unsurveyed}
+    text:
+      status: complete
+      sources: [{source: src-fiction, locator: 本則}]
+      glyphCheck: unverified
+      glyphNotes: versions/q7v3n2xc/glyphs.yaml
+    status: active
+coverage: {state: unconfirmed}

@@ -1,6 +1,6 @@
 # Next specification implementation (loj/v1alpha2 and the new kinds)
 
-Target: loj-spec commit `ba6bdfdcf20eefa16067e38d125d46a42147728c`, vendored as
+Target: loj-spec commit `bd7718aaec3a92421c1ffcd987693ba69fc0777e`, vendored as
 `spec`, `schemas`, `conformance`, `grammar/v1alpha2` and `LICENSE` in `vendor/loj-spec` with `COMMIT` and
 `SHA256SUMS.json`. The v1alpha1 fixtures of `b704631` stay unchanged in
 `vendor/loj-spec-v1alpha1`; the v1alpha1 and legacy pipelines are unchanged.
@@ -75,10 +75,13 @@ cannot be selected.
   `target.repository`.
 - The change check covers the commits of `base..head`, each parent before its
   children (`git rev-list --topo-order --reverse`), each compared with its parent. Without `base` (CLI: no `--base`; conformance: an
-  input without `base`, common-059..061) it covers every commit reachable from
+  input without `base`, common-059..064) it covers every commit reachable from
   `head` (`git rev-list <head>`), from the commits without a parent on. A commit
   without a parent is compared with no record before it and must declare
-  `revisionAdd`; otherwise it is a CHG-03 error and gets no CHG-02 or CHG-04 check
+  `revisionAdd` for law inputs or `metadata` for registry inputs, including a README-only root.
+  The CLI selects the layout with `--repository-kind` (default `law`).
+  A law root may create all of history.yaml and rebuild.yaml. AST equality is
+  satisfied when there are no versions to compare. An incorrect root declaration raises CHG-03 and skips CHG-02 and CHG-04
   (the file mode included). A history with two or more roots joins them in a merge
   commit, which is a CHG-03 error; each root is checked as a first commit.
   A snapshot is dropped from memory after the last commit compared with it.
@@ -193,10 +196,10 @@ or nothing passed.
 
 | Suite | Normative | Passed | Informative (not counted) |
 |---|---|---|---|
-| loj/v1alpha2 | 221 | 221 | 1 (pkg-026, L2) |
-| common/v1alpha1 | 61 | 61 | 0 |
+| loj/v1alpha2 | 230 | 230 | 1 (pkg-026, L2) |
+| common/v1alpha1 | 64 | 64 | 0 |
 | loj-history/v1alpha1 | 61 | 61 | 0 |
-| loj-glyphs/v1alpha1 | 20 | 20 | 0 |
+| loj-glyphs/v1alpha1 | 27 | 27 | 0 |
 | loj-registry/v1alpha1 | 13 | 13 | 0 |
 | loj-rebuild/v1alpha1 | 5 | 5 | 0 |
 
@@ -204,7 +207,7 @@ Passing the fixed cases is a necessary condition only (CONF-02).
 
 ## Normative boundaries
 
-- There are 381 normative cases and one informative L2 case. `derivedFrom` and
+- There are 400 normative cases and one informative L2 case. `derivedFrom` and
   `rejectedBy` are audit metadata, never instructions to regenerate or skip inputs.
 - MD-04 emptiness uses the 25 Unicode 15.1 White_Space code points. Paragraph
   captions require `caption=present`; Toc placement and mixed number scripts are
@@ -253,8 +256,8 @@ Passing the fixed cases is a necessary condition only (CONF-02).
   CHG-04 reports each uncomparable AST, even when a format violation also exists.
   A review trailer removes only the automatic-format violation, not incompleteness.
   No normative migration mapping exists for this specification pair.
-  The canonical data files are `history.yaml`, `rebuild.yaml`, `space.yaml`,
-  `versions/**` and `records/**` (CHG-01); other files may change under any kind
+  The law layout checks `history.yaml`, `rebuild.yaml` and `versions/**`.
+  The registry layout checks `space.yaml` and `records/**` (CHG-01); other files may change under any kind
   and are not checked. `auxiliary` requires every canonical data file to keep its
   path, bytes and Git file mode (`100644`/`100755`, from the tree listing), builds
   and compares no AST, and so is never CHG-04 undetermined. A tree with any other

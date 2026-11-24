@@ -1,7 +1,7 @@
 //! `loj-validator check` for the next specification (loj/v1alpha2 and the
 //! loj-history, loj-glyphs, loj-registry, loj-rebuild kinds). The JSON output
 //! is a report of `schemas/common/v1alpha1/report.schema.json`.
-use law_semantic::checks::{run_with_space, Input};
+use law_semantic::checks::{run_with_space, Input, RepositoryKind};
 use law_semantic::common::{Check, Report};
 use std::path::PathBuf;
 
@@ -9,12 +9,13 @@ pub const USAGE: &str = "next specification (loj/v1alpha2 and history, glyphs, r
   loj-validator check PATH [--level L0|L1|L3|L4]... [--category NAME]... [--check NAME]...
                      [--format json|text] [--ast FILE] [--registration-space SPACE] [--record ID]
   loj-validator check --registry DIR --repository DIR... [--level L4] [--category NAME]...
-  loj-validator check BUNDLE [--base COMMIT] --head COMMIT      (change check, CHG-02/03)
+  loj-validator check BUNDLE [--repository-kind law|registry] [--base COMMIT] --head COMMIT      (change check, CHG-02/03)
   loj-validator check BUNDLE --registry DIR --reference REF     (reference resolution)
 
   PATH is law.yaml or its directory (package), a law repository (history.yaml),
   or a registry (records/). Categories: historyStructure, evidence (L3);
   relationResolution, relationConsistency, timeConsistency, displayConsistency (L4).
+  The default repository kind for change checks is law.
   Without --base, the change check covers every commit reachable from --head,
   from the first commit (the commit without a parent) on.
   --registration-space SPACE supplies the registry space ([a-z][a-z0-9-]*);
@@ -52,6 +53,7 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
     let mut categories: Vec<String> = Vec::new();
     let mut named = Vec::new();
     let mut registry = None;
+    let mut repository_kind = None;
     let mut registration_space = None;
     let mut record = None;
     let mut repositories = Vec::new();
@@ -92,6 +94,7 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
             "--record" => once(&mut record, value)?,
             "--registration-space" => once(&mut registration_space, value)?,
             "--repository" => repositories.push(PathBuf::from(value)),
+            "--repository-kind" => once(&mut repository_kind, value)?,
             "--base" => once(&mut base, value)?,
             "--head" => once(&mut head, value)?,
             "--reference" => once(&mut reference, value)?,
@@ -114,10 +117,20 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
     {
         return Err("--registration-space must match [a-z][a-z0-9-]*".into());
     }
+    if repository_kind.is_some() && head.is_none() {
+        return Err("--repository-kind requires a change check".into());
+    }
     let input = match (path, registry, base, head, reference) {
-        (Some(bundle), None, base, Some(head), None) if repositories.is_empty() => {
-            Input::Change { bundle, base, head }
-        }
+        (Some(bundle), None, base, Some(head), None) if repositories.is_empty() => Input::Change {
+            bundle,
+            base,
+            head,
+            repository: match repository_kind.as_deref() {
+                None | Some("law") => RepositoryKind::Law,
+                Some("registry") => RepositoryKind::Registry,
+                _ => return Err("--repository-kind must be law or registry".into()),
+            },
+        },
         (Some(bundle), Some(registry), None, None, Some(reference)) if repositories.is_empty() => {
             Input::Reference {
                 bundle: bundle.clone(),

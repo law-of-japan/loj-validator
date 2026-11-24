@@ -168,6 +168,13 @@
                   "head": {
                     "type": "string",
                     "minLength": 1
+                  },
+                  "repository": {
+                    "description": "The kind of repository the bundle holds, given to the change check as input (CHG-03): a law repository (law) or the repository of the registry (registry). Omitted for a law repository.",
+                    "enum": [
+                      "law",
+                      "registry"
+                    ]
                   }
                 },
                 "required": [

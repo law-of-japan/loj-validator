@@ -1,5 +1,6 @@
 //! Change check between two commits of a law repository (common/v1alpha1
 //! CHG-02, CHG-03, CHG-04), reported apart from the conformance levels.
+use crate::checks::RepositoryKind;
 use crate::common::findings::Findings;
 use crate::common::{load_yaml, Check, Class, Loaded, Report, COMMON};
 use crate::git::{Bundle, ExportError, GitError};
@@ -70,7 +71,7 @@ pub(crate) struct Snapshot {
 /// A snapshot whose history manifest is usable; an unusable one is a refused
 /// tree (`ExportError::Tree`).
 pub(crate) fn snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError> {
-    let mut snapshot = read_snapshot(b, commit)?;
+    let mut snapshot = read_snapshot(b, commit, None)?;
     if let Some(e) = snapshot.manifest_error.take() {
         return Err(ExportError::Tree(e));
     }
@@ -78,8 +79,15 @@ pub(crate) fn snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError
     Ok(snapshot)
 }
 
-fn read_snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError> {
-    let (dir, executable) = b.export_tree(commit)?;
+fn read_snapshot(
+    b: &Bundle,
+    commit: &str,
+    repository: Option<RepositoryKind>,
+) -> Result<Snapshot, ExportError> {
+    let (dir, mut executable) = b.export_tree(commit)?;
+    if let Some(layout) = repository {
+        executable.retain(|path| layout.canonical(path));
+    }
     let mut files = BTreeMap::new();
     let mut documents = BTreeMap::new();
     let mut pending = vec![dir.clone()];
@@ -102,6 +110,9 @@ fn read_snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError> {
                     .expect("exported tree entry is inside its root")
                     .to_string_lossy()
                     .replace('\\', "/");
+                if repository.is_some_and(|r| !r.canonical(&relative)) {
+                    continue;
+                }
                 if relative.ends_with(".yaml") {
                     if let Ok(text) = std::str::from_utf8(&bytes) {
                         if let Ok(value) = crate::common::yaml::parse(text) {
@@ -120,11 +131,15 @@ fn read_snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError> {
     let manifest = dir.join("history.yaml");
     let unreadable =
         |e: std::io::Error| ExportError::Io(format!("cannot read history.yaml at {commit}: {e}"));
-    let history_bytes = match std::fs::metadata(&manifest) {
-        Ok(m) if m.is_file() => Some(std::fs::read(&manifest).map_err(unreadable)?),
-        Ok(_) => None,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
-        Err(e) => return Err(unreadable(e)),
+    let history_bytes = if repository == Some(RepositoryKind::Registry) {
+        None
+    } else {
+        match std::fs::metadata(&manifest) {
+            Ok(m) if m.is_file() => Some(std::fs::read(&manifest).map_err(unreadable)?),
+            Ok(_) => None,
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
+            Err(e) => return Err(unreadable(e)),
+        }
     };
     let mut snapshot = Snapshot {
         history: None,
@@ -137,6 +152,9 @@ fn read_snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError> {
         manifest_error: None,
         directory: dir,
     };
+    if repository == Some(RepositoryKind::Registry) {
+        return Ok(snapshot);
+    }
     match read_manifest(&snapshot.directory, snapshot.history_bytes.is_some()) {
         Ok((history, packages)) => (snapshot.history, snapshot.packages) = (history, packages),
         Err(e) => snapshot.manifest_error = Some(e),
@@ -286,7 +304,18 @@ fn undetermined(mut f: Findings, target: Map<String, Value>, why: String) -> Rep
 /// The change check (CHG-02, CHG-03) of the commits after `base` up to `head`,
 /// or, without `base`, of every commit reachable from `head` from the first
 /// commit on; a commit without a parent is compared with no record before it.
-pub fn check(bundle: &Path, base: Option<&str>, head: &str) -> Report {
+#[cfg(test)]
+fn check(bundle: &Path, base: Option<&str>, head: &str) -> Report {
+    check_repository(bundle, base, head, RepositoryKind::Law)
+}
+
+/// Check commits using the explicitly selected repository layout.
+pub fn check_repository(
+    bundle: &Path,
+    base: Option<&str>,
+    head: &str,
+    repository: RepositoryKind,
+) -> Report {
     let mut f = Findings::default();
     let mut report = Report::default();
     let b = match Bundle::open(bundle) {
@@ -311,7 +340,7 @@ pub fn check(bundle: &Path, base: Option<&str>, head: &str) -> Report {
     report
         .target
         .insert("repository".into(), json!(bundle.to_string_lossy()));
-    check_bundle(&b, f, report, base, head, &LIMITS)
+    check_bundle(&b, f, report, base, head, repository, &LIMITS)
 }
 
 /// The change check on an opened bundle. A git failure is never reported as a
@@ -325,6 +354,7 @@ fn check_bundle(
     mut report: Report,
     base: Option<&str>,
     head: &str,
+    repository: RepositoryKind,
     limits: &Limits,
 ) -> Report {
     let start = Instant::now();
@@ -415,18 +445,23 @@ fn check_bundle(
                 break 'commit;
             };
             let parent = parents.first();
-            if parent.is_none() && kind != "revisionAdd" {
+            let (layout, first_kind) = match repository {
+                RepositoryKind::Law => ("law", "revisionAdd"),
+                RepositoryKind::Registry => ("registry", "metadata"),
+            };
+            if parent.is_none() && kind != first_kind {
                 f.error(
                     CH,
                     "CHG-03",
                     COMMON,
-                    "first law commit must declare revisionAdd",
+                    format!("first {layout} commit must declare {first_kind}"),
                     &at,
                     "",
                 );
                 break 'commit;
             }
             let change = Change {
+                initial: parent.is_none(),
                 commit: &commit,
                 at: &at,
                 kind: &kind,
@@ -434,7 +469,7 @@ fn check_bundle(
                 reviewed: reviewed(&message),
             };
             for c in parent.into_iter().chain(std::iter::once(&commit)) {
-                if let Err(why) = load_snapshot(b, c, &change, &mut cache, &mut f) {
+                if let Err(why) = load_snapshot(b, c, repository, &change, &mut cache, &mut f) {
                     return undetermined(f, report.target, why);
                 }
             }
@@ -535,6 +570,7 @@ fn declared_change(
 fn load_snapshot(
     b: &Bundle,
     commit: &str,
+    repository: RepositoryKind,
     change: &Change<'_>,
     cache: &mut BTreeMap<String, Option<Snapshot>>,
     f: &mut Findings,
@@ -545,7 +581,7 @@ fn load_snapshot(
         }
         return Ok(());
     }
-    match read_snapshot(b, commit) {
+    match read_snapshot(b, commit, Some(repository)) {
         Ok(mut s) => {
             s.build_asts(|id| change.must_keep(id));
             cache.insert(commit.to_owned(), Some(s));
@@ -574,6 +610,7 @@ fn load_snapshot(
 
 /// One commit of the range and the change it declares.
 struct Change<'a> {
+    initial: bool,
     commit: &'a str,
     /// Location of its diagnostics.
     at: &'a str,
@@ -624,9 +661,10 @@ impl Change<'_> {
                 format!("{commit}: metadata changes the version packages"),
             ),
             "revisionAdd"
-                if policy::revision_ids(after)
-                    .iter()
-                    .all(|k| policy::revision_ids(before).contains(k)) =>
+                if !self.initial
+                    && policy::revision_ids(after)
+                        .iter()
+                        .all(|k| policy::revision_ids(before).contains(k)) =>
             {
                 self.error(
                     f,
@@ -836,6 +874,7 @@ mod tests {
             let declared = ["b7k2m9qd".to_owned()];
             for kind in ["correction", "officialCorrection", "restoration"] {
                 let mut change = Change {
+                    initial: false,
                     commit,
                     at: "test commit",
                     kind,
@@ -844,7 +883,8 @@ mod tests {
                 };
                 let mut cache = BTreeMap::new();
                 let mut f = Findings::default();
-                load_snapshot(&b, commit, &change, &mut cache, &mut f).unwrap();
+                load_snapshot(&b, commit, RepositoryKind::Law, &change, &mut cache, &mut f)
+                    .unwrap();
                 let cached = cache[commit].as_ref().unwrap();
                 assert!(cached.asts.is_empty());
                 assert!(cached.packages.contains_key(&declared[0]));
@@ -852,7 +892,8 @@ mod tests {
 
                 // The next commit requires all ASTs, even if it declares IDs.
                 change.kind = "metadata";
-                load_snapshot(&b, commit, &change, &mut cache, &mut f).unwrap();
+                load_snapshot(&b, commit, RepositoryKind::Law, &change, &mut cache, &mut f)
+                    .unwrap();
                 let cached = cache[commit].as_ref().unwrap();
                 assert_eq!(cached.directory, directory);
                 assert_eq!(cached.asts.len(), 1);
@@ -863,7 +904,15 @@ mod tests {
                 change.kind = kind;
                 change.declared = &[];
                 let mut other_cache = BTreeMap::new();
-                load_snapshot(&b, commit, &change, &mut other_cache, &mut f).unwrap();
+                load_snapshot(
+                    &b,
+                    commit,
+                    RepositoryKind::Law,
+                    &change,
+                    &mut other_cache,
+                    &mut f,
+                )
+                .unwrap();
                 assert_eq!(other_cache[commit].as_ref().unwrap().asts, cached.asts);
                 change.compare(cached, cached, &mut f);
                 if case_id != "common-041" {
@@ -880,6 +929,7 @@ mod tests {
     fn which_asts_a_change_must_keep() {
         let declared = ["r2".to_owned()];
         let change = |kind| Change {
+            initial: false,
             commit: "c1",
             at: "commit c1",
             kind,
@@ -926,12 +976,12 @@ mod tests {
         let b = Bundle::open(&s.bundle(&[("100644", "blob", "law.yaml")])).unwrap();
         let head = b.branch("main").unwrap().unwrap();
         let (whole, checkpoints) =
-            crate::cancellation::test_hook::run(None, || read_snapshot(&b, &head).is_ok());
+            crate::cancellation::test_hook::run(None, || read_snapshot(&b, &head, None).is_ok());
         assert!(whole);
         assert!(checkpoints > 0, "the walk has checkpoints");
         for at in 1..=checkpoints {
             let (result, _) =
-                crate::cancellation::test_hook::run(Some(at), || read_snapshot(&b, &head));
+                crate::cancellation::test_hook::run(Some(at), || read_snapshot(&b, &head, None));
             assert!(
                 matches!(result, Err(ExportError::Cancelled)),
                 "checkpoint {at}: {:?}",
@@ -954,6 +1004,7 @@ mod tests {
             Report::default(),
             Some(&c[0]),
             &c[1],
+            RepositoryKind::Law,
             &LIMITS,
         );
         assert_eq!(result(&r), ResultValue::Incomplete);
@@ -1353,6 +1404,7 @@ mod tests {
             Report::default(),
             base,
             head,
+            RepositoryKind::Law,
             limits,
         )
     }
@@ -1470,6 +1522,52 @@ mod tests {
                         == Some(file.as_str())
             })
             .count()
+    }
+
+    #[test]
+    fn registry_metadata_ignores_an_executable_invalid_law_manifest() {
+        let s = Scratch::new();
+        let blob = s.run(&["hash-object", "-w", "--stdin"], Some(b"bad: ["));
+        let tree = s.run(
+            &["mktree"],
+            Some(format!("100755 blob {blob}\thistory.yaml\n").as_bytes()),
+        );
+        let head = s.run(
+            &[
+                "commit-tree",
+                &tree,
+                "-m",
+                "registry root\n\nLoJ-Change: metadata",
+            ],
+            None,
+        );
+        let r = check_repository(&s.bundle_head(&head), None, &head, RepositoryKind::Registry);
+        assert_eq!(result(&r), ResultValue::Pass, "{:?}", r.diagnostics);
+    }
+
+    #[test]
+    fn only_the_law_root_may_create_whole_rebuild_metadata_as_revision_add() {
+        let s = Scratch::new();
+        let blob = s.run(
+            &["hash-object", "-w", "--stdin"],
+            Some(b"schemaVersion: loj-rebuild/v1alpha1"),
+        );
+        let tree = s.run(
+            &["mktree"],
+            Some(format!("100644 blob {blob}\trebuild.yaml\n").as_bytes()),
+        );
+        let message = "root\n\nLoJ-Change: revisionAdd";
+        let head = s.run(&["commit-tree", &tree, "-m", message], None);
+        let r = check(&s.bundle_head(&head), None, &head);
+        assert_eq!(result(&r), ResultValue::Pass, "{:?}", r.diagnostics);
+        let empty = s.run(&["mktree"], Some(b""));
+        let root = s.run(&["commit-tree", &empty, "-m", message], None);
+        let child = s.run(&["commit-tree", &tree, "-p", &root, "-m", message], None);
+        let r = check(&s.bundle_head(&child), None, &child);
+        assert!(r
+            .diagnostics
+            .iter()
+            .any(|d| d.rule == "CHG-02" && d.message.contains("unrelated rebuild data")));
     }
 
     /// Without `base`, a lone first commit is compared with no record before

@@ -33,12 +33,10 @@ fn version_file(path: &str) -> Option<(&str, &str)> {
 /// repository) and REG-01 (a registry repository). Every other file of the
 /// canonical branch (CI configuration, generators, documents) is outside the
 /// canonical data and is not subject to any change kind's check.
-/// The two layouts are matched as a union, without telling the repository
-/// kinds apart, as CHG-01 lists them; revisit if the layouts come to differ.
+/// Change snapshots already contain only paths of the selected layout.
 fn canonical(path: &str) -> bool {
-    matches!(path, "history.yaml" | "rebuild.yaml" | "space.yaml")
-        || path.starts_with("versions/")
-        || path.starts_with("records/")
+    use crate::checks::RepositoryKind;
+    RepositoryKind::Law.canonical(path) || RepositoryKind::Registry.canonical(path)
 }
 
 /// CHG-02 `auxiliary`: the canonical data files are identical before and
@@ -253,10 +251,12 @@ pub(super) fn check(change: &Change<'_>, before: &Snapshot, after: &Snapshot, f:
             );
         }
     }
-    if matches!(
-        change.kind,
-        "correction" | "officialCorrection" | "restoration" | "revisionAdd" | "revisionFix"
-    ) {
+    if !change.initial
+        && matches!(
+            change.kind,
+            "correction" | "officialCorrection" | "restoration" | "revisionAdd" | "revisionFix"
+        )
+    {
         history(change, before, after, &affected, f);
         if before.files.get("rebuild.yaml") != after.files.get("rebuild.yaml") {
             mappings(change, before, after, &affected, f);
@@ -469,7 +469,7 @@ fn history(
             }
         }
     }
-    if before.history.is_some() && a != b {
+    if a != b {
         change.error(f, "CHG-02", "unrelated history metadata changed".into());
     }
 }
@@ -572,6 +572,7 @@ mod tests {
     fn inspect(kind: &str, before: &Snapshot, after: &Snapshot) -> Findings {
         let mut f = Findings::default();
         let change = Change {
+            initial: false,
             commit: "c",
             at: "c",
             kind,
@@ -609,6 +610,7 @@ mod tests {
             .documents
             .insert("rebuild.yaml".into(), json!({"mappings":[]}));
         let change = Change {
+            initial: false,
             commit: "c",
             at: "c",
             kind: "restoration",
@@ -664,6 +666,7 @@ mod tests {
     #[test]
     fn ambiguous_ids_are_incomplete_and_unknown_kinds_cannot_change_data() {
         let change = Change {
+            initial: false,
             commit: "c",
             at: "c",
             kind: "metadata",
@@ -721,6 +724,7 @@ mod tests {
     fn auxiliary_findings(before: &Snapshot, after: &Snapshot) -> Findings {
         let mut f = Findings::default();
         let change = Change {
+            initial: false,
             commit: "c",
             at: "c",
             kind: "auxiliary",
@@ -884,6 +888,7 @@ mod tests {
     fn modes_findings(kind: &str, before: &Snapshot, after: &Snapshot) -> Vec<String> {
         let mut f = Findings::default();
         let change = Change {
+            initial: false,
             commit: "c",
             at: "c",
             kind,

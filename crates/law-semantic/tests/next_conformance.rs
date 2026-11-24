@@ -117,6 +117,11 @@ fn run(case: &Value, checks: &[Check]) -> Actual {
         "change" => Actual {
             report: law_semantic::checks::run_with_space(
                 &law_semantic::checks::Input::Change {
+                    repository: match input["repository"].as_str() {
+                        None | Some("law") => law_semantic::checks::RepositoryKind::Law,
+                        Some("registry") => law_semantic::checks::RepositoryKind::Registry,
+                        other => panic!("unknown repository kind {other:?}"),
+                    },
                     bundle: root.join(input["bundle"].as_str().unwrap()),
                     // `base` is omitted for a check from the first commit.
                     base: input["base"].as_str().map(Into::into),
