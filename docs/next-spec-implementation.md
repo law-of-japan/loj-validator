@@ -84,7 +84,10 @@ cannot be selected.
   A snapshot is dropped from memory after the last commit compared with it.
   At most 10,000 commits are checked: `rev-list` lists at most one more
   (`--max-count`), and with more the check is incomplete ("more than 10000
-  commits to check", CHG-02 undetermined) before any commit is checked. The
+  commits to check", CHG-02 undetermined) before any commit is checked. This
+  bounds the list printed and kept, not git's walk: `--topo-order` walks the
+  whole range before it lists any commit, which only the 120 s command timeout
+  bounds. The
   check as a whole runs for at most 3600 s, measured before each commit: past it,
   the check stops there as incomplete ("the change check ran longer than 3600 s")
   and keeps the findings made so far. The result is then `incomplete`, unless an

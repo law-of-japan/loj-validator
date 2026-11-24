@@ -590,7 +590,9 @@ impl Bundle {
         // `--topo-order` lists every parent before its children whatever the
         // commit dates, so a snapshot dropped after its last child is never
         // needed again.
-        // `--max-count` limits the walk before `--reverse` reorders it.
+        // `--max-count` limits the list before `--reverse` reorders it. It
+        // bounds the output only: `--topo-order` still walks the whole range
+        // first, within the command timeout.
         let max = format!("--max-count={}", limit.saturating_add(1));
         let list = self.git(&[
             "rev-list",
