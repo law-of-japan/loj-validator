@@ -142,3 +142,24 @@ fn finalize(report: &mut Report, checks: &[Check]) {
     }
     report.select(checks);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn cancelled_package_checks_finalize_every_selected_result() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../vendor/loj-spec/conformance/v1alpha2/valid/pkg-110");
+        let checks = [Check::L0, Check::L1];
+        let (package, _) =
+            crate::cancellation::test_hook::run(Some(1), || run_package(&path, &checks));
+        assert_eq!(package.report.exit_code(), 3);
+        for check in checks {
+            assert_eq!(
+                package.report.result(check),
+                Some(crate::common::ResultValue::Incomplete)
+            );
+        }
+    }
+}

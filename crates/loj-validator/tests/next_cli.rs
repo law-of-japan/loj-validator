@@ -229,15 +229,18 @@ fn registration_space_and_record_selection_are_explicit_cli_inputs() {
 #[test]
 fn ast_output_preserves_package_report_and_reports_write_errors() {
     let path = std::env::temp_dir().join(format!("loj-package-ast-{}.json", std::process::id()));
-    let (code, report) = json(&["check", PKG, "--ast", path.to_str().unwrap()]);
-    assert_eq!((code, report), json(&["check", PKG]));
-    let selection = ["check", PKG, "--level=L1", "--category=evidence"];
-    let mut with_ast = selection.to_vec();
-    with_ast.extend(["--ast", path.to_str().unwrap()]);
-    assert_eq!(json(&with_ast), json(&selection));
-    let bytes = std::fs::read(&path).unwrap();
-    std::fs::remove_file(path).unwrap();
-    assert!(serde_json::from_slice::<Value>(&bytes).unwrap().is_object());
+    for selection in [
+        &["check", PKG][..],
+        &["check", PKG, "--level=L1", "--category=evidence"],
+    ] {
+        let mut with_ast = selection.to_vec();
+        with_ast.extend(["--ast", path.to_str().unwrap()]);
+        let result = json(&with_ast);
+        let bytes = std::fs::read(&path).unwrap();
+        std::fs::remove_file(&path).unwrap();
+        assert_eq!(result, json(selection));
+        assert!(serde_json::from_slice::<Value>(&bytes).unwrap().is_object());
+    }
 
     let (code, report) = json(&["check", PKG, "--ast", PKG]);
     assert_eq!(code, 2);
