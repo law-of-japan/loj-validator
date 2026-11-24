@@ -71,7 +71,9 @@ pub(super) fn read_snapshot(
                 let bytes = std::fs::read(&path).map_err(|e| ExportError::Io(e.to_string()))?;
                 let relative = path
                     .strip_prefix(&dir)
-                    .expect("exported tree entry is inside its root")
+                    .map_err(|e| {
+                        ExportError::Io(format!("cannot locate exported file in its tree: {e}"))
+                    })?
                     .to_string_lossy()
                     .replace('\\', "/");
                 if repository.is_some_and(|r| !r.canonical(&relative)) {

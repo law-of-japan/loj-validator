@@ -680,6 +680,47 @@ impl Change<'_> {
         f.error(CH, rule, COMMON, message, self.at, "");
     }
 
+    /// Check modes even if a manifest is unusable. Only auxiliary changes can
+    /// also compare the canonical files without a usable manifest.
+    pub(super) fn check_snapshots(
+        &self,
+        parent: Option<&str>,
+        before: &Snapshot,
+        after: &Snapshot,
+        noted: &mut BTreeSet<String>,
+        f: &mut Findings,
+    ) {
+        if self.kind != "auxiliary" {
+            modes(self, before, after, f);
+            let mut usable = true;
+            for (commit, snapshot) in parent
+                .map(|id| (id, before))
+                .into_iter()
+                .chain([(self.commit, after)])
+            {
+                if let Some(error) = &snapshot.manifest_error {
+                    usable = false;
+                    if noted.insert(commit.to_owned()) {
+                        f.incomplete.insert(CH);
+                        f.note(
+                            CH,
+                            Class::Undetermined,
+                            "CHG-02",
+                            COMMON,
+                            format!("{commit}: tree refused: {error}"),
+                            self.at,
+                            "",
+                        );
+                    }
+                }
+            }
+            if !usable {
+                return;
+            }
+        }
+        self.compare(before, after, f);
+    }
+
     /// CHG-02 / CHG-03 / CHG-04: compare the states before and after the commit.
     pub(super) fn compare(&self, before: &Snapshot, after: &Snapshot, f: &mut Findings) {
         let (commit, kind) = (self.commit, self.kind);

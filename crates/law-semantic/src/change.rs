@@ -230,34 +230,13 @@ fn check_bundle(
             let Some(Some(after)) = cache.get(&commit) else {
                 break 'commit;
             };
-            // CHG-02: the file modes are read from the trees, so they are checked
-            // for every declared kind even when a history manifest cannot be used.
-            // `auxiliary` fails any mode change of canonical data in its own check.
-            if kind != "auxiliary" {
-                policy::modes(&change, before, after, &mut f);
-            }
-            // CHG-02 `auxiliary` compares the files only, so it is decided even
-            // when a history manifest cannot be used; every other kind reads it.
-            // `migration` stays undetermined here too, as when such a tree was
-            // refused before, rather than reaching its CHG-02 error in `compare`.
-            if kind != "auxiliary" {
-                let unusable: Vec<_> = [parent.map(|p| (p, before)), Some((&commit, after))]
-                    .into_iter()
-                    .flatten()
-                    .filter_map(|(c, s)| Some((c, s.manifest_error.as_ref()?)))
-                    .collect();
-                for (c, e) in &unusable {
-                    if noted.insert((*c).clone()) {
-                        f.incomplete.insert(CH);
-                        let why = format!("{c}: tree refused: {e}");
-                        f.note(CH, Class::Undetermined, "CHG-02", COMMON, why, &at, "");
-                    }
-                }
-                if !unusable.is_empty() {
-                    break 'commit;
-                }
-            }
-            change.compare(before, after, &mut f);
+            change.check_snapshots(
+                parent.map(String::as_str),
+                before,
+                after,
+                &mut noted,
+                &mut f,
+            );
         }
         if last_use {
             cache.remove(&parents[0]);
