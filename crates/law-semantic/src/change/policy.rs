@@ -33,7 +33,9 @@ fn version_file(path: &str) -> Option<(&str, &str)> {
 /// repository) and REG-01 (a registry repository). Every other file of the
 /// canonical branch (CI configuration, generators, documents) is outside the
 /// canonical data and is not subject to any change kind's check.
-/// Change snapshots already contain only paths of the selected layout.
+/// The change-check loader filters snapshots to the selected layout before
+/// applying this policy. Fixed-reference resolution uses an unfiltered snapshot
+/// and never applies change policy.
 fn canonical(path: &str) -> bool {
     use crate::checks::RepositoryKind;
     RepositoryKind::Law.canonical(path) || RepositoryKind::Registry.canonical(path)
@@ -588,6 +590,20 @@ mod tests {
             ..Snapshot::default()
         }
     }
+    #[test]
+    fn revision_add_after_a_root_without_history_cannot_introduce_top_level_metadata() {
+        let after = snapshot(json!({
+            "schemaVersion": "loj-history/v1alpha1",
+            "record": "20990101-act-1",
+            "revisions": [{"id": "b7k2m9qd", "text": {"status": "absent"}}]
+        }));
+        let f = inspect("revisionAdd", &Snapshot::default(), &after);
+        assert!(f
+            .items
+            .iter()
+            .any(|(_, d)| d.rule == "CHG-02" && d.message == "unrelated history metadata changed"));
+    }
+
     #[test]
     fn dependent_mappings_and_revision_fix_are_scoped() {
         let h = json!({"revisions":[{"id":"b7k2m9qd","status":"active","basis":[{"relation":"rel","items":["item"]}]}],"relations":[{"id":"rel","status":"active","items":[{"id":"item"}]}],"termination":[{"relation":"rel"}]});

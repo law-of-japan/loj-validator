@@ -181,8 +181,11 @@ fn bare_article(label: &str) -> Option<String> {
 
 /// Canonical components have no leading zeroes, so length then lexical order
 /// compares each component numerically.
-fn article_key(number: &str) -> Vec<(usize, &str)> {
-    number.split('-').map(|n| (n.len(), n)).collect()
+fn compare_numbers(left: &str, right: &str) -> std::cmp::Ordering {
+    fn components(number: &str) -> impl Iterator<Item = (usize, &str)> {
+        number.split('-').map(|n| (n.len(), n))
+    }
+    components(left).cmp(components(right))
 }
 
 /// A byte range of one source file.
@@ -1168,7 +1171,7 @@ impl<'a> Builder<'a> {
             parent
         };
         if let Some((start, end)) = &range {
-            if article_key(start) >= article_key(end) {
+            if !compare_numbers(start, end).is_lt() {
                 ctx.diag(
                     "HEAD-04",
                     "Article range endpoints must increase",
@@ -1512,30 +1515,31 @@ fn check_article_overlaps(nodes: &[Node], ctx: &mut Context) {
         };
         let (start, end) = number.split_once(':').unwrap_or((number, number));
         let scope = node.id.rsplit_once('/').map(|(scope, _)| scope);
-        intervals.push((scope, article_key(start), article_key(end), node));
+        intervals.push((scope, start, end, node));
     }
-    intervals.sort_by(|a, b| (a.0, &a.1).cmp(&(b.0, &b.1)));
-    let mut previous = intervals.first();
-    for interval in intervals.iter().skip(1) {
-        if let Some((scope, _, end, earlier)) = previous {
-            if scope == &interval.0 && end >= &interval.1 {
-                // Equal IDs are diagnosed when the node is inserted.
-                if earlier.id != interval.3.id {
-                    let n = interval.3;
-                    ctx.diag(
-                        "HEAD-02",
-                        "Overlapping scoped article numbers",
-                        &n.path,
-                        n.span.start,
-                        n.span.end,
-                    );
-                }
-                if end >= &interval.2 {
-                    continue;
-                }
+    intervals.sort_by(|a, b| a.0.cmp(&b.0).then_with(|| compare_numbers(a.1, b.1)));
+    let mut sorted = intervals.into_iter();
+    let Some(mut furthest) = sorted.next() else {
+        return;
+    };
+    for current in sorted {
+        let (scope, start, end, node) = current;
+        if scope == furthest.0 && !compare_numbers(start, furthest.2).is_gt() {
+            // Equal IDs are diagnosed when the node is inserted.
+            if node.id != furthest.3.id {
+                ctx.diag(
+                    "HEAD-02",
+                    "Overlapping scoped article numbers",
+                    &node.path,
+                    node.span.start,
+                    node.span.end,
+                );
+            }
+            if !compare_numbers(end, furthest.2).is_gt() {
+                continue;
             }
         }
-        previous = Some(interval);
+        furthest = current;
     }
 }
 
@@ -2045,10 +2049,14 @@ mod tests {
         let mut ctx = Context::default();
         check_article_overlaps(&nodes, &mut ctx);
         assert!(ctx.diagnostics.is_empty());
-        nodes.push(article("main", "9-2-1:9-3"));
-        check_article_overlaps(&nodes, &mut ctx);
-        assert_eq!(ctx.diagnostics.len(), 1);
-        assert_eq!(ctx.diagnostics[0].1.rule, "HEAD-02");
+        for number in ["9-2-1:9-3", "9-2:9-4", "10", "10:10-1"] {
+            nodes.push(article("main", number));
+            check_article_overlaps(&nodes, &mut ctx);
+            assert_eq!(ctx.diagnostics.len(), 1, "{number}");
+            assert_eq!(ctx.diagnostics[0].1.rule, "HEAD-02");
+            ctx.diagnostics.clear();
+            nodes.pop();
+        }
     }
 
     #[test]

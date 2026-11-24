@@ -2141,8 +2141,6 @@
   "conformance/v1alpha2/valid/pkg-226/main.md": "6c29bb8fe2a36b80935068e3ded91098ebd0f6356661422042926a8047b81033",
   "conformance/v1alpha2/valid/pkg-231/law.yaml": "3d8df017fd6e60fb5a1301386da4032bbfd5d1c71a0124ae9c4d64925f476edf",
   "conformance/v1alpha2/valid/pkg-231/main.md": "243cce4d7dd1d928762b4981a113135d746c0705c473f8b47e9811bffb7d8196",
-  "grammar/v1alpha1/directives.ebnf": "1aa44b8f95a96373fadc6cabfc344751e7025dcf5537e329677508109c283850",
-  "grammar/v1alpha1/headings.ebnf": "c524c0af7766d63597a8506a79015b175d7921a1a4d2d324578b9f1e8e505ecb",
   "grammar/v1alpha2/directives.ebnf": "675ea50fe038fd4d42f7945eaaa5ccc6ebacaf21b97876ed973596d48b2f89d6",
   "grammar/v1alpha2/headings.ebnf": "28f002a7b9e850193b072fbdfaa3af9859b9c49decd6e8cbb3e17033a6903500",
   "schemas/common/v1alpha1/conformance.schema.json": "d015209876a07ce76ea6655d2b92ace42080255db4803a6eff883f26e1ef363e",
