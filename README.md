@@ -70,17 +70,18 @@ v1alpha1の正式適合データはライセンス・commit・SHA-256一覧と�
 
 ## 次期仕様の使い方
 
-固定仕様は `2f62274086381ddafc6d9d0315bb87f88f24456a`、規範適合ケースは378件です。
+固定仕様は `ba6bdfdcf20eefa16067e38d125d46a42147728c`、規範適合ケースは381件です。
 
 ```text
 loj-validator check PATH [--level L0|L1|L3|L4]... [--category NAME]... [--check NAME]...
                          [--format json|text] [--ast FILE] [--registration-space SPACE] [--record ID]
 loj-validator check --registry DIR --repository DIR... --registration-space SPACE
-loj-validator check BUNDLE --base COMMIT --head COMMIT
+loj-validator check BUNDLE [--base COMMIT] --head COMMIT
 loj-validator check BUNDLE --registry DIR --reference REF --registration-space SPACE
 ```
 
 `PATH`は版パッケージ、法令リポジトリ、登録台帳です。検査を指定しなければ入力に適用する検査を実行します。
+変更検査は、`--base`の後から`--head`までの各commitを、その親と比べて検査します。`--base`を省くと、`--head`から辿れるすべてのcommitを、最初のcommit（親のないcommit）から検査します。最初のcommitは変更前の版がないものとして検査し、`revisionAdd`でなければCHG-03の違反です。親のないcommitが二つ以上ある履歴では、それらを合わせるmergeのcommitがCHG-03の違反になります。
 L3の区分は `historyStructure`・`evidence`、L4は `relationResolution`・`relationConsistency`・`timeConsistency`・`displayConsistency`です。
 `displayConsistency`は採用中の番号主張と表示の不一致を警告します。
 適合レベルとは別に `registry`・`rebuild`・`change`・`reference`を選べます。

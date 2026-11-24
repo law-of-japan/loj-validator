@@ -161,6 +161,7 @@
                     "pattern": "^[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*$"
                   },
                   "base": {
+                    "description": "The commit to compare from: the commits after it up to head are checked in order. Omitted for a check from the first commit of the repository: every commit from the commit without a parent up to head is checked in order, the first one with no record before it (CHG-03).",
                     "type": "string",
                     "minLength": 1
                   },
@@ -172,7 +173,6 @@
                 "required": [
                   "kind",
                   "bundle",
-                  "base",
                   "head"
                 ],
                 "additionalProperties": false

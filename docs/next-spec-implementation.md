@@ -1,6 +1,6 @@
 # Next specification implementation (loj/v1alpha2 and the new kinds)
 
-Target: loj-spec commit `2f62274086381ddafc6d9d0315bb87f88f24456a`, vendored as
+Target: loj-spec commit `ba6bdfdcf20eefa16067e38d125d46a42147728c`, vendored as
 `spec`, `schemas`, `conformance`, `grammar/v1alpha2` and `LICENSE` in `vendor/loj-spec` with `COMMIT` and
 `SHA256SUMS.json`. The v1alpha1 fixtures of `b704631` stay unchanged in
 `vendor/loj-spec-v1alpha1`; the v1alpha1 and legacy pipelines are unchanged.
@@ -73,6 +73,18 @@ cannot be selected.
   (its change kind is unknown, as with a missing `LoJ-Change`). These
   reports, like the one for a base or head missing from the bundle, carry
   `target.repository`.
+- The change check covers the commits of `base..head`, each parent before its
+  children (`git rev-list --topo-order --reverse`), each compared with its parent. Without `base` (CLI: no `--base`; conformance: an
+  input without `base`, common-059..061) it covers every commit reachable from
+  `head` (`git rev-list <head>`), from the commits without a parent on. A commit
+  without a parent is compared with no record before it and must declare
+  `revisionAdd`; otherwise it is a CHG-03 error and gets no CHG-02 or CHG-04 check
+  (the file mode included). A history with two or more roots joins them in a merge
+  commit, which is a CHG-03 error; each root is checked as a first commit.
+  A snapshot is dropped from memory after the last commit compared with it.
+  The number of commits checked has no limit of its own yet (issue #61): the
+  bundle, object, tree and per-command limits apply, and cancellation stops the
+  check between commits.
 - A bundle is untrusted. git runs isolated from the caller's environment, user and
   system configuration and hooks. Automatic maintenance and GC are disabled so
   fetch cannot leave background repacking racing the object-store check. Git uses
@@ -144,7 +156,7 @@ cannot be selected.
 loj-validator check PATH [--level L0|L1|L3|L4]... [--category NAME]... [--check NAME]...
                          [--format json|text] [--ast FILE] [--registration-space SPACE] [--record ID]
 loj-validator check --registry DIR --repository DIR... [--category NAME]...
-loj-validator check BUNDLE --base COMMIT --head COMMIT
+loj-validator check BUNDLE [--base COMMIT] --head COMMIT
 loj-validator check BUNDLE --registry DIR --reference REF
 ```
 
@@ -170,7 +182,7 @@ or nothing passed.
 | Suite | Normative | Passed | Informative (not counted) |
 |---|---|---|---|
 | loj/v1alpha2 | 221 | 221 | 1 (pkg-026, L2) |
-| common/v1alpha1 | 58 | 58 | 0 |
+| common/v1alpha1 | 61 | 61 | 0 |
 | loj-history/v1alpha1 | 61 | 61 | 0 |
 | loj-glyphs/v1alpha1 | 20 | 20 | 0 |
 | loj-registry/v1alpha1 | 13 | 13 | 0 |
@@ -180,7 +192,7 @@ Passing the fixed cases is a necessary condition only (CONF-02).
 
 ## Normative boundaries
 
-- There are 378 normative cases and one informative L2 case. `derivedFrom` and
+- There are 381 normative cases and one informative L2 case. `derivedFrom` and
   `rejectedBy` are audit metadata, never instructions to regenerate or skip inputs.
 - MD-04 emptiness uses the 25 Unicode 15.1 White_Space code points. Paragraph
   captions require `caption=present`; Toc placement and mixed number scripts are
