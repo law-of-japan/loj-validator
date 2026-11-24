@@ -1245,10 +1245,7 @@ mod tests {
         let s = Scratch::new();
         let blob = s.run(&["hash-object", "-w", "--stdin"], Some(b""));
         let tree = |mode: &str| {
-            let spec = format!(
-                "{mode} blob {blob}	history.yaml
-"
-            );
+            let spec = format!("{mode} blob {blob}\thistory.yaml\n");
             s.run(&["mktree"], Some(spec.as_bytes()))
         };
         let (plain, executable) = (tree("100644"), tree("100755"));
@@ -1260,38 +1257,10 @@ mod tests {
             args.extend(["-m", msg]);
             s.run(&args, None)
         };
-        let root = commit(
-            &plain,
-            &[],
-            "root
-
-LoJ-Change: revisionAdd
-",
-        );
-        let left = commit(
-            &executable,
-            &[&root],
-            "left
-
-LoJ-Change: metadata
-",
-        );
-        let right = commit(
-            &executable,
-            &[&root],
-            "right
-
-LoJ-Change: metadata
-",
-        );
-        let merge = commit(
-            &plain,
-            &[&left, &right],
-            "m
-
-LoJ-Change: format
-",
-        );
+        let root = commit(&plain, &[], "root\n\nLoJ-Change: revisionAdd\n");
+        let left = commit(&executable, &[&root], "left\n\nLoJ-Change: metadata\n");
+        let right = commit(&executable, &[&root], "right\n\nLoJ-Change: metadata\n");
+        let merge = commit(&plain, &[&left, &right], "m\n\nLoJ-Change: format\n");
         let r = check(&s.bundle_head(&merge), None, &merge);
         let mode = |c: &str| {
             r.diagnostics.iter().any(|d| {
