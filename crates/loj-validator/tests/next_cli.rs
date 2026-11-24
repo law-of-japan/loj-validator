@@ -225,3 +225,17 @@ fn registration_space_and_record_selection_are_explicit_cli_inputs() {
     assert_eq!(code, 3, "{r}");
     assert_eq!(r["resolution"]["result"], "notFetched");
 }
+
+#[test]
+fn ast_output_preserves_package_report_and_reports_write_errors() {
+    let path = std::env::temp_dir().join(format!("loj-package-ast-{}.json", std::process::id()));
+    let (code, report) = json(&["check", PKG, "--ast", path.to_str().unwrap()]);
+    assert_eq!((code, report), json(&["check", PKG]));
+    let bytes = std::fs::read(&path).unwrap();
+    std::fs::remove_file(path).unwrap();
+    assert!(serde_json::from_slice::<Value>(&bytes).unwrap().is_object());
+
+    let (code, report) = json(&["check", PKG, "--ast", PKG]);
+    assert_eq!(code, 2);
+    assert_eq!(report["error"]["kind"], "output");
+}
