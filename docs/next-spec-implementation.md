@@ -83,21 +83,20 @@ cannot be selected.
   commit, which is a CHG-03 error; each root is checked as a first commit.
   A snapshot is dropped from memory after the last commit compared with it.
   At most 10,000 commits are checked: `rev-list` lists at most one more
-  (`--max-count`), and with more the check is incomplete ("more than 10000
-  commits to check", CHG-02 undetermined) before any commit is checked. This
-  bounds the list printed and kept, not git's walk: `--topo-order` walks the
-  whole range before it lists any commit, which only the 120 s command timeout
-  bounds. The
+  (`--max-count`), and with more the check is incomplete ("more than 10000 commits
+  to check", CHG-02 undetermined) before any commit is checked. This bounds the
+  list printed and kept, not git's walk: `--topo-order` walks the whole range
+  before it lists any commit, which only the 120 s command timeout bounds. The
   check as a whole runs for at most 3600 s, measured before each commit: past it,
   the check stops there as incomplete ("the change check ran longer than 3600 s")
   and keeps the findings made so far. The result is then `incomplete`, unless an
   error was already found: that violation holds whatever the unchecked commits
   hold, so the result is `fail` (fail > incomplete) with the undetermined note
-  beside it. The commit being checked when the time passes finishes first, so
-  the check can run past 3600 s by the time of one commit: reading its message
-  and exporting the trees of the commit and its parent, each a git command or
-  export with its own 120 s deadline (at most about 6 minutes), plus building
-  and comparing the ASTs. Cancellation also stops the check between commits.
+  beside it. The commit being checked when the time passes finishes first, so the
+  check can run past 3600 s by the time of one commit: reading its message and
+  exporting the trees of the commit and its parent, each a git command or export
+  with its own 120 s deadline (at most about 6 minutes), plus building and
+  comparing the ASTs. Cancellation also stops the check between commits.
 - A bundle is untrusted. git runs isolated from the caller's environment, user and
   system configuration and hooks. Automatic maintenance and GC are disabled so
   fetch cannot leave background repacking racing the object-store check. Git uses
