@@ -17,15 +17,19 @@ mod policy;
 struct Limits {
     /// The most commits checked.
     commits: usize,
-    /// The longest the check runs, measured between commits: the commit being
-    /// checked when it passes finishes first (each git command has its own
-    /// timeout).
+    /// The longest the check runs, measured before each commit: the commit
+    /// being checked when it passes finishes first (each git command has its
+    /// own timeout).
     duration: Duration,
+    /// The time since the check started (a parameter so tests can let the
+    /// limit pass between two commits).
+    elapsed: fn(Instant) -> Duration,
 }
 
 const LIMITS: Limits = Limits {
     commits: 10_000,
     duration: Duration::from_secs(3600),
+    elapsed: |start| start.elapsed(),
 };
 const KINDS: &[&str] = &[
     "format",
@@ -363,7 +367,7 @@ fn check_bundle(
         if crate::cancellation::checkpoint() {
             return undetermined(f, report.target, GitError::Cancelled.to_string());
         }
-        if start.elapsed() >= limits.duration {
+        if (limits.elapsed)(start) >= limits.duration {
             let why = format!(
                 "the change check ran longer than {} s",
                 limits.duration.as_secs()
@@ -1359,6 +1363,14 @@ mod tests {
             .any(|d| d.rule == "CHG-02" && d.class == Class::Undetermined && d.message == message)
     }
 
+    fn limits(commits: usize, duration: Duration) -> Limits {
+        Limits {
+            commits,
+            duration,
+            elapsed: LIMITS.elapsed,
+        }
+    }
+
     /// Up to the commit limit every commit is checked; one commit more and none
     /// is, so the check is incomplete without the finding of any commit, with
     /// or without `base`.
@@ -1366,28 +1378,17 @@ mod tests {
     fn the_commit_limit_makes_the_check_incomplete() {
         let s = Scratch::new();
         let (path, c) = s.chain(&[
-            b"first
-
-LoJ-Change: revisionAdd
-",
-            b"second
-
-LoJ-Change: metadata
-",
-            b"third
-",
+            b"first\n\nLoJ-Change: revisionAdd\n",
+            b"second\n\nLoJ-Change: metadata\n",
+            b"third\n",
         ]);
-        let limits = |commits| Limits {
-            commits,
-            duration: LIMITS.duration,
-        };
         // Three commits without base, two after `base`: at the limit, the
         // third commit's missing `LoJ-Change` is found.
         for (base, n) in [(None, 3), (Some(c[0].as_str()), 2)] {
-            let r = check_with(&path, base, &c[2], &limits(n));
+            let r = check_with(&path, base, &c[2], &limits(n, LIMITS.duration));
             assert_eq!(result(&r), ResultValue::Fail, "{:?}", r.diagnostics);
             assert_eq!(at_of(&r, &c[2]), 1, "{:?}", r.diagnostics);
-            let r = check_with(&path, base, &c[2], &limits(n - 1));
+            let r = check_with(&path, base, &c[2], &limits(n - 1, LIMITS.duration));
             assert_eq!(result(&r), ResultValue::Incomplete, "{:?}", r.diagnostics);
             assert!(
                 r.diagnostics.iter().all(|d| !d.is_error()),
@@ -1400,31 +1401,59 @@ LoJ-Change: metadata
         }
     }
 
-    /// Past the time limit, the check stops before the next commit and is
-    /// incomplete; a finding already made is kept, so it still fails.
+    /// Past the time limit, the check stops before the next commit with an
+    /// undetermined note. With no finding yet it is incomplete.
     #[test]
     fn the_time_limit_makes_the_check_incomplete() {
         let s = Scratch::new();
-        let (path, c) = s.chain(&[
-            b"first
-
-LoJ-Change: revisionAdd
-",
-            b"second
-",
-        ]);
-        let limits = Limits {
-            commits: LIMITS.commits,
-            duration: Duration::ZERO,
-        };
-        let r = check_with(&path, None, &c[1], &limits);
+        let (path, c) = s.chain(&[b"first\n\nLoJ-Change: revisionAdd\n", b"second\n"]);
+        let r = check_with(&path, None, &c[1], &limits(LIMITS.commits, Duration::ZERO));
         assert_eq!(result(&r), ResultValue::Incomplete, "{:?}", r.diagnostics);
-        assert_eq!(at_of(&r, &c[1]), 0, "{:?}", r.diagnostics);
+        assert!(
+            r.diagnostics.iter().all(|d| !d.is_error()),
+            "{:?}",
+            r.diagnostics
+        );
         let why = "the change check ran longer than 0 s";
         assert!(undetermined_by(&r, why), "{:?}", r.diagnostics);
         // Within the limit, the same input is decided.
         let r = check_with(&path, None, &c[1], &LIMITS);
         assert_eq!(result(&r), ResultValue::Fail, "{:?}", r.diagnostics);
+    }
+
+    /// A finding made before the time limit passed is kept: a violation found
+    /// is a violation whatever the unchecked commits hold, so the check fails
+    /// (fail > incomplete) and the note says why the rest was not checked.
+    #[test]
+    fn a_finding_before_the_time_limit_still_fails_the_check() {
+        thread_local! {
+            static CALLS: std::cell::Cell<u32> = const { std::cell::Cell::new(0) };
+        }
+        // No time has passed before the first commit; the limit has passed
+        // before the second.
+        fn clock(_: Instant) -> Duration {
+            CALLS.with(|n| {
+                n.set(n.get() + 1);
+                if n.get() == 1 {
+                    Duration::ZERO
+                } else {
+                    Duration::MAX
+                }
+            })
+        }
+        let s = Scratch::new();
+        let (path, c) = s.chain(&[b"first\n", b"second\n"]);
+        let limits = Limits {
+            elapsed: clock,
+            ..limits(LIMITS.commits, LIMITS.duration)
+        };
+        let r = check_with(&path, None, &c[1], &limits);
+        assert_eq!(CALLS.with(std::cell::Cell::get), 2);
+        assert_eq!(result(&r), ResultValue::Fail, "{:?}", r.diagnostics);
+        assert_eq!(at_of(&r, &c[0]), 1, "{:?}", r.diagnostics);
+        assert_eq!(at_of(&r, &c[1]), 0, "{:?}", r.diagnostics);
+        let why = "the change check ran longer than 3600 s";
+        assert!(undetermined_by(&r, why), "{:?}", r.diagnostics);
     }
 
     /// The errors reported at `commit` (the change check's `location.file`).

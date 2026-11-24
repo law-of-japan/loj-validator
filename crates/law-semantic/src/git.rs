@@ -569,7 +569,9 @@ impl Bundle {
     /// `commit` returned); an invalid revision is an `Err`, like a git failure.
     /// At most `limit + 1` commits are listed, so a caller can tell that more
     /// than `limit` exist without git printing (or this process keeping) the
-    /// whole list.
+    /// whole list. Past `limit`, which commits are listed is unspecified
+    /// (`--max-count` applies before `--reverse`): only their number is
+    /// meaningful.
     pub fn range(
         &self,
         base: Option<&str>,

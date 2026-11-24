@@ -87,9 +87,14 @@ cannot be selected.
   commits to check", CHG-02 undetermined) before any commit is checked. The
   check as a whole runs for at most 3600 s, measured before each commit: past it,
   the check stops there as incomplete ("the change check ran longer than 3600 s")
-  and keeps the findings made so far, so an earlier error still fails it. The
-  commit being checked when the time passes finishes first (each git command has
-  its own 120 s timeout). Cancellation also stops the check between commits.
+  and keeps the findings made so far. The result is then `incomplete`, unless an
+  error was already found: that violation holds whatever the unchecked commits
+  hold, so the result is `fail` (fail > incomplete) with the undetermined note
+  beside it. The commit being checked when the time passes finishes first, so
+  the check can run past 3600 s by the time of one commit: reading its message
+  and exporting the trees of the commit and its parent, each a git command or
+  export with its own 120 s deadline (at most about 6 minutes), plus building
+  and comparing the ASTs. Cancellation also stops the check between commits.
 - A bundle is untrusted. git runs isolated from the caller's environment, user and
   system configuration and hooks. Automatic maintenance and GC are disabled so
   fetch cannot leave background repacking racing the object-store check. Git uses
