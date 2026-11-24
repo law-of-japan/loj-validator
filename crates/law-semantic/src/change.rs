@@ -2,16 +2,19 @@
 //! CHG-02, CHG-03, CHG-04), reported apart from the conformance levels.
 use crate::checks::RepositoryKind;
 use crate::common::findings::Findings;
-use crate::common::{load_yaml, Check, Class, Loaded, Report, COMMON};
-use crate::git::{Bundle, ExportError, GitError};
+use crate::common::{Check, Class, Report, COMMON};
+use crate::git::{Bundle, GitError};
 use serde_json::{json, Map, Value};
-use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::time::{Duration, Instant};
 
 const CH: Check = Check::CHANGE;
 mod policy;
+mod snapshots;
+use policy::{declared_change, reviewed};
+pub(crate) use snapshots::snapshot;
+use snapshots::{load_snapshot, Snapshot};
 
 /// Implementation limits of one change check (VAL-04): past either, the check
 /// ends as incomplete rather than running for as long as the input allows.
@@ -32,263 +35,6 @@ const LIMITS: Limits = Limits {
     duration: Duration::from_secs(3600),
     elapsed: |start| start.elapsed(),
 };
-const KINDS: &[&str] = &[
-    "format",
-    "correction",
-    "officialCorrection",
-    "restoration",
-    "metadata",
-    "revisionAdd",
-    "revisionFix",
-    "migration",
-    "auxiliary",
-];
-
-/// The state of a record version at one commit.
-#[derive(Default)]
-pub(crate) struct Snapshot {
-    pub history: Option<Value>,
-    pub history_bytes: Option<Vec<u8>>,
-    /// revision_id -> AST, or why no AST could be built (CHG-04).
-    pub asts: BTreeMap<String, Result<Value, String>>,
-    /// revision_id -> package path.
-    pub packages: BTreeMap<String, String>,
-    pub files: BTreeMap<String, [u8; 32]>,
-    /// Paths whose Git file mode is executable (`100755`); every other file is
-    /// `100644`, as the export refuses any other mode.
-    pub executable: BTreeSet<String>,
-    pub documents: BTreeMap<String, Value>,
-    /// Why the history manifest could not be used (unreadable, an unsupported
-    /// `schemaVersion`, an invalid Revision ID), if so. `history` and
-    /// `packages` are then empty, while the file lists are complete, which
-    /// is all `auxiliary` compares (CHG-02).
-    pub manifest_error: Option<String>,
-    /// Export retained until Bundle is dropped. Deferred AST generation must
-    /// finish while that bundle is alive (the change-check cache is local to it).
-    directory: std::path::PathBuf,
-}
-
-/// A snapshot whose history manifest is usable; an unusable one is a refused
-/// tree (`ExportError::Tree`).
-pub(crate) fn snapshot(b: &Bundle, commit: &str) -> Result<Snapshot, ExportError> {
-    let mut snapshot = read_snapshot(b, commit, None)?;
-    if let Some(e) = snapshot.manifest_error.take() {
-        return Err(ExportError::Tree(e));
-    }
-    snapshot.build_asts(|_| true);
-    Ok(snapshot)
-}
-
-fn read_snapshot(
-    b: &Bundle,
-    commit: &str,
-    repository: Option<RepositoryKind>,
-) -> Result<Snapshot, ExportError> {
-    let (dir, mut executable) = b.export_tree(commit)?;
-    if let Some(layout) = repository {
-        executable.retain(|path| layout.canonical(path));
-    }
-    let mut files = BTreeMap::new();
-    let mut documents = BTreeMap::new();
-    let mut pending = vec![dir.clone()];
-    while let Some(directory) = pending.pop() {
-        if crate::cancellation::checkpoint() {
-            return Err(ExportError::Cancelled);
-        }
-        for entry in std::fs::read_dir(directory).map_err(|e| ExportError::Io(e.to_string()))? {
-            if crate::cancellation::checkpoint() {
-                return Err(ExportError::Cancelled);
-            }
-            let entry = entry.map_err(|e| ExportError::Io(e.to_string()))?;
-            let path = entry.path();
-            if path.is_dir() {
-                pending.push(path);
-            } else {
-                let bytes = std::fs::read(&path).map_err(|e| ExportError::Io(e.to_string()))?;
-                let relative = path
-                    .strip_prefix(&dir)
-                    .expect("exported tree entry is inside its root")
-                    .to_string_lossy()
-                    .replace('\\', "/");
-                if repository.is_some_and(|r| !r.canonical(&relative)) {
-                    continue;
-                }
-                if relative.ends_with(".yaml") {
-                    if let Ok(text) = std::str::from_utf8(&bytes) {
-                        if let Ok(value) = crate::common::yaml::parse(text) {
-                            documents.insert(relative.clone(), value);
-                        }
-                    }
-                }
-                files.insert(relative, Sha256::digest(&bytes).into());
-            }
-        }
-    }
-    // The export holds every blob byte for byte, so the raw manifest is read from
-    // it rather than from git again. No file of that name (absent, or a directory
-    // in the tree) is no manifest, a finding about the data; failing to look at or
-    // read the file leaves the check undetermined.
-    let manifest = dir.join("history.yaml");
-    let unreadable =
-        |e: std::io::Error| ExportError::Io(format!("cannot read history.yaml at {commit}: {e}"));
-    let history_bytes = if repository == Some(RepositoryKind::Registry) {
-        None
-    } else {
-        match std::fs::metadata(&manifest) {
-            Ok(m) if m.is_file() => Some(std::fs::read(&manifest).map_err(unreadable)?),
-            Ok(_) => None,
-            Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
-            Err(e) => return Err(unreadable(e)),
-        }
-    };
-    let mut snapshot = Snapshot {
-        history: None,
-        history_bytes,
-        asts: BTreeMap::new(),
-        packages: BTreeMap::new(),
-        files,
-        executable,
-        documents,
-        manifest_error: None,
-        directory: dir,
-    };
-    if repository == Some(RepositoryKind::Registry) {
-        return Ok(snapshot);
-    }
-    match read_manifest(&snapshot.directory, snapshot.history_bytes.is_some()) {
-        Ok((history, packages)) => (snapshot.history, snapshot.packages) = (history, packages),
-        Err(e) => snapshot.manifest_error = Some(e),
-    }
-    Ok(snapshot)
-}
-
-type Packages = BTreeMap<String, String>;
-
-/// The history manifest of an exported tree and the package of each revision
-/// with text, or why the manifest cannot be used.
-fn read_manifest(dir: &Path, present: bool) -> Result<(Option<Value>, Packages), String> {
-    let history = match load_yaml(&dir.join("history.yaml")) {
-        Loaded::Ok(v, _) if v["schemaVersion"] == crate::repository::HISTORY => Some(v),
-        _ if present => {
-            return Err("history manifest is unreadable or has an unsupported schemaVersion".into())
-        }
-        _ => None,
-    };
-    let mut packages = BTreeMap::new();
-    for r in history
-        .as_ref()
-        .and_then(|h| h["revisions"].as_array())
-        .into_iter()
-        .flatten()
-    {
-        let Some(id) = r["id"].as_str() else { continue };
-        if !matches!(r["text"]["status"].as_str(), Some("complete" | "partial")) {
-            continue;
-        }
-        if !crate::repository::history::valid_revision_id(id) {
-            return Err("invalid Revision ID cannot select a package".into());
-        }
-        let path = crate::repository::history::package_path(r);
-        packages.insert(id.to_owned(), path);
-    }
-    Ok((history, packages))
-}
-
-impl Snapshot {
-    /// CHG-02: declared corrections/restorations do not build an AST. A cached
-    /// commit may need that AST later, as the parent of a different change.
-    fn build_asts(&mut self, needed: impl Fn(&str) -> bool) {
-        for revision in self
-            .history
-            .as_ref()
-            .and_then(|h| h["revisions"].as_array())
-            .into_iter()
-            .flatten()
-        {
-            let Some(id) = revision["id"].as_str() else {
-                continue;
-            };
-            // Leaving early is safe: the report is cancelled by
-            // `checks::run_with_space` before it is returned.
-            if crate::cancellation::checkpoint() {
-                break;
-            }
-            let Some(path) = self.packages.get(id) else {
-                continue;
-            };
-            if !needed(id) || self.asts.contains_key(id) {
-                continue;
-            }
-            let ast = if revision["text"]["status"] == "partial" {
-                Err("partial text".into())
-            } else {
-                let pkg =
-                    crate::v1alpha2::check(&self.directory.join(path), &[Check::L0, Check::L1]);
-                pkg.ast.ok_or_else(|| "the package does not pass L1".into())
-            };
-            self.asts.insert(id.to_owned(), ast);
-        }
-    }
-}
-
-/// CHG-03: only a wholly valid final paragraph, excluding the first one.
-fn trailer_fields(message: &str) -> Vec<(&str, &str)> {
-    let mut paragraphs: Vec<Vec<&str>> = Vec::new();
-    let mut current = Vec::new();
-    for line in message
-        .split('\n')
-        .map(|line| line.strip_suffix('\r').unwrap_or(line))
-    {
-        if line.trim_matches([' ', '\t']).is_empty() {
-            if !current.is_empty() {
-                paragraphs.push(std::mem::take(&mut current));
-            }
-        } else {
-            current.push(line);
-        }
-    }
-    if !current.is_empty() {
-        paragraphs.push(current);
-    }
-    if paragraphs.len() < 2 {
-        return Vec::new();
-    }
-    let mut fields = Vec::new();
-    for line in paragraphs.last().into_iter().flatten() {
-        let Some((name, value)) = line.split_once(':') else {
-            return Vec::new();
-        };
-        if name.is_empty() || !name.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-') {
-            return Vec::new();
-        }
-        fields.push((name, value.trim_matches([' ', '\t'])));
-    }
-    fields
-}
-
-fn trailers(message: &str) -> (Vec<String>, Vec<String>) {
-    let fields = trailer_fields(message);
-    let kinds = fields
-        .iter()
-        .filter(|(name, _)| *name == "LoJ-Change")
-        .map(|(_, value)| (*value).into())
-        .collect();
-    let revisions: Vec<String> = fields
-        .iter()
-        .filter(|(name, _)| *name == "LoJ-Revisions")
-        .map(|(_, value)| (*value).into())
-        .collect();
-    (kinds, revisions)
-}
-
-fn reviewed(message: &str) -> bool {
-    let fields = trailer_fields(message);
-    let values: Vec<_> = fields
-        .iter()
-        .filter(|(name, _)| *name == "LoJ-Reviewed")
-        .collect();
-    matches!(values.as_slice(), [(_, value)] if !value.is_empty())
-}
 /// End the check as incomplete (VAL-04), with `why` as the reason. The note
 /// carries CHG-02, the rule of the change check as a whole, whichever step (commit
 /// resolution, range, message) could not be completed: the spec gives no rule of
@@ -484,34 +230,13 @@ fn check_bundle(
             let Some(Some(after)) = cache.get(&commit) else {
                 break 'commit;
             };
-            // CHG-02: the file modes are read from the trees, so they are checked
-            // for every declared kind even when a history manifest cannot be used.
-            // `auxiliary` fails any mode change of canonical data in its own check.
-            if kind != "auxiliary" {
-                policy::modes(&change, before, after, &mut f);
-            }
-            // CHG-02 `auxiliary` compares the files only, so it is decided even
-            // when a history manifest cannot be used; every other kind reads it.
-            // `migration` stays undetermined here too, as when such a tree was
-            // refused before, rather than reaching its CHG-02 error in `compare`.
-            if kind != "auxiliary" {
-                let unusable: Vec<_> = [parent.map(|p| (p, before)), Some((&commit, after))]
-                    .into_iter()
-                    .flatten()
-                    .filter_map(|(c, s)| Some((c, s.manifest_error.as_ref()?)))
-                    .collect();
-                for (c, e) in &unusable {
-                    if noted.insert((*c).clone()) {
-                        f.incomplete.insert(CH);
-                        let why = format!("{c}: tree refused: {e}");
-                        f.note(CH, Class::Undetermined, "CHG-02", COMMON, why, &at, "");
-                    }
-                }
-                if !unusable.is_empty() {
-                    break 'commit;
-                }
-            }
-            change.compare(before, after, &mut f);
+            change.check_snapshots(
+                parent.map(String::as_str),
+                before,
+                after,
+                &mut noted,
+                &mut f,
+            );
         }
         if last_use {
             cache.remove(&parents[0]);
@@ -527,222 +252,27 @@ fn check_bundle(
     r
 }
 
-/// CHG-03: the commit declares exactly one known `LoJ-Change`. Returns the
-/// kind and the `LoJ-Revisions`, or `None` when the declarations are invalid
-/// and the trees must not be compared. Revision trailer lines are not combined.
-fn declared_change(
-    commit: &str,
-    at: &str,
-    message: &str,
-    f: &mut Findings,
-) -> Option<(String, Vec<String>)> {
-    let (kinds, revisions) = trailers(message);
-    if revisions.len() > 1 {
-        f.error(
-            CH,
-            "CHG-03",
-            COMMON,
-            format!("{commit} declares more than one LoJ-Revisions"),
-            at,
-            "",
-        );
-        return None;
-    }
-    let problem = match kinds.as_slice() {
-        [k] if KINDS.contains(&k.as_str()) => {
-            let declared = revisions
-                .first()
-                .map(|value| value.split(", ").map(str::to_owned).collect())
-                .unwrap_or_default();
-            return Some((k.clone(), declared));
-        }
-        [] => format!("{commit} declares no LoJ-Change"),
-        [k] => format!("{commit}: unknown change kind {k}"),
-        _ => format!("{commit} declares more than one LoJ-Change"),
-    };
-    f.error(CH, "CHG-03", COMMON, problem, at, "");
-    None
-}
-
-/// Export `commit` unless the cache has it. A tree refused for its content is
-/// noted and cached as `None`. `Err` is a failure of the environment, which
-/// ends the whole check.
-fn load_snapshot(
-    b: &Bundle,
-    commit: &str,
-    repository: RepositoryKind,
-    change: &Change<'_>,
-    cache: &mut BTreeMap<String, Option<Snapshot>>,
-    f: &mut Findings,
-) -> Result<(), String> {
-    if let Some(cached) = cache.get_mut(commit) {
-        if let Some(snapshot) = cached {
-            snapshot.build_asts(|id| change.must_keep(id));
-        }
-        return Ok(());
-    }
-    match read_snapshot(b, commit, Some(repository)) {
-        Ok(mut s) => {
-            s.build_asts(|id| change.must_keep(id));
-            cache.insert(commit.to_owned(), Some(s));
-        }
-        // Cancellation stops the check like an environment failure; the report
-        // is then made incomplete by `cancellation::finish`.
-        Err(e @ (ExportError::Environment(_) | ExportError::Io(_) | ExportError::Cancelled)) => {
-            return Err(format!("{commit}: {e}"))
-        }
-        Err(ExportError::Tree(e)) => {
-            f.incomplete.insert(CH);
-            f.note(
-                CH,
-                Class::Undetermined,
-                "CHG-02",
-                COMMON,
-                format!("{commit}: tree refused: {e}"),
-                change.at,
-                "",
-            );
-            cache.insert(commit.to_owned(), None);
-        }
-    }
-    Ok(())
-}
-
 /// One commit of the range and the change it declares.
 struct Change<'a> {
     initial: bool,
     commit: &'a str,
     /// Location of its diagnostics.
     at: &'a str,
-    /// `LoJ-Change`, one of [`KINDS`].
+    /// `LoJ-Change`, one of the supported change kinds.
     kind: &'a str,
     /// `LoJ-Revisions`.
     declared: &'a [String],
     reviewed: bool,
 }
 
-impl Change<'_> {
-    fn error(&self, f: &mut Findings, rule: &str, message: String) {
-        f.error(CH, rule, COMMON, message, self.at, "");
-    }
-
-    /// CHG-02 / CHG-03 / CHG-04: compare the states before and after the commit.
-    fn compare(&self, before: &Snapshot, after: &Snapshot, f: &mut Findings) {
-        let (commit, kind) = (self.commit, self.kind);
-        if kind == "migration" {
-            self.error(
-                f,
-                "CHG-02",
-                "this specification provides no normative AST migration mapping".into(),
-            );
-            return;
-        }
-        if kind == "auxiliary" {
-            // CHG-02: only the canonical data files are compared, byte for byte
-            // and by mode. No AST is built or compared, so a version that cannot
-            // build one is not undetermined here (CHG-04).
-            policy::auxiliary(self, before, after, f);
-            return;
-        }
-        if !policy::processable(self, before, f) || !policy::processable(self, after, f) {
-            return;
-        }
-        self.kept_asts(before, after, f);
-        policy::check(self, before, after, f);
-        match kind {
-            "format" if before.history_bytes != after.history_bytes => self.error(
-                f,
-                "CHG-02",
-                format!("{commit}: format changes history.yaml"),
-            ),
-            "metadata" if before.packages != after.packages => self.error(
-                f,
-                "CHG-02",
-                format!("{commit}: metadata changes the version packages"),
-            ),
-            "revisionAdd"
-                if !self.initial
-                    && policy::revision_ids(after)
-                        .iter()
-                        .all(|k| policy::revision_ids(before).contains(k)) =>
-            {
-                self.error(
-                    f,
-                    "CHG-02",
-                    format!("{commit}: revisionAdd adds no version"),
-                )
-            }
-            _ => {}
-        }
-    }
-
-    /// Whether the AST of revision `id` must stay identical under this change.
-    fn must_keep(&self, id: &str) -> bool {
-        match self.kind {
-            "format" | "metadata" | "revisionAdd" => true,
-            "auxiliary" => false,
-            _ => !self.declared.iter().any(|d| d == id),
-        }
-    }
-
-    /// CHG-02: the ASTs that the change must keep are identical. CHG-04: an AST
-    /// that cannot be built is never compared as equal.
-    fn kept_asts(&self, before: &Snapshot, after: &Snapshot, f: &mut Findings) {
-        let (commit, kind) = (self.commit, self.kind);
-        for (id, old) in &before.asts {
-            if !self.must_keep(id) {
-                continue;
-            }
-            match (old, after.asts.get(id)) {
-                (Ok(a), Some(Ok(b))) => {
-                    if a != b {
-                        self.error(
-                            f,
-                            "CHG-02",
-                            format!("{commit}: {kind} changes the AST of revision {id}"),
-                        );
-                    }
-                }
-                (_, None) => {
-                    if kind != "revisionFix" || !self.declared.contains(id) {
-                        self.error(
-                            f,
-                            "CHG-02",
-                            format!("{commit}: {kind} removes revision {id}"),
-                        );
-                    }
-                }
-                (Err(e), _) | (_, Some(Err(e))) => {
-                    let prefix = format!("versions/{id}/");
-                    let changed = before.files.keys().chain(after.files.keys()).any(|path| {
-                        path.starts_with(&prefix)
-                            && !path.ends_with("/glyphs.yaml")
-                            && before.files.get(path) != after.files.get(path)
-                    });
-                    if kind == "format" && changed && !self.reviewed {
-                        self.error(f, "CHG-04", format!("{commit}: format changes uncomparable revision {id} without a review record"));
-                    }
-                    f.incomplete.insert(CH);
-                    f.note(
-                        CH,
-                        Class::Undetermined,
-                        "CHG-04",
-                        COMMON,
-                        format!("{commit}: revision {id} not compared: {e}"),
-                        self.at,
-                        "",
-                    );
-                }
-            }
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
+    use super::policy::{trailers, KINDS};
+    use super::snapshots::read_snapshot;
     use super::*;
     use crate::common::ResultValue;
     use crate::git::tests::Scratch;
+    use crate::git::ExportError;
 
     fn result(r: &Report) -> ResultValue {
         r.results.iter().find(|(c, _)| *c == CH).unwrap().1
