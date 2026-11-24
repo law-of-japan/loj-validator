@@ -1125,6 +1125,18 @@ impl<'a> Builder<'a> {
             );
             return;
         };
+        // The single-heading pattern can consume another article in its
+        // branch suffix. A malformed compound label is a HEAD-01 finding.
+        if range.is_none() && matches!(&c[2], "条" | "條") && c[3].contains('第') {
+            ctx.diag(
+                "HEAD-01",
+                "Unrecognized article range",
+                path,
+                span.start,
+                span.end,
+            );
+            return;
+        }
         let num = number(&format!("{}{}", &c[1], &c[3]), SEPARATORS, Digits::Any);
         let num = range.as_ref().map(|(a, b)| format!("{a}:{b}")).or(num);
         let Some(num) = num else {
@@ -2025,6 +2037,29 @@ mod tests {
         }
         for no in ["附属書", "附x則", "則", "附則　抄", "第一条"] {
             assert!(matches!(supplement_label(no), Supplement::No), "{no:?}");
+        }
+    }
+
+    #[test]
+    fn malformed_article_ranges_are_unrecognized_headings() {
+        let manifest = json!({"law":{"id":"law","title":"例"}});
+        for label in [
+            "第一条から第三条まで及び第五条",
+            "第一条乃至第三条余分",
+            "第一条の二から第三条",
+            "第一条の二乃至第三条まで",
+        ] {
+            let documents = [(
+                "main.md".into(),
+                format!("# {label}\n削除\n"),
+                "main".into(),
+            )];
+            let mut ctx = Context::default();
+            build(&manifest, &documents, &mut ctx);
+            assert!(
+                ctx.diagnostics.iter().any(|(_, d)| d.rule == "HEAD-01"),
+                "{label}"
+            );
         }
     }
 

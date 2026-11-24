@@ -168,6 +168,13 @@ fn change_and_reference() {
         ]);
         assert_eq!(code, expected_code, "{report}");
     }
+    let (code, report) = json(&[
+        "check",
+        &format!("{c}/valid/common-064/repo.bundle"),
+        "--repository-kind=registry",
+    ]);
+    assert_eq!(code, 2, "{report}");
+    assert_eq!(report["errors"][0]["kind"], "usage");
     // --base alone is still not an input; the error is one JSON object.
     let (code, r) = json(&[
         "check",
