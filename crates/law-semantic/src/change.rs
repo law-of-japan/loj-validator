@@ -52,14 +52,24 @@ fn undetermined(mut f: Findings, target: Map<String, Value>, why: String) -> Rep
 /// commit on; a commit without a parent is compared with no record before it.
 #[cfg(test)]
 fn check(bundle: &Path, base: Option<&str>, head: &str) -> Report {
-    check_repository(bundle, base, head, RepositoryKind::Law)
+    check_repository(bundle, base, head, None, RepositoryKind::Law)
 }
 
 /// Check commits using the explicitly selected repository layout.
+///
+/// `legacy_boundary` is the legacy boundary of a law repository whose canonical
+/// branch starts on a commit of the legacy repository (CHG-03): it and its
+/// ancestors are legacy commits, not checked, and a canonical commit whose
+/// parent is one of them is checked as a first commit, against no record
+/// before it. It is an input of the caller and never inferred from the files
+/// or the commit messages. A boundary that is not in the bundle, is `head`
+/// itself, is not reachable from `head`, or is given for a registry
+/// repository fails CHG-03 without any commit being checked.
 pub fn check_repository(
     bundle: &Path,
     base: Option<&str>,
     head: &str,
+    legacy_boundary: Option<&str>,
     repository: RepositoryKind,
 ) -> Report {
     let mut f = Findings::default();
@@ -86,7 +96,49 @@ pub fn check_repository(
     report
         .target
         .insert("repository".into(), json!(bundle.to_string_lossy()));
-    check_bundle(&b, f, report, base, head, repository, &LIMITS)
+    let range = Range {
+        base,
+        head,
+        legacy_boundary,
+    };
+    check_bundle(&b, f, report, &range, repository, &LIMITS)
+}
+
+/// The commits a change check covers, as given by the caller.
+struct Range<'a> {
+    base: Option<&'a str>,
+    head: &'a str,
+    legacy_boundary: Option<&'a str>,
+}
+
+/// Why a given legacy boundary does not meet the conditions of CHG-03, or
+/// `None` when it does. `boundary` is the resolved commit (`None` when it is
+/// not in the bundle) and `head` the resolved head commit.
+fn boundary_problem(
+    b: &Bundle,
+    boundary: Option<&str>,
+    head: &str,
+    repository: RepositoryKind,
+) -> Result<Option<String>, GitError> {
+    if repository == RepositoryKind::Registry {
+        return Ok(Some(
+            "a legacy boundary is not given for a registry repository".into(),
+        ));
+    }
+    let Some(boundary) = boundary else {
+        return Ok(Some(
+            "the legacy boundary is not a commit in the bundle".into(),
+        ));
+    };
+    Ok(if boundary == head {
+        Some(format!("the legacy boundary {boundary} is head itself"))
+    } else if !b.is_ancestor(boundary, head)? {
+        Some(format!(
+            "the legacy boundary {boundary} is not reachable from head"
+        ))
+    } else {
+        None
+    })
 }
 
 /// The change check on an opened bundle. A git failure is never reported as a
@@ -98,14 +150,13 @@ fn check_bundle(
     b: &Bundle,
     mut f: Findings,
     mut report: Report,
-    base: Option<&str>,
-    head: &str,
+    range: &Range,
     repository: RepositoryKind,
     limits: &Limits,
 ) -> Report {
     let start = Instant::now();
-    let base = base.map(|base| b.commit(base)).transpose();
-    let (base, head) = match (base, b.commit(head)) {
+    let base = range.base.map(|base| b.commit(base)).transpose();
+    let (base, head) = match (base, b.commit(range.head)) {
         (Ok(base @ (None | Some(Some(_)))), Ok(Some(head))) => (base.flatten(), head),
         (Err(e), _) | (_, Err(e)) => return undetermined(f, report.target, e.to_string()),
         _ => {
@@ -115,7 +166,29 @@ fn check_bundle(
     };
     report.target.insert("commit".into(), json!(head));
     f.applicable.insert(CH);
-    let commits = match b.range(base.as_deref(), &head, limits.commits) {
+    let boundary = match range.legacy_boundary.map(|c| b.commit(c)).transpose() {
+        Ok(boundary) => boundary,
+        Err(e) => return undetermined(f, report.target, e.to_string()),
+    };
+    if let Some(boundary) = &boundary {
+        match boundary_problem(b, boundary.as_deref(), &head, repository) {
+            // Which commits are legacy commits is unknown, so none is checked.
+            Ok(Some(problem)) => {
+                f.error(CH, "CHG-03", COMMON, problem, "legacy boundary", "");
+                let mut r = f.into_report(&[CH]);
+                r.target = report.target;
+                return r;
+            }
+            Ok(None) => {}
+            Err(e) => return undetermined(f, report.target, e.to_string()),
+        }
+    }
+    let boundary = boundary.flatten();
+    // The legacy commits are those reached from the boundary, so excluding it
+    // leaves the canonical commits. A `base` among the legacy commits excludes
+    // no more than the boundary does: the check starts from the first commit.
+    let exclude: Vec<&str> = base.iter().chain(&boundary).map(String::as_str).collect();
+    let commits = match b.range(&exclude, &head, limits.commits) {
         Ok(Some(c)) => c,
         // Past the limit, no commit is checked: a check of only some commits
         // would say nothing about the rest.
@@ -134,12 +207,19 @@ fn check_bundle(
     // a snapshot is dropped from the cache after its last such comparison, so
     // a check of the whole history does not keep every snapshot in memory.
     let mut uses: BTreeMap<String, usize> = BTreeMap::new();
-    for (_, parents) in &commits {
+    let initial = match first_commits(b, &commits, boundary.as_deref()) {
+        Ok(initial) => initial,
+        Err(e) => return undetermined(f, report.target, e.to_string()),
+    };
+    for (commit, parents) in &commits {
         if let [parent] = parents.as_slice() {
-            *uses.entry(parent.clone()).or_default() += 1;
+            if !initial.contains(commit) {
+                *uses.entry(parent.clone()).or_default() += 1;
+            }
         }
     }
     for (commit, parents) in commits {
+        let first = initial.contains(&commit);
         if crate::cancellation::checkpoint() {
             return undetermined(f, report.target, GitError::Cancelled.to_string());
         }
@@ -151,7 +231,7 @@ fn check_bundle(
             return undetermined(f, report.target, why);
         }
         let last_use = match parents.as_slice() {
-            [parent] => uses.get_mut(parent).is_some_and(|n| {
+            [parent] if !first => uses.get_mut(parent).is_some_and(|n| {
                 *n -= 1;
                 *n == 0
             }),
@@ -190,12 +270,12 @@ fn check_bundle(
             let Some((kind, declared)) = declared_change(&commit, &at, &message, &mut f) else {
                 break 'commit;
             };
-            let parent = parents.first();
+            let parent = parents.first().filter(|_| !first);
             let (layout, first_kind) = match repository {
                 RepositoryKind::Law => ("law", "revisionAdd"),
                 RepositoryKind::Registry => ("registry", "metadata"),
             };
-            if parent.is_none() && kind != first_kind {
+            if first && kind != first_kind {
                 f.error(
                     CH,
                     "CHG-03",
@@ -207,7 +287,7 @@ fn check_bundle(
                 break 'commit;
             }
             let change = Change {
-                initial: parent.is_none(),
+                initial: first,
                 commit: &commit,
                 at: &at,
                 kind: &kind,
@@ -250,6 +330,45 @@ fn check_bundle(
     let mut r = f.into_report(&[CH]);
     r.target = report.target;
     r
+}
+
+/// The commits of the list that are first commits, compared with no record
+/// before them (CHG-02, CHG-03): those without a parent and, with a legacy
+/// boundary, those whose one parent is a legacy commit (the boundary or one of
+/// its ancestors). A legacy commit has no record, so its tree is never
+/// compared. A canonical commit on a legacy commit other than the boundary
+/// cannot be the only start of the canonical branch (the boundary is reachable
+/// from `head`), so a merge commit joining it is reported in any case. Merge
+/// commits are not compared at all, so they are never first commits.
+fn first_commits(
+    b: &Bundle,
+    commits: &[crate::git::CommitParents],
+    boundary: Option<&str>,
+) -> Result<BTreeSet<String>, GitError> {
+    let listed: BTreeSet<&str> = commits.iter().map(|(c, _)| c.as_str()).collect();
+    let mut legacy: BTreeMap<&str, bool> = BTreeMap::new();
+    let mut first = BTreeSet::new();
+    for (commit, parents) in commits {
+        let is_first = match (parents.as_slice(), boundary) {
+            ([], _) => true,
+            // A listed parent is canonical: the legacy commits are excluded.
+            ([parent], Some(boundary)) if !listed.contains(parent.as_str()) => {
+                match legacy.get(parent.as_str()) {
+                    Some(known) => *known,
+                    None => {
+                        let known = b.is_ancestor(parent, boundary)?;
+                        legacy.insert(parent, known);
+                        known
+                    }
+                }
+            }
+            _ => false,
+        };
+        if is_first {
+            first.insert(commit.clone());
+        }
+    }
+    Ok(first)
 }
 
 /// One commit of the range and the change it declares.
@@ -532,8 +651,11 @@ mod tests {
             &b,
             Findings::default(),
             Report::default(),
-            Some(&c[0]),
-            &c[1],
+            &Range {
+                base: Some(&c[0]),
+                head: &c[1],
+                legacy_boundary: None,
+            },
             RepositoryKind::Law,
             &LIMITS,
         );
@@ -928,12 +1050,16 @@ mod tests {
     /// The check with `limits` in place of [`LIMITS`].
     fn check_with(path: &Path, base: Option<&str>, head: &str, limits: &Limits) -> Report {
         let b = Bundle::open(path).unwrap();
+        let range = Range {
+            base,
+            head,
+            legacy_boundary: None,
+        };
         check_bundle(
             &b,
             Findings::default(),
             Report::default(),
-            base,
-            head,
+            &range,
             RepositoryKind::Law,
             limits,
         )
@@ -1071,8 +1197,210 @@ mod tests {
             ],
             None,
         );
-        let r = check_repository(&s.bundle_head(&head), None, &head, RepositoryKind::Registry);
+        let r = check_repository(
+            &s.bundle_head(&head),
+            None,
+            &head,
+            None,
+            RepositoryKind::Registry,
+        );
         assert_eq!(result(&r), ResultValue::Pass, "{:?}", r.diagnostics);
+    }
+
+    /// A commit of the given tree, parents and message.
+    fn commit_of(s: &Scratch, tree: &str, parents: &[&str], msg: &str) -> String {
+        let mut args = vec!["commit-tree", tree];
+        for p in parents {
+            args.extend(["-p", p]);
+        }
+        args.extend(["-m", msg]);
+        s.run(&args, None)
+    }
+
+    fn errors(r: &Report) -> Vec<(String, String)> {
+        r.diagnostics
+            .iter()
+            .filter(|d| d.is_error())
+            .map(|d| (d.rule.clone(), d.message.clone()))
+            .collect()
+    }
+
+    /// With a legacy boundary, the boundary and its ancestors (without
+    /// declarations, with a merge commit) are not checked, and the canonical
+    /// commit on the boundary is a first commit: it must declare `revisionAdd`
+    /// and is compared with no record, not with the tree of the boundary (whose
+    /// `history.yaml` it would otherwise change). A `base` among the legacy
+    /// commits checks from the first commit on.
+    #[test]
+    fn a_legacy_boundary_excludes_the_legacy_commits() {
+        let s = Scratch::new();
+        let blob = |text: &[u8]| s.run(&["hash-object", "-w", "--stdin"], Some(text));
+        let tree = |text: &[u8]| {
+            let spec = format!("100644 blob {}\thistory.yaml\n", blob(text));
+            s.run(&["mktree"], Some(spec.as_bytes()))
+        };
+        let (legacy_tree, other_tree) = (tree(b"old: 1\n"), tree(b"old: 2\n"));
+        let empty = s.run(&["mktree"], Some(b""));
+        let root = commit_of(&s, &legacy_tree, &[], "legacy root\n");
+        let side = commit_of(&s, &other_tree, &[&root], "legacy side\n");
+        let boundary = commit_of(&s, &legacy_tree, &[&root, &side], "legacy merge\n");
+        // The first commit removes the legacy file: compared with the tree of
+        // the boundary, it would change a history manifest that has no record.
+        let first = commit_of(
+            &s,
+            &empty,
+            &[&boundary],
+            "first\n\nLoJ-Change: revisionAdd\n",
+        );
+        let path = s.bundle_head(&first);
+        let with = |base: Option<&str>, boundary: Option<&str>| {
+            check_repository(&path, base, &first, boundary, RepositoryKind::Law)
+        };
+        for base in [None, Some(root.as_str()), Some(boundary.as_str())] {
+            let r = with(base, Some(&boundary));
+            assert_eq!(
+                result(&r),
+                ResultValue::Pass,
+                "{base:?} {:?}",
+                r.diagnostics
+            );
+        }
+        // Without the boundary, the legacy commits are reported.
+        let r = with(None, None);
+        assert_eq!(result(&r), ResultValue::Fail);
+        for c in [&root, &side, &boundary] {
+            assert_eq!(at_of(&r, c), 1, "{:?}", r.diagnostics);
+        }
+        // A first commit on the boundary declares revisionAdd.
+        let format = commit_of(&s, &empty, &[&boundary], "fmt\n\nLoJ-Change: format\n");
+        let r = check_repository(
+            &s.bundle_head(&format),
+            None,
+            &format,
+            Some(&boundary),
+            RepositoryKind::Law,
+        );
+        assert_eq!(
+            errors(&r),
+            [(
+                "CHG-03".to_owned(),
+                "first law commit must declare revisionAdd".to_owned()
+            )]
+        );
+        // A later commit is compared with its canonical parent as before.
+        let second = commit_of(&s, &empty, &[&first], "second\n\nLoJ-Change: format\n");
+        let r = check_repository(
+            &s.bundle_head(&second),
+            None,
+            &second,
+            Some(&boundary),
+            RepositoryKind::Law,
+        );
+        assert_eq!(result(&r), ResultValue::Pass, "{:?}", r.diagnostics);
+    }
+
+    /// A branch merged in from another parent is canonical unless it is
+    /// reached from the boundary: its commits are checked, and a commit on a
+    /// legacy commit other than the boundary is compared with no record.
+    #[test]
+    fn a_merged_branch_is_canonical_unless_reached_from_the_boundary() {
+        let s = Scratch::new();
+        let empty = s.run(&["mktree"], Some(b""));
+        let root = commit_of(&s, &empty, &[], "legacy root\n");
+        let boundary = commit_of(&s, &empty, &[&root], "legacy\n");
+        let first = commit_of(&s, &empty, &[&boundary], "a\n\nLoJ-Change: revisionAdd\n");
+        // Starts on the legacy root, which is not the boundary, and declares
+        // nothing: it is a canonical commit and is reported.
+        let stray = commit_of(&s, &empty, &[&root], "undeclared\n");
+        let merge = commit_of(&s, &empty, &[&first, &stray], "m\n\nLoJ-Change: format\n");
+        let r = check_repository(
+            &s.bundle_head(&merge),
+            None,
+            &merge,
+            Some(&boundary),
+            RepositoryKind::Law,
+        );
+        assert_eq!(result(&r), ResultValue::Fail);
+        assert_eq!(at_of(&r, &stray), 1, "{:?}", r.diagnostics);
+        assert_eq!(at_of(&r, &merge), 1, "{:?}", r.diagnostics);
+        assert_eq!(at_of(&r, &first), 0, "{:?}", r.diagnostics);
+        assert_eq!(at_of(&r, &root), 0, "{:?}", r.diagnostics);
+        assert_eq!(at_of(&r, &boundary), 0, "{:?}", r.diagnostics);
+    }
+
+    /// A merge commit with the boundary as one of its parents is a canonical
+    /// commit: it fails CHG-03 as a merge commit and is not a first commit,
+    /// while the boundary itself is still not reported.
+    #[test]
+    fn a_merge_commit_on_the_boundary_is_reported() {
+        let s = Scratch::new();
+        let empty = s.run(&["mktree"], Some(b""));
+        let boundary = commit_of(&s, &empty, &[], "legacy\n");
+        let first = commit_of(&s, &empty, &[&boundary], "a\n\nLoJ-Change: revisionAdd\n");
+        let merge = commit_of(
+            &s,
+            &empty,
+            &[&first, &boundary],
+            "m\n\nLoJ-Change: revisionAdd\n",
+        );
+        let r = check_repository(
+            &s.bundle_head(&merge),
+            None,
+            &merge,
+            Some(&boundary),
+            RepositoryKind::Law,
+        );
+        assert_eq!(result(&r), ResultValue::Fail);
+        assert_eq!(
+            errors(&r),
+            [(
+                "CHG-03".to_owned(),
+                "merge commits are not permitted".to_owned()
+            )]
+        );
+        assert_eq!(at_of(&r, &merge), 1, "{:?}", r.diagnostics);
+        assert_eq!(at_of(&r, &boundary), 0, "{:?}", r.diagnostics);
+    }
+
+    /// A boundary that is absent, `head` itself, not reached from `head`, or
+    /// given for a registry fails CHG-03 once, and no commit is checked. An
+    /// invalid revision is absent, not a git failure.
+    #[test]
+    fn an_unusable_legacy_boundary_fails_without_checking_commits() {
+        let s = Scratch::new();
+        let empty = s.run(&["mktree"], Some(b""));
+        let root = commit_of(&s, &empty, &[], "legacy\n");
+        let head = commit_of(&s, &empty, &[&root], "undeclared\n");
+        // In the bundle, but a child of `head`, not an ancestor.
+        let elsewhere = commit_of(&s, &empty, &[&head], "later\n");
+        let path = s.bundle_head(&elsewhere);
+        let absent = "0123456789abcdef0123456789abcdef01234567";
+        for (boundary, kind, problem) in [
+            (absent, RepositoryKind::Law, "is not a commit in the bundle"),
+            (
+                "--all",
+                RepositoryKind::Law,
+                "is not a commit in the bundle",
+            ),
+            (head.as_str(), RepositoryKind::Law, "is head itself"),
+            (
+                elsewhere.as_str(),
+                RepositoryKind::Law,
+                "is not reachable from head",
+            ),
+            (
+                root.as_str(),
+                RepositoryKind::Registry,
+                "registry repository",
+            ),
+        ] {
+            let r = check_repository(&path, None, &head, Some(boundary), kind);
+            assert_eq!(result(&r), ResultValue::Fail, "{boundary}");
+            let found = errors(&r);
+            assert_eq!(found.len(), 1, "{boundary}: {found:?}");
+            assert_eq!(found[0].0, "CHG-03");
+            assert!(found[0].1.contains(problem), "{boundary}: {found:?}");
+        }
     }
 
     #[test]

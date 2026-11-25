@@ -37,11 +37,14 @@ pub enum Input {
     /// Commits of a law or registry repository in a `git bundle` (CHG-02, CHG-03): those
     /// after `base` up to `head`, or, without `base`, every commit reachable
     /// from `head`, from the first commit (the commit without a parent) on.
+    /// With `legacy_boundary`, it and its ancestors are legacy commits, not
+    /// checked, and the canonical commits on it are first commits (CHG-03).
     Change {
         repository: RepositoryKind,
         bundle: PathBuf,
         base: Option<String>,
         head: String,
+        legacy_boundary: Option<String>,
     },
     /// A fixed or Revision reference resolved against a bundle and the registry.
     Reference {
@@ -112,8 +115,15 @@ pub fn run_with_space(input: &Input, checks: &[Check], space: Option<&str>) -> R
             bundle,
             base,
             head,
+            legacy_boundary,
             repository,
-        } => crate::change::check_repository(bundle, base.as_deref(), head, *repository),
+        } => crate::change::check_repository(
+            bundle,
+            base.as_deref(),
+            head,
+            legacy_boundary.as_deref(),
+            *repository,
+        ),
         Input::Reference {
             bundle,
             registry,

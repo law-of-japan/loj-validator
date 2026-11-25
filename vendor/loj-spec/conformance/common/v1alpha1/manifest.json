@@ -1457,6 +1457,107 @@
       },
       "expected": "conformance/common/v1alpha1/expected/common-064.json",
       "success": true
+    },
+    {
+      "id": "common-065",
+      "title": "旧リポジトリのcommitの上に始めた正本ブランチを、旧履歴の境界を与えて検査する",
+      "requirements": [
+        "CHG-02",
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-065/repo.bundle",
+        "head": "70a843cb063993a7119820ea1504689dca39c49b",
+        "legacyBoundary": "106dac1ef387d3ac814f2e858975588c915fdc03"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-065.json",
+      "success": true
+    },
+    {
+      "id": "common-066",
+      "title": "旧履歴の境界を与え、旧履歴のcommitをbaseとして検査する",
+      "requirements": [
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-065/repo.bundle",
+        "base": "43922c828b2701a9d2e2f6bddb735e8785e65e40",
+        "head": "70a843cb063993a7119820ea1504689dca39c49b",
+        "legacyBoundary": "106dac1ef387d3ac814f2e858975588c915fdc03"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-066.json",
+      "success": true
+    },
+    {
+      "id": "common-067",
+      "title": "旧リポジトリのcommitの上に始めた正本ブランチを、旧履歴の境界を与えずに検査する",
+      "requirements": [
+        "CHG-02",
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-067/repo.bundle",
+        "head": "70a843cb063993a7119820ea1504689dca39c49b"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-067.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-067/repo.bundle",
+          "from": "conformance/common/v1alpha1/valid/common-065/repo.bundle",
+          "edits": []
+        }
+      ]
+    },
+    {
+      "id": "common-068",
+      "title": "headそのものを旧履歴の境界として与える",
+      "requirements": [
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-068/repo.bundle",
+        "head": "70a843cb063993a7119820ea1504689dca39c49b",
+        "legacyBoundary": "70a843cb063993a7119820ea1504689dca39c49b"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-068.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/invalid/common-068/repo.bundle",
+          "from": "conformance/common/v1alpha1/valid/common-065/repo.bundle",
+          "edits": []
+        }
+      ]
+    },
+    {
+      "id": "common-069",
+      "title": "旧履歴の境界を親とする最初のcommitを、書式変更と宣言する",
+      "requirements": [
+        "CHG-03"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-069/repo.bundle",
+        "head": "87fd4c92cd587478d20b2f3d54a02c21ec4b538f",
+        "legacyBoundary": "106dac1ef387d3ac814f2e858975588c915fdc03"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-069.json",
+      "success": false
     }
   ]
 }
