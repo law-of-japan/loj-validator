@@ -250,11 +250,20 @@ fn determining_record_is_looked_up_in_its_registration_space() {
         registry: dir.0.join("registry"),
         repositories: vec![dir.0.join("repo")],
     };
+    let mut withdrawn = record("retired");
+    withdrawn["status"] = json!("withdrawn");
+    dir.write("registry/records/retired.yaml", withdrawn.to_string());
     let check = Check::RELATION_RESOLUTION;
-    for (id, space, result) in [
-        ("unknown", "alpha", ResultValue::Pass),
-        ("unknown", "beta", ResultValue::Incomplete),
-        ("unissued", "alpha", ResultValue::Incomplete),
+    for (id, space, result, resolution) in [
+        ("unknown", "alpha", ResultValue::Pass, "resolved"),
+        (
+            "retired",
+            "alpha",
+            ResultValue::Pass,
+            "nonexistentConfirmed",
+        ),
+        ("unknown", "beta", ResultValue::Incomplete, "notFetched"),
+        ("unissued", "alpha", ResultValue::Incomplete, "notFetched"),
     ] {
         let h = json!({"schemaVersion":"loj-history/v1alpha1","record":{"id":"unknown"},
             "revisions":[{"effective":{"base":{"determinedBy":{"record":{"id":id,"space":space}}}}}]});
@@ -264,7 +273,7 @@ fn determining_record_is_looked_up_in_its_registration_space() {
         assert!(report
             .references
             .iter()
-            .any(|r| r["target"] == format!("loj:{space}/{id}")));
+            .any(|r| r["target"] == format!("loj:{space}/{id}") && r["result"] == resolution));
     }
 }
 
