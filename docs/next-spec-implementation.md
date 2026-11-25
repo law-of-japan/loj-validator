@@ -1,6 +1,6 @@
 # Next specification implementation (loj/v1alpha2 and the new kinds)
 
-Target: loj-spec commit `bd7718aaec3a92421c1ffcd987693ba69fc0777e`, vendored as
+Target: loj-spec commit `728b347cc5e01d1c1f2ebb918e86e077089c5634`, vendored as
 `spec`, `schemas`, `conformance`, `grammar/v1alpha2` and `LICENSE` in `vendor/loj-spec` with `COMMIT` and
 `SHA256SUMS.json`. The v1alpha1 fixtures of `b704631` stay unchanged in
 `vendor/loj-spec-v1alpha1`; the v1alpha1 and legacy pipelines are unchanged.
@@ -100,6 +100,17 @@ so this migration introduces no further shared layer.
   satisfied when there are no versions to compare. An incorrect root declaration raises CHG-03 and skips CHG-02 and CHG-04
   (the file mode included). A history with two or more roots joins them in a merge
   commit, which is a CHG-03 error; each root is checked as a first commit.
+  With a legacy boundary (CLI: `--legacy-boundary`; conformance: `legacyBoundary`,
+  common-065..069), the range is `git rev-list <head> ^<base> ^<boundary>`: the
+  boundary and its ancestors are legacy commits, never checked or reported, and a
+  `base` among them checks from the first commit on. A canonical commit whose one
+  parent is a legacy commit (`merge-base --is-ancestor` against the boundary, for
+  parents outside the list) is a first commit, compared with no record, never with
+  the boundary's tree. A branch merged in from another parent stays canonical unless
+  it is reached from the boundary. A boundary not in the bundle, equal to `head`,
+  not an ancestor of `head`, or given for a registry fails CHG-03 once, at
+  `legacy boundary`, without any commit being checked. The boundary is never
+  inferred from files or trailers.
   A snapshot is dropped from memory after the last commit compared with it.
   At most 10,000 commits are checked: `rev-list` lists at most one more
   (`--max-count`), and with more the check is incomplete ("more than 10000 commits
@@ -187,7 +198,8 @@ so this migration introduces no further shared layer.
 loj-validator check PATH [--level L0|L1|L3|L4]... [--category NAME]... [--check NAME]...
                          [--format json|text] [--ast FILE] [--registration-space SPACE] [--record ID]
 loj-validator check --registry DIR --repository DIR... [--category NAME]...
-loj-validator check BUNDLE [--base COMMIT] --head COMMIT
+loj-validator check BUNDLE [--repository-kind law|registry] [--base COMMIT] --head COMMIT
+                           [--legacy-boundary COMMIT]
 loj-validator check BUNDLE --registry DIR --reference REF
 ```
 
@@ -213,7 +225,7 @@ or nothing passed.
 | Suite | Normative | Passed | Informative (not counted) |
 |---|---|---|---|
 | loj/v1alpha2 | 230 | 230 | 1 (pkg-026, L2) |
-| common/v1alpha1 | 64 | 64 | 0 |
+| common/v1alpha1 | 69 | 69 | 0 |
 | loj-history/v1alpha1 | 61 | 61 | 0 |
 | loj-glyphs/v1alpha1 | 27 | 27 | 0 |
 | loj-registry/v1alpha1 | 13 | 13 | 0 |
@@ -223,7 +235,7 @@ Passing the fixed cases is a necessary condition only (CONF-02).
 
 ## Normative boundaries
 
-- There are 400 normative cases and one informative L2 case. `derivedFrom` and
+- There are 405 normative cases and one informative L2 case. `derivedFrom` and
   `rejectedBy` are audit metadata, never instructions to regenerate or skip inputs.
 - MD-04 emptiness uses the 25 Unicode 15.1 White_Space code points. Paragraph
   captions require `caption=present`; Toc placement and mixed number scripts are

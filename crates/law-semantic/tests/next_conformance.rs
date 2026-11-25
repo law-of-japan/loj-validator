@@ -126,6 +126,7 @@ fn run(case: &Value, checks: &[Check]) -> Actual {
                     // `base` is omitted for a check from the first commit.
                     base: input["base"].as_str().map(Into::into),
                     head: input["head"].as_str().unwrap().into(),
+                    legacy_boundary: input["legacyBoundary"].as_str().map(Into::into),
                 },
                 checks,
                 Some("loj"),

@@ -161,11 +161,16 @@
                     "pattern": "^[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*$"
                   },
                   "base": {
-                    "description": "The commit to compare from: the commits after it up to head are checked in order. Omitted for a check from the first commit of the repository: every commit from the commit without a parent up to head is checked in order, the first one with no record before it (CHG-03).",
+                    "description": "The commit to compare from: the commits after it up to head are checked in order. Omitted for a check from the first commit of the canonical branch: every commit from the first commit up to head is checked in order, the first one with no record before it (CHG-03). The first commit is the commit without a parent, or the child of legacyBoundary when it is given.",
                     "type": "string",
                     "minLength": 1
                   },
                   "head": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "legacyBoundary": {
+                    "description": "The legacy boundary of a law repository whose canonical branch starts on a commit of the legacy repository, given to the change check as input (CHG-03): the parent of the first commit of the canonical branch. It and the commits reached from it by parents are legacy commits, not checked. Omitted when the canonical branch starts with a commit without a parent.",
                     "type": "string",
                     "minLength": 1
                   },

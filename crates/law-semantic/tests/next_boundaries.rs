@@ -19,6 +19,7 @@ fn library_git_cancellation_is_incomplete_not_a_violation() {
         bundle: scratch.0.join("input.bundle"),
         base: Some("aaaa".into()),
         head: "bbbb".into(),
+        legacy_boundary: None,
     };
     let report = law_semantic::cancellation::with_flag(Arc::new(AtomicBool::new(true)), || {
         run_with_space(&input, &[Check::CHANGE], None)

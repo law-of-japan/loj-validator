@@ -183,6 +183,49 @@ fn change_and_reference() {
     ]);
     assert_eq!(code, 2, "{r}");
     assert_eq!(r["errors"][0]["kind"], "usage", "{r}");
+    // --legacy-boundary excludes the legacy commits (common-065, common-067).
+    let legacy = manifest["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["id"] == "common-065")
+        .unwrap();
+    let bundle = format!("{c}/valid/common-065/repo.bundle");
+    let legacy_head = format!("--head={}", legacy["input"]["head"].as_str().unwrap());
+    let boundary = format!(
+        "--legacy-boundary={}",
+        legacy["input"]["legacyBoundary"].as_str().unwrap()
+    );
+    let (code, r) = json(&["check", &bundle, &legacy_head, &boundary]);
+    assert_eq!(code, 0, "{r}");
+    assert_eq!(r["results"][0]["result"], "pass");
+    let (code, r) = json(&["check", &bundle, &legacy_head]);
+    assert_eq!(code, 1, "{r}");
+    // A boundary given for a registry fails CHG-03; one without a change check
+    // or given twice is a usage error.
+    let (code, r) = json(&[
+        "check",
+        &bundle,
+        &legacy_head,
+        &boundary,
+        "--repository-kind=registry",
+    ]);
+    assert_eq!(code, 1, "{r}");
+    assert_eq!(r["diagnostics"][0]["rule"], "CHG-03", "{r}");
+    for args in [
+        vec!["check", bundle.as_str(), boundary.as_str()],
+        vec![
+            "check",
+            bundle.as_str(),
+            legacy_head.as_str(),
+            boundary.as_str(),
+            boundary.as_str(),
+        ],
+    ] {
+        let (code, r) = json(&args);
+        assert_eq!(code, 2, "{r}");
+        assert_eq!(r["errors"][0]["kind"], "usage", "{r}");
+    }
     let (code, r) = json(&[
         "check",
         &format!("{c}/valid/common-004/repo.bundle"),

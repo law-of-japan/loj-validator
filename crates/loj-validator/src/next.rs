@@ -9,7 +9,8 @@ pub const USAGE: &str = "next specification (loj/v1alpha2 and history, glyphs, r
   loj-validator check PATH [--level L0|L1|L3|L4]... [--category NAME]... [--check NAME]...
                      [--format json|text] [--ast FILE] [--registration-space SPACE] [--record ID]
   loj-validator check --registry DIR --repository DIR... [--level L4] [--category NAME]...
-  loj-validator check BUNDLE [--repository-kind law|registry] [--base COMMIT] --head COMMIT      (change check, CHG-02/03)
+  loj-validator check BUNDLE [--repository-kind law|registry] [--base COMMIT] --head COMMIT
+                     [--legacy-boundary COMMIT]     (change check, CHG-02/03)
   loj-validator check BUNDLE --registry DIR --reference REF     (reference resolution)
 
   PATH is law.yaml or its directory (package), a law repository (history.yaml),
@@ -18,6 +19,10 @@ pub const USAGE: &str = "next specification (loj/v1alpha2 and history, glyphs, r
   The default repository kind for change checks is law.
   Without --base, the change check covers every commit reachable from --head,
   from the first commit (the commit without a parent) on.
+  --legacy-boundary COMMIT is the parent of the first commit of a canonical
+  branch started on a legacy repository commit: it and its ancestors are not
+  checked, and its children are checked as first commits. It is never inferred;
+  one that is not an ancestor of --head (or is given for a registry) fails CHG-03.
   --registration-space SPACE supplies the registry space ([a-z][a-z0-9-]*);
   no default is inferred from space.yaml. --record ID selects a repository/records report.
   --ast is package-only; --registration-space requires a registry input.
@@ -58,6 +63,7 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
     let mut record = None;
     let mut repositories = Vec::new();
     let (mut base, mut head, mut reference) = (None, None, None);
+    let mut legacy_boundary = None;
     let mut json = false;
     let mut ast = None;
     let mut rest = args.iter();
@@ -97,6 +103,7 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
             "--repository-kind" => once(&mut repository_kind, value)?,
             "--base" => once(&mut base, value)?,
             "--head" => once(&mut head, value)?,
+            "--legacy-boundary" => once(&mut legacy_boundary, value)?,
             "--reference" => once(&mut reference, value)?,
             "--format" => match value.as_str() {
                 "json" => json = true,
@@ -120,11 +127,15 @@ pub fn parse(args: &[String]) -> Result<Args, String> {
     if repository_kind.is_some() && head.is_none() {
         return Err("--repository-kind requires a change check".into());
     }
+    if legacy_boundary.is_some() && head.is_none() {
+        return Err("--legacy-boundary requires a change check".into());
+    }
     let input = match (path, registry, base, head, reference) {
         (Some(bundle), None, base, Some(head), None) if repositories.is_empty() => Input::Change {
             bundle,
             base,
             head,
+            legacy_boundary,
             repository: match repository_kind.as_deref() {
                 None | Some("law") => RepositoryKind::Law,
                 Some("registry") => RepositoryKind::Registry,
