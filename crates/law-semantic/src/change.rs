@@ -1328,6 +1328,40 @@ mod tests {
         assert_eq!(at_of(&r, &boundary), 0, "{:?}", r.diagnostics);
     }
 
+    /// A merge commit with the boundary as one of its parents is a canonical
+    /// commit: it fails CHG-03 as a merge commit and is not a first commit,
+    /// while the boundary itself is still not reported.
+    #[test]
+    fn a_merge_commit_on_the_boundary_is_reported() {
+        let s = Scratch::new();
+        let empty = s.run(&["mktree"], Some(b""));
+        let boundary = commit_of(&s, &empty, &[], "legacy\n");
+        let first = commit_of(&s, &empty, &[&boundary], "a\n\nLoJ-Change: revisionAdd\n");
+        let merge = commit_of(
+            &s,
+            &empty,
+            &[&first, &boundary],
+            "m\n\nLoJ-Change: revisionAdd\n",
+        );
+        let r = check_repository(
+            &s.bundle_head(&merge),
+            None,
+            &merge,
+            Some(&boundary),
+            RepositoryKind::Law,
+        );
+        assert_eq!(result(&r), ResultValue::Fail);
+        assert_eq!(
+            errors(&r),
+            [(
+                "CHG-03".to_owned(),
+                "merge commits are not permitted".to_owned()
+            )]
+        );
+        assert_eq!(at_of(&r, &merge), 1, "{:?}", r.diagnostics);
+        assert_eq!(at_of(&r, &boundary), 0, "{:?}", r.diagnostics);
+    }
+
     /// A boundary that is absent, `head` itself, not reached from `head`, or
     /// given for a registry fails CHG-03 once, and no commit is checked. An
     /// invalid revision is absent, not a git failure.
