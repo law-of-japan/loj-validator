@@ -318,6 +318,13 @@ impl Subject<'_> {
                 ));
             }
         }
+        let mut points = Vec::new();
+        crate::repository::history::time_points(h, String::new(), &mut points);
+        for (ptr, point) in points {
+            if let Some(record) = point.pointer("/determinedBy/record") {
+                endpoints.push((format!("{ptr}/determinedBy/record"), record, false));
+            }
+        }
         for (ptr, rref, confirmed) in endpoints {
             let res = reg.resolve(rref);
             if let Some(target) = reg.target(rref) {

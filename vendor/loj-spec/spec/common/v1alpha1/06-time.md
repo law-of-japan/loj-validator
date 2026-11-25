@@ -46,6 +46,7 @@
 - `pending`は、定め方の原文を`raw`に、委任先・条件を`delegation`（原文と出典）に持つ。
 - `pending`の時点が法令上確定した場合は、`state: date`とし、確定前の定め方を`delegation`に、確定させた根拠（施行期日政令等のRecordと出典）を`determinedBy`に保持しなければならない（MUST）。確定前の値を消してはならない（MUST NOT）。
 - `determinedBy`を持つ時点値は、`delegation`を持たなければならない（MUST）。
+- `determinedBy`の`record`（RecordRef）は、登録台帳に登録した施行期日政令等のRecordを指す。根拠の法令が登録台帳になければ、`notCollected`のRecordとして登録して指し、未登録を表す仮の値を置かない（[TYPE-01](05-types.md#type-01-recordref)）。
 
 ## TIME-05 unknownとnotApplicable
 

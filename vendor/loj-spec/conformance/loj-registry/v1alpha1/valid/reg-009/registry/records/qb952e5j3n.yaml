@@ -1,0 +1,23 @@
+schemaVersion: loj-registry/v1alpha1
+id: qb952e5j3n
+label: 昭和二十四年政令第二百九十三号
+status: active
+identity:
+  evidence: [{source: src-egov-s24-70, locator: 附則第一項}]
+  verification: {state: unverified, reason: 官報と未照合}
+collection: {state: notCollected}
+sources:
+  - {id: src-egov-s24-70, kind: egov, title: e-Gov 鉱山保安法, uri: https://laws.e-gov.go.jp/law/324AC0000000070}
+numbers:
+  - id: n1
+    state: exists
+    raw: 政令第二百九十三号
+    structured:
+      system: 政令
+      period: {raw: 昭和二十四年, gregorian: {from: "1949-01-01", to: "1949-12-31"}}
+      series: {state: regular}
+      number: "293"
+    evidence: [{source: src-egov-s24-70, locator: 附則第一項の施行期日の政令}]
+    verification: {state: unverified, reason: 官報と未照合}
+    decision: adopted
+externalIds: []

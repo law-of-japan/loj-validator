@@ -1,6 +1,6 @@
 # Next specification implementation (loj/v1alpha2 and the new kinds)
 
-Target: loj-spec commit `728b347cc5e01d1c1f2ebb918e86e077089c5634`, vendored as
+Target: loj-spec commit `3009dd02c7c3d3cd66ddcb3f96671dd233d5b8db`, vendored as
 `spec`, `schemas`, `conformance`, `grammar/v1alpha2` and `LICENSE` in `vendor/loj-spec` with `COMMIT` and
 `SHA256SUMS.json`. The v1alpha1 fixtures of `b704631` stay unchanged in
 `vendor/loj-spec-v1alpha1`; the v1alpha1 and legacy pipelines are unchanged.
@@ -69,6 +69,12 @@ so this migration introduces no further shared layer.
   not in the file counts for neither (TYPE-03 reports it). Which locator shows the
   illegible place, and whether the other Source is an original, are left to L3
   source comparison.
+- HIST-05: every complete or partial staged-enactment package, including an
+  intervening amendment, is checked as supplied, with provisions awaiting
+  commencement included. Partial packages declare missing scopes in `gaps`.
+  Establishing that only those scopes are missing and that every amendment
+  is reflected requires comparison with the promulgated sources. The validator
+  does not generate the date-specific views governed by VIEW-02.
 - L4 `notFetched` references make the category `incomplete`, never `fail`.
 - Registration space is explicit input (`run_with_space`, `--registration-space`).
   There is no implicit `loj` and `space.yaml` is ignored. Omitted-space RecordRefs
@@ -226,7 +232,7 @@ or nothing passed.
 |---|---|---|---|
 | loj/v1alpha2 | 230 | 230 | 1 (pkg-026, L2) |
 | common/v1alpha1 | 69 | 69 | 0 |
-| loj-history/v1alpha1 | 61 | 61 | 0 |
+| loj-history/v1alpha1 | 62 | 62 | 0 |
 | loj-glyphs/v1alpha1 | 27 | 27 | 0 |
 | loj-registry/v1alpha1 | 13 | 13 | 0 |
 | loj-rebuild/v1alpha1 | 5 | 5 | 0 |
@@ -235,7 +241,7 @@ Passing the fixed cases is a necessary condition only (CONF-02).
 
 ## Normative boundaries
 
-- There are 405 normative cases and one informative L2 case. `derivedFrom` and
+- There are 406 normative cases and one informative L2 case. `derivedFrom` and
   `rejectedBy` are audit metadata, never instructions to regenerate or skip inputs.
 - MD-04 emptiness uses the 25 Unicode 15.1 White_Space code points. Paragraph
   captions require `caption=present`; Toc placement and mixed number scripts are

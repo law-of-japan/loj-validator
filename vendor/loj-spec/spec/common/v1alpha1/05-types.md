@@ -11,6 +11,9 @@
 | `label` | 任意 | 表示用の名前（例: 平成十七年法律第四十三号） |
 
 - Recordは、登録空間とRecord IDの組で指さなければならない（MUST）。リポジトリのURLで指してはならない（MUST NOT）。
+- `id`は、参照する登録空間で発行したRecord IDでなければならない（MUST）。Recordを登録していないことや、Recordを特定していないことを表す仮の値（例: `unregistered`、`none`、`unknown`）を置いてはならない（MUST NOT）。例は列挙ではない。登録の管理主体が発行していないIDを、入力者が作って置くことも、これに当たる。
+- 参照するRecordが登録台帳にない場合は、そのRecordを登録し、発行したIDで指す。本文を収録しない法令も、`collection.state: notCollected`のRecordとして登録できる（[REG-02](../../loj-registry/v1alpha1/01-registry.md#reg-02-recordのファイル)）。
+- 仮の値は、Record IDの文字種（[RID-02](../../loj-registry/v1alpha1/02-record-ids.md#rid-02-idの文字種と長さ)）に合うことがあり、機械では一般に区別できない。登録台帳にないRecord IDは、関係の解決（L4）では未取得として報告され、違反にならない（[XREF-01](10-cross-record.md#xref-01-関係の解決)）。
 - `label`は表示用である。番号主張の代わりにしてはならない（MUST NOT）。参照の解決に使わない。
 
 ## TYPE-02 Source

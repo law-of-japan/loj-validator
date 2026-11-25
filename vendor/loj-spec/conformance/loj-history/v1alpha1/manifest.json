@@ -1766,11 +1766,29 @@
             {
               "file": "history.yaml",
               "old": "      delegation: {raw: この法律の施行の日以前に皇室典範第四条の規定による皇位の継承があったとき, evidence: [{source: src-egov-h29-63, locator: 附則第二条}]}\n",
-              "new": "      delegation: {raw: この法律の施行の日以前に皇室典範第四条の規定による皇位の継承があったとき, evidence: [{source: src-egov-h29-63, locator: 附則第二条}]}\n      determinedBy: {record: {id: unregistered, label: 平成二十九年政令第三百二号}, evidence: [{source: src-egov-h29-302, locator: 本則}]}\n"
+              "new": "      delegation: {raw: この法律の施行の日以前に皇室典範第四条の規定による皇位の継承があったとき, evidence: [{source: src-egov-h29-63, locator: 附則第二条}]}\n      determinedBy: {record: {id: tfy1ccapzk, label: 平成二十九年政令第三百二号}, evidence: [{source: src-egov-h29-302, locator: 本則}]}\n"
             }
           ]
         }
       ]
+    },
+    {
+      "id": "hist-062",
+      "title": "段階施行の二つの版（鉱山保安法）",
+      "requirements": [
+        "HIST-04",
+        "HIST-05",
+        "TIME-04"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/valid/hist-062/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-062.json",
+      "success": true
     }
   ]
 }

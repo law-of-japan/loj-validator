@@ -157,6 +157,18 @@ fn registry_space_is_explicit_and_replaced_by_requires_the_same_registry() {
         check(Some("beta")).result(Check::REGISTRY),
         Some(ResultValue::Fail)
     );
+    b["replacedBy"][0]["record"]["id"] = json!("never-issued");
+    dir.write("records/b7k2m9qd3x.yaml", b.to_string());
+    assert_eq!(
+        check(None).result(Check::REGISTRY),
+        Some(ResultValue::Incomplete)
+    );
+    assert_eq!(
+        check(Some("alpha")).result(Check::REGISTRY),
+        Some(ResultValue::Fail)
+    );
+    b["replacedBy"][0]["record"]["id"] = json!("a7k2m9qd3x");
+    dir.write("records/b7k2m9qd3x.yaml", b.to_string());
     let before = check(Some("alpha")).to_json();
     for bytes in [b"id: beta".as_slice(), b"not: [yaml", b"\xff"] {
         dir.write("space.yaml", bytes);
@@ -227,6 +239,35 @@ fn fragmented_caption_diagnostic_uses_the_later_source_fragment() {
         result.report.diagnostics
     );
 }
+#[test]
+fn determining_record_is_looked_up_in_its_registration_space() {
+    let dir = Scratch::new();
+    dir.write(
+        "registry/records/unknown.yaml",
+        record("unknown").to_string(),
+    );
+    let input = Input::Records {
+        registry: dir.0.join("registry"),
+        repositories: vec![dir.0.join("repo")],
+    };
+    let check = Check::RELATION_RESOLUTION;
+    for (id, space, result) in [
+        ("unknown", "alpha", ResultValue::Pass),
+        ("unknown", "beta", ResultValue::Incomplete),
+        ("unissued", "alpha", ResultValue::Incomplete),
+    ] {
+        let h = json!({"schemaVersion":"loj-history/v1alpha1","record":{"id":"unknown"},
+            "revisions":[{"effective":{"base":{"determinedBy":{"record":{"id":id,"space":space}}}}}]});
+        dir.write("repo/history.yaml", h.to_string());
+        let report = run_with_space(&input, &[check], Some("alpha"));
+        assert_eq!(report.result(check), Some(result));
+        assert!(report
+            .references
+            .iter()
+            .any(|r| r["target"] == format!("loj:{space}/{id}")));
+    }
+}
+
 #[test]
 fn duplicate_or_unidentified_l4_inputs_are_incomplete() {
     let dir = Scratch::new();
