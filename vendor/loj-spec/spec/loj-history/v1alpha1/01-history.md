@@ -79,6 +79,10 @@
 - 起点以外のRevisionは、成立根拠`basis`を持たなければならない（MUST）。起点（`origin`を持つRevision）は、`basis`を持ってはならない（MUST NOT）。
 - `basis`は、項目を一つだけ持つ配列とする。項目は、関係の`id`（`relation`）とその内訳の`id`の一覧（`items`）の組か、制定時の段階施行（`enactment`）のどちらかである。一つのRevisionの`basis`は、一つの関係の内訳（同じ改正法令）に限る。
 - 制定時に施行時点が複数ある法令（段階施行）は、最初の施行の版を起点（`origin: enactment`）とし、起点に続くRevisionの`basis`を`enactment`（`scope`、`evidence`）とする。
+- 段階施行の法令（起点が`origin: enactment`で、`basis`が`enactment`の`status: active`のRevisionを持つ法令）の版のうち、版パッケージを持つ版（`text.status`が`complete`・`partial`）の本文は、制定時に公布された本文の全体に、その版までの改正を反映したものでなければならない（MUST）。`partial`の版は、`gaps`の範囲だけを欠いてよい。その版の施行時点で後の施行時点を待つ規定（未施行の規定）を、未施行であることを理由に本文から除いてはならない（MUST NOT）。未施行の規定を除くと、版の中の参照（「第四條の規定」等）が解決しなくなり、版ごとにノードの集合が変わるためである。
+- この要求は、起点の版と、起点と後の施行時点のRevisionの間にある改正の版にも及ぶ。後の施行時点のRevisionをまだ記録していない段階でも、版の本文は同じである。
+- 未施行の規定は本文に書くので、収録できていない本文の範囲（`text.status: partial`の`gaps`。[HIST-08](#hist-08-本文の状態)）に当たらない。
+- 未施行の範囲は、後の施行時点のRevisionの`basis`の`enactment`の`scope`で表し、前の版の側には記録しない。版の本文だけからは、どの規定がその版の施行時点で施行されているかは分からない。派生ビューで示す内容は、[VIEW-02](../../common/v1alpha1/09-views.md#view-02-選択規則と主張の限界)による。
 - `basis`が参照する関係と内訳は、同じ履歴マニフェストに存在しなければならない（MUST）。
 - `basis`が参照する内訳の`effective`と、Revisionの`effective`は一致しなければならない（MUST）。両方が`date`の場合に検査する。
 - 同じ関係・同じ施行時点のRevisionが二つ以上あってはならない（MUST NOT）。`status: active`のRevisionだけを数え、施行時点は、両方が確定日（[TIME-03](../../common/v1alpha1/06-time.md)）のときに日付（`value`）の一致で比べる。確定日は精度が日の値だけなので、精度が月・年の値や`pending`等、確定日でない施行時点を含む組は、この規則では比べない。

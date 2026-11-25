@@ -1,0 +1,44 @@
+schemaVersion: loj-history/v1alpha1
+record: {id: 19490516-law-70, label: 昭和二十四年法律第七十号}
+sources:
+  - {id: src-egov-s24-70, kind: egov, title: e-Gov 鉱山保安法, uri: https://laws.e-gov.go.jp/law/324AC0000000070}
+  - {id: src-kanpo-s24-293, kind: promulgation, title: 官報 昭和二十四年政令第二百九十三号}
+relations: []
+revisions:
+  - id: ry4fy0q4
+    label: 制定（公布の日に施行する規定）
+    origin: enactment
+    effective:
+      state: derived
+      rule: 公布の日から
+      base:
+        state: date
+        value: "1949-05-16"
+        raw: 昭和二十四年五月十六日
+        precision: day
+        evidence: [{source: src-egov-s24-70, locator: 公布日}]
+        verification: {state: unverified, reason: 官報と未照合}
+      value: "1949-05-16"
+      raw: 第一條から第三條まで、第三十二條から第三十四條まで、第三十九條から第五十四條まで及び附則第五項から第十項までの規定は、公布の日から施行する
+      evidence: [{source: src-egov-s24-70, locator: 附則第一項ただし書}]
+      verification: {state: unverified, reason: 官報と未照合}
+    applicability: {state: unsurveyed}
+    text: {status: absent}
+    status: active
+  - id: ses7fgry
+    label: 制定（附則第一項ただし書に掲げる規定以外の規定の施行）
+    basedOn: ry4fy0q4
+    basis: [{enactment: {scope: {text: 附則第一項ただし書に掲げる規定以外の規定}, evidence: [{source: src-egov-s24-70, locator: 附則第一項}]}}]
+    effective:
+      state: date
+      value: "1949-08-12"
+      raw: 昭和二十四年八月十二日
+      precision: day
+      delegation: {raw: 公布の日から起算して九十日をこえない期間内において、政令で定める, evidence: [{source: src-egov-s24-70, locator: 附則第一項}]}
+      determinedBy: {record: {id: qb952e5j3n, label: 昭和二十四年政令第二百九十三号}, evidence: [{source: src-kanpo-s24-293, locator: 本則}]}
+      evidence: [{source: src-kanpo-s24-293, locator: 本則}]
+      verification: {state: unverified, reason: 官報と未照合}
+    applicability: {state: unsurveyed}
+    text: {status: absent}
+    status: active
+coverage: {state: unconfirmed}

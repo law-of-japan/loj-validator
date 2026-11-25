@@ -3,7 +3,7 @@
   "cases": [
     {
       "id": "reg-001",
-      "title": "登録台帳の三つのRecord",
+      "title": "登録台帳の六つのRecord",
       "requirements": [
         "REG-01",
         "REG-02",

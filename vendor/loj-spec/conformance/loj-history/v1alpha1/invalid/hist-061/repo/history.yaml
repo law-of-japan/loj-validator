@@ -10,7 +10,7 @@ termination:
       state: pending
       raw: この法律の施行の日以前に皇室典範第四条の規定による皇位の継承があったとき
       delegation: {raw: この法律の施行の日以前に皇室典範第四条の規定による皇位の継承があったとき, evidence: [{source: src-egov-h29-63, locator: 附則第二条}]}
-      determinedBy: {record: {id: unregistered, label: 平成二十九年政令第三百二号}, evidence: [{source: src-egov-h29-302, locator: 本則}]}
+      determinedBy: {record: {id: tfy1ccapzk, label: 平成二十九年政令第三百二号}, evidence: [{source: src-egov-h29-302, locator: 本則}]}
       evidence: [{source: src-egov-h29-63, locator: 附則第二条}]
       verification: {state: unverified, reason: 官報と未照合}
     evidence: [{source: src-egov-h29-63, locator: 附則第二条}]
@@ -24,7 +24,7 @@ revisions:
       raw: 平成三十一年四月三十日
       precision: day
       delegation: {raw: 公布の日から起算して三年を超えない範囲内において政令で定める日, evidence: [{source: src-egov-h29-63, locator: 附則第一条第一項}]}
-      determinedBy: {record: {id: unregistered, label: 平成二十九年政令第三百二号}, evidence: [{source: src-egov-h29-302, locator: 本則}]}
+      determinedBy: {record: {id: tfy1ccapzk, label: 平成二十九年政令第三百二号}, evidence: [{source: src-egov-h29-302, locator: 本則}]}
       evidence: [{source: src-egov-h29-302, locator: 本則}]
       verification: {state: unverified, reason: 官報と未照合}
     applicability: {state: unsurveyed}
