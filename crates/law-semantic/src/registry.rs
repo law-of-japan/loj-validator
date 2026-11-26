@@ -3,7 +3,7 @@
 use crate::common::findings::{common_type_rule, Findings};
 use crate::common::{load_yaml, Check, Loaded, Report, COMMON};
 use serde_json::{json, Value};
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::Path;
 
 pub const REGISTRY: &str = "loj-registry/v1alpha1";
@@ -126,12 +126,14 @@ impl Registry {
                     let candidates = crate::repository::history::list(&rec["replacedBy"])
                         .iter()
                         .map(|entry| self.target(&entry["record"]))
-                        .collect::<Option<Vec<_>>>();
+                        .collect::<Option<BTreeSet<_>>>();
                     return match candidates {
-                        Some(values) => Resolution::Candidates(values),
-                        None => {
-                            Resolution::NotFetched("candidate registration space is unknown".into())
+                        Some(values) if !values.is_empty() => {
+                            Resolution::Candidates(values.into_iter().collect())
                         }
+                        _ => Resolution::NotFetched(
+                            "split Record has no serializable candidate list".into(),
+                        ),
                     };
                 }
                 Some("withdrawn") => return Resolution::NonexistentConfirmed,
@@ -145,7 +147,8 @@ impl Registry {
     }
     pub fn target(&self, r: &Value) -> Option<String> {
         let space = r["space"].as_str().unwrap_or(&self.space);
-        (!space.is_empty()).then(|| format!("loj:{space}/{}", r["id"].as_str().unwrap_or("")))
+        let id = r["id"].as_str()?;
+        (!space.is_empty() && !id.is_empty()).then(|| format!("loj:{space}/{id}"))
     }
 }
 
@@ -535,6 +538,34 @@ mod tests {
 #[cfg(test)]
 mod space_tests {
     use super::*;
+    #[test]
+    fn split_candidates_require_serializable_targets_and_form_a_set() {
+        let mut reg = Registry::default();
+        let reference = json!({"id":"split"});
+        for entries in [
+            json!([]),
+            json!([{"record":{"id":"local"}}]),
+            json!([{"record":{"space":"alpha"}}]),
+        ] {
+            reg.records.insert(
+                "split".into(),
+                json!({"status":"split", "replacedBy": entries}),
+            );
+            assert!(matches!(reg.resolve(&reference), Resolution::NotFetched(_)));
+        }
+        reg.space = "alpha".into();
+        reg.records.insert(
+            "split".into(),
+            json!({"status":"split","replacedBy":[
+            {"record":{"id":"next"}},{"record":{"space":"alpha","id":"next"}},
+            {"record":{"space":"beta","id":"remote"}}]}),
+        );
+        assert_eq!(
+            reg.resolve(&reference),
+            Resolution::Candidates(vec!["loj:alpha/next".into(), "loj:beta/remote".into()])
+        );
+    }
+
     #[test]
     fn explicit_space_is_context_not_an_identifier_alias() {
         let mut reg = Registry::default();
