@@ -1086,6 +1086,34 @@ mod tests {
         assert!(inspect("correction", &before, &after).failed(CH));
     }
     #[test]
+    fn declarations_of_a_version_without_text_follow_chg02() {
+        // An absent version carries no text.sources (HIST-08), so every
+        // correction-like kind that declares it lacks evidence, and only
+        // restoration may change text.status.
+        let absent = json!({"revisions":[{"id":"b7k2m9qd","text":{"status":"absent"}}]});
+        let partial = json!({"revisions":[{"id":"b7k2m9qd","text":{"status":"partial","gaps":[{"article":"1"}],"sources":[{"source":"s"}]}}]});
+        let complete = json!({"revisions":[{"id":"b7k2m9qd","text":{"status":"complete","sources":[{"source":"s"}]}}]});
+        let fails = |kind: &str, before: &Value, after: &Value| {
+            let f = inspect(kind, &snapshot(before.clone()), &snapshot(after.clone()));
+            f.items
+                .iter()
+                .any(|(_, d)| d.rule == "CHG-02" && d.is_error())
+        };
+        // restoration: absent before and after, and text turned into absent
+        assert!(fails("restoration", &absent, &absent));
+        assert!(fails("restoration", &complete, &absent));
+        assert!(fails("restoration", &partial, &absent));
+        // restoration that adds the text of an absent version
+        assert!(!fails("restoration", &absent, &complete));
+        // correction may not change text.status, in either direction
+        assert!(fails("correction", &partial, &complete));
+        assert!(fails("correction", &absent, &complete));
+        assert!(fails("correction", &complete, &absent));
+        assert!(fails("officialCorrection", &absent, &absent));
+        assert!(!fails("correction", &complete, &complete));
+    }
+
+    #[test]
     fn metadata_cannot_touch_package_bytes_and_revert_keeps_revision_records() {
         let mut before = snapshot(json!({"revisions":[{"id":"b7k2m9qd"}]}));
         before
