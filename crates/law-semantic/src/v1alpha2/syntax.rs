@@ -891,18 +891,19 @@ impl<'a> Builder<'a> {
                 outside(&mut self.nodes, doc.article, source, path, before, ctx);
             }
             if token.heading {
-                if doc
+                if let Some(toc) = doc
                     .stack
                     .last()
-                    .is_some_and(|i| self.nodes[*i].kind == Kind::Toc)
+                    .map(|i| &self.nodes[*i])
+                    .filter(|node| node.kind == Kind::Toc)
                 {
                     // A heading violates both container nesting and the opaque Toc content rule.
                     ctx.diag(
                         "DIR-02",
                         "ATX heading inside Toc container",
                         path,
-                        span.start,
-                        span.end,
+                        toc.span.start,
+                        toc.span.end,
                     );
                     ctx.diag(
                         "TOC-01",
@@ -2045,6 +2046,30 @@ mod tests {
         }
         for no in ["附属書", "附x則", "則", "附則　抄", "第一条"] {
             assert!(matches!(supplement_label(no), Supplement::No), "{no:?}");
+        }
+    }
+
+    #[test]
+    fn heading_inside_toc_reports_each_offending_line() {
+        let manifest = json!({"law":{"id":"law","title":"例"}});
+        let source = include_str!(
+            "../../../../vendor/loj-spec/conformance/v1alpha2/invalid/pkg-232/main.md"
+        );
+        let documents = [("main.md".into(), source.into(), "main".into())];
+        let mut ctx = Context::default();
+        build(&manifest, &documents, &mut ctx);
+        for (rule, start, end) in [("DIR-02", 0, 17), ("TOC-01", 24, 60)] {
+            let locations: Vec<_> = ctx
+                .diagnostics
+                .iter()
+                .filter(|(_, d)| d.rule == rule)
+                .map(|(_, d)| d.location.as_ref())
+                .collect();
+            assert_eq!(
+                locations,
+                [Some(&json!({"path":"main.md","start":start,"end":end}))],
+                "{rule}"
+            );
         }
     }
 
