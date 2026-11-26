@@ -1093,24 +1093,50 @@ mod tests {
         let absent = json!({"revisions":[{"id":"b7k2m9qd","text":{"status":"absent"}}]});
         let partial = json!({"revisions":[{"id":"b7k2m9qd","text":{"status":"partial","gaps":[{"article":"1"}],"sources":[{"source":"s"}]}}]});
         let complete = json!({"revisions":[{"id":"b7k2m9qd","text":{"status":"complete","sources":[{"source":"s"}]}}]});
-        let fails = |kind: &str, before: &Value, after: &Value| {
+        let errors = |kind: &str, before: &Value, after: &Value| -> Vec<String> {
             let f = inspect(kind, &snapshot(before.clone()), &snapshot(after.clone()));
             f.items
                 .iter()
-                .any(|(_, d)| d.rule == "CHG-02" && d.is_error())
+                .filter(|(_, d)| d.rule == "CHG-02" && d.is_error())
+                .map(|(_, d)| d.message.clone())
+                .collect()
         };
+        let has = |errors: &[String], text: &str| errors.iter().any(|m| m.contains(text));
+        const EVIDENCE: &str = "requires source evidence";
+        const STATUS: &str = "unrelated Revision metadata changed";
         // restoration: absent before and after, and text turned into absent
-        assert!(fails("restoration", &absent, &absent));
-        assert!(fails("restoration", &complete, &absent));
-        assert!(fails("restoration", &partial, &absent));
-        // restoration that adds the text of an absent version
-        assert!(!fails("restoration", &absent, &complete));
+        let e = errors("restoration", &absent, &absent);
+        assert!(has(&e, EVIDENCE) && has(&e, "does not update the text status"));
+        assert!(has(&errors("restoration", &complete, &absent), EVIDENCE));
+        assert!(has(&errors("restoration", &partial, &absent), EVIDENCE));
+        // restoration that adds or completes text passes
+        assert_eq!(
+            errors("restoration", &absent, &complete),
+            Vec::<String>::new()
+        );
+        assert_eq!(
+            errors("restoration", &partial, &complete),
+            Vec::<String>::new()
+        );
         // correction may not change text.status, in either direction
-        assert!(fails("correction", &partial, &complete));
-        assert!(fails("correction", &absent, &complete));
-        assert!(fails("correction", &complete, &absent));
-        assert!(fails("officialCorrection", &absent, &absent));
-        assert!(!fails("correction", &complete, &complete));
+        assert_eq!(
+            errors("correction", &partial, &complete),
+            vec![format!("{STATUS}: b7k2m9qd")]
+        );
+        assert_eq!(
+            errors("correction", &absent, &complete),
+            vec![format!("{STATUS}: b7k2m9qd")]
+        );
+        let e = errors("correction", &complete, &absent);
+        assert!(has(&e, STATUS) && has(&e, EVIDENCE));
+        assert!(has(
+            &errors("officialCorrection", &absent, &absent),
+            EVIDENCE
+        ));
+        assert_eq!(
+            errors("correction", &complete, &complete),
+            Vec::<String>::new()
+        );
     }
 
     #[test]
