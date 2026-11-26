@@ -1,6 +1,6 @@
 # Next specification implementation (loj/v1alpha2 and the new kinds)
 
-Target: loj-spec commit `b7dd5250ece462374203f8e3a30dcb78fa567713`, vendored as
+Target: loj-spec commit `666a74eb0eee31bb1f1abb826a581846bb59c3ba`, vendored as
 `spec`, `schemas`, `conformance`, `grammar/v1alpha2` and `LICENSE` in `vendor/loj-spec` with `COMMIT` and
 `SHA256SUMS.json`. The v1alpha1 fixtures of `b704631` stay unchanged in
 `vendor/loj-spec-v1alpha1`; the v1alpha1 and legacy pipelines are unchanged.
@@ -231,7 +231,7 @@ or nothing passed.
 | Suite | Normative | Passed | Informative (not counted) |
 |---|---|---|---|
 | loj/v1alpha2 | 232 | 232 | 1 (pkg-026, L2) |
-| common/v1alpha1 | 97 | 97 | 0 |
+| common/v1alpha1 | 101 | 101 | 0 |
 | loj-history/v1alpha1 | 68 | 68 | 0 |
 | loj-glyphs/v1alpha1 | 34 | 34 | 0 |
 | loj-registry/v1alpha1 | 16 | 16 | 0 |
@@ -241,7 +241,7 @@ Passing the fixed cases is a necessary condition only (CONF-02).
 
 ## Normative boundaries
 
-- There are 454 normative cases and one informative L2 case. `derivedFrom` and
+- There are 458 normative cases and one informative L2 case. `derivedFrom` and
   `rejectedBy` are audit metadata, never instructions to regenerate or skip inputs.
 - MD-04 emptiness uses the 25 Unicode 15.1 White_Space code points. Paragraph
   captions require `caption=present`; Toc placement and mixed number scripts are
