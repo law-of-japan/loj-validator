@@ -186,15 +186,49 @@
             "enum": [
               "resolved",
               "notFetched",
-              "nonexistentConfirmed"
+              "nonexistentConfirmed",
+              "candidates"
             ]
+          },
+          "candidates": {
+            "$comment": "XREF-01: the Records listed in replacedBy of a split Record, in the string notation of FIXREF-02.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^loj:[a-z][a-z0-9-]*/[A-Za-z0-9][A-Za-z0-9-]*$"
+            },
+            "minItems": 1,
+            "uniqueItems": true
           }
         },
         "required": [
           "target",
           "result"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "result": {
+                  "const": "candidates"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "candidates"
+              ]
+            },
+            "else": {
+              "not": {
+                "required": [
+                  "candidates"
+                ]
+              }
+            }
+          }
+        ]
       },
       "minItems": 1
     },

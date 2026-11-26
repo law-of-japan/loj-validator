@@ -1,0 +1,14 @@
+{
+  "diagnostics": [
+    {
+      "rule": "TOC-01",
+      "schemaVersion": "loj/v1alpha2",
+      "class": "error"
+    },
+    {
+      "rule": "DIR-02",
+      "schemaVersion": "loj/v1alpha2",
+      "class": "error"
+    }
+  ]
+}

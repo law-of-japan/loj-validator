@@ -1,0 +1,16 @@
+schemaVersion: loj-registry/v1alpha1
+id: m4x8k2p7qd
+label: 架空の統合した登録
+status: merged
+identity:
+  evidence: [{source: src-fictional, locator: 登録の記録}]
+  verification: {state: confirmed}
+collection: {state: notCollected}
+sources:
+  - {id: src-fictional, kind: other, title: 適合ケースのための架空の資料}
+numbers: []
+externalIds: []
+replacedBy:
+  - record: {id: 20990601-law-2, label: 架空の改正法}
+    evidence: [{source: src-fictional, locator: 統合の記録}]
+    verification: {state: confirmed}

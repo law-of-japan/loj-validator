@@ -1,0 +1,15 @@
+{
+  "results": [
+    {
+      "check": "registry",
+      "result": "fail"
+    }
+  ],
+  "diagnostics": [
+    {
+      "rule": "TYPE-05",
+      "schemaVersion": "common/v1alpha1",
+      "class": "error"
+    }
+  ]
+}

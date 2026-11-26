@@ -1,0 +1,16 @@
+{
+  "results": [
+    {
+      "check": "L4",
+      "category": "timeConsistency",
+      "result": "fail"
+    }
+  ],
+  "diagnostics": [
+    {
+      "rule": "XREF-06",
+      "schemaVersion": "common/v1alpha1",
+      "class": "error"
+    }
+  ]
+}

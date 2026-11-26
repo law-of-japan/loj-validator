@@ -1,0 +1,33 @@
+schemaVersion: loj-history/v1alpha1
+record: {id: 20990101-law-5, label: 架空の旧法（全部改正の例）}
+sources:
+  - {id: src-fictional, kind: other, title: 適合ケースのための架空の資料}
+relations:
+  - id: rel-total
+    type: totallyRevises
+    from: {id: 20991001-law-9, label: 架空の新法（全部改正の例）}
+    evidence: [{source: src-fictional, locator: 附則第一条}]
+    verification: {state: confirmed}
+    status: active
+    items:
+      - id: i1
+        scope: {text: 全部}
+        effective:
+          state: date
+          value: "2099-10-01"
+          raw: 令和八十一年十月一日
+          precision: day
+          evidence: [{source: src-fictional, locator: 附則第一条}]
+          verification: {state: unverified, reason: 架空の資料}
+        evidence: [{source: src-fictional, locator: 附則第一条}]
+        verification: {state: unverified, reason: 架空の資料}
+revisions:
+  - id: 2p6r8v4x
+    origin: coverageStart
+    effective: {state: unknown, reason: 適合ケースで省略}
+    applicability: {state: unsurveyed}
+    text: {status: absent}
+    status: active
+termination:
+  - {type: totallyRevised, relation: rel-total}
+coverage: {state: unconfirmed}

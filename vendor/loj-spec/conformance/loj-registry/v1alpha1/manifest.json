@@ -362,6 +362,95 @@
           ]
         }
       ]
+    },
+    {
+      "id": "reg-014",
+      "title": "同一性の確認が登録台帳にないSourceを指す",
+      "requirements": [
+        "TYPE-03",
+        "REG-02"
+      ],
+      "check": "registry",
+      "normative": true,
+      "input": {
+        "kind": "registry",
+        "path": "conformance/loj-registry/v1alpha1/invalid/reg-014/registry"
+      },
+      "expected": "conformance/loj-registry/v1alpha1/expected/reg-014.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-registry/v1alpha1/invalid/reg-014/registry",
+          "from": "conformance/loj-registry/v1alpha1/valid/reg-001/registry",
+          "edits": [
+            {
+              "file": "records/19480720-law-178.yaml",
+              "old": "  evidence: [{source: src-kanpo-19480720, locator: 1コマ}]\n  verification: {state: confirmed}\n",
+              "new": "  evidence: [{source: src-kanpo-19480721, locator: 1コマ}]\n  verification: {state: confirmed}\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reg-015",
+      "title": "同一性の確認のVerificationの未知の状態",
+      "requirements": [
+        "TYPE-04",
+        "REG-02"
+      ],
+      "check": "registry",
+      "normative": true,
+      "input": {
+        "kind": "registry",
+        "path": "conformance/loj-registry/v1alpha1/invalid/reg-015/registry"
+      },
+      "expected": "conformance/loj-registry/v1alpha1/expected/reg-015.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-registry/v1alpha1/invalid/reg-015/registry",
+          "from": "conformance/loj-registry/v1alpha1/valid/reg-001/registry",
+          "edits": [
+            {
+              "file": "records/19480720-law-178.yaml",
+              "old": "  evidence: [{source: src-kanpo-19480720, locator: 1コマ}]\n  verification: {state: confirmed}\n",
+              "new": "  evidence: [{source: src-kanpo-19480720, locator: 1コマ}]\n  verification: {state: checked}\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reg-016",
+      "title": "出典のない同一性の確認を確認済みにする",
+      "requirements": [
+        "TYPE-05",
+        "REG-02"
+      ],
+      "check": "registry",
+      "normative": true,
+      "input": {
+        "kind": "registry",
+        "path": "conformance/loj-registry/v1alpha1/invalid/reg-016/registry"
+      },
+      "expected": "conformance/loj-registry/v1alpha1/expected/reg-016.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-registry/v1alpha1/invalid/reg-016/registry",
+          "from": "conformance/loj-registry/v1alpha1/valid/reg-001/registry",
+          "edits": [
+            {
+              "file": "records/19480720-law-178.yaml",
+              "old": "  evidence: [{source: src-kanpo-19480720, locator: 1コマ}]\n  verification: {state: confirmed}\n",
+              "new": "  evidence: []\n  verification: {state: confirmed}\n"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -420,10 +420,20 @@ fn problems(case: &Value, expected: &Value, actual: &Actual) -> Vec<String> {
         let got = json["references"].as_array().cloned().unwrap_or_default();
         for w in want {
             let found = got.iter().any(|g| {
-                w.as_object()
-                    .unwrap()
-                    .iter()
-                    .all(|(k, v)| g.get(k) == Some(v))
+                w.as_object().unwrap().iter().all(|(k, v)| {
+                    if k == "candidates" {
+                        let strings = |value: &Value| {
+                            value.as_array().and_then(|a| {
+                                a.iter()
+                                    .map(|item| item.as_str().map(str::to_owned))
+                                    .collect::<Option<std::collections::BTreeSet<_>>>()
+                            })
+                        };
+                        strings(v).is_some() && strings(v) == strings(&g[k])
+                    } else {
+                        g.get(k) == Some(v)
+                    }
+                })
             });
             if !found {
                 problems.push(format!("missing reference {w}; got {got:?}"));

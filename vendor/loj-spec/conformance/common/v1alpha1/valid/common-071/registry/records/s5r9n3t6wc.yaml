@@ -1,0 +1,19 @@
+schemaVersion: loj-registry/v1alpha1
+id: s5r9n3t6wc
+label: 架空の分割した登録
+status: split
+identity:
+  evidence: [{source: src-fictional, locator: 登録の記録}]
+  verification: {state: confirmed}
+collection: {state: notCollected}
+sources:
+  - {id: src-fictional, kind: other, title: 適合ケースのための架空の資料}
+numbers: []
+externalIds: []
+replacedBy:
+  - record: {id: 20991001-law-9, label: 架空の新法（全部改正の例）}
+    evidence: [{source: src-fictional, locator: 分割の記録}]
+    verification: {state: unverified, reason: 分割先が確定していない（架空）}
+  - record: {id: 20990602-law-4, label: 架空の分割先の候補}
+    evidence: [{source: src-fictional, locator: 分割の記録}]
+    verification: {state: unverified, reason: 分割先が確定していない（架空）}

@@ -31,6 +31,7 @@ pub(crate) fn classify(schema_path: &str, _instance: &str) -> (Check, &'static s
             "/properties/revisions/items/properties/applicability/allOf",
             "HIST-07",
         ),
+        ("/properties/revisions/items/properties/text/properties/variances/items/properties/readings/minItems", "HIST-08"),
         ("/properties/termination/items/allOf/0", "HIST-12"),
     ] {
         if schema_path.starts_with(path) {
@@ -381,6 +382,29 @@ fn revision_ids<'a>(revisions: &'a [Value], f: &mut Findings) -> ById<'a> {
     by_id
 }
 
+/// Shared by history validation and the revisionAdd comparison (CHG-02).
+pub(crate) fn based_on_order(r: &Value, b: &str, by_id: &ById, mut error: impl FnMut(String)) {
+    let Some(base) = by_id.get(b) else {
+        error(format!("basedOn {b} is not a revision of this manifest"));
+        return;
+    };
+    if r["status"] == "active" && base["status"] != "active" {
+        error("active revision cannot be based on a withdrawn, merged or split revision".into());
+    }
+    let mut seen = HashSet::from([r["id"].as_str().unwrap_or("")]);
+    let mut cur = b;
+    while let Some(next) = by_id.get(cur) {
+        if !seen.insert(cur) {
+            error("basedOn forms a cycle".into());
+            break;
+        }
+        match next["basedOn"].as_str() {
+            Some(n) => cur = n,
+            None => break,
+        }
+    }
+}
+
 /// HIST-04: the basedOn target exists and the chain has no cycle.
 /// HIST-06: the base state does not take effect after the revision.
 fn based_on(r: &Value, p: &str, by_id: &ById, retroactive: bool, f: &mut Findings) {
@@ -400,46 +424,17 @@ fn based_on(r: &Value, p: &str, by_id: &ById, retroactive: bool, f: &mut Finding
         }
         _ => return,
     };
-    let Some(base) = by_id.get(b) else {
+    based_on_order(r, b, by_id, |message| {
         f.error(
             HS,
             "HIST-04",
             HISTORY,
-            format!("basedOn {b} is not a revision of this manifest"),
+            message,
             FILE,
             &format!("{p}/basedOn"),
         );
-        return;
-    };
-    if r["status"] == "active" && base["status"] != "active" {
-        f.error(
-            HS,
-            "HIST-04",
-            HISTORY,
-            "active revision cannot be based on a withdrawn, merged or split revision",
-            FILE,
-            &format!("{p}/basedOn"),
-        );
-    }
-    let mut seen = HashSet::from([r["id"].as_str().unwrap_or("")]);
-    let mut cur = b;
-    while let Some(next) = by_id.get(cur) {
-        if !seen.insert(cur) {
-            f.error(
-                HS,
-                "HIST-04",
-                HISTORY,
-                "basedOn forms a cycle",
-                FILE,
-                &format!("{p}/basedOn"),
-            );
-            break;
-        }
-        match next["basedOn"].as_str() {
-            Some(n) => cur = n,
-            None => break,
-        }
-    }
+    });
+    let Some(base) = by_id.get(b) else { return };
     let day = fixed_day;
     if base["origin"] == "coverageStart" && day(&base["effective"]).is_none() {
         return;

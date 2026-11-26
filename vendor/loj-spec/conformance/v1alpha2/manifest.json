@@ -3767,6 +3767,38 @@
       },
       "expected": "conformance/v1alpha2/expected/pkg-231.json",
       "success": true
+    },
+    {
+      "id": "pkg-232",
+      "title": "目次の中のATX見出し",
+      "requirements": [
+        "TOC-01",
+        "DIR-02"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/invalid/pkg-232/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-232.json",
+      "success": false
+    },
+    {
+      "id": "pkg-233",
+      "title": "Manifestの出典のURI（sourceUris）",
+      "requirements": [
+        "MAN-01",
+        "AST-01"
+      ],
+      "check": "L1",
+      "normative": true,
+      "input": {
+        "kind": "package",
+        "path": "conformance/v1alpha2/valid/pkg-233/law.yaml"
+      },
+      "expected": "conformance/v1alpha2/expected/pkg-233.json",
+      "success": true
     }
   ]
 }

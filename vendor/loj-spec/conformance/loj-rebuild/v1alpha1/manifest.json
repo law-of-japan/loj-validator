@@ -133,6 +133,66 @@
           ]
         }
       ]
+    },
+    {
+      "id": "rebuild-006",
+      "title": "旧commitとの対応のVerificationの未知の状態",
+      "requirements": [
+        "TYPE-04",
+        "REBR-04"
+      ],
+      "check": "rebuild",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-rebuild/v1alpha1/invalid/rebuild-006/repo"
+      },
+      "expected": "conformance/loj-rebuild/v1alpha1/expected/rebuild-006.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-rebuild/v1alpha1/invalid/rebuild-006/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "rebuild.yaml",
+              "old": "    verification: {state: confirmed, reason: リポジトリ作成時のcommitで、本文を含まない}\n",
+              "new": "    verification: {state: checked, reason: リポジトリ作成時のcommitで、本文を含まない}\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rebuild-007",
+      "title": "出典のない差の記録を確認済みにする",
+      "requirements": [
+        "TYPE-05",
+        "REBR-05"
+      ],
+      "check": "rebuild",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-rebuild/v1alpha1/invalid/rebuild-007/repo"
+      },
+      "expected": "conformance/loj-rebuild/v1alpha1/expected/rebuild-007.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-rebuild/v1alpha1/invalid/rebuild-007/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "rebuild.yaml",
+              "old": "    evidence: [{source: src-kanpo-19480720, locator: 第二條}]\n    verification: {state: confirmed}\n",
+              "new": "    evidence: []\n    verification: {state: confirmed}\n"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

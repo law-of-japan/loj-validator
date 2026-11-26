@@ -1789,6 +1789,136 @@
       },
       "expected": "conformance/loj-history/v1alpha1/expected/hist-062.json",
       "success": true
+    },
+    {
+      "id": "hist-063",
+      "title": "本文のない版を挟んで行がなくても、削ったとみなさない（架空）",
+      "requirements": [
+        "HIST-13",
+        "HIST-08"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/valid/hist-063/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-063.json",
+      "success": true
+    },
+    {
+      "id": "hist-064",
+      "title": "L1が不合格の版で行がなくても、削ったとみなさない（架空）",
+      "requirements": [
+        "HIST-13",
+        "VAL-05"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/valid/hist-064/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-064.json",
+      "success": true
+    },
+    {
+      "id": "hist-065",
+      "title": "表の番号が変わった表の行のkeyを、前の番号の表と比べない（架空）",
+      "requirements": [
+        "HIST-13",
+        "ID-01",
+        "TABLE-01"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/valid/hist-065/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-065.json",
+      "success": true
+    },
+    {
+      "id": "hist-066",
+      "title": "basedOnが分岐した別の枝の版とは、行のkeyを比べない（架空）",
+      "requirements": [
+        "HIST-13",
+        "HIST-04"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/valid/hist-066/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-066.json",
+      "success": true
+    },
+    {
+      "id": "hist-067",
+      "title": "原典資料の間の文言の食い違いを、官報正誤が見つからない間はdisputedとして記録する",
+      "requirements": [
+        "HIST-08",
+        "GLYPH-07",
+        "TYPE-06"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/valid/hist-067/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-067.json",
+      "success": true,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/valid/hist-067/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "      glyphNotes: versions/98mj5vgx/glyphs.yaml\n",
+              "new": "      glyphNotes: versions/98mj5vgx/glyphs.yaml\n      variances:\n        - scope: {text: 第一條}\n          readings:\n            - {source: src-kanpo-19480720, locator: 1コマ 第一條, raw: 美しい風習を育てつつ}\n            - {source: src-goshomei, locator: 第一條, raw: 美しい風俗を育てつつ}\n          verification: {state: disputed, reason: 適合ケースのための架空の食い違い。官報正誤は見つかっていない}\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hist-068",
+      "title": "原典資料の間の文言の食い違いの資料ごとの文言が一件だけ",
+      "requirements": [
+        "HIST-08"
+      ],
+      "check": "L3",
+      "category": "historyStructure",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-history/v1alpha1/invalid/hist-068/repo"
+      },
+      "expected": "conformance/loj-history/v1alpha1/expected/hist-068.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-history/v1alpha1/invalid/hist-068/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-067/repo",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "            - {source: src-goshomei, locator: 第一條, raw: 美しい風俗を育てつつ}\n",
+              "new": ""
+            }
+          ]
+        }
+      ]
     }
   ]
 }

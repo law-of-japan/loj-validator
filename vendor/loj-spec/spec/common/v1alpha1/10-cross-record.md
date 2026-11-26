@@ -7,6 +7,8 @@ L4「他法令との参照整合性」の検査を、Record間の参照につい
 - 関係（改正・廃止・全部改正等）の起点・終点のRecordを、登録台帳で解決できるかを検査する。他の登録空間のRecordは、登録空間とRecord IDの組で解決する。本版の入力は一つの登録台帳だけなので、他の登録空間のRecordは未取得になる（[VAL-03](03-validation.md)）。
 - 解決の対象はRecordであり、リポジトリの存在ではない。本文を収録していないRecordも、登録台帳にあれば解決済みとする。
 - 統合したRecordへの参照は統合先へ解決する。分割したRecordへの参照は候補を返し、解決済みにしてはならない（MUST NOT）。
+- 分割したRecordへの参照の結果は、候補（`candidates`）とする。候補の参照は、登録台帳の`replacedBy`（[REG-02](../../loj-registry/v1alpha1/01-registry.md)）の各項目の`record`を、その確認状態によらず候補のRecordとして挙げる（`candidates`）。候補はRecordであり、Revisionや固定参照ではない。候補のRecordを、さらに統合先等へ解決しない。候補以外の結果の参照は、`candidates`を持たない。
+- 候補の参照は、判定不能として報告する（[VAL-04](03-validation.md)の表で区分の結果を未完了にする）。確定した関係が分割したRecordを参照していても、違反にしない。どの候補が関係の起点・終点に当たるかは、登録台帳からは決まらないためである。
 - 登録台帳で`status: withdrawn`（[REG-02](../../loj-registry/v1alpha1/01-registry.md)）のRecordを、不存在確認済みのRecordとする。確定した関係（`status: active`で、`verification.state`が`confirmed`の関係）が、起点または終点に不存在確認済みのRecordを参照している場合は、違反とする。
 - 登録台帳にないRecord IDは、不存在確認済みとせず、未取得として報告する。登録台帳が網羅的である保証はないためである。未取得の参照（登録台帳にないIDと、登録台帳を取得できない場合）は、違反にしない。
 

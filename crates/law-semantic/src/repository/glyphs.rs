@@ -286,6 +286,28 @@ fn document(
                 }
             }
         }
+        if let Some(recorded) = n["recorded"].as_str() {
+            let matches = if recorded.chars().any(selector) {
+                n["ivd"]["sequence"].as_str().is_some_and(|sequence| {
+                    sequence
+                        .split(' ')
+                        .map(|hex| u32::from_str_radix(hex, 16).ok())
+                        .eq(recorded.chars().map(|c| Some(u32::from(c))))
+                })
+            } else {
+                n.get("ivd").is_none()
+            };
+            if !matches {
+                f.error(
+                    EV,
+                    "GLYPH-05",
+                    GLYPHS,
+                    "IVD sequence must match recorded text with a variation selector",
+                    file,
+                    &format!("{p}/ivd"),
+                );
+            }
+        }
         if !other_source_evidence(n, sources) {
             f.error(
                 EV,
@@ -444,6 +466,31 @@ fn unnoted(texts: &Texts, covered: &Covered, file: &str, f: &mut Findings) {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn ivd_covers_the_entire_recorded_sequence() {
+        for (recorded, sequence, valid) in [
+            ("一\u{fe00}二", Some("4E00 FE00 4E8C"), true),
+            ("一\u{fe00}二", Some("4E00 FE00"), false),
+            ("一\u{e0100}", None, false),
+            ("一二", Some("4E00 4E8C"), false),
+        ] {
+            let mut note = json!({"recorded":recorded});
+            if let Some(sequence) = sequence {
+                note["ivd"] = json!({"sequence":sequence});
+            }
+            let mut findings = Findings::default();
+            document(
+                &Value::Null,
+                &[note],
+                "rev",
+                "glyphs.yaml",
+                &SourceKinds::new(),
+                &mut findings,
+            );
+            assert_eq!(!findings.failed(EV), valid);
+        }
+    }
 
     #[test]
     fn unknown_notes_do_not_become_missing_glyph_violations() {

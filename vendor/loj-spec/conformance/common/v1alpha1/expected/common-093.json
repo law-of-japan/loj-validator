@@ -1,0 +1,26 @@
+{
+  "results": [
+    {
+      "check": "L4",
+      "category": "relationResolution",
+      "result": "incomplete"
+    }
+  ],
+  "diagnostics": [
+    {
+      "rule": "XREF-01",
+      "schemaVersion": "common/v1alpha1",
+      "class": "undetermined"
+    }
+  ],
+  "references": [
+    {
+      "target": "loj:loj/s5r9n3t6wc",
+      "result": "candidates",
+      "candidates": [
+        "loj:loj/20991001-law-9",
+        "loj:loj/20990602-law-4"
+      ]
+    }
+  ]
+}
