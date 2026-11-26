@@ -25,6 +25,39 @@ pub(super) fn revision_ids(snapshot: &Snapshot) -> BTreeSet<String> {
         .unwrap_or_default()
 }
 
+/// Count entries before indexing revisions by ID, which would hide reuse.
+fn revision_counts(h: &Value) -> BTreeMap<&str, usize> {
+    let mut counts = BTreeMap::new();
+    for id in list(&h["revisions"])
+        .iter()
+        .filter_map(|r| r["id"].as_str())
+    {
+        *counts.entry(id).or_default() += 1;
+    }
+    counts
+}
+
+fn retired_id_reuse(change: &Change<'_>, old: &Value, new: &Value, f: &mut Findings) {
+    let old_counts = revision_counts(old);
+    let new_counts = revision_counts(new);
+    for r in list(&old["revisions"]) {
+        let Some(id) = r["id"].as_str() else { continue };
+        if matches!(r["status"].as_str(), Some("retracted" | "merged" | "split"))
+            && old_counts.get(id) == Some(&1)
+            && new_counts.get(id).is_some_and(|n| *n > 1)
+        {
+            f.error(
+                CH,
+                "REV-01",
+                crate::repository::HISTORY,
+                format!("retired Revision id reused: {id}"),
+                change.at,
+                "",
+            );
+        }
+    }
+}
+
 fn version_file(path: &str) -> Option<(&str, &str)> {
     path.strip_prefix("versions/")?.split_once('/')
 }
@@ -185,6 +218,27 @@ pub(super) fn check(change: &Change<'_>, before: &Snapshot, after: &Snapshot, f:
     } else {
         change.declared.iter().cloned().collect()
     };
+    if change.kind == "revisionAdd" {
+        if let Some(history) = &after.history {
+            let by_id: std::collections::HashMap<_, _> =
+                indexed(&history["revisions"]).into_iter().collect();
+            for id in &affected {
+                let r = by_id[id.as_str()];
+                if r.get("basedOn").is_some() == r.get("origin").is_some() {
+                    change.error(
+                        f,
+                        "CHG-02",
+                        format!("new Revision {id} must declare either origin or basedOn"),
+                    );
+                }
+                if let Some(base) = r["basedOn"].as_str() {
+                    crate::repository::history::based_on_order(r, base, &by_id, |message| {
+                        change.error(f, "CHG-02", format!("new Revision {id}: {message}"))
+                    });
+                }
+            }
+        }
+    }
     if change.kind != "revisionAdd"
         && new_ids
             .difference(&old_ids)
@@ -403,7 +457,10 @@ fn history(
             continue;
         }
         let permitted = selected_items.get(id);
-        if change.kind == "revisionFix" && permitted.is_some() {
+        if change.kind == "revisionFix"
+            && permitted.is_some()
+            && b.is_some_and(|r| r["status"] != "retracted")
+        {
             for relation in [a, b].into_iter().flatten() {
                 sources(relation, &mut allowed_sources);
             }
@@ -457,20 +514,6 @@ fn history(
     let (mut a, mut b) = (old.clone(), new.clone());
     remove(&mut a, &["revisions", "relations", "sources"]);
     remove(&mut b, &["revisions", "relations", "sources"]);
-    if change.kind == "revisionFix" {
-        for value in [&mut a, &mut b] {
-            if let Some(termination) = value.get_mut("termination").and_then(Value::as_array_mut) {
-                termination.retain(|t| {
-                    !t["relation"]
-                        .as_str()
-                        .is_some_and(|id| selected_items.contains_key(id))
-                });
-                if termination.is_empty() {
-                    remove(value, &["termination"]);
-                }
-            }
-        }
-    }
     if a != b {
         change.error(f, "CHG-02", "unrelated history metadata changed".into());
     }
@@ -739,6 +782,11 @@ impl Change<'_> {
             auxiliary(self, before, after, f);
             return;
         }
+        if kind == "revisionFix" {
+            if let (Some(old), Some(new)) = (&before.history, &after.history) {
+                retired_id_reuse(self, old, new, f);
+            }
+        }
         if !processable(self, before, f) || !processable(self, after, f) {
             return;
         }
@@ -871,15 +919,55 @@ mod tests {
     }
 
     #[test]
+    fn revision_add_reports_a_missing_base_as_a_change_violation() {
+        let after = snapshot(json!({"revisions":[{"id":"a","basedOn":"missing"}]}));
+        let f = inspect("revisionAdd", &Snapshot::default(), &after);
+        assert!(f
+            .items
+            .iter()
+            .any(|(_, d)| d.rule == "CHG-02" && d.message.contains("basedOn missing")));
+    }
+
+    #[test]
+    fn retired_id_reuse_compares_multiplicities() {
+        let change = Change {
+            initial: false,
+            commit: "c",
+            at: "c",
+            kind: "revisionFix",
+            declared: &[],
+            reviewed: false,
+        };
+        for status in ["retracted", "merged", "split"] {
+            let retired = json!({"id":"a","status":status});
+            let restored = json!({"id":"a","status":"active","text":{"status":"absent"}});
+            let old = json!({"revisions":[retired]});
+            let single = json!({"revisions":[restored]});
+            let duplicate = json!({"revisions":[restored,retired]});
+            for (before, after, expected) in [
+                (&old, &single, false),
+                (&old, &duplicate, true),
+                (&duplicate, &duplicate, false),
+            ] {
+                let mut f = Findings::default();
+                retired_id_reuse(&change, before, after, &mut f);
+                assert_eq!(f.items.iter().any(|(_, d)| d.rule == "REV-01"), expected);
+            }
+        }
+    }
+
+    #[test]
     fn dependent_mappings_and_revision_fix_are_scoped() {
         let h = json!({"revisions":[{"id":"b7k2m9qd","status":"active","basis":[{"relation":"rel","items":["item"]}]}],"relations":[{"id":"rel","status":"active","items":[{"id":"item"}]}],"termination":[{"relation":"rel"}]});
         let before = snapshot(h.clone());
         let mut after = snapshot(h);
         let h = after.history.as_mut().unwrap();
         h["revisions"][0]["status"] = json!("retracted");
+        assert!(!inspect("revisionFix", &before, &after).failed(CH));
+        let h = after.history.as_mut().unwrap();
         h["relations"][0]["status"] = json!("retracted");
         h["termination"] = json!([]);
-        assert!(!inspect("revisionFix", &before, &after).failed(CH));
+        assert!(inspect("revisionFix", &before, &after).failed(CH));
         after.history.as_mut().unwrap()["revisions"][0]["id"] = json!("c7k2m9qd");
         assert!(inspect("revisionFix", &before, &after).failed(CH));
         let mut before = Snapshot::default();

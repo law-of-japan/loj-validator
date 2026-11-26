@@ -1,6 +1,6 @@
 # Next specification implementation (loj/v1alpha2 and the new kinds)
 
-Target: loj-spec commit `3009dd02c7c3d3cd66ddcb3f96671dd233d5b8db`, vendored as
+Target: loj-spec commit `b7dd5250ece462374203f8e3a30dcb78fa567713`, vendored as
 `spec`, `schemas`, `conformance`, `grammar/v1alpha2` and `LICENSE` in `vendor/loj-spec` with `COMMIT` and
 `SHA256SUMS.json`. The v1alpha1 fixtures of `b704631` stay unchanged in
 `vendor/loj-spec-v1alpha1`; the v1alpha1 and legacy pipelines are unchanged.
@@ -225,23 +225,23 @@ or nothing passed.
   must match; other diagnostic fields and additional diagnostics are allowed.
 - Negative cases require all listed diagnostics; expected result values govern aggregation.
 - `references` (CONF-01): every expected entry is reported with the same `target` and
-  `result`; extra references are allowed.
+  `result`, comparing split Record candidates as a set; extra references are allowed.
 - `resolution`: exact.
 
 | Suite | Normative | Passed | Informative (not counted) |
 |---|---|---|---|
-| loj/v1alpha2 | 230 | 230 | 1 (pkg-026, L2) |
-| common/v1alpha1 | 69 | 69 | 0 |
-| loj-history/v1alpha1 | 62 | 62 | 0 |
-| loj-glyphs/v1alpha1 | 27 | 27 | 0 |
-| loj-registry/v1alpha1 | 13 | 13 | 0 |
-| loj-rebuild/v1alpha1 | 5 | 5 | 0 |
+| loj/v1alpha2 | 232 | 232 | 1 (pkg-026, L2) |
+| common/v1alpha1 | 97 | 97 | 0 |
+| loj-history/v1alpha1 | 68 | 68 | 0 |
+| loj-glyphs/v1alpha1 | 34 | 34 | 0 |
+| loj-registry/v1alpha1 | 16 | 16 | 0 |
+| loj-rebuild/v1alpha1 | 7 | 7 | 0 |
 
 Passing the fixed cases is a necessary condition only (CONF-02).
 
 ## Normative boundaries
 
-- There are 406 normative cases and one informative L2 case. `derivedFrom` and
+- There are 454 normative cases and one informative L2 case. `derivedFrom` and
   `rejectedBy` are audit metadata, never instructions to regenerate or skip inputs.
 - MD-04 emptiness uses the 25 Unicode 15.1 White_Space code points. Paragraph
   captions require `caption=present`; Toc placement and mixed number scripts are

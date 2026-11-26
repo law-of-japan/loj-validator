@@ -897,6 +897,13 @@ impl<'a> Builder<'a> {
                     .is_some_and(|i| self.nodes[*i].kind == Kind::Toc)
                 {
                     ctx.diag(
+                        "DIR-02",
+                        "ATX heading inside Toc container",
+                        path,
+                        span.start,
+                        span.end,
+                    );
+                    ctx.diag(
                         "TOC-01",
                         "TOC content must not use structural headings",
                         path,

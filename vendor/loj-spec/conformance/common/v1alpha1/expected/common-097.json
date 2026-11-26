@@ -1,0 +1,15 @@
+{
+  "results": [
+    {
+      "check": "change",
+      "result": "fail"
+    }
+  ],
+  "diagnostics": [
+    {
+      "rule": "REV-01",
+      "schemaVersion": "loj-history/v1alpha1",
+      "class": "error"
+    }
+  ]
+}

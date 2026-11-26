@@ -786,6 +786,221 @@
           ]
         }
       ]
+    },
+    {
+      "id": "glyph-028",
+      "title": "異体字セレクタを付けた字の注記に、IVDのコレクションと登録の並びを書く",
+      "requirements": [
+        "GLYPH-05",
+        "GLYPH-06",
+        "CHAR-03"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/valid/glyph-028/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-028.json",
+      "success": true,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/valid/glyph-028/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "versions/98mj5vgx/glyphs.yaml",
+              "old": "  - id: g15\n",
+              "new": "  - id: g30\n    node: 19480720-law-178/main/article/2/paragraph/1/table/1/row/b6gr/cell/1\n    offset: 1\n    recorded: \"日󠄀\"\n    kind: selected\n    ivd: {collection: Moji_Joho, sequence: 65E5 E0100}\n    evidence: [{source: src-kanpo-19480720, locator: \"1コマ 第二條 元日の項\"}]\n    verification: {state: unverified, reason: \"適合ケースのための架空の注記\"}\n  - id: g15\n"
+            },
+            {
+              "file": "versions/98mj5vgx/main.md",
+              "old": "元日\n",
+              "new": "元日󠄀\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "glyph-029",
+      "title": "異体字セレクタを付けた字の注記にivdがない",
+      "requirements": [
+        "GLYPH-05"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-029/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-029.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-029/repo",
+          "from": "conformance/loj-glyphs/v1alpha1/valid/glyph-028/repo",
+          "edits": [
+            {
+              "file": "versions/98mj5vgx/glyphs.yaml",
+              "old": "    ivd: {collection: Moji_Joho, sequence: 65E5 E0100}\n",
+              "new": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "glyph-030",
+      "title": "ivdの登録の並びが、注記の字と合わない",
+      "requirements": [
+        "GLYPH-05"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-030/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-030.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-030/repo",
+          "from": "conformance/loj-glyphs/v1alpha1/valid/glyph-028/repo",
+          "edits": [
+            {
+              "file": "versions/98mj5vgx/glyphs.yaml",
+              "old": "sequence: 65E5 E0100}",
+              "new": "sequence: 65E5 E0101}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "glyph-031",
+      "title": "異体字セレクタを含まない注記にivdを書く",
+      "requirements": [
+        "GLYPH-05"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-031/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-031.json",
+      "success": false,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-031/repo",
+          "from": "conformance/loj-glyphs/v1alpha1/valid/glyph-028/repo",
+          "edits": [
+            {
+              "file": "versions/98mj5vgx/glyphs.yaml",
+              "old": "    recorded: \"号\"\n    kind: ambiguous\n",
+              "new": "    recorded: \"号\"\n    kind: ambiguous\n    ivd: {collection: Moji_Joho, sequence: 53F7 E0100}\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "glyph-032",
+      "title": "官報とほかの原典資料で字体が違う字に、官報の字を置いて両方の字を注記する",
+      "requirements": [
+        "GLYPH-02",
+        "GLYPH-05",
+        "GLYPH-07"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/valid/glyph-032/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-032.json",
+      "success": true,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/valid/glyph-032/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "versions/98mj5vgx/glyphs.yaml",
+              "old": "  - id: g15\n",
+              "new": "  - id: g31\n    node: 19480720-law-178/main/article/1/paragraph/1\n    offset: 15\n    recorded: \"國\"\n    kind: variance\n    candidates: [\"國\", \"国\"]\n    evidence: [{source: src-kanpo-19480720, locator: \"1コマ 第一條\"}, {source: src-goshomei, locator: \"第一條\"}]\n    verification: {state: unverified, reason: \"適合ケースのための架空の注記\"}\n  - id: g15\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "glyph-033",
+      "title": "字体の違いの注記に候補がない",
+      "requirements": [
+        "GLYPH-05"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-033/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-033.json",
+      "success": false,
+      "rejectedBy": "schema",
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/invalid/glyph-033/repo",
+          "from": "conformance/loj-glyphs/v1alpha1/valid/glyph-032/repo",
+          "edits": [
+            {
+              "file": "versions/98mj5vgx/glyphs.yaml",
+              "old": "    candidates: [\"國\", \"国\"]\n",
+              "new": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "glyph-034",
+      "title": "官報正誤の複製で読めず、ほかの原典資料で読めた字を本文に置く判読困難の注記",
+      "requirements": [
+        "GLYPH-05",
+        "GLYPH-06",
+        "GLYPH-07"
+      ],
+      "check": "L3",
+      "category": "evidence",
+      "normative": true,
+      "input": {
+        "kind": "repository",
+        "path": "conformance/loj-glyphs/v1alpha1/valid/glyph-034/repo"
+      },
+      "expected": "conformance/loj-glyphs/v1alpha1/expected/glyph-034.json",
+      "success": true,
+      "derivedFrom": [
+        {
+          "path": "conformance/loj-glyphs/v1alpha1/valid/glyph-034/repo",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "versions/98mj5vgx/glyphs.yaml",
+              "old": "  - id: g15\n",
+              "new": "  - id: g32\n    node: 19480720-law-178/main/article/2/paragraph/1/table/1/row/2aph/cell/3\n    offset: 13\n    recorded: \"國\"\n    kind: illegible\n    basis: otherSource\n    evidence: [{source: src-kanpo-19480928, locator: \"2コマ 正誤 第二條八行（かすれ）\"}, {source: src-goshomei, locator: \"第二條 憲法記念日の項\"}]\n    verification: {state: unverified, reason: \"適合ケースのための架空の注記\"}\n  - id: g15\n"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

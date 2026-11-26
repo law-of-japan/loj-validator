@@ -286,6 +286,28 @@ fn document(
                 }
             }
         }
+        if let Some(recorded) = n["recorded"].as_str() {
+            let matches = if recorded.chars().any(selector) {
+                n["ivd"]["sequence"].as_str().is_some_and(|sequence| {
+                    sequence
+                        .split(' ')
+                        .map(|hex| u32::from_str_radix(hex, 16).ok())
+                        .eq(recorded.chars().map(|c| Some(u32::from(c))))
+                })
+            } else {
+                n.get("ivd").is_none()
+            };
+            if !matches {
+                f.error(
+                    EV,
+                    "GLYPH-05",
+                    GLYPHS,
+                    "IVD sequence must match recorded text with a variation selector",
+                    file,
+                    &format!("{p}/ivd"),
+                );
+            }
+        }
         if !other_source_evidence(n, sources) {
             f.error(
                 EV,

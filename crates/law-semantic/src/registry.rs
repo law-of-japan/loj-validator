@@ -64,6 +64,7 @@ pub struct Registry {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Resolution {
     Resolved(String),
+    Candidates(Vec<String>),
     NotFetched(String),
     NonexistentConfirmed,
 }
@@ -72,6 +73,7 @@ impl Resolution {
     pub fn as_str(&self) -> &'static str {
         match self {
             Resolution::Resolved(_) => "resolved",
+            Resolution::Candidates(_) => "candidates",
             Resolution::NotFetched(_) => "notFetched",
             Resolution::NonexistentConfirmed => "nonexistentConfirmed",
         }
@@ -121,10 +123,16 @@ impl Registry {
                     }
                 }
                 Some("split") => {
-                    return Resolution::NotFetched(format!(
-                        "{id} is split; candidates: {}",
-                        rec["replacedBy"]
-                    ))
+                    let candidates = crate::repository::history::list(&rec["replacedBy"])
+                        .iter()
+                        .map(|entry| self.target(&entry["record"]))
+                        .collect::<Option<Vec<_>>>();
+                    return match candidates {
+                        Some(values) => Resolution::Candidates(values),
+                        None => {
+                            Resolution::NotFetched("candidate registration space is unknown".into())
+                        }
+                    };
                 }
                 Some("withdrawn") => return Resolution::NonexistentConfirmed,
                 Some("active" | "provisional") => {

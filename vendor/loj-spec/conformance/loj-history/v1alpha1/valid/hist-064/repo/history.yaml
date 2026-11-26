@@ -1,0 +1,90 @@
+schemaVersion: loj-history/v1alpha1
+record: {id: 20990201-act-2, label: 架空雲分類法}
+sources:
+  - {id: src-fiction, kind: other, title: 適合ケースのための架空の資料}
+relations:
+  - id: rel-1
+    type: amends
+    from: {id: 20990301-act-11, label: 架空の改正法}
+    evidence: [{source: src-fiction, locator: 本則}]
+    verification: {state: unverified, reason: 架空の資料}
+    status: active
+    items:
+      - id: i1
+        scope: {text: 第一条の表}
+        effective:
+          state: date
+          value: "2099-03-01"
+          raw: 二千九十九年三月一日
+          precision: day
+          evidence: [{source: src-fiction, locator: 附則}]
+          verification: {state: unverified, reason: 架空の資料}
+        evidence: [{source: src-fiction, locator: 附則}]
+        verification: {state: unverified, reason: 架空の資料}
+  - id: rel-2
+    type: amends
+    from: {id: 20990401-act-12, label: 架空の改正法}
+    evidence: [{source: src-fiction, locator: 本則}]
+    verification: {state: unverified, reason: 架空の資料}
+    status: active
+    items:
+      - id: i1
+        scope: {text: 第一条の表}
+        effective:
+          state: date
+          value: "2099-04-01"
+          raw: 二千九十九年四月一日
+          precision: day
+          evidence: [{source: src-fiction, locator: 附則}]
+          verification: {state: unverified, reason: 架空の資料}
+        evidence: [{source: src-fiction, locator: 附則}]
+        verification: {state: unverified, reason: 架空の資料}
+revisions:
+  - id: c4f7h2k9
+    origin: enactment
+    effective:
+      state: date
+      value: "2099-02-01"
+      raw: 二千九十九年二月一日
+      precision: day
+      evidence: [{source: src-fiction, locator: 施行期日}]
+      verification: {state: unverified, reason: 架空の資料}
+    applicability: {state: unsurveyed}
+    text:
+      status: complete
+      sources: [{source: src-fiction, locator: 本則}]
+      glyphCheck: unverified
+    status: active
+  - id: d5g8j3m6
+    basedOn: c4f7h2k9
+    basis: [{relation: rel-1, items: [i1]}]
+    effective:
+      state: date
+      value: "2099-03-01"
+      raw: 二千九十九年三月一日
+      precision: day
+      evidence: [{source: src-fiction, locator: 施行期日}]
+      verification: {state: unverified, reason: 架空の資料}
+    applicability: {state: unsurveyed}
+    text:
+      status: complete
+      sources: [{source: src-fiction, locator: 本則}]
+      glyphCheck: unverified
+    status: active
+  - id: e6h9k4n7
+    basedOn: d5g8j3m6
+    basis: [{relation: rel-2, items: [i1]}]
+    effective:
+      state: date
+      value: "2099-04-01"
+      raw: 二千九十九年四月一日
+      precision: day
+      evidence: [{source: src-fiction, locator: 施行期日}]
+      verification: {state: unverified, reason: 架空の資料}
+    applicability: {state: unsurveyed}
+    text:
+      status: complete
+      sources: [{source: src-fiction, locator: 本則}]
+      glyphCheck: unverified
+    status: active
+coverage: {state: unconfirmed}

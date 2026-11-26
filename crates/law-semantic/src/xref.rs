@@ -328,7 +328,11 @@ impl Subject<'_> {
         for (ptr, rref, confirmed) in endpoints {
             let res = reg.resolve(rref);
             if let Some(target) = reg.target(rref) {
-                references.push((RES, self.reference(&target, res.as_str())));
+                let mut reference = self.reference(&target, res.as_str());
+                if let Resolution::Candidates(values) = &res {
+                    reference["candidates"] = serde_json::json!(values);
+                }
+                references.push((RES, reference));
             } else {
                 f.note(
                     RES,
@@ -342,6 +346,18 @@ impl Subject<'_> {
             }
             match res {
                 Resolution::Resolved(_) => {}
+                Resolution::Candidates(_) => {
+                    f.incomplete.insert(RES);
+                    f.note(
+                        RES,
+                        Class::Undetermined,
+                        "XREF-01",
+                        COMMON,
+                        format!("{rref} resolves to split Record candidates"),
+                        file,
+                        &ptr,
+                    );
+                }
                 Resolution::NotFetched(why) => {
                     f.incomplete.insert(RES);
                     f.note(

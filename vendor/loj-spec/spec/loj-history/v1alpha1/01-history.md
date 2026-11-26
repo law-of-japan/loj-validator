@@ -187,7 +187,7 @@
 - `repealed`・`totallyRevised`の`relation`は、同じ履歴マニフェストに存在し、種類が合う関係でなければならない（MUST）。
 - `repealed`・`totallyRevised`の`relation`は、`status: active`の関係でなければならない（MUST）。撤回した関係（`status: retracted`）を根拠とする項目は違反とする。
 - 終了の時点は、関係の`items`のうち、`verification.state`が`retracted`でない内訳の`effective`から得る。撤回した内訳の`effective`は使わない。すべての内訳を撤回した関係を根拠としてはならない（MUST NOT）。撤回していない内訳は一つに限られる（[HIST-03](#hist-03-関係と内訳)）ので、終了の時点はその内訳の`effective`である。撤回していない内訳が二つ以上ある関係（HIST-03の違反）では、終了の時点を決めず、次の警告を判定しない。
-- 関係を撤回するときは、それを根拠とする`termination`の項目を、同じ変更（`revisionFix`、[CHG-01](../../common/v1alpha1/07-changes.md)）で削る。効力の終了を別の関係で表せる場合は、その関係を根拠とする項目に置き換える。撤回の事実と理由は、関係の側に残る（HIST-03）。
+- 関係を撤回するときは、それを根拠とする`termination`の項目を、同じ変更（`metadata`、[CHG-01](../../common/v1alpha1/07-changes.md)）で削る。関係の撤回は、Revisionの撤回・統合・分割（`revisionFix`）ではなく、関係の更新である。効力の終了を別の関係で表せる場合は、その関係を根拠とする項目に置き換える。撤回の事実と理由は、関係の側に残る（HIST-03）。
 - 登録台帳の`status`は登録の状態であり、効力の終了で変えない。効力の終了を登録台帳に写してはならない（MUST NOT）。
 - 終了の時点（`repealed`・`totallyRevised`では、撤回した内訳を除いて得た時点）より後に施行されるRevisionがあれば、警告とする。施行前に廃止された等の場合があるため、不合格にしない。
   - 比べるのは、`status: active`のRevisionの施行時点`effective`と、終了の時点である。両方が確定日（[TIME-03](../../common/v1alpha1/06-time.md)）のときに日付（`value`）で比べ、Revisionの施行時点が終了の時点より後（同じ日を含めない）であれば警告とする。

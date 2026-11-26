@@ -1,0 +1,12 @@
+schemaVersion: loj-registry/v1alpha1
+id: 20990601-law-2
+label: 架空の改正法
+status: active
+identity:
+  evidence: [{source: src-fictional, locator: 題名}]
+  verification: {state: confirmed}
+collection: {state: notCollected}
+sources:
+  - {id: src-fictional, kind: other, title: 適合ケースのための架空の資料}
+numbers: []
+externalIds: []
