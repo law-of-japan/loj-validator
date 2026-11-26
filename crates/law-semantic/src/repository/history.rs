@@ -44,7 +44,8 @@ pub(crate) fn classify(schema_path: &str, _instance: &str) -> (Check, &'static s
         return (check, rule, COMMON);
     }
     if let Some(path) = schema_path.strip_prefix("/properties/revisions/items/properties/text/") {
-        // VAL-07 leaves unknown fields and schema-only constraints with HIST-01.
+        // Shared types have already been classified above. VAL-07 leaves
+        // unknown fields and schema-only constraints with HIST-01.
         let keyword = path.rsplit('/').next().unwrap_or("");
         if matches!(keyword, "required" | "enum" | "type" | "pattern" | "not")
             || path == "properties/variances/items/properties/readings/minItems"
@@ -884,30 +885,40 @@ mod tests {
     #[test]
     fn text_schema_errors_follow_the_requirement_owning_the_constraint() {
         let doc = json!({"revisions": [{"text": {
-            "status": "partial", "glyphCheck": "unknown", "unexpected": true,
+            "status": "partial", "glyphCheck": "unknown", "unexpected": true, "sources": [],
             "variances": [{"readings": [{}]}],
             "correctionsSurveyed": {"state": "unsurveyed"}
-        }}]});
+        }}, {"text": {"status": "unknown"}}]});
         let errors: Vec<_> = validator()
             .iter_errors(&doc)
             .map(|e| {
                 let pointer = e.instance_path().to_string();
                 let rule = classify(&e.schema_path().to_string(), &pointer).1;
-                (pointer, rule)
+                (pointer, e.schema_path().to_string(), rule)
             })
             .collect();
-        for (suffix, rule) in [
-            ("", "HIST-01"),
-            ("", "HIST-08"),
-            ("/glyphCheck", "HIST-08"),
-            ("/variances/0/readings", "HIST-08"),
-            ("/variances/0/readings/0", "HIST-08"),
-            ("/correctionsSurveyed", "HIST-08"),
+        for (location, keyword, expected) in [
+            ("0/text", "additionalProperties", "HIST-01"),
+            ("0/text", "required", "HIST-08"),
+            ("0/text/glyphCheck", "enum", "HIST-08"),
+            (
+                "0/text/sources",
+                "allOf/0/then/properties/sources/minItems",
+                "HIST-08",
+            ),
+            ("0/text/variances/0/readings", "minItems", "HIST-08"),
+            ("0/text/variances/0/readings/0", "required", "HIST-08"),
+            ("0/text/correctionsSurveyed", "required", "HIST-08"),
+            ("1/text/status", "enum", "HIST-08"),
         ] {
-            assert!(
-                errors.contains(&(format!("/revisions/0/text{suffix}"), rule)),
-                "{errors:?}"
-            );
+            let location = format!("/revisions/{location}");
+            let keyword = format!("/{keyword}");
+            let mut rules = errors
+                .iter()
+                .filter(|(p, k, _)| p == &location && k.ends_with(&keyword))
+                .map(|(_, _, rule)| *rule);
+            assert_eq!(rules.next(), Some(expected), "{errors:?}");
+            assert!(rules.all(|rule| rule == expected), "{errors:?}");
         }
     }
 
