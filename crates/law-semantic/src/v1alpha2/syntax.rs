@@ -2050,7 +2050,7 @@ mod tests {
     }
 
     #[test]
-    fn heading_inside_toc_reports_each_offending_line() {
+    fn heading_inside_toc_reports_dir_02_at_opener_and_toc_01_at_heading() {
         let manifest = json!({"law":{"id":"law","title":"例"}});
         let source = include_str!(
             "../../../../vendor/loj-spec/conformance/v1alpha2/invalid/pkg-232/main.md"
