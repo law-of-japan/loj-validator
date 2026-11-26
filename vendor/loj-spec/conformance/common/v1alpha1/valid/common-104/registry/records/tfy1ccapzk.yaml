@@ -1,0 +1,23 @@
+schemaVersion: loj-registry/v1alpha1
+id: tfy1ccapzk
+label: 天皇の退位等に関する皇室典範特例法の施行期日を定める政令（平成二十九年政令第三百二号）
+status: active
+identity:
+  evidence: [{source: src-egov-h29-302, locator: 法令名}]
+  verification: {state: unverified, reason: 官報と未照合}
+collection: {state: notCollected}
+sources:
+  - {id: src-egov-h29-302, kind: egov, title: e-Gov 平成二十九年政令第三百二号, uri: https://laws.e-gov.go.jp/law/429CO0000000302}
+numbers:
+  - id: n1
+    state: exists
+    raw: 政令第三百二号
+    structured:
+      system: 政令
+      period: {raw: 平成二十九年, gregorian: {from: "2017-01-01", to: "2017-12-31"}}
+      series: {state: regular}
+      number: "302"
+    evidence: [{source: src-egov-h29-302, locator: 法令番号}]
+    verification: {state: unverified, reason: 官報と未照合}
+    decision: adopted
+externalIds: []

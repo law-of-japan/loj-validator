@@ -1,0 +1,26 @@
+schemaVersion: loj-registry/v1alpha1
+id: 19490516-law-70
+label: 鉱山保安法（昭和二十四年法律第七十号）
+status: active
+identity:
+  evidence: [{source: src-egov-s24-70, locator: 法令名}]
+  verification: {state: unverified, reason: 官報と未照合}
+collection: {state: notCollected}
+repository:
+  location: github.com/law-of-japan/19490516-law-70
+  canonicalBranch: main
+sources:
+  - {id: src-egov-s24-70, kind: egov, title: e-Gov 鉱山保安法, uri: https://laws.e-gov.go.jp/law/324AC0000000070}
+numbers:
+  - id: n1
+    state: exists
+    raw: 法律第七十号
+    structured:
+      system: 法律
+      period: {raw: 昭和二十四年, gregorian: {from: "1949-01-01", to: "1949-12-31"}}
+      series: {state: regular}
+      number: "70"
+    evidence: [{source: src-egov-s24-70, locator: 法令番号}]
+    verification: {state: unverified, reason: 官報と未照合}
+    decision: adopted
+externalIds: []
