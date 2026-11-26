@@ -222,8 +222,10 @@ pub(super) fn check(change: &Change<'_>, before: &Snapshot, after: &Snapshot, f:
         if let Some(history) = &after.history {
             let by_id: std::collections::HashMap<_, _> =
                 indexed(&history["revisions"]).into_iter().collect();
-            for id in &affected {
-                let r = by_id[id.as_str()];
+            for (id, r) in &by_id {
+                if !affected.contains(*id) {
+                    continue;
+                }
                 if r.get("basedOn").is_some() == r.get("origin").is_some() {
                     change.error(
                         f,
@@ -965,7 +967,14 @@ mod tests {
         h["revisions"][0]["status"] = json!("retracted");
         assert!(!inspect("revisionFix", &before, &after).failed(CH));
         let h = after.history.as_mut().unwrap();
+        h["relations"] = json!([]);
+        assert!(inspect("revisionFix", &before, &after).failed(CH));
+        let h = after.history.as_mut().unwrap();
+        h["relations"] = before.history.as_ref().unwrap()["relations"].clone();
         h["relations"][0]["status"] = json!("retracted");
+        assert!(inspect("revisionFix", &before, &after).failed(CH));
+        let h = after.history.as_mut().unwrap();
+        h["relations"] = before.history.as_ref().unwrap()["relations"].clone();
         h["termination"] = json!([]);
         assert!(inspect("revisionFix", &before, &after).failed(CH));
         after.history.as_mut().unwrap()["revisions"][0]["id"] = json!("c7k2m9qd");

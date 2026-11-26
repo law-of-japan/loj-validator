@@ -896,6 +896,7 @@ impl<'a> Builder<'a> {
                     .last()
                     .is_some_and(|i| self.nodes[*i].kind == Kind::Toc)
                 {
+                    // A heading violates both container nesting and the opaque Toc content rule.
                     ctx.diag(
                         "DIR-02",
                         "ATX heading inside Toc container",
