@@ -2411,6 +2411,163 @@
       },
       "expected": "conformance/common/v1alpha1/expected/common-101.json",
       "success": false
+    },
+    {
+      "id": "common-102",
+      "title": "採用中の番号主張が判読不能で、版パッケージの番号と一致しない",
+      "requirements": [
+        "XREF-05",
+        "REG-03"
+      ],
+      "check": "L4",
+      "category": "displayConsistency",
+      "normative": true,
+      "input": {
+        "kind": "records",
+        "registry": "conformance/common/v1alpha1/valid/common-102/registry",
+        "repositories": [
+          "conformance/loj-history/v1alpha1/valid/hist-001/repo"
+        ]
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-102.json",
+      "success": true,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/valid/common-102/registry",
+          "from": "conformance/loj-registry/v1alpha1/valid/reg-001/registry",
+          "edits": [
+            {
+              "file": "records/19480720-law-178.yaml",
+              "old": "    state: exists\n    raw: 法律第百七十八号\n",
+              "new": "    state: illegible\n    raw: 法律第百七十〓号\n"
+            },
+            {
+              "file": "records/19480720-law-178.yaml",
+              "old": "      - {id: g1, offset: 7, recorded: \"号\", kind: ambiguous, candidates: [\"号\", \"號\"],\n         basis: provisional, evidence: [{source: src-egov, locator: 法令番号}],\n         verification: {state: confirmed, reason: 画像の最大解像度で字体を決められない}}\n",
+              "new": "      - {id: g1, offset: 6, recorded: \"〓\", kind: illegible, basis: undetermined,\n         evidence: [{source: src-kanpo-19480720, locator: 1コマ 法律の冒頭}],\n         verification: {state: unverified, reason: 適合ケースのための架空の判読不能}}\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "common-103",
+      "title": "版パッケージの番号がnullで、採用中の番号主張は番号がある",
+      "requirements": [
+        "XREF-05",
+        "MAN-01"
+      ],
+      "check": "L4",
+      "category": "displayConsistency",
+      "normative": true,
+      "input": {
+        "kind": "records",
+        "registry": "conformance/loj-registry/v1alpha1/valid/reg-001/registry",
+        "repositories": [
+          "conformance/common/v1alpha1/valid/common-103/hist-001"
+        ]
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-103.json",
+      "success": true,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/valid/common-103/hist-001",
+          "from": "conformance/loj-history/v1alpha1/valid/hist-001/repo",
+          "edits": [
+            {
+              "file": "versions/zwgmz1rt/law.yaml",
+              "old": "  number: \"昭和二十三年法律第百七十八号\"\n",
+              "new": "  number: null\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "common-104",
+      "title": "採用中の番号主張にstructured.periodがなく、版パッケージの番号がrawと一致しない",
+      "requirements": [
+        "XREF-05",
+        "REG-03"
+      ],
+      "check": "L4",
+      "category": "displayConsistency",
+      "normative": true,
+      "input": {
+        "kind": "records",
+        "registry": "conformance/common/v1alpha1/valid/common-104/registry",
+        "repositories": [
+          "conformance/loj-history/v1alpha1/valid/hist-001/repo"
+        ]
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-104.json",
+      "success": true,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/valid/common-104/registry",
+          "from": "conformance/loj-registry/v1alpha1/valid/reg-001/registry",
+          "edits": [
+            {
+              "file": "records/19480720-law-178.yaml",
+              "old": "      period: {raw: 昭和二十三年, gregorian: {from: \"1948-01-01\", to: \"1948-12-31\"}}\n",
+              "new": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "common-105",
+      "title": "同じ改正法令からの関係を持つ、もう一方のRecordを収録していない（判定しない）",
+      "requirements": [
+        "XREF-06",
+        "REG-02"
+      ],
+      "check": "L4",
+      "category": "timeConsistency",
+      "normative": true,
+      "input": {
+        "kind": "records",
+        "registry": "conformance/common/v1alpha1/valid/common-015/registry",
+        "repositories": [
+          "conformance/loj-history/v1alpha1/valid/hist-016/repo"
+        ]
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-105.json",
+      "success": true
+    },
+    {
+      "id": "common-106",
+      "title": "同じ履歴マニフェストの、同じ改正法令からの関係の公布の時点は比べない（架空）",
+      "requirements": [
+        "XREF-06",
+        "HIST-03"
+      ],
+      "check": "L4",
+      "category": "timeConsistency",
+      "normative": true,
+      "input": {
+        "kind": "records",
+        "registry": "conformance/common/v1alpha1/valid/common-015/registry",
+        "repositories": [
+          "conformance/common/v1alpha1/valid/common-106/hist-016b"
+        ]
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-106.json",
+      "success": true,
+      "derivedFrom": [
+        {
+          "path": "conformance/common/v1alpha1/valid/common-106/hist-016b",
+          "from": "conformance/common/v1alpha1/valid/common-015/hist-016b",
+          "edits": [
+            {
+              "file": "history.yaml",
+              "old": "revisions:\n",
+              "new": "  - id: rel-amend-x\n    type: amends\n    from: {id: 20990601-law-2, label: 架空の改正法}\n    promulgated:\n      state: date\n      value: \"2099-06-02\"\n      raw: 令和八十一年六月二日\n      precision: day\n      evidence: [{source: src-fictional, locator: 公布の日}]\n      verification: {state: unverified, reason: 架空の資料}\n    evidence: [{source: src-fictional, locator: 附則第二条}]\n    verification: {state: unverified, reason: 架空の資料}\n    status: active\n    items:\n      - id: i1\n        scope: {text: 第二条}\n        effective: {state: unknown, reason: 適合ケースで省略}\n        evidence: [{source: src-fictional, locator: 附則第二条}]\n        verification: {state: unverified, reason: 架空の資料}\nrevisions:\n"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
