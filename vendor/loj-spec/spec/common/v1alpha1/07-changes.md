@@ -43,6 +43,9 @@ ASTは、`schemaVersion`・`law`・`root`への投影を、位置情報を除い
   - `correction`: 当該Revisionの`text.sources`が、Evidenceを一つ以上持つ。
   - `officialCorrection`: 上に加えて、`text.sources`のEvidenceの少なくとも一つが、`kind: officialCorrection`のSource（官報正誤）を指す。
 - この確かめは、そのcommitが根拠を加えた・更新したことを求めない。根拠の内容が訂正に合うかは、原典と比べて確かめる事柄であり、変更検査では判定しない。
+- 本文のない版とは、`text.status: absent`のRevisionをいう。本文のない版は`text.sources`を持たない（[HIST-08](../../loj-history/v1alpha1/01-history.md)）。したがって、変更後の記録版で本文のない版である版を宣言した`correction`・`officialCorrection`は、上の根拠の確かめを満たさず、本要件の規則で不合格とする。本文のない版には、訂正する本文がない。本文の内容を変えない版の宣言はレビューで確かめる（[CHG-01](#chg-01-変更の種類)）が、この不合格は宣言の誤りの判定ではなく、宣言した種類の検査（根拠の確かめ）の結果である。
+- 変更前の記録版で本文のない版に、版パッケージを加えて本文を補う変更は、`restoration`とする。本文の状態（`text.status`）の変更は`restoration`の範囲であり、`correction`・`officialCorrection`の変更してよい範囲に入らない。`correction`・`officialCorrection`で、宣言した版の`text.status`を変えるcommitと、変更前の記録版で本文のない版に版パッケージを加えるcommitは、範囲の外の変更として、本要件の規則で不合格とする。
+- `restoration`は本文を補う変更であり、本文を減らして本文のない版にする変更を含まない。`restoration`で宣言した版が、変更後の記録版で本文のない版であれば、変更前の本文の状態によらず、本要件の規則で不合格とする。変更前も本文のない版であれば本文の状態の宣言が更新されておらず、変更前に本文があれば本文を補う変更に当たらないためである。
 - `revisionFix`の「撤回・統合・分割した旧IDを再利用していない」は、変更前の記録版で`status`が`retracted`・`merged`・`split`のRevisionのrevision_idで、変更前の記録版では一つのRevisionだけが持つものを、変更後の記録版の履歴マニフェストで二つ以上のRevisionが持つかを確かめる。持てば、旧IDの再利用として報告する。変更前から二つ以上のRevisionが持っていたidは、そのcommitが生じた再利用ではないので、この検査では報告しない（変更前の記録版のL3で検出する）。
   - 撤回・統合・分割したRevisionは履歴マニフェストに残る（[HIST-10](../../loj-history/v1alpha1/01-history.md)）ので、別のRevisionが同じidを持てば、二つの項目が同じidを持つ。
   - 撤回・統合・分割したRevisionの項目そのものを`active`に戻す変更は、撤回・統合・分割の取り消し（[CHG-03](#chg-03-種類の宣言)）であり、再利用に当たらない。戻すときにその項目のほかのフィールドを変えても、宣言した版の訂正と区別できないので、変更検査では再利用と判定しない。

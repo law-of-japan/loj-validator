@@ -2339,6 +2339,78 @@
       },
       "expected": "conformance/common/v1alpha1/expected/common-097.json",
       "success": false
+    },
+    {
+      "id": "common-098",
+      "title": "本文のない版を宣言し、正本のデータの外のファイルだけを変える記録訂正",
+      "requirements": [
+        "CHG-02",
+        "HIST-08"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-098/repo.bundle",
+        "base": "dc52d7ab4752f015a2c5837fff72c43c7caebc20",
+        "head": "6d6a08eac33ba2d2c10af2f6052c64e46f957584"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-098.json",
+      "success": false
+    },
+    {
+      "id": "common-099",
+      "title": "本文のない版を宣言し、版パッケージを加えて本文をそろえる記録訂正",
+      "requirements": [
+        "CHG-02",
+        "HIST-08"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-099/repo.bundle",
+        "base": "dc52d7ab4752f015a2c5837fff72c43c7caebc20",
+        "head": "d797e717ad985421970e02400d22b71574b8f7a8"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-099.json",
+      "success": false
+    },
+    {
+      "id": "common-100",
+      "title": "本文のない版に版パッケージを加えて本文をそろえる復元",
+      "requirements": [
+        "CHG-02",
+        "HIST-08"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/valid/common-100/repo.bundle",
+        "base": "dc52d7ab4752f015a2c5837fff72c43c7caebc20",
+        "head": "b4a1c211e552f437fc11dd98e2441ed50568da7f"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-100.json",
+      "success": true
+    },
+    {
+      "id": "common-101",
+      "title": "本文のない版を宣言し、本文を補わずに正本のデータの外のファイルだけを変える復元",
+      "requirements": [
+        "CHG-02",
+        "HIST-08"
+      ],
+      "check": "change",
+      "normative": true,
+      "input": {
+        "kind": "change",
+        "bundle": "conformance/common/v1alpha1/invalid/common-101/repo.bundle",
+        "base": "dc52d7ab4752f015a2c5837fff72c43c7caebc20",
+        "head": "7a0ccd34738e4363cb50ec337020278f9e9f6646"
+      },
+      "expected": "conformance/common/v1alpha1/expected/common-101.json",
+      "success": false
     }
   ]
 }
